@@ -1,0 +1,25 @@
+[project]
+name = "wjdr"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.11.7",
+]
+
+[[tool.uv.index]]
+url = "https://nexus.framatome.corp/repository/py-pypi/simple"
+default = true
+
+[tool.uv.sources]
+wjdr = { workspace = true }
+
+[[tool.uv.index]]
+url = "https://nexus.framatome.corp/repository/py-releases/simple"
+
+[dependency-groups]
+dev = [
+    "pydantic-faker>=0.4.0",
+    "wjdr",
+]
