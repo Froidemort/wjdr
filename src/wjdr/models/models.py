@@ -264,16 +264,28 @@ class Character(BaseModel, validate_assignment=True):
 
     def _coerce_career_attributes(self):
         if self.current_career:
-            for (primary_attribute, value,) in self.current_career.primary_attributes.items():
+            for (
+                primary_attribute,
+                value,
+            ) in self.current_career.primary_attributes.items():
                 value = max(value, getattr(self, primary_attribute))
-                setattr(self, primary_attribute, value)
-            for (secondary_attribute,value,) in self.current_career.secondary_attributes.items():
+                object.__setattr__(self, primary_attribute, value)
+            for (
+                secondary_attribute,
+                value,
+            ) in self.current_career.secondary_attributes.items():
                 value = max(value, getattr(self, secondary_attribute))
-                setattr(self, secondary_attribute, value)
+                object.__setattr__(self, secondary_attribute, value)
             if self.current_career.basic:
-                # Here we set starting skills and talents
-                self.skills.union(set(self.current_career.skills))
-                self.talents.union(set(self.current_career.talents))
+                for skill in self.current_career.skills:
+                    if isinstance(skill, tuple):
+                        skill = skill[0] # Take the first skill in the tuple
+                    character_skill = CharacterSkill(skill=skill, bonus=0)
+                    self.add_skill(character_skill)
+                for talent in self.current_career.talents:
+                    if isinstance(talent, tuple):
+                        talent = talent[0] # Take the first talent in the tuple
+                    self.add_talent(talent)
 
     @model_validator(mode="after")
     def validate_character(self):
