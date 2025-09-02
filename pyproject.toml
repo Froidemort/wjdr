@@ -18,6 +18,9 @@ url = "https://nexus.framatome.corp/repository/py-releases/simple"
 [tool.uv.sources]
 wjdr = { workspace = true }
 
+[tool.ruff]
+line-length = 240
+
 [dependency-groups]
 dev = [
     "pydantic-faker>=0.4.0",
