@@ -1,0 +1,831 @@
+[
+  {
+    "name": "Canotage",
+    "description": "Le personnage sait manœuvrer des embarcations à rames ou à perche, comme des barques ou des barges.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Charisme",
+    "description": "Le personnage est doué pour influencer les autres par sa personnalité. Il apparaît comme quelqu'un de sympathique et digne de confiance.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Commandement",
+    "description": "Le personnage sait comment diriger les autres au combat et les pousser à se surpasser.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Commérage",
+    "description": "Le personnage a le don de trouver les informations, les rumeurs et les secrets, et sait comment les faire circuler.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Conduite d'attelages",
+    "description": "Le personnage sait conduire des chariots, des coches et autres véhicules tirés par des animaux.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Déguisement",
+    "description": "Le personnage sait comment changer son apparence, sa voix et ses manières pour se faire passer pour quelqu'un d'autre.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Déplacement silencieux",
+    "description": "Le personnage sait se déplacer sans faire de bruit.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Dissimulation",
+    "description": "Permet au personnage de se cacher et de ne pas être repéré.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Équitation",
+    "description": "Le personnage sait monter une bête de selle commune, comme un cheval ou un mulet.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Escalade",
+    "description": "Le personnage sait grimper sur des surfaces verticales, comme des murs ou des falaises.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Évaluation",
+    "description": "Le personnage peut déterminer la valeur d'un objet ou d'une marchandise.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Fouille",
+    "description": "Le personnage sait comment trouver des objets cachés, des portes secrètes et des mécanismes dissimulés.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Intimidation",
+    "description": "Le personnage sait comment effrayer les autres pour obtenir ce qu'il veut, que ce soit par des menaces directes ou une attitude menaçante.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Jeu",
+    "description": "Le personnage est habile à divers jeux de hasard et de stratégie, et sait comment tricher sans se faire prendre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Marchandage",
+    "description": "Le personnage est doué pour la négociation et sait comment obtenir le meilleur prix, que ce soit en achetant ou en vendant.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Natation",
+    "description": "Le personnage sait nager et ne risque pas de se noyer dans des conditions normales.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Perception",
+    "description": "Cette compétence représente la vigilance du personnage et sa capacité à remarquer des détails inhabituels.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Résistance à l'alcool",
+    "description": "Le personnage peut consommer de grandes quantités d'alcool avant d'en subir les effets.",
+    "attribute": "toughness"
+  },
+  {
+    "name": "Soins des animaux",
+    "description": "Le personnage sait s'occuper des animaux, les nourrir et soigner leurs blessures légères.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Survie",
+    "description": "Le personnage sait comment survivre en milieu sauvage, en trouvant de la nourriture, de l'eau et un abri.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Baratin",
+    "basic": false,
+    "description": "Le personnage est capable d'embobiner les autres et de mentir avec aplomb, de faire passer des vessies pour des lanternes.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Braconnage",
+    "basic": false,
+    "description": "Le personnage sait poser des pièges et des collets pour attraper du petit gibier.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Crochetage",
+    "basic": false,
+    "description": "Le personnage sait ouvrir les serrures sans avoir la clé.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Dressage",
+    "basic": false,
+    "description": "Le personnage sait comment dresser des animaux pour qu'ils obéissent à des ordres simples.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Emprise sur les animaux",
+    "basic": false,
+    "description": "Le personnage a une affinité avec les animaux et sait comment les calmer et les approcher sans les effrayer.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Escamotage",
+    "basic": false,
+    "description": "Le personnage est doué pour subtiliser de petits objets, faire les poches et réaliser des tours de passe-passe.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Esquive",
+    "basic": false,
+    "description": "Le personnage peut éviter les attaques au corps à corps, les projectiles et autres dangers similaires.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Filature",
+    "basic": false,
+    "description": "Le personnage sait comment suivre une personne en ville sans se faire repérer.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Focalisation",
+    "basic": false,
+    "description": "Cette compétence permet de canaliser les Vents de Magie pour lancer des sorts.",
+    "attribute": "mental_strength"
+  },
+  {
+    "name": "Hypnotisme",
+    "basic": false,
+    "description": "Le personnage peut influencer l'esprit d'une cible consentante ou affaiblie.",
+    "attribute": "mental_strength"
+  },
+  {
+    "name": "Lecture sur les lèvres",
+    "basic": false,
+    "description": "Le personnage peut comprendre ce que dit une personne en observant le mouvement de ses lèvres.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Lire/écrire",
+    "basic": false,
+    "description": "Le personnage sait lire et écrire dans sa langue maternelle, pour peu qu'elle dispose d'une forme écrite.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Navigation",
+    "basic": false,
+    "description": "Le personnage sait se diriger en mer en utilisant les étoiles, les cartes et les instruments de navigation.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Orientation",
+    "basic": false,
+    "description": "Le personnage sait se repérer et ne pas se perdre, en se basant sur le soleil, les étoiles et les points de repère.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Pistage",
+    "basic": false,
+    "description": "Le personnage sait suivre des traces laissées par des créatures ou des personnes.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Préparation de poisons",
+    "basic": false,
+    "description": "Le personnage sait comment fabriquer divers types de poisons à partir d'ingrédients.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Sens de la magie",
+    "basic": false,
+    "description": "Le personnage peut sentir la présence et la nature des Vents de Magie.",
+    "attribute": "mental_strength"
+  },
+  {
+    "name": "Soins",
+    "basic": false,
+    "description": "Le personnage a des connaissances médicales pour soigner les maladies et les blessures graves.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Torture",
+    "basic": false,
+    "description": "Le personnage sait comment infliger la douleur pour obtenir des informations.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Ventriloquie",
+    "basic": false,
+    "description": "Le personnage peut projeter sa voix pour donner l'impression qu'elle vient d'ailleurs.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Arts",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Astronomie",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Démonologie",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Droit",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Histoire",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Ingénierie",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Généalogie/Héraldique",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Magie",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Nécromancie",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Philosophie",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Runes",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Science",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Stratégie/Tactique",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances académiques",
+    "basic": false,
+    "specialization": "Théologie",
+    "description": "Représente un savoir beaucoup plus approfondi que Connaissances générales et nécessite de longues études. Chaque compétence représente un domaine particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Bretonnie",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Elfes",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Empire",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Estalie",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Halflings",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Kislev",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Nains",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Norsca",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Ogres",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Pays Perdu",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Principautés Frontalières",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Connaissances générales",
+    "basic": false,
+    "specialization": "Tilée",
+    "description": "Permet de se souvenir des coutumes, des institutions, des traditions, des personnalités et des superstitions d'une nation, d'une race ou d'un groupe culturel particulier.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Acrobate",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Acteur",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Bouffon",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Chanteur",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Chiromancien",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Clown",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Comédien",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Conteur",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Cracheur de feu",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Danseur",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Jongleur",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Mime",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Expression artistique",
+    "basic": false,
+    "specialization": "Musicien",
+    "description": "Permet de divertir un groupe de spectateurs. Chaque domaine est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Langage mystique",
+    "basic": false,
+    "specialization": "Demonik",
+    "description": "Permet de lancer des sorts et de manipuler des énergies magiques. Les parchemins et grimoires sont rédigés en langage mystique.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langage mystique",
+    "basic": false,
+    "specialization": "Elfique mystique",
+    "description": "Permet de lancer des sorts et de manipuler des énergies magiques. Les parchemins et grimoires sont rédigés en langage mystique.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langage mystique",
+    "basic": false,
+    "specialization": "Magick",
+    "description": "Permet de lancer des sorts et de manipuler des énergies magiques. Les parchemins et grimoires sont rédigés en langage mystique.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langage secret",
+    "basic": false,
+    "specialization": "Langage de bataille",
+    "description": "Utilisé pour communiquer secrètement entre individus via des codes, gestes ou mots. Chaque langage secret est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langage secret",
+    "basic": false,
+    "specialization": "Langage de guilde",
+    "description": "Utilisé pour communiquer secrètement entre individus via des codes, gestes ou mots. Chaque langage secret est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langage secret",
+    "basic": false,
+    "specialization": "Langage des rôdeurs",
+    "description": "Utilisé pour communiquer secrètement entre individus via des codes, gestes ou mots. Chaque langage secret est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langage secret",
+    "basic": false,
+    "specialization": "Langage des voleurs",
+    "description": "Utilisé pour communiquer secrètement entre individus via des codes, gestes ou mots. Chaque langage secret est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Bretonnien",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Eltharin",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Estalien",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Halfling",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Khazalid",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Kislevien",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Norse",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Reikspiel",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Tiléen",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Classique",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Gobelinoïde",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Grumbarth",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Langue",
+    "basic": false,
+    "specialization": "Langage sombre",
+    "description": "Cette compétence permet à deux individus de communiquer par l'intermédiaire d'une langue qu'ils parlent l'un et l'autre.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Apothicaire",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Arquebusier",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Artiste",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Brasseur",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Calligraphe",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Cartographe",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Charpentier",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Charpentier naval",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Cordonnier",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Cristallier",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Cuisinier",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Embaumeur",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Fabricant d'arcs",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Fabricant d'armes",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Fabricant d'armures",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Fabricant de bougies",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Fermier",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Forgeron",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Herboriste",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "intelligence"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Maçon",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Marchand",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "sociability"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Meunier",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Mineur",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Orfèvre",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Prospecteur",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Tailleur",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "agility"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Tanneur",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  },
+  {
+    "name": "Métier",
+    "basic": false,
+    "specialization": "Tonnelier",
+    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "attribute": "strength"
+  }
+]
