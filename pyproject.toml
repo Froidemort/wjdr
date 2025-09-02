@@ -12,14 +12,16 @@ dependencies = [
 url = "https://nexus.framatome.corp/repository/py-pypi/simple"
 default = true
 
-[tool.uv.sources]
-wjdr = { workspace = true }
-
 [[tool.uv.index]]
 url = "https://nexus.framatome.corp/repository/py-releases/simple"
+
+[tool.uv.sources]
+wjdr = { workspace = true }
 
 [dependency-groups]
 dev = [
     "pydantic-faker>=0.4.0",
+    "pytest>=8.4.1",
+    "ruff>=0.12.11",
     "wjdr",
 ]
