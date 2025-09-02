@@ -1,5 +1,5 @@
-from collections import defaultdict
-from typing import Iterable, Literal, Optional, Self, get_args
+from operator import inv
+from typing import Literal, Optional, Self, get_args
 from pydantic import BaseModel, Field, model_validator
 
 PrimaryAttributeName = Literal[
@@ -100,11 +100,11 @@ class PrimaryAttributes(BaseModel):
 
     @property
     def strength_bonus(self) -> int:
-        return self.strength // 10
+        return self.strength.actual // 10
 
     @property
     def toughness_bonus(self) -> int:
-        return self.toughness // 10
+        return self.toughness.actual // 10
 
 
 class Talent(BaseModel):
@@ -117,12 +117,11 @@ class Skill(BaseModel):
     basic: bool = True
     description: str
     attribute: PrimaryAttributeName
-    bonus: int = Field(ge=0, default=0, le=20, multiple_of=10, examples=[0,10,20])  # +0,+10,+20
 
     talents: list[Talent] = Field(default=[], description="List of related talents")
 
-    def __eq__(self, other_skill: "Skill") -> bool:
-        return self.name == other_skill.name and self.basic == other_skill.basic and self.attribute == other_skill.attribute and self.talents == other_skill.talents
+    def __eq__(self, other_skill: object) -> bool:
+        return self.name == getattr(other_skill, "name", None) and self.basic == getattr(other_skill, "basic", None) and self.attribute == getattr(other_skill, "attribute", None) and self.talents == getattr(other_skill, "talents", None)
 
     def __hash__(self) -> int:
         return hash((self.name, self.basic, self.attribute, tuple(self.talents)))
@@ -131,12 +130,16 @@ class Skill(BaseModel):
 class SpecializedSkill(Skill):
     specialization: str
 
-    def __eq__(self,  other_skill: "SpecializedSkill"):
-        return self.specialization == other_skill.specialization and super().__eq__(other_skill)
+    def __eq__(self, other_skill: object):
+        return self.specialization == getattr(other_skill, "specialization", None) and super().__eq__(other_skill)
 
     def __hash__(self) -> int:
         return hash(self.specialization) ^ super().__hash__()
 
+
+class CharacterSkill(BaseModel):
+    skill: Skill | SpecializedSkill
+    bonus: int = Field(ge=0, default=0, le=20, multiple_of=10, examples=[0, 10, 20])  # +0,+10,+20
 
 
 class SecondaryAttribute(BaseModel):
@@ -161,11 +164,14 @@ class SecondaryAttributes(BaseModel):
 class Career(BaseModel):
     name: str = Field(description="Name of the career")
     basic: bool = True
+    # Primary and secondary attributes that will be set to the character
     primary_attributes: dict[PrimaryAttributeName, int]
     secondary_attributes: dict[SecondaryAttributeName, int]
 
-    skills: set[Skill, tuple[Skill]] = {}
-    talents: set[Talent, tuple[Talent]] = {}
+    # Here we can have a list of skills, or a tuple.
+    # The tuple is a modeling trick to say "one of these skills"
+    skills: tuple[Skill | tuple[Skill]]
+    talents: tuple[Talent | tuple[Talent]]
 
     @model_validator(mode="after")
     def validated_career_plan(self):
@@ -175,6 +181,55 @@ class Career(BaseModel):
         for secondary_attribute in get_args(PrimaryAttributeName):
             raise ValueError(f"{secondary_attribute} must be in career plan")
         return self
+
+
+class Money(BaseModel, validate_assignment=True):
+    golden_crown: int = Field(ge=0, default=0)
+    silver_pistol: int = Field(ge=0, default=0)
+    copper_coins: int = Field(ge=0, default=0)
+
+    @staticmethod
+    def coerce_money(golden_crown: int, silver_pistol: int, copper_coins: int) -> tuple[int, int, int]:
+        # Calculate the correct values without mutating self
+        silver_pistol += copper_coins // 12
+        copper_coins = copper_coins % 12
+        golden_crown += silver_pistol // 20
+        silver_pistol = silver_pistol % 20
+        return golden_crown, silver_pistol, copper_coins
+
+    @model_validator(mode="after")
+    def validate_money(self) -> Self:
+        gc, sp, cc = self.coerce_money(self.golden_crown, self.silver_pistol, self.copper_coins)
+        # Use object.__setattr__ to bypass pydantic validation on assignment (it prevents infinite loop)
+        object.__setattr__(self, "golden_crown", gc)
+        object.__setattr__(self, "silver_pistol", sp)
+        object.__setattr__(self, "copper_coins", cc)
+        return self
+
+
+class EquipmentCategory(BaseModel):
+    category: Literal["Armes", "Armures", "Munitions", "Divers", "Animaux", "Véhicules"]
+    subcategory: Optional[str] = None
+
+
+class Equipment(BaseModel):
+    name: str
+    description: Optional[str] = None
+    category: EquipmentCategory = Field(default=EquipmentCategory(category="Divers"))
+    clutter: int = Field(ge=0, default=0)
+    # Value in money, automatically coerced
+    value: Money = Field(default=Money(), description="Unitary value of the equipment")
+    quantity: int = Field(ge=1, default=1)
+
+
+class Inventory(BaseModel):
+    equipments: list[Equipment] = []
+    money: Money = Field(default=Money(), description="Total money owned by the character")
+
+    @property
+    def total_clutter(self) -> int:
+        # We ignore animals and vehicles in the clutter calculation, because they are not carried by the character
+        return sum(e.clutter * e.quantity for e in self.equipments if e.category.category != "Animaux" or e.category.subcategory != "Véhicules")
 
 
 class Character(BaseModel, validate_assignment=True):
@@ -192,10 +247,13 @@ class Character(BaseModel, validate_assignment=True):
     destiny_points: int = Field(ge=0, default=0)
 
     # Skills & Talents
-    skills: set[Skill|SpecializedSkill] = set()
+    skills: set[CharacterSkill] = set()
     talents: set[Talent] = set()
 
     carrers: list[Career] = []
+
+    # Handle all the money and equipment
+    inventory: Inventory = Field(default=Inventory())
 
     @property
     def current_career(self):
@@ -204,18 +262,12 @@ class Character(BaseModel, validate_assignment=True):
         else:
             return None
 
-    def _coerce_attributes_career(self):
+    def _coerce_career_attributes(self):
         if self.current_career:
-            for (
-                primary_attribute,
-                value,
-            ) in self.current_career.primary_attributes.items():
+            for (primary_attribute, value,) in self.current_career.primary_attributes.items():
                 value = max(value, getattr(self, primary_attribute))
                 setattr(self, primary_attribute, value)
-            for (
-                secondary_attribute,
-                value,
-            ) in self.current_career.secondary_attributes.items():
+            for (secondary_attribute,value,) in self.current_career.secondary_attributes.items():
                 value = max(value, getattr(self, secondary_attribute))
                 setattr(self, secondary_attribute, value)
             if self.current_career.basic:
@@ -225,28 +277,28 @@ class Character(BaseModel, validate_assignment=True):
 
     @model_validator(mode="after")
     def validate_character(self):
-        self._coerce_attributes_career()
+        self._coerce_career_attributes()
         return self
 
-    def add_skill(self, new_skill: Skill):
+    def add_skill(self, new_skill: CharacterSkill):
         existing_skill = self._get_existing_skill(new_skill)
 
         if existing_skill:
-            # Le skill existe déjà, on augmente son bonus
             new_bonus = min(existing_skill.bonus + 10, 20)
             existing_skill.bonus = new_bonus
         else:
-            # Le skill n'existe pas, on l'ajoute
             self.skills.add(new_skill)
 
-    def _get_existing_skill(self, skill: Skill) -> Skill | None:
+    def _get_existing_skill(self, character_skill: CharacterSkill) -> CharacterSkill | None:
         for s in self.skills:
-            if s == skill:
+            if s.skill == character_skill.skill:
                 return s
         return None
 
+    def add_talent(self, new_talent: Talent):
+        self.talents.add(new_talent)
 
-            
 
 if __name__ == "__main__":
-    s = Skill(name="Esquive", basic=False, description="Permet d'esquiver au lieu de parer les attaques", attribute="agility", bonus=0, talents=[])
+    s = Skill(name="Esquive", basic=False, description="Permet d'esquiver au lieu de parer les attaques", attribute="agility", talents=[])
+    cs = CharacterSkill(skill=s, bonus=0)
