@@ -1,4 +1,4 @@
-from operator import inv
+import datetime
 from typing import Literal, Optional, Self, get_args
 from pydantic import BaseModel, Field, model_validator
 
@@ -62,6 +62,12 @@ AstralSign = Literal[
     "L'Étoile du Sorcier",
 ]
 
+class MetaInformations(BaseModel):
+    player_name: Optional[str] = None
+    master_name: Optional[str] = None
+    campaign_name: Optional[str] = None
+    date_creation: Optional[datetime.date] = Field(default_factory=datetime.date.today)
+    last_update: Optional[datetime.date] = Field(default_factory=datetime.datetime.now)
 
 class DetailedInformations(BaseModel):
     age: Optional[int] = Field(gt=0, default=None, le=200)
@@ -78,6 +84,8 @@ class DetailedInformations(BaseModel):
 
 class PrimaryAttribute(BaseModel, validate_assignment=True):
     base: int = Field(ge=0, default=0, le=100)
+    # TODO: maybe consider adding a "permanent" field to handle bonus from some talents
+    # TODO: maybe consider adding a "from_object" field to handle bonus from some objects
     advanced: int = Field(ge=0, default=0, le=100, multiple_of=5)
     actual: int = Field(ge=0, default=0, le=100)
 
@@ -110,6 +118,7 @@ class PrimaryAttributes(BaseModel):
 class Talent(BaseModel):
     name: str
     description: str
+    permanent_bonus: Optional[tuple[PrimaryAttributeName, int]] = Field(default=None, description="Permanent bonus to a primary attribute, in the form (attribute_name, bonus_amount)", examples=[("strength", 5), ("agility", 10)])
 
 
 class Skill(BaseModel):
@@ -182,6 +191,18 @@ class Career(BaseModel):
             raise ValueError(f"{secondary_attribute} must be in career plan")
         return self
 
+    @property
+    def career_experience_amount(self) -> int:
+        # Every tick of primary attribute costs 100 experience
+        experience = sum(value // 5 * 100 for value in self.primary_attributes.values())
+        # Every tick of secondary attribute costs 100 experience
+        experience += sum(value * 100 for value in self.secondary_attributes.values())
+        if not self.basic:
+            experience += len(self.skills) * 100
+            experience += len(self.talents) * 100
+        return experience
+
+
 
 class Money(BaseModel, validate_assignment=True):
     golden_crown: int = Field(ge=0, default=0)
@@ -206,15 +227,39 @@ class Money(BaseModel, validate_assignment=True):
         object.__setattr__(self, "copper_coins", cc)
         return self
 
+    def __add__(self, other: "Money") -> "Money":
+        if not isinstance(other, Money):
+            return NotImplemented
+        gc = self.golden_crown + other.golden_crown
+        sp = self.silver_pistol + other.silver_pistol
+        cc = self.copper_coins + other.copper_coins
+        gc, sp, cc = self.coerce_money(gc, sp, cc)
+        return Money(golden_crown=gc, silver_pistol=sp, copper_coins=cc)
+
+    def __sub__(self, other: "Money") -> "Money":
+        if not isinstance(other, Money):
+            return NotImplemented
+        # Convert everything to copper coins to handle subtraction
+        total_cc_self = self.golden_crown * 240 + self.silver_pistol * 12 + self.copper_coins
+        total_cc_other = other.golden_crown * 240 + other.silver_pistol * 12 + other.copper_coins
+        if total_cc_self < total_cc_other:
+            raise ValueError("Cannot have negative money")
+        total_cc_result = total_cc_self - total_cc_other
+        gc = total_cc_result // 240
+        sp = (total_cc_result % 240) // 12
+        cc = total_cc_result % 12
+        return Money(golden_crown=gc, silver_pistol=sp, copper_coins=cc)
 
 class EquipmentCategory(BaseModel):
-    category: Literal["Armes", "Armures", "Munitions", "Divers", "Animaux", "Véhicules"]
+    # TODO: maybe consider adding subcategories for "Divers"
+    category: Literal["Armes", "Armures", "Munitions", "Divers"]
     subcategory: Optional[str] = None
 
 
 class Equipment(BaseModel):
     name: str
     description: Optional[str] = None
+    quality: Literal["Médiocre", "Moyenne", "Bonne", "Exceptionnelle"] = "Moyenne"
     category: EquipmentCategory = Field(default=EquipmentCategory(category="Divers"))
     clutter: int = Field(ge=0, default=0)
     # Value in money, automatically coerced
@@ -228,9 +273,20 @@ class Inventory(BaseModel):
 
     @property
     def total_clutter(self) -> int:
-        # We ignore animals and vehicles in the clutter calculation, because they are not carried by the character
-        return sum(e.clutter * e.quantity for e in self.equipments if e.category.category != "Animaux" or e.category.subcategory != "Véhicules")
+        return sum(e.clutter * e.quantity for e in self.equipments)
 
+
+class Experience(BaseModel):
+    total: int = Field(ge=0, default=0)
+    spent: int = Field(ge=0, default=0, multiple_of=100) # TODO: check id multiple of 100 is correct
+
+    @property
+    def available(self) -> int:
+        return self.total - self.spent
+    
+    @property
+    def spendable_ticks(self) -> int:
+        return self.available % 100
 
 class Character(BaseModel, validate_assignment=True):
     # Mandatory informations
@@ -255,8 +311,14 @@ class Character(BaseModel, validate_assignment=True):
     # Handle all the money and equipment
     inventory: Inventory = Field(default=Inventory())
 
+    experience: Experience = Field(default=Experience())
+
+    meta_informations: MetaInformations = Field(default=MetaInformations())
+
     @property
     def current_career(self):
+        # In a normal case, a character has a career
+        # The None case is when the character is created and has no career yet
         if self.carrers:
             return self.carrers[-1]
         else:
@@ -310,6 +372,18 @@ class Character(BaseModel, validate_assignment=True):
     def add_talent(self, new_talent: Talent):
         self.talents.add(new_talent)
 
+    @property
+    def max_clutter(self) -> int:
+        race_modifier = {
+            "Elfe": 10,
+            "Nain": 20,
+            "Humain": 10,
+            "Halfling": 10,
+        }
+        return self.primary_attributes.strength.actual * race_modifier[self.race]
+
+    def is_cluttered(self) -> bool:
+        return self.inventory.total_clutter > self.max_clutter
 
 if __name__ == "__main__":
     s = Skill(name="Esquive", basic=False, description="Permet d'esquiver au lieu de parer les attaques", attribute="agility", talents=[])
