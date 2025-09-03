@@ -1,0 +1,51 @@
+{
+  "name": "Bûcheron",
+  "basic": true,
+  "primary_attributes": {
+    "fight_capacity": 10,
+    "shooting_capacity": 0,
+    "strength": 10,
+    "toughness": 0,
+    "agility": 5,
+    "intelligence": 0,
+    "mental_strength": 10,
+    "sociability": 0
+  },
+  "secondary_attributes": {
+    "attack": 0,
+    "wounds": 3,
+    "movement": 0,
+    "magic_point": 0
+  },
+  "skills": [
+    "Alphabet secret (rôdeurs)",
+    ["Braconnage", "Pistage"],
+    "Déplacement silencieux",
+    "Dissimulation",
+    "Escalade",
+    "Langage secret (langage des rôdeurs)",
+    "Perception"
+  ],
+  "talents": [
+    "Camouflage rural",
+    ["Course à pied", "Résistance accrue"],
+    "Maîtrise (armes lourdes)"
+  ],
+  "accessible_careers": [
+    "Chasseur",
+    "Hors-la-loi",
+    "Milicien",
+    "Pisteur",
+    "Vagabond"
+  ],
+  "endowments": [
+    "Hache à deux mains",
+    "Veste de cuir",
+    "Nécessaire antipoison"
+  ],
+  "money": {
+    "golden_crown": 0,
+    "silver_pistol": 0,
+    "copper_coins": 0
+  }
+}
