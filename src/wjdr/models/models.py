@@ -1,6 +1,9 @@
 import datetime
+from functools import partial
 from typing import Literal, Optional, Self, get_args
 from pydantic import BaseModel, Field, model_validator
+
+from .random import DicePool
 
 PrimaryAttributeName = Literal[
     "fight_capacity",
@@ -62,49 +65,48 @@ AstralSign = Literal[
     "L'Étoile du Sorcier",
 ]
 
+
 class MetaInformations(BaseModel):
-    player_name: Optional[str] = None
-    master_name: Optional[str] = None
-    campaign_name: Optional[str] = None
-    date_creation: Optional[datetime.date] = Field(default_factory=datetime.date.today)
-    last_update: Optional[datetime.date] = Field(default_factory=datetime.datetime.now)
+    player_name: Optional[str] = Field(default=None, description="Nom réel du joueur", examples=["Jean", "Marie"])
+    master_name: Optional[str] = Field(default=None, description="Nom réel du maitre du jeu", examples=["Jean", "Marie"])
+    campaign_name: Optional[str] = Field(default=None, description="Nom de la campagne", examples=["Bienvenue à Altdorf", "Meurtre à Nuln"])
+    date_creation: Optional[datetime.date] = Field(default_factory=datetime.date.today, description="Date de création du personnage")
+    last_update: Optional[datetime.date] = Field(default_factory=datetime.datetime.now, description="Date de la dernière mise à jour du personnage")
+
 
 class DetailedInformations(BaseModel):
-    age: Optional[int] = Field(gt=0, default=None, le=200)
-    eye_color: Optional[EyeColor] = None
-    hair_color: Optional[HairColor] = None
-    astral_sign: Optional[AstralSign] = None
-    birth_place: Optional[str] = None
-    height: Optional[float] = Field(ge=100.0, le=200.0, default=None)
+    age: Optional[int] = Field(gt=0, default=None, le=200, examples=[25, 30, 45], description="Âge du personnage en années")
+    eye_color: Optional[EyeColor] = Field(default=None, description="Couleur des yeux du personnage", examples=["Bleu", "Marron", "Noir"])
+    hair_color: Optional[HairColor] = Field(default=None, description="Couleur des cheveux du personnage", examples=["Blond", "Brun", "Roux"])
+    astral_sign: Optional[AstralSign] = Field(default=None, description="Signe astral du personnage", examples=["Le Danseur", "Le Grimoire", "La Chèvre Sauvage"])
+    birth_place: Optional[str] = Field(default=None, description="Lieu de naissance du personnage", examples=["Altdorf", "Nuln", "Middenheim"])
+    height: Optional[float] = Field(ge=100.0, le=200.0, default=None, description="Taille du personnage en cm", examples=[160.0, 175.5, 180.2])
     weigth: Optional[float] = Field(ge=30.0, le=200.0, default=None)
-    sibling_number: int = Field(ge=0, default=0)
-    distinctive_signs: list[str] = []
-    chaos_mutations: list[str] = []
+    sibling_number: int = Field(ge=0, default=0, description="Nombre de frères et sœurs du personnage", examples=[0, 1, 2, 3])
+    distinctive_signs: list[str] = Field(default=[], description="Liste des signes distinctifs du personnage", examples=[["Cicatrice sur le visage", "Tatouage en forme de dragon"]])
+    chaos_mutations: list[str] = Field(default=[], description="Liste des mutations du Chaos du personnage", examples=[["Peau écailleuse", "Yeux rouges"]])
 
 
 class PrimaryAttribute(BaseModel, validate_assignment=True):
-    base: int = Field(ge=0, default=0, le=100)
+    base: int = Field(ge=0, default=0, le=100, description="Statistique de base du personnage entre 1 et 100", examples=[30, 40, 50])
     # TODO: maybe consider adding a "permanent" field to handle bonus from some talents
     # TODO: maybe consider adding a "from_object" field to handle bonus from some objects
-    advanced: int = Field(ge=0, default=0, le=100, multiple_of=5)
-    actual: int = Field(ge=0, default=0, le=100)
+    advanced: int = Field(ge=0, default=0, le=100, multiple_of=5, description="Statistique d'amélioration du personnage achetable avec l'expérience, entre 0 et 100, par pas de 5", examples=[0, 5, 10, 15, 20])
 
-    @model_validator(mode="after")
-    def validate_actual(self) -> Self:
-        if self.base + self.advanced > self.actual:
-            raise ValueError(f"Actual {self.actual} must be lower than base {self.base} and advanced {self.advanced}")
-        return self
+    @property
+    def actual(self) -> int:
+        return self.base + self.advanced
 
 
 class PrimaryAttributes(BaseModel):
-    fight_capacity: PrimaryAttribute = Field(default=PrimaryAttribute(), alias="CC")
-    shooting_capacity: PrimaryAttribute = Field(default=PrimaryAttribute(), alias="CT")
-    strength: PrimaryAttribute = Field(default=PrimaryAttribute(), alias="F")
-    toughness: PrimaryAttribute = Field(default=PrimaryAttribute(), alias="E")
-    agility: PrimaryAttribute = Field(default=PrimaryAttribute(), alias="Ag")
-    intelligence: PrimaryAttribute = Field(default=PrimaryAttribute(), alias="Int")
-    mental_strength: PrimaryAttribute = Field(default=PrimaryAttribute(), alias="FM")
-    sociability: PrimaryAttribute = Field(default=PrimaryAttribute(), alias="Soc")
+    fight_capacity: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="CC")
+    shooting_capacity: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="CT")
+    strength: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="F")
+    toughness: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="E")
+    agility: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="Ag")
+    intelligence: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="Int")
+    mental_strength: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="FM")
+    sociability: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="Soc")
 
     @property
     def strength_bonus(self) -> int:
@@ -119,6 +121,19 @@ class Talent(BaseModel):
     name: str
     description: str
     permanent_bonus: Optional[tuple[PrimaryAttributeName, int]] = Field(default=None, description="Permanent bonus to a primary attribute, in the form (attribute_name, bonus_amount)", examples=[("strength", 5), ("agility", 10)])
+
+    def __eq__(self, other_talent: object) -> bool:
+        return self.name == getattr(other_talent, "name", None) and self.description == getattr(other_talent, "description", None) and self.permanent_bonus == getattr(other_talent, "permanent_bonus", None)
+
+
+class SpecializedTalent(Talent):
+    specialization: str
+
+    def __eq__(self, other_talent: object) -> bool:
+        return self.specialization == getattr(other_talent, "specialization", None) and super().__eq__(other_talent)
+
+    def __hash__(self) -> int:
+        return hash(self.specialization) ^ super().__hash__()
 
 
 class Skill(BaseModel):
@@ -154,54 +169,17 @@ class CharacterSkill(BaseModel):
 class SecondaryAttribute(BaseModel):
     base: int = Field(ge=0, default=0)
     advanced: int = Field(ge=0, default=0)
-    actual: int = Field(ge=0, default=0)
 
-    @model_validator(mode="after")
-    def validate_actual(self) -> Self:
-        if self.base + self.advanced > self.actual:
-            raise ValueError(f"Actual {self.actual} must be lower than base {self.base} and advanced {self.advanced}")
-        return self
+    @property
+    def actual(self) -> int:
+        return self.base + self.advanced
 
 
 class SecondaryAttributes(BaseModel):
-    attack: SecondaryAttribute = Field(alias="A")
-    wounds: SecondaryAttribute = Field(alias="B")
-    movement: SecondaryAttribute = Field(alias="M")
-    magic_point: SecondaryAttribute = Field(alias="Mag")
-
-
-class Career(BaseModel):
-    name: str = Field(description="Name of the career")
-    basic: bool = True
-    # Primary and secondary attributes that will be set to the character
-    primary_attributes: dict[PrimaryAttributeName, int]
-    secondary_attributes: dict[SecondaryAttributeName, int]
-
-    # Here we can have a list of skills, or a tuple.
-    # The tuple is a modeling trick to say "one of these skills"
-    skills: tuple[Skill | tuple[Skill]]
-    talents: tuple[Talent | tuple[Talent]]
-
-    @model_validator(mode="after")
-    def validated_career_plan(self):
-        for primary_attribute in get_args(PrimaryAttributeName):
-            if primary_attribute not in self.primary_attributes:
-                raise ValueError(f"{primary_attribute} must be in career plan")
-        for secondary_attribute in get_args(PrimaryAttributeName):
-            raise ValueError(f"{secondary_attribute} must be in career plan")
-        return self
-
-    @property
-    def career_experience_amount(self) -> int:
-        # Every tick of primary attribute costs 100 experience
-        experience = sum(value // 5 * 100 for value in self.primary_attributes.values())
-        # Every tick of secondary attribute costs 100 experience
-        experience += sum(value * 100 for value in self.secondary_attributes.values())
-        if not self.basic:
-            experience += len(self.skills) * 100
-            experience += len(self.talents) * 100
-        return experience
-
+    attack: SecondaryAttribute = Field(serialization_alias="A", description="Number of attacks per round", examples=[1, 2, 3])
+    wounds: SecondaryAttribute = Field(serialization_alias="B", description="Point de blessures", examples=[8, 12, 18])
+    movement: SecondaryAttribute = Field(serialization_alias="M", description="Points de mouvement", examples=[3, 4, 5, 10])
+    magic_point: SecondaryAttribute = Field(serialization_alias="Mag", description="Points de magie", examples=[0, 1, 2, 3])
 
 
 class Money(BaseModel, validate_assignment=True):
@@ -250,6 +228,7 @@ class Money(BaseModel, validate_assignment=True):
         cc = total_cc_result % 12
         return Money(golden_crown=gc, silver_pistol=sp, copper_coins=cc)
 
+
 class EquipmentCategory(BaseModel):
     # TODO: maybe consider adding subcategories for "Divers"
     category: Literal["Armes", "Armures", "Munitions", "Divers"]
@@ -276,28 +255,93 @@ class Inventory(BaseModel):
         return sum(e.clutter * e.quantity for e in self.equipments)
 
 
+class Career(BaseModel):
+    name: str = Field(description="Name of the career")
+    basic: bool = True
+    # Primary and secondary attributes that will be set to the character
+    primary_attributes: dict[PrimaryAttributeName, int]
+    secondary_attributes: dict[SecondaryAttributeName, int]
+
+    # Here we can have a list of skills, or a tuple.
+    # The tuple is a modeling trick to say "one of these skills",
+    # also it keeps order when we map it after a GUI choice.
+    skills: tuple[str | tuple[str]]
+    talents: tuple[str | tuple[str]]
+
+    endowments: list[str] = Field(default=[], description="Liste des dotations en début de carrière ou des objets à avoir pour acccéder à cette carrière")
+    money: Money = Field(default=Money(), description="Monnaie de départ lors de l'entrée dans cette carrière, ou argent à avoir pour accéder à cette carrière")
+
+
+    accessible_careers: list[str] = Field(default=[], description="List of careers accessible after this one")
+
+    @model_validator(mode="after")
+    def validated_career_plan(self):
+        for primary_attribute in get_args(PrimaryAttributeName):
+            if primary_attribute not in self.primary_attributes:
+                raise ValueError(f"{primary_attribute} must be in career plan")
+        for secondary_attribute in get_args(PrimaryAttributeName):
+            raise ValueError(f"{secondary_attribute} must be in career plan")
+        return self
+
+    @property
+    def career_experience_amount(self) -> int:
+        # Every tick of primary attribute costs 100 experience
+        experience = sum(value // 5 * 100 for value in self.primary_attributes.values())
+        # Every tick of secondary attribute costs 100 experience
+        experience += sum(value * 100 for value in self.secondary_attributes.values())
+        if not self.basic:
+            experience += len(self.skills) * 100
+            experience += len(self.talents) * 100
+        return experience
+
+
 class Experience(BaseModel):
     total: int = Field(ge=0, default=0)
-    spent: int = Field(ge=0, default=0, multiple_of=100) # TODO: check id multiple of 100 is correct
+    spent: int = Field(ge=0, default=0, multiple_of=100)  # TODO: check id multiple of 100 is correct
 
     @property
     def available(self) -> int:
         return self.total - self.spent
-    
+
     @property
     def spendable_ticks(self) -> int:
         return self.available % 100
 
+
+# TODO: primary attribute factory must depends on race
+def primary_attribute_random_factory() -> PrimaryAttributes:
+    attrs = {}
+    for attr in get_args(PrimaryAttributeName):
+        base_value = DicePool({10: 2}, 20).roll()  # 2d10+20
+        attrs[attr] = PrimaryAttribute(base=base_value, advanced=0)
+    return PrimaryAttributes(**attrs)
+
+
+# TODO: secondary attribute factory must depends on race
+def secondary_attribute_random_factory() -> SecondaryAttributes:
+    attr = {}
+    attr["attack"] = SecondaryAttribute(base=1, advanced=0)  # Always 1 attack at start
+    attr["wounds"] = SecondaryAttribute(base=12, advanced=0)  # 2d10+20
+    attr["movement"] = SecondaryAttribute(base=4, advanced=0)  # 4 for now
+    attr["magic_point"] = SecondaryAttribute(base=0, advanced=0)  # Always 0 at start
+    return SecondaryAttributes(**attr)
+
+
+def race_skill_factory(race: Literal["Elfe", "Nain", "Humain", "Halfling"]) -> set[CharacterSkill]:
+    return set()
+
+
 class Character(BaseModel, validate_assignment=True):
     # Mandatory informations
+    name: str = Field(description="Nom du personnage", examples=["Randuil", "Tharn", "Gruber"])
     gender: Literal["Masculin", "Feminin"]
     race: Literal["Elfe", "Nain", "Humain", "Halfling"]
     # Usefull but optional informations
-    detailed_informations: DetailedInformations
+    detailed_informations: DetailedInformations = Field(default=DetailedInformations())
 
     # Attributes
-    primary_attributes: PrimaryAttributes
-    secondary_attributes: SecondaryAttributes
+    primary_attributes: PrimaryAttributes = Field(default_factory=primary_attribute_random_factory)
+    secondary_attributes: SecondaryAttributes = Field(default_factory=secondary_attribute_random_factory)
     # Special attributes
     madness_points: int = Field(ge=0, default=0)
     destiny_points: int = Field(ge=0, default=0)
@@ -324,37 +368,41 @@ class Character(BaseModel, validate_assignment=True):
         else:
             return None
 
-    def _coerce_career_attributes(self):
-        if self.current_career:
-            for (
-                primary_attribute,
-                value,
-            ) in self.current_career.primary_attributes.items():
-                value = max(value, getattr(self, primary_attribute))
-                object.__setattr__(self, primary_attribute, value)
-            for (
-                secondary_attribute,
-                value,
-            ) in self.current_career.secondary_attributes.items():
-                value = max(value, getattr(self, secondary_attribute))
-                object.__setattr__(self, secondary_attribute, value)
-            if self.current_career.basic:
-                for skill in self.current_career.skills:
-                    if isinstance(skill, tuple):
-                        skill = skill[0] # Take the first skill in the tuple
-                    character_skill = CharacterSkill(skill=skill, bonus=0)
-                    self.add_skill(character_skill)
-                for talent in self.current_career.talents:
-                    if isinstance(talent, tuple):
-                        talent = talent[0] # Take the first talent in the tuple
-                    self.add_talent(talent)
-
     @model_validator(mode="after")
     def validate_character(self):
-        self._coerce_career_attributes()
+        # Ensure that attributes are coherent with careers
+        # There is two cases :
+        # - character has no career : all attributes must be 0 (only occurs when character is created)
+        # - character has at least one career : this is the first career, the advanced attribute must be lower or equal to the career plan
+        # - character has multiple careers : the advanced attribute can be higher thant the previous career plan, but must be lower or equal to the current career plan
+        if not self.carrers:
+            for primary_attribute in get_args(PrimaryAttributeName):
+                if getattr(self.primary_attributes, primary_attribute).advanced != 0:
+                    raise ValueError(f"{primary_attribute} advanced must be 0 when character has no career")
+            for secondary_attribute in get_args(SecondaryAttributeName):
+                if getattr(self.secondary_attributes, secondary_attribute).advanced != 0:
+                    raise ValueError(f"{secondary_attribute} advanced must be 0 when character has no career")
+        if len(self.carrers) >= 1:
+            first_career = self.carrers[0]
+            for primary_attribute, max_value in first_career.primary_attributes.items():
+                if getattr(self.primary_attributes, primary_attribute).advanced > max_value:
+                    raise ValueError(f"{primary_attribute} advanced must be lower or equal to {max_value} from first career {first_career.name}")
+            for secondary_attribute, max_value in first_career.secondary_attributes.items():
+                if getattr(self.secondary_attributes, secondary_attribute).advanced > max_value:
+                    raise ValueError(f"{secondary_attribute} advanced must be lower or equal to {max_value} from first career {first_career.name}")
+        if len(self.carrers) > 1:
+            current_career = self.carrers[-1]
+            for primary_attribute, max_value in current_career.primary_attributes.items():
+                if getattr(self.primary_attributes, primary_attribute).advanced > max_value:
+                    raise ValueError(f"{primary_attribute} advanced must be lower or equal to {max_value} from current career {current_career.name}")
+            for secondary_attribute, max_value in current_career.secondary_attributes.items():
+                if getattr(self.secondary_attributes, secondary_attribute).advanced > max_value:
+                    raise ValueError(f"{secondary_attribute} advanced must be lower or equal to {max_value} from current career {current_career.name}")
+        # Check that spent experience is consistent with attributes and careers
+
         return self
 
-    def add_skill(self, new_skill: CharacterSkill):
+    def add_skill(self, new_skill: CharacterSkill) -> None:
         existing_skill = self._get_existing_skill(new_skill)
 
         if existing_skill:
@@ -362,6 +410,15 @@ class Character(BaseModel, validate_assignment=True):
             existing_skill.bonus = new_bonus
         else:
             self.skills.add(new_skill)
+
+    def delete_skill(self, skill: CharacterSkill) -> None:
+        # Note : This function is only usesulf when creating a new character and rolling for random skills
+        existing_skill = self._get_existing_skill(skill)
+        if existing_skill:
+            if existing_skill.bonus == 0:
+                self.skills.remove(existing_skill)
+            else:
+                existing_skill.bonus = max(existing_skill.bonus - 10, 0)
 
     def _get_existing_skill(self, character_skill: CharacterSkill) -> CharacterSkill | None:
         for s in self.skills:
@@ -384,6 +441,7 @@ class Character(BaseModel, validate_assignment=True):
 
     def is_cluttered(self) -> bool:
         return self.inventory.total_clutter > self.max_clutter
+
 
 if __name__ == "__main__":
     s = Skill(name="Esquive", basic=False, description="Permet d'esquiver au lieu de parer les attaques", attribute="agility", talents=[])
