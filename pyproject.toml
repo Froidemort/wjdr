@@ -18,6 +18,12 @@ url = "https://nexus.framatome.corp/repository/py-releases/simple"
 [tool.uv.sources]
 wjdr = { workspace = true }
 
+[tool.pytest.ini_options]
+markers = ["unitary",
+           "integration",
+           "e2e",
+           "gui"]
+
 [tool.ruff]
 line-length = 240
 
