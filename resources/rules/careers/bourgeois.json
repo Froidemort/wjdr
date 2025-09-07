@@ -1,0 +1,68 @@
+{
+  "name": "Bourgeois",
+  "description": "Les grandes villes de l'Empire gagnant en importance, une nouvelle classe de citoyens s'est affirmée : les Bourgeois. Propriétaires d'échoppes, petits marchands, négociants et fonctionnaires locaux, ils constituent un ciment social essentiel des cités, coincés entre la paysannerie et la noblesse. La vie urbaine offre des opportunités, mais aussi son lot de dangers et d'épidémies.",
+  "basic": true,
+  "primary_attributes": {
+    "fight_capacity": 5,
+    "shooting_capacity": 0,
+    "strength": 0,
+    "toughness": 0,
+    "agility": 5,
+    "intelligence": 10,
+    "mental_strength": 5,
+    "sociability": 5
+  },
+  "secondary_attributes": {
+    "attack": 0,
+    "wounds": 2,
+    "movement": 0,
+    "magic_point": 0
+  },
+  "skills": [
+    [
+      "Commérage",
+      "Lire/écrire"
+    ],
+    "Conduite d'attelages",
+    [
+      "Connaissances générales (Empire)",
+      "Résistance à l'alcool"
+    ],
+    "Évaluation",
+    "Fouille",
+    [
+      "Langue (bretonnien)",
+      "Langue (kislevien)",
+      "Langue (tiléen)"
+    ],
+    "Langue (reikspiel)",
+    "Marchandage",
+    "Perception"
+  ],
+  "talents": [
+    "Dur en affaires",
+    [
+      "Intelligent",
+      "Sociable"
+    ]
+  ],
+  "endowments": [
+    "Boulier",
+    "Lanterne",
+    "Vêtements confortables"
+  ],
+  "accessible_careers": [
+    "Agitateur",
+    "Artisan",
+    "Aubergiste",
+    "Marchand",
+    "Milicien",
+    "Receleur",
+    "Valet"
+  ],
+  "money": {
+    "golden_crown": 0,
+    "silver_pistol": 0,
+    "copper_coins": 0
+  }
+}

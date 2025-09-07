@@ -1,0 +1,458 @@
+[
+    {
+        "name": "Acrobatie équestre",
+        "description": "Vous êtes capable de prouesses quand vous êtes à cheval. Vous pouvez faire de l'équilibre sur une monture lancée au galop, sauter d'un cheval sur un autre, etc. Dans les circonstances les plus extrêmes, il vous suffit de réussir un test d'Équitation, et même alors, vous bénéficiez d'un bonus de +10%."
+    },
+    {
+        "name": "Acuité visuelle",
+        "description": "Vous avez des yeux de lynx. Vous bénéficiez d'un bonus de +10% aux tests de Perception liés à la vue et aux tests de Lecture sur les lèvres."
+    },
+    {
+        "name": "Course à pied",
+        "description": "Vous bénéficiez d'un bonus permanent de +1 en Mouvement. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "movement",
+            1
+        ]
+    },
+    {
+        "name": "Adresse au tir",
+        "description": "Vous visez avec une précision stupéfiante. Lors d'un combat, si vous recourez à l'action visée, votre prochaine attaque à distance bénéficie d'un bonus de +20% en Capacité de Tir au lieu de +10%."
+    },
+    {
+        "name": "Dur à cuire",
+        "description": "Vous bénéficiez d'un bonus permanent de +1 en Blessures. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "wounds",
+            1
+        ]
+    },
+    {
+        "name": "Acuité auditive",
+        "description": "Vous disposez d'une ouïe exceptionnelle. Vous bénéficiez d'un bonus de +20% aux tests de Perception impliquant l'ouïe."
+    },
+    {
+        "name": "Force accrue",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Force. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "strength",
+            5
+        ]
+    },
+    {
+        "name": "Ambidextre",
+        "description": "Vous savez parfaitement vous servir de vos deux mains. Vous ne subissez pas le malus de -20% en CC ou CT quand vous utilisez une arme avec votre main non directrice."
+    },
+    {
+        "name": "Guerrier né",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Capacité de Combat. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "fight_capacity",
+            5
+        ]
+    },
+    {
+        "name": "Armes naturelles",
+        "description": "Vous avez des griffes ou des dents pointues qui vous permettent de déchirer les chairs de vos adversaires. Quand vous faites une attaque à mains nues, on considère que vous maniez une arme à une main. Vous ne pouvez pas parer à l'aide de vos armes naturelles. Évidemment, vous ne pouvez pas non plus être désarmé."
+    },
+    {
+        "name": "Intelligent",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Intelligence. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "intelligence",
+            5
+        ]
+    },
+    {
+        "name": "Calcul mental",
+        "description": "Vous avez un don pour les chiffres, et vous pouvez trouver la solution de presque n'importe quel problème mathématique, du moment qu'on vous laisse un peu de temps. Vous bénéficiez d'un bonus de +10% aux tests de Jeu et d'Orientation, ainsi que d'un bonus de +20% aux tests de Perception liés à une estimation."
+    },
+    {
+        "name": "Agile",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Agilité. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "agility",
+            5
+        ]
+    },
+    {
+        "name": "Camouflage rural",
+        "description": "Vous êtes parfaitement dans votre élément dans la nature. Vous bénéficiez d'un bonus de +10% aux tests de Déplacement silencieux et de Dissimulation en milieu rural."
+    },
+    {
+        "name": "Dur à cuire (Endurance)",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Endurance. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "toughness",
+            5
+        ]
+    },
+    {
+        "name": "Camouflage souterrain",
+        "description": "Les profondeurs de la terre sont votre second foyer. Vous bénéficiez d'un bonus de +10% aux tests de Déplacement silencieux et de Dissimulation dans les environnements souterrains."
+    },
+    {
+        "name": "Sang-froid",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Force Mentale. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "mental_strength",
+            5
+        ]
+    },
+    {
+        "name": "Camouflage urbain",
+        "description": "Vous êtes à l'aise dans la rue comme un chat de gouttière. Vous bénéficiez d'un bonus de +10% aux tests de Déplacement silencieux et de Dissimulation en milieu urbain."
+    },
+    {
+        "name": "Sociable",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Sociabilité. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "sociability",
+            5
+        ]
+    },
+    {
+        "name": "Chance",
+        "description": "La chance vous sourit. Au moment le plus improbable, la situation tourne à votre avantage. Vous gagnez 1 point de Fortune supplémentaire chaque jour."
+    },
+    {
+        "name": "Chirurgie",
+        "description": "Vous êtes au courant des derniers progrès en matière de soins médicaux. Vous bénéficiez d'un bonus de +10% aux tests de soins. Si vous traitez un patient gravement blessé, un test réussi lui permet de récupérer 2 points de Blessures au lieu de 1. Si le personnage soigné risque de perdre un membre à la suite d'un coup critique, vous lui faites également bénéficier d'un bonus de +20% au test d'Endurance permettant d'éviter l'amputation."
+    },
+    {
+        "name": "Code de la rue",
+        "description": "Vous savez comment vous conduire dans la rue. Vous bénéficiez d'un bonus de +10% aux tests de Charisme et de Commérage dans tous vos rapports avec le milieu du crime."
+    },
+    {
+        "name": "Combat de rue",
+        "description": "Vous avez appris à vous battre dans la rue. Vos attaques à mains nues bénéficient d'un bonus de +10% en Capacité de Combat. Par ailleurs, vous bénéficiez d'un bonus de +1 aux jets de dégâts de telles attaques."
+    },
+    {
+        "name": "Combattant virevoltant",
+        "description": "Vous êtes exceptionnellement agile au combat. Vous pouvez utiliser l'action de saut en tant que demi-action et la portée de tous vos sauts augmente de 1 mètre."
+    },
+    {
+        "name": "Connaissance des pièges",
+        "description": "Vous êtes un expert en pièges. Vous bénéficiez d'un bonus de +10% aux tests de Crochetage et de Perception liés à la localisation et au désamorçage des pièges."
+    },
+    {
+        "name": "Contorsionniste",
+        "description": "Vous pouvez déformer votre corps au-delà des limites physiques possibles au commun des mortels. Vous bénéficiez d'un bonus de +10% aux tests d'Expression artistique en rapport avec ce talent, ainsi que d'un bonus de +20% aux tests d'Agilité destinés à vous libérer de liens serrés, à passer par de petites ouvertures, etc."
+    },
+    {
+        "name": "Coups assommants",
+        "description": "Quand vous réussissez une attaque de corps à corps, vous pouvez tenter d'assommer votre adversaire au lieu d'infliger des dégâts. Vous devez tout d'abord effectuer un test de Force. En cas de succès, votre adversaire doit effectuer un test d'Endurance bénéficiant d'un bonus de +10% pour chaque PA à la tête. S'il échoue, votre adversaire est assommé pour 1d10 rounds. Les personnages assommés ne peuvent entreprendre aucune action et ne peuvent pas esquiver."
+    },
+    {
+        "name": "Coups précis",
+        "description": "Vous êtes passé maître dans l'art de frapper le point faible de l'ennemi. La valeur de vos coups critiques augmente de 1 point."
+    },
+    {
+        "name": "Coups puissants",
+        "description": "Vous savez utiliser les armes de corps à corps pour infliger un maximum de dégâts. Vous bénéficiez d'un bonus de +1 aux jets de dégâts avec les armes de corps à corps."
+    },
+    {
+        "name": "Course à pied",
+        "description": "Vous bénéficiez d'un bonus permanent de +1 en Mouvement. Modifiez votre profil de départ en conséquence."
+    },
+    {
+        "name": "Désarmement",
+        "description": "Quand vous réussissez une attaque au corps à corps, vous pouvez tenter de désarmer votre adversaire au lieu de lui infliger des dégâts. Un test d'Agilité opposé est nécessaire. Si vous l'emportez, votre adversaire est désarmé et son arme tombe au sol. Elle peut être ramassée au prix de l'action dégainer. Si c'est l'adversaire qui l'emporte, il conserve son arme. On ne peut pas faire tomber de la sorte des armes naturelles (griffes, crocs, etc.)."
+    },
+    {
+        "name": "Dur à cuire",
+        "description": "Vous bénéficiez d'un bonus permanent de +1 en Blessures. Modifiez votre profil de départ en conséquence."
+    },
+    {
+        "name": "Dur en affaires",
+        "description": "Vous avez du bagou et le sens des affaires, et vous savez obtenir le maximum d'une transaction. Vous bénéficiez d'un bonus de +10% aux tests d'Évaluation et de Marchandage."
+    },
+    {
+        "name": "Effrayant",
+        "description": "Vous avez une apparence effrayante. Vous provoquez la Peur, comme indiqué dans le Chapitre 9 : Le meneur de jeu."
+    },
+    {
+        "name": "Éloquence",
+        "description": "Vous savez comment émouvoir les foules. Le nombre de personnes que vous pouvez affecter à l'aide de la compétence Charisme est multiplié par 10."
+    },
+    {
+        "name": "Étiquette",
+        "description": "Vous connaissez bien les mœurs de la haute société. Vous bénéficiez d'un bonus de +10% aux tests de Charisme et de Commérage quand vous êtes face à des membres de la noblesse. Ce bonus s'applique également à toutes les situations où la connaissance de l'étiquette est importante (comme se faire passer pour un noble avec la compétence Déguisement, par exemple)."
+    },
+    {
+        "name": "Force accrue",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Force. Modifiez votre profil de départ en conséquence."
+    },
+    {
+        "name": "Frénésie",
+        "description": "Vous pouvez entrer dans une véritable rage destructrice. Vous devez passer 1 round à vous mettre en condition (en hurlant, en mordant votre bouclier, etc.). Au round suivant, vous perdez tout contrôle de vous-même et entrez dans une rage meurtrière, bénéficiant ainsi d'un bonus de +10% en Force et en Force Mentale, mais subissant dans le même temps un malus de -10% en Capacité de Combat et en Intelligence. Vous devez attaquer l'ennemi le plus proche au corps à corps, toutes vos attaques doivent être des attaques brutales ou des charges, et vous ne pouvez ni fuir ni battre en retraite. Vous restez dans cet état de rage jusqu'à la fin du combat."
+    },
+    {
+        "name": "Fuite",
+        "description": "Quand votre vie est en jeu, vous êtes capable de pointes de vitesse incroyables. Quand vous fuyez un combat ou un grave danger, vous bénéficiez d'un bonus de +1 en Mouvement pendant 1d10 rounds."
+    },
+    {
+        "name": "Fureur vengeresse",
+        "description": "Votre peuple a accumulé une rancune considérable à l'encontre des diverses races gobelinoïdes. Leurs exactions vous emplissent d'une telle rage que vous bénéficiez d'un bonus de +5% en Capacité de Combat quand vous attaquez des orques, des gobelins ou des hobgobelins."
+    },
+    {
+        "name": "Grand voyageur",
+        "description": "Vos longs voyages ont façonné votre expérience. Vous bénéficiez d'un bonus de +10% aux tests de Connaissances générales et de Langue."
+    },
+    {
+        "name": "Guerrier né",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Capacité de Combat. Modifiez votre profil de départ en conséquence."
+    },
+    {
+        "name": "Harmonie aethyrique",
+        "description": "Vous êtes en harmonie avec l'Aethyr et manipulez plus facilement les vents de magie. Vous bénéficiez d'un bonus de +10% aux tests de Focalisation et de Sens de la magie."
+    },
+    {
+        "name": "Imitation",
+        "description": "Vous avez une bonne oreille en ce qui concerne les voix et les accents, et vous savez les reproduire fidèlement. Vous bénéficiez d'un bonus de +10% aux tests de Déguisement si vous devez imiter une voix dans le but de vous faire passer pour autrui, aux tests d'Expression artistique (acteur, bouffon, clown, comédien et conteur) et aux tests de Langue quand vous essayez de faire croire que vous êtes originaire d'un autre pays en parlant la langue."
+    },
+    {
+        "name": "Incantation de bataille",
+        "description": "Vos prières vous aident à lancer des sorts facilement même si vous portez une armure. Le malus au jet d'incantation est réduit de 3 points quand vous lancez des sorts divins tout en portant une armure. Par exemple, vous subissez habituellement un malus de -3 quand vous portez un gilet de mailles, mais avec le talent Incantation de bataille, ce malus passe à 0."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Grungni",
+        "description": "Votre dévouement envers Grungni est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Manann",
+        "description": "Votre dévouement envers Manann est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Morr",
+        "description": "Votre dévouement envers Morr est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Myrmidia",
+        "description": "Votre dévouement envers Myrmidia est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Ranald",
+        "description": "Votre dévouement envers Ranald est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Sigmar",
+        "description": "Votre dévouement envers Sigmar est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Shallya",
+        "description": "Votre dévouement envers Shallya est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Taal/Rhya",
+        "description": "Votre dévouement envers Taal/Rhya est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ces dieux. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Ulric",
+        "description": "Votre dévouement envers Ulric est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Inspiration divine",
+        "specialization": "Verena",
+        "description": "Votre dévouement envers Verena est tel que vos prières peuvent donner lieu à des miracles et de puissants effets magiques liés à ce dieu. Vous pouvez tenter de lancer n'importe quel sort dépendant de ce domaine divin."
+    },
+    {
+        "name": "Intelligent",
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Intelligence. Modifiez votre profil de départ en conséquence."
+    },
+    {
+        "name": "Intrigant",
+        "description": "Vous êtes passé maître dans l'art des intrigues personnelles. Vous bénéficiez d'un bonus de +10% aux tests de Charisme liés aux intrigues et aux tests de Force Mentale destinés à résister au Charisme d'autrui."
+    },
+    {
+        "name": "Lévitation",
+        "description": "Vous pouvez voler sur une courte distance au-dessus du sol. Pour plus de détails concernant le vol, reportez-vous au Chapitre 6 : Combat, dégâts et mouvements."
+    },
+    {
+        "name": "Linguistique",
+        "description": "Vous avez une affinité particulière pour les langues étrangères. Vous bénéficiez d'un bonus de +10% aux tests de Lire/écrire et de Langue."
+    },
+    {
+        "name": "Lutte",
+        "description": "Le pugilat et les prises n'ont pas de secret pour vous. Vous pouvez porter des attaques à mains nues avec un bonus de +10% en Capacité de Combat quand vous tentez une prise. De plus, vous bénéficiez d'un bonus de +10% à vos tests de Force liés à une prise."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "arbaletes",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les arbalètes avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "arcs longs",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les arcs longs avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "armes a feu",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les armes à feu avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "armes de cavalerie",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les armes de cavalerie avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "armes de jet",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les armes de jet avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "armes de parade",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les armes de parade avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "armes d'escrime",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les armes d'escrime avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "armes lourdes",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les armes lourdes avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "armes mecaniques",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les armes mécaniques avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "armes paralysantes",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les armes paralysantes avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "fleaux",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les fléaux avec compétence et sans malus."
+    },
+    {
+        "name": "Maitrise",
+        "specialization": "lance-pierres",
+        "description": "Vous êtes capable d'utiliser un type d'armes nécessitant une formation particulière. Ce talent permet d'utiliser les lance-pierres avec compétence et sans malus."
+    },
+    {
+        "name": "Maître artilleur",
+        "description": "Pour vous, le temps de rechargement des armes à poudre est réduit d'une demi-action. Si vous disposez aussi du talent Rechargement rapide, cet avantage est cumulable (ce qui réduit le temps de rechargement des armes à poudre d'une action complète)."
+    },
+    {
+        "name": "Magie commune",
+        "specialization": "(à spécifier)",
+        "description": "Vous connaissez la plus élémentaire des formes de magie. Magie commune est un talent particulier car il n'est pas unique, il en existe différentes formes. Chaque talent de Magie commune correspond à la maîtrise d'une forme de magie, cette spécialité étant indiquée entre parenthèses. Par exemple, Magie commune (occulte) est différent de Magie commune (divine)."
+    },
+    {
+        "name": "Magie mineure",
+        "specialization": "(à spécifier)",
+        "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
+    },
+    {
+        "name": "Magie noire",
+        "description": "Vous pouvez manipuler le Dhar (la magie noire) afin d'alimenter vos sorts. L'utilisation de la magie noire confère davantage de pouvoir, mais elle est bien plus dangereuse. Quand vous lancez un sort, vous pouvez choisir d'utiliser l'énergie du Dhar pour l'alimenter. Quand vous effectuez votre jet d'incantation pour un sort de Magie noire, lancez 1d10 supplémentaire et ignorez le dé qui donne le résultat le plus faible. Cependant, tous les dés sont comptabilisés pour la Malédiction de Tzeentch."
+    },
+    {
+        "name": "Magie vulgaire",
+        "description": "Vous êtes un lanceur de sorts autodidacte qui a réussi à comprendre comment manipuler la magie à force d'expériences et d'erreurs. Vous pouvez lancer des sorts de Magie commune (vulgaire) sans avoir la compétence Langage mystique. Le talent Magie commune (vulgaire) est cependant indispensable. Vous lancez 1d10 supplémentaire quand vous jetez un sort. Ce dernier ne s'ajoute pas à votre jet d'incantation, mais compte pour la Malédiction de Tzeentch."
+    },
+    {
+        "name": "Rapide",
+        "description": "Vous êtes particulièrement véloce. Vous bénéficiez d'un bonus de +1 en Mouvement."
+    },
+    {
+        "name": "Résistance",
+        "description": "Vous bénéficiez d'un bonus de +10% aux tests d'Endurance."
+    },
+    {
+        "name": "Sombre savoir",
+        "specialization": "à spécifier",
+        "description": "Vous avez étudié une forme interdite de magie noire. Sombre savoir est un talent particulier, chaque spécialisation correspondant à une tradition occulte différente. Par exemple, Sombre savoir (Chaos) ou Sombre savoir (nécromancie)."
+    },
+    {
+        "name": "Sombre savoir",
+        "specialization": "Nécromancie",
+        "description": "Vous maîtrisez les arts sombres de la nécromancie, capables d’invoquer et de contrôler les morts. Ce talent vous permet de lancer des sorts nécromantiques interdits et d’accéder à des rituels liés à la manipulation des âmes et des cadavres."
+    },
+    {
+        "name": "Sombre savoir",
+        "specialization": "Chaos",
+        "description": "Vous avez percé les secrets de la magie chaotique, puisant dans les énergies instables du Chaos. Ce talent vous permet de lancer des sorts issus des puissances chaotiques, au prix de grands risques pour votre âme et votre corps."
+    },
+    {
+        "name": "Sombre savoir",
+        "specialization": "Nurgle",
+        "description": "Vous avez appris à manipuler la magie pestilentielle de Nurgle, le Seigneur de la Déchéance. Ce talent vous permet de lancer des sorts liés à la maladie, la putréfaction et la corruption."
+    },
+    {
+        "name": "Sombre savoir",
+        "specialization": "Slaanesh",
+        "description": "Vous maîtrisez les arcanes décadents de Slaanesh, le Prince du Chaos. Ce talent vous permet de lancer des sorts liés à la séduction, l’illusion, l’excès et la manipulation des sens."
+    },
+    {
+        "name": "Sombre savoir",
+        "specialization": "Khorne",
+        "description": "Vous avez étudié la magie sanglante de Khorne, le Dieu du Sang. Ce talent vous permet de lancer des sorts destructeurs liés à la rage, la guerre et la violence, mais vous expose à la fureur incontrôlable de Khorne."
+    },
+    {
+        "name": "Sombre savoir",
+        "specialization": "Tzeentch",
+        "description": "Vous avez percé les mystères changeants de Tzeentch, le Maître du Changement. Ce talent vous permet de lancer des sorts de mutation, de manipulation du destin et d’altération de la réalité."
+    },
+    {
+        "name": "Sombre savoir",
+        "specialization": "Skavens",
+        "description": "Vous avez appris les secrets de la sorcellerie skaven, axée sur la malepierre et la corruption. Ce talent vous permet de lancer des sorts propres aux sorciers skavens, souvent instables et dangereux, mais puissants."
+    },
+    {
+        "name": "Sur ses gardes",
+        "description": "Vos réflexes aiguisés vous permettent de dégainer rapidement vos armes et d'autres objets. Une fois par round, vous pouvez utiliser l'action d'égainer en tant qu'action gratuite."
+    },
+    {
+        "name": "Talent artistique",
+        "description": "Vous avez une âme d'artiste. Vous bénéficiez d'un bonus de +20% aux tests de Métier (artiste) et aux tests d'Évaluation concernant les œuvres d'art."
+    },
+    {
+        "name": "Terrifiant",
+        "description": "La simple vue de votre visage monstrueux fait fuir l'ennemi. Vous provoquez la Terreur comme indiqué dans le Chapitre 9 : Le meneur de jeu."
+    },
+    {
+        "name": "Tir de précision",
+        "description": "Vous savez trouver la faille dans l'armure de vos ennemis. Quand vous réussissez une attaque à distance, vous pouvez ignorer 1 point d'Armure. Si votre cible n'a pas d'armure, ce talent n'a aucun effet."
+    },
+    {
+        "name": "Tir en puissance",
+        "description": "Vous êtes capable d'infliger un maximum de dégâts à l'aide de vos tirs. Vous bénéficiez d'un bonus de +1 aux jets de dégâts des armes de tir."
+    },
+    {
+        "name": "Tireur d'élite",
+        "description": "Vous bénéficiez d'un bonus permanent de +10% en Capacité de Tir. Modifiez votre profil de départ en conséquence."
+    },
+    {
+        "name": "Troublant",
+        "description": "Votre simple présence dérange vos adversaires. Vos ennemis doivent réussir un test de Force Mentale quand ils vous voient pour éviter de subir un malus de -10% en Capacité de Combat et en Capacité de Tir. Ils peuvent retenter ce test à chaque round jusqu'à ce qu'ils le réussissent ou que vous soyez hors de vue."
+    },
+    {
+        "name": "Valeureux",
+        "description": "Vous êtes doté d'une bravoure exceptionnelle. Vous bénéficiez d'un bonus de +10% aux tests de Peur et de Terreur, ainsi qu'aux tests de Force Mentale visant à résister à une tentative d'intimidation."
+    },
+    {
+        "name": "Vision nocturne",
+        "description": "Vous voyez parfaitement clair dans l'obscurité naturelle jusqu'à une distance de 30 mètres. Ce talent ne fonctionne pas dans l'obscurité totale et requiert l'équivalent de la lumière des étoiles au moins."
+    },
+    {
+        "name": "Vol",
+        "description": "Vous savez voler. Pour plus de détails concernant le vol, reportez-vous au Chapitre 6 : Combat, dégâts et mouvements."
+    }
+]

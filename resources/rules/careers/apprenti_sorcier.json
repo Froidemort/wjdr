@@ -1,0 +1,57 @@
+{
+  "name": "Apprenti sorcier",
+  "description": "Les humains dotés de facultés magiques sont des individus dangereux et redoutés. L'Empire envoie ces individus dans l'un des huit ordres de magie. Durant leur apprentissage, les jeunes sorciers apprennent à manipuler la magie en toute sécurité et choisissent l'ordre qu'ils rejoindront définitivement. Certains apprentis servent le sorcier qui a découvert leurs talents, d'autres partent à l'aventure pour gagner suffisamment d'argent et passer sous la tutelle des collèges de magie.",
+  "basic": true,
+  "primary_attributes": {
+    "fight_capacity": 0,
+    "shooting_capacity": 0,
+    "strength": 0,
+    "toughness": 0,
+    "agility": 5,
+    "intelligence": 10,
+    "mental_strength": 15,
+    "sociability": 5
+  },
+  "secondary_attributes": {
+    "attack": 0,
+    "wounds": 2,
+    "movement": 0,
+    "magic_point": 1
+  },
+  "skills": [
+    "Connaissances académiques (magie)",
+    "Focalisation",
+    "Fouille",
+    "Langage mystique (magick)",
+    "Langue (classique)",
+    "Lire/écrire",
+    "Perception",
+    "Sens de la magie"
+  ],
+  "talents": [
+    [
+      "Harmonie aethyrique",
+      "Mains agiles"
+    ],
+    [
+      "Intelligent",
+      "Résistance accrue"
+    ],
+    "Magie commune (occulte)"
+  ],
+  "endowments": [
+    "Bâton",
+    "Sac à dos",
+    "Livre imprimé"
+  ],
+  "accessible_careers": [
+    "Compagnon sorcier",
+    "Érudit",
+    "Scribe"
+  ],
+  "money": {
+    "golden_crown": 0,
+    "silver_pistol": 0,
+    "copper_coins": 0
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "name": "Chasseur de primes",
+  "description": "Les chasseurs de primes traquent criminels et fugitifs pour les livrer à la justice. Opérant seuls ou comme auxiliaires de la milice, ils sont redoutablement efficaces et peu préoccupés par la vie d'autrui. Les autorités les considèrent comme un mal nécessaire.",
+  "basic": true,
+  "primary_attributes": {
+  "fight_capacity": 5,
+  "shooting_capacity": 10,
+  "strength": 5,
+  "toughness": 0,
+  "agility": 10,
+  "intelligence": 0,
+  "mental_strength": 5,
+  "sociability": 0
+  },
+  "secondary_attributes": {
+  "attack": 0,
+  "wounds": 2,
+  "movement": 0,
+  "magic_point": 0
+  },
+  "skills": [
+    "Déplacement silencieux",
+    "Filature",
+    "Fouille",
+    "Intimidation",
+    "Perception",
+    "Pistage",
+    "Survie"
+  ],
+  "talents": [
+    [
+      "Adroit au tir",
+      "Coups puissants"
+    ],
+    "Camouflage rural",
+    [
+      "Coups assommants",
+      "Tireur d'élite"
+    ],
+    "Maîtrise (armes paralysantes)"
+  ],
+  "endowments": [
+    "Arbalète et 10 carreaux",
+    "Filet",
+    "Armure légère (gilet de cuir et calotte de cuir)",
+    "Menottes",
+    "10 mètres de corde"
+  ],
+  "accessible_careers": [
+    "Chasseur de vampires",
+    "Franc-archer",
+    "Mercenaire",
+    "Pisteur",
+    "Spadassin"
+  ],
+  "money": {
+    "golden_crown": 0,
+    "silver_pistol": 0,
+    "copper_coins": 0
+  }
+}

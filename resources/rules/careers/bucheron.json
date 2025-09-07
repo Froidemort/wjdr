@@ -1,5 +1,6 @@
 {
   "name": "Bûcheron",
+  "description": "Les bûcherons vivent dans les vastes forêts de l'Empire et abattent des arbres destinés à la construction. Les plus chanceux travaillent dans de grands domaines pour des familles de la noblesse, mais les plus courageux vivent en marge de la civilisation et contribuent à l'élargissement des régions colonisées. Ces derniers affrontent les dangers de la forêt, qu'il s'agisse de pièges, de bandits, d'animaux sauvages ou d'hommes-bêtes. Ils gardent toujours leur hache à portée de main, et pas seulement pour couper du bois. Les bûcherons se heurtent parfois aux elfes, car ces derniers n'apprécient guère que l'on s'attaque à leurs précieuses forêts.",
   "basic": true,
   "primary_attributes": {
     "fight_capacity": 10,
@@ -19,7 +20,10 @@
   },
   "skills": [
     "Alphabet secret (rôdeurs)",
-    ["Braconnage", "Pistage"],
+    [
+      "Braconnage",
+      "Pistage"
+    ],
     "Déplacement silencieux",
     "Dissimulation",
     "Escalade",
@@ -28,7 +32,10 @@
   ],
   "talents": [
     "Camouflage rural",
-    ["Course à pied", "Résistance accrue"],
+    [
+      "Course à pied",
+      "Résistance accrue"
+    ],
     "Maîtrise (armes lourdes)"
   ],
   "accessible_careers": [

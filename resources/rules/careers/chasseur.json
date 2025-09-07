@@ -1,0 +1,71 @@
+{
+  "name": "Chasseur",
+  "description": "De vastes régions de l'Empire restent sauvages. Les chasseurs et trappeurs y prospèrent en capturant le gibier, traquant dans les forêts tout en évitant les créatures qui y rôdent. Vêtus de peaux et de fourrures, ils sont parfois vus comme des sauvages par les citadins, mais leur savoir-faire est vital en terres hostiles.",
+  "basic": true,
+  "primary_attributes": {
+  "fight_capacity": 0,
+  "shooting_capacity": 15,
+  "strength": 0,
+  "toughness": 5,
+  "agility": 10,
+  "intelligence": 5,
+  "mental_strength": 0,
+  "sociability": 0
+  },
+  "secondary_attributes": {
+  "attack": 0,
+  "wounds": 3,
+  "movement": 0,
+  "magic_point": 0
+  },
+  "skills": [
+    "Alphabet secret (rôdeurs)",
+    [
+      "Braconnage",
+      "Déplacement silencieux"
+    ],
+    "Dissimulation",
+    [
+      "Fouille",
+      "Natation"
+    ],
+    "Perception",
+    "Pistage",
+    "Survie"
+  ],
+  "talents": [
+    [
+      "Camouflage rural",
+      "Tireur d'élite"
+    ],
+    [
+      "Dur à cuire",
+      "Maîtrise (arcs longs)"
+    ],
+    "Rechargement rapide",
+    [
+      "Réflexes éclair",
+      "Résistance accrue"
+    ]
+  ],
+  "endowments": [
+    "Arc long et 10 flèches",
+    "2 collets",
+    "Nécessaire antipoison"
+  ],
+  "accessible_careers": [
+    "Charbonnier",
+    "Chasseur de primes",
+    "Franc-archer",
+    "Gardien tribal",
+    "Mineur",
+    "Pisteur",
+    "Sentinelle halfling",
+    "Soldat"
+  ],
+  "money": {
+    "golden_crown": 0,
+    "silver_pistol": 0,
+    "copper_coins": 0
+  }
+}

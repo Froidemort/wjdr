@@ -1,0 +1,61 @@
+{
+    "name": "Agitateur",
+    "description": "Habituellement, les citoyens de l'Empire n'ont pas véritablement leur mot à dire en matière de politique. L'Empereur et les Comtes Électeurs promulguent les lois et en assurent l'application avec le concours des diverses Églises (comme celles de Sigmar et d'Ulric). Les villes de l'Empire abritent néanmoins de nombreux activistes virulents. Ces Agitateurs se mobilisent au nom de causes variées, distribuent des tracts, prononcent des discours enflammés et soulèvent parfois les foules. Les extrémistes sont généralement ignorés, mais ceux qui parviennent à rallier leur auditoire, en attisant notamment le ressentiment des paysans et des bourgeois, acquièrent rapidement le statut de menace d'État. Ils deviennent alors la proie de la milice locale ou sont accusés d'hérésie par les représentants de l'Église, voire obligés de se soumettre à la miséricorde des répurgateurs. Malgré les risques, les Agitateurs poursuivent néanmoins leurs activités. Certains croient dur comme fer en leur cause, mais d'autres sont de cyniques sycophantes, aussi corrompus que ceux contre lesquels ils se répandent en invectives.",
+    "basic": true,
+    "primary_attributes": {
+        "fight_capacity": 5,
+        "shooting_capacity": 5,
+        "strength": 0,
+        "toughness": 0,
+        "agility": 5,
+        "intelligence": 10,
+        "mental_strength": 0,
+        "sociability": 10
+    },
+    "secondary_attributes": {
+        "attack": 0,
+        "wounds": 2,
+        "magic_point": 0,
+        "movement": 0
+    },
+    "skills": [
+        "Charisme",
+        [
+            "Commerage",
+            "Connaissances academiques (histoire)"
+        ],
+        [
+            "Connaissances academiques (droit)",
+            "Connaissances generales (Empire)"
+        ],
+        "Dissimulation",
+        [
+            "Langue (bretonnien)",
+            "Langue (tileen)"
+        ],
+        "Langue (reikspiel)",
+        "Lire/écrire",
+        "Perception"
+    ],
+    "talents": [
+        [
+            "Combat de rue",
+            "Sang-froid"
+        ],
+        "Eloquence",
+        "Fuite"
+    ],
+    "endowments": [
+        "Armure legere (veste de cuir)",
+        "Vetements confortables",
+        "2d10 tracts de diverses causes"
+    ],
+    "accessible_careers": [
+        "Charlatan",
+        "Démagogue",
+        "Escroc",
+        "Fanatique",
+        "Hors-la-loi",
+        "Politicien"
+    ]
+}
