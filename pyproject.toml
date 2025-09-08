@@ -22,8 +22,11 @@ line-length = 240
 
 [dependency-groups]
 dev = [
-    "pydantic-faker>=0.4.0",
     "pytest>=8.4.1",
     "ruff>=0.12.11",
     "wjdr",
+]
+ocr = [
+    "easyocr>=1.7.2",
+    "pdf2image>=1.16.3",
 ]
