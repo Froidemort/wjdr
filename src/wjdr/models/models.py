@@ -81,7 +81,7 @@ class DetailedInformations(BaseModel):
     astral_sign: Optional[AstralSign] = Field(default=None, description="Signe astral du personnage", examples=["Le Danseur", "Le Grimoire", "La Chèvre Sauvage"])
     birth_place: Optional[str] = Field(default=None, description="Lieu de naissance du personnage", examples=["Altdorf", "Nuln", "Middenheim"])
     height: Optional[float] = Field(ge=100.0, le=200.0, default=None, description="Taille du personnage en cm", examples=[160.0, 175.5, 180.2])
-    weigth: Optional[float] = Field(ge=30.0, le=200.0, default=None)
+    weight: Optional[float] = Field(ge=30.0, le=200.0, default=None)
     sibling_number: int = Field(ge=0, default=0, description="Nombre de frères et sœurs du personnage", examples=[0, 1, 2, 3])
     distinctive_signs: list[str] = Field(default=[], description="Liste des signes distinctifs du personnage", examples=[["Cicatrice sur le visage", "Tatouage en forme de dragon"]])
     chaos_mutations: list[str] = Field(default=[], description="Liste des mutations du Chaos du personnage", examples=[["Peau écailleuse", "Yeux rouges"]])
@@ -242,13 +242,13 @@ class Equipment(BaseModel):
     category: EquipmentCategory = Field(default=EquipmentCategory(category="Divers"))
     clutter: int = Field(ge=0, default=0)
     # Value in money, automatically coerced
-    value: Money = Field(default=Money(), description="Unitary value of the equipment")
+    value: Money = Field(default=Money(), description="Valeur unitaire de l'équipement")
     quantity: int = Field(ge=1, default=1)
 
 
 class Inventory(BaseModel):
     equipments: list[Equipment] = []
-    money: Money = Field(default=Money(), description="Total money owned by the character")
+    money: Money = Field(default=Money(), description="Somme d'argent possédée par le personnage")
 
     @property
     def total_clutter(self) -> int:
@@ -256,7 +256,8 @@ class Inventory(BaseModel):
 
 
 class Career(BaseModel):
-    name: str = Field(description="Name of the career")
+    name: str = Field(description="Nom de la carrière", examples=["Guerrier", "Prêtre", "Voleur"])
+    description: Optional[str] = Field(default=None, description="Description de la carrière")
     basic: bool = True
     # Primary and secondary attributes that will be set to the character
     primary_attributes: dict[PrimaryAttributeName, int]
@@ -265,8 +266,10 @@ class Career(BaseModel):
     # Here we can have a list of skills, or a tuple.
     # The tuple is a modeling trick to say "one of these skills",
     # also it keeps order when we map it after a GUI choice.
-    skills: tuple[str | tuple[str]]
-    talents: tuple[str | tuple[str]]
+    # A sequence of skills where each item can be a skill string or a tuple of alternatives
+    skills: tuple[str | tuple[str], ...]
+    # A sequence of talents where each item can be a talent string or a tuple of alternatives
+    talents: tuple[str | tuple[str], ...]
 
     endowments: list[str] = Field(default=[], description="Liste des dotations en début de carrière ou des objets à avoir pour acccéder à cette carrière")
     money: Money = Field(default=Money(), description="Monnaie de départ lors de l'entrée dans cette carrière, ou argent à avoir pour accéder à cette carrière")
@@ -279,8 +282,9 @@ class Career(BaseModel):
         for primary_attribute in get_args(PrimaryAttributeName):
             if primary_attribute not in self.primary_attributes:
                 raise ValueError(f"{primary_attribute} must be in career plan")
-        for secondary_attribute in get_args(PrimaryAttributeName):
-            raise ValueError(f"{secondary_attribute} must be in career plan")
+        for secondary_attribute in get_args(SecondaryAttributeName):
+            if secondary_attribute not in self.secondary_attributes:
+                raise ValueError(f"{secondary_attribute} must be in career plan")
         return self
 
     @property
@@ -308,7 +312,7 @@ class Experience(BaseModel):
         return self.available % 100
 
 
-# TODO: primary attribute factory must depends on race
+# TODO: primary attribute factory must depends on a race
 def primary_attribute_random_factory() -> PrimaryAttributes:
     attrs = {}
     for attr in get_args(PrimaryAttributeName):
@@ -317,7 +321,7 @@ def primary_attribute_random_factory() -> PrimaryAttributes:
     return PrimaryAttributes(**attrs)
 
 
-# TODO: secondary attribute factory must depends on race
+# TODO: secondary attribute factory must depends on a race
 def secondary_attribute_random_factory() -> SecondaryAttributes:
     attr = {}
     attr["attack"] = SecondaryAttribute(base=1, advanced=0)  # Always 1 attack at start
