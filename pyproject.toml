@@ -1,32 +1,40 @@
 [project]
 name = "wjdr"
 version = "0.1.0"
-description = "Add your description here"
+description = "WJDR is a Python application to help a GM create and manage their RPG campaigns."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.11.7",
 ]
 
-[tool.uv.sources]
-wjdr = { workspace = true }
-
-[tool.pytest.ini_options]
-markers = ["unitary",
-           "integration",
-           "e2e",
-           "gui"]
-
-[tool.ruff]
-line-length = 240
-
 [dependency-groups]
 dev = [
     "pytest>=8.4.1",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
     "ruff>=0.12.11",
     "wjdr",
 ]
+# Dependencies for tools 
+# These tools are not required for the application
+# but to perform OCR, PDF conversion, etc.
 ocr = [
     "easyocr>=1.7.2",
     "pdf2image>=1.16.3",
 ]
+
+# Tools section
+[tool.uv.sources]
+wjdr = { workspace = true }
+
+[tool.pytest.ini_options]
+markers = [
+    "unitary", # Unit tests
+    "integration", # Integration tests
+    "e2e", # End-to-end tests
+    "gui" # GUI tests
+]
+
+[tool.ruff]
+line-length = 240
