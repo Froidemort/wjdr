@@ -1,0 +1,1 @@
+"""Model package for WJDR application."""
