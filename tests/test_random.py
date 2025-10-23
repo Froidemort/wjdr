@@ -1,17 +1,5 @@
 import pytest
 from wjdr.models.random import DicePool
-import random
-import contextlib
-
-
-@contextlib.contextmanager
-def fixed_seed(seed):
-    state = random.getstate()
-    random.seed(seed)
-    try:
-        yield
-    finally:
-        random.setstate(state)
 
 
 @pytest.fixture
@@ -53,16 +41,25 @@ def test_roll_returns_int_and_in_range():
 
 
 @pytest.mark.unitary
-@fixed_seed(42)
-def test_roll_multiple_dice_types():
-    pool = DicePool({6: 1, 4: 2}, 0)
-    result = pool.roll()
+def test_roll_multiple_dice_types(fixed_seed):
+    with fixed_seed:
+        pool = DicePool({6: 1, 4: 2}, 0)
+        result = pool.roll()
     assert result == 11
 
 
 @pytest.mark.unitary
-@fixed_seed(42)
-def test_roll_with_negative_modifier():
-    pool = DicePool({8: 1}, -2)
-    result = pool.roll()
+def test_roll_with_negative_modifier(fixed_seed):
+    with fixed_seed:
+        pool = DicePool({8: 1}, -2)
+        result = pool.roll()
     assert result == 0
+
+@pytest.mark.unitary
+@pytest.mark.parametrize(
+    "bad_string",
+    ["abc", "a+2", "z-9"]
+)
+def test_invalid_from_string(bad_string):
+    with pytest.raises(ValueError):
+        DicePool.from_string(bad_string)

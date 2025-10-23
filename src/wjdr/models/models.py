@@ -1,3 +1,4 @@
+from __future__ import annotations
 import datetime
 from functools import partial
 from typing import Literal, Optional, Self, get_args
@@ -117,26 +118,16 @@ class PrimaryAttributes(BaseModel):
         return self.toughness.actual // 10
 
 
-class Talent(BaseModel):
+class Talent(BaseModel, frozen=True):
     name: str
     description: str
     permanent_bonus: Optional[tuple[PrimaryAttributeName, int]] = Field(default=None, description="Permanent bonus to a primary attribute, in the form (attribute_name, bonus_amount)", examples=[("strength", 5), ("agility", 10)])
 
-    def __eq__(self, other_talent: object) -> bool:
-        return self.name == getattr(other_talent, "name", None) and self.description == getattr(other_talent, "description", None) and self.permanent_bonus == getattr(other_talent, "permanent_bonus", None)
 
-
-class SpecializedTalent(Talent):
+class SpecializedTalent(Talent, frozen=True):
     specialization: str
 
-    def __eq__(self, other_talent: object) -> bool:
-        return self.specialization == getattr(other_talent, "specialization", None) and super().__eq__(other_talent)
-
-    def __hash__(self) -> int:
-        return hash(self.specialization) ^ super().__hash__()
-
-
-class Skill(BaseModel):
+class Skill(BaseModel, frozen=True):
     name: str
     basic: bool = True
     description: str
@@ -144,21 +135,9 @@ class Skill(BaseModel):
 
     talents: list[Talent] = Field(default=[], description="List of related talents")
 
-    def __eq__(self, other_skill: object) -> bool:
-        return self.name == getattr(other_skill, "name", None) and self.basic == getattr(other_skill, "basic", None) and self.attribute == getattr(other_skill, "attribute", None) and self.talents == getattr(other_skill, "talents", None)
 
-    def __hash__(self) -> int:
-        return hash((self.name, self.basic, self.attribute, tuple(self.talents)))
-
-
-class SpecializedSkill(Skill):
+class SpecializedSkill(Skill, frozen=True):
     specialization: str
-
-    def __eq__(self, other_skill: object):
-        return self.specialization == getattr(other_skill, "specialization", None) and super().__eq__(other_skill)
-
-    def __hash__(self) -> int:
-        return hash(self.specialization) ^ super().__hash__()
 
 
 class CharacterSkill(BaseModel):
@@ -205,18 +184,18 @@ class Money(BaseModel, validate_assignment=True):
         object.__setattr__(self, "copper_coins", cc)
         return self
 
-    def __add__(self, other: "Money") -> "Money":
+    def __add__(self, other: Money) -> Money:
         if not isinstance(other, Money):
-            return NotImplemented
+            return NotImplemented # pragma: no cover
         gc = self.golden_crown + other.golden_crown
         sp = self.silver_pistol + other.silver_pistol
         cc = self.copper_coins + other.copper_coins
         gc, sp, cc = self.coerce_money(gc, sp, cc)
         return Money(golden_crown=gc, silver_pistol=sp, copper_coins=cc)
 
-    def __sub__(self, other: "Money") -> "Money":
+    def __sub__(self, other: Money) -> Money:
         if not isinstance(other, Money):
-            return NotImplemented
+            return NotImplemented # pragma: no cover
         # Convert everything to copper coins to handle subtraction
         total_cc_self = self.golden_crown * 240 + self.silver_pistol * 12 + self.copper_coins
         total_cc_other = other.golden_crown * 240 + other.silver_pistol * 12 + other.copper_coins
@@ -309,7 +288,7 @@ class Experience(BaseModel):
 
     @property
     def spendable_ticks(self) -> int:
-        return self.available % 100
+        return self.available // 100
 
 
 # TODO: primary attribute factory must depends on a race
@@ -332,7 +311,7 @@ def secondary_attribute_random_factory() -> SecondaryAttributes:
 
 
 def race_skill_factory(race: Literal["Elfe", "Nain", "Humain", "Halfling"]) -> set[CharacterSkill]:
-    return set()
+    return set() # pragma: no cover
 
 
 class Character(BaseModel, validate_assignment=True):
@@ -354,7 +333,7 @@ class Character(BaseModel, validate_assignment=True):
     skills: set[CharacterSkill] = set()
     talents: set[Talent] = set()
 
-    carrers: list[Career] = []
+    careers: list[Career] = []
 
     # Handle all the money and equipment
     inventory: Inventory = Field(default=Inventory())
@@ -367,8 +346,8 @@ class Character(BaseModel, validate_assignment=True):
     def current_career(self):
         # In a normal case, a character has a career
         # The None case is when the character is created and has no career yet
-        if self.carrers:
-            return self.carrers[-1]
+        if self.careers:
+            return self.careers[-1]
         else:
             return None
 
@@ -379,23 +358,23 @@ class Character(BaseModel, validate_assignment=True):
         # - character has no career : all attributes must be 0 (only occurs when character is created)
         # - character has at least one career : this is the first career, the advanced attribute must be lower or equal to the career plan
         # - character has multiple careers : the advanced attribute can be higher thant the previous career plan, but must be lower or equal to the current career plan
-        if not self.carrers:
+        if not self.careers:
             for primary_attribute in get_args(PrimaryAttributeName):
                 if getattr(self.primary_attributes, primary_attribute).advanced != 0:
                     raise ValueError(f"{primary_attribute} advanced must be 0 when character has no career")
             for secondary_attribute in get_args(SecondaryAttributeName):
                 if getattr(self.secondary_attributes, secondary_attribute).advanced != 0:
                     raise ValueError(f"{secondary_attribute} advanced must be 0 when character has no career")
-        if len(self.carrers) >= 1:
-            first_career = self.carrers[0]
+        if len(self.careers) >= 1:
+            first_career = self.careers[0]
             for primary_attribute, max_value in first_career.primary_attributes.items():
                 if getattr(self.primary_attributes, primary_attribute).advanced > max_value:
                     raise ValueError(f"{primary_attribute} advanced must be lower or equal to {max_value} from first career {first_career.name}")
             for secondary_attribute, max_value in first_career.secondary_attributes.items():
                 if getattr(self.secondary_attributes, secondary_attribute).advanced > max_value:
                     raise ValueError(f"{secondary_attribute} advanced must be lower or equal to {max_value} from first career {first_career.name}")
-        if len(self.carrers) > 1:
-            current_career = self.carrers[-1]
+        if len(self.careers) > 1:
+            current_career = self.careers[-1]
             for primary_attribute, max_value in current_career.primary_attributes.items():
                 if getattr(self.primary_attributes, primary_attribute).advanced > max_value:
                     raise ValueError(f"{primary_attribute} advanced must be lower or equal to {max_value} from current career {current_career.name}")
@@ -415,11 +394,11 @@ class Character(BaseModel, validate_assignment=True):
         else:
             self.skills.add(new_skill)
 
-    def delete_skill(self, skill: CharacterSkill) -> None:
+    def delete_skill(self, skill: CharacterSkill, all=False) -> None:
         # Note : This function is only usesulf when creating a new character and rolling for random skills
         existing_skill = self._get_existing_skill(skill)
         if existing_skill:
-            if existing_skill.bonus == 0:
+            if all or existing_skill.bonus == 0:
                 self.skills.remove(existing_skill)
             else:
                 existing_skill.bonus = max(existing_skill.bonus - 10, 0)
@@ -432,6 +411,10 @@ class Character(BaseModel, validate_assignment=True):
 
     def add_talent(self, new_talent: Talent):
         self.talents.add(new_talent)
+    
+    def delete_talent(self, talent: Talent):
+        if talent in self.talents:
+            self.talents.remove(talent)
 
     @property
     def max_clutter(self) -> int:
@@ -443,10 +426,6 @@ class Character(BaseModel, validate_assignment=True):
         }
         return self.primary_attributes.strength.actual * race_modifier[self.race]
 
+    @property
     def is_cluttered(self) -> bool:
         return self.inventory.total_clutter > self.max_clutter
-
-
-if __name__ == "__main__":
-    s = Skill(name="Esquive", basic=False, description="Permet d'esquiver au lieu de parer les attaques", attribute="agility", talents=[])
-    cs = CharacterSkill(skill=s, bonus=0)
