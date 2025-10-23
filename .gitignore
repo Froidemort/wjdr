@@ -10,5 +10,13 @@ wheels/
 .venv
 
 
-# Vscode
+# VsCode
 .vscode
+
+# Testing cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy type checking cache
+.mypy_cache/
