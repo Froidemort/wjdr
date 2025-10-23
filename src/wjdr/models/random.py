@@ -89,7 +89,7 @@ class DicePool:
         {6: 2}
         """
         pattern = r'(\d+)d(\d+)'
-        dices = {}
+        dices: dict[int, int] = {}
         modifier = 0
 
         # Find all dice expressions
