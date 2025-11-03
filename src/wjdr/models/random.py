@@ -14,7 +14,7 @@ Notes
 """
 
 from random import sample
-from typing import Self
+from typing import Self, Any
 from dataclasses import dataclass
 import re
 @dataclass(frozen=True)
@@ -110,3 +110,52 @@ class DicePool:
             modifier = sum(int(m) for m in mod_matches) if mod_matches else 0
 
         return cls(dices, modifier)
+
+def dice_roll_map(dice_face: int, pool_map: dict[tuple[int, int], Any]) -> Any:
+    """Roll a dice, map to the pool map in order to return the corresponding value.
+    Parameters
+    ----------
+    dice_face : int
+        The number of faces of the dice to roll.
+    pool_map : dict[tuple[int], Any]
+        A mapping from dice roll result to the desired output value.
+        The tuple keys represent possible roll ranges.
+    Returns
+    -------
+    Any
+        The mapped value from the pool map based on the rolled result.
+    Raises
+    ------
+    ValueError
+        If the rolled result is not found in the pool map.
+    Examples
+    --------
+    >>> pool_map = {(1, 1): 10, (2, 2): 20, (3, 3): 30, (4, 4): 40, (5, 5): 50, (6, 6): 60}
+    >>> dice_roll_map(6, pool_map)  # Possible outputs: 10, 20, 30, 40, 50, or 60
+    40  # doctest: +ELLIPSIS
+    >>> pool_map = {(1, 3): "Low", (4, 6): "High"}
+    >>> dice_roll_map(6, pool_map)  # Possible outputs: "Low" or "High"
+    'High'  # doctest: +ELLIPSIS
+    """
+    # Flatten pool_map range keys (e.g., (1, 3): value) into single-face keys.
+    flat_map: dict[int, Any] = {}
+    for key, value in pool_map.items():
+        if not isinstance(key, tuple) or len(key) != 2:
+            raise ValueError(f"Invalid pool_map key {key!r}, expected a (start, end) tuple.")
+        start, end = key
+        if start > end:
+            raise ValueError(f"Invalid range {key!r}: start greater than end.")
+        for face in range(start, end + 1):
+            if face in flat_map and flat_map[face] != value:
+                raise ValueError(f"Overlapping ranges for face {face}.")
+            flat_map[face] = value
+    # Ensure coverage for the dice faces to avoid KeyError later.
+    missing = [i for i in range(1, dice_face + 1) if i not in flat_map]
+    if missing:
+        raise ValueError(f"Pool map does not cover faces: {missing}")
+    dice = DicePool(dices={dice_face: 1}, modifier=0)
+    roll_result = dice.roll()
+    for face, mapped_value in flat_map.items():
+        if roll_result == face:
+            return mapped_value
+    raise ValueError(f"Roll result {roll_result} not found in pool map.")
