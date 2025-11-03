@@ -1,0 +1,1 @@
+"""WJDR views package, containing all the web views created with NiceGUI."""
