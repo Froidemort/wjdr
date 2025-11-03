@@ -1,7 +1,25 @@
 from typing import Generator
 import pytest
 
-from wjdr.models.models import Money, Equipment, Inventory, Experience, Career, PrimaryAttributeName, SecondaryAttribute, Talent, primary_attribute_random_factory, PrimaryAttribute, Character, CharacterSkill, Skill, Talent
+from wjdr.models.models import (
+    Money,
+    Equipment,
+    Inventory,
+    Experience,
+    Career,
+    SecondaryAttribute,
+    Talent,
+    PrimaryAttribute,
+    Character,
+    CharacterSkill,
+    Skill,
+)
+from wjdr.models.factory import (
+    primary_attribute_random_factory,
+    secondary_attribute_random_factory,
+    talent_factory,
+    skill_factory
+)
 
 
 @pytest.mark.unitary
@@ -116,9 +134,82 @@ def test_career_experience_amount(career):
 def test_primary_attribute_random_factory(fixed_seed):
     with fixed_seed:
         primary_attributes = primary_attribute_random_factory(race="Humain")
-        assert primary_attributes.model_dump() == {'fight_capacity': {'base': 23, 'advanced': 0}, 'shooting_capacity': {'base': 29, 'advanced': 0}, 'strength': {'base': 27, 'advanced': 0}, 'toughness': {'base': 31, 'advanced': 0}, 'agility': {'base': 29, 'advanced': 0}, 'intelligence': {'base': 31, 'advanced': 0}, 'mental_strength': {'base': 26, 'advanced': 0}, 'sociability': {'base': 33, 'advanced': 0}}
-        assert primary_attributes.strength_bonus == 2
-        assert primary_attributes.toughness_bonus == 3
+        assert primary_attributes == {'fight_capacity': 23, 'shooting_capacity': 29,
+                                      'strength': 27, 'toughness': 31,
+                                      'agility': 29, 'intelligence': 31,
+                                      'mental_strength': 26, 'sociability': 33}
+
+@pytest.mark.unitary
+def test_secondary_attribute_random_factory(fixed_seed):
+    with fixed_seed:
+        secondary_attributes = secondary_attribute_random_factory(race="Humain")
+        assert secondary_attributes == {'attack': 1,
+                                        'wounds': 10,
+                                        'movement': 4,
+                                        'magic_point':0}
+
+@pytest.mark.unitary
+@pytest.mark.parametrize(
+    ("race", "expected"),
+    [
+        ("Humain", ['Sang froid', 'Calcul mental']),
+        ("Elfe", [
+            "Acuité visuelle",
+            ("Harmonie aethyrique", "Maitrise (arcs longs)"),
+            ("Intelligent", "Sang froid"),
+            "Vision nocturne",
+        ]),
+        ("Nain", [
+            "Fureur vengeresse",
+            "Résistance à la magie",
+            "Robuste",
+            "Savoir faire nain",
+            "Valeureux",
+            "Vision nocturne",
+        ]),
+        ("Halfling", [
+            "Maitrise (lance-pierre)",
+            "Résistance au chaos",
+            "Vision nocturne",
+            "Sain d'esprit",
+        ]),
+    ])
+def test_talent_factory(fixed_seed, race, expected):
+    with fixed_seed:
+        talents = talent_factory(race=race)
+        assert set(talents) == set(expected)
+
+@pytest.mark.unitary
+@pytest.mark.parametrize(
+    ("race", "expected"),
+    [
+        ("Humain", ["Connaissances générales (l'Empire)", "Langue (Reikspiel)"]),
+        ("Elfe", [
+            "Connaissances générales (Elfes)",
+            "Langue (Eltharin)",
+            "Langue (Reikspiel)",
+        ]),
+        ("Nain", [
+            "Connaissances générales (Nains)",
+            "Langue (Khazalid)",
+            "Langue (Reikspiel)",
+        ]),
+        ("Halfling", [
+            "Commérage",
+            "Langue (Reikspiel)",
+            "Langue (Halfling)",
+            (
+                "Connaissances académiques (généalogie)",
+                "Connaissances académiques (héraldique)",
+            ),
+            ("Métier (cuisinier)", "Métier (fermier)"),
+            "Connaissances générales (Halflings)",
+        ]),
+    ])
+def test_skill_factory(race, expected):
+    skills = skill_factory(race=race)
+    assert set(skills) == set(expected)
+
 
 @pytest.mark.unitary
 def test_skill():

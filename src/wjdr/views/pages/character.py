@@ -2,7 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, get_args
 from nicegui import ui
 
-from wjdr.models.models import AstralSign, PrimaryAttributes, SecondaryAttributes, primary_attribute_random_factory, secondary_attribute_random_factory
+from wjdr.models.models import AstralSign, PrimaryAttributes, SecondaryAttributes
+from wjdr.models.factory import primary_attribute_random_factory, secondary_attribute_random_factory
 from wjdr.views.theme import frame
 
 if TYPE_CHECKING:
@@ -47,12 +48,12 @@ def character_view():
     ui.separator().classes('my-4')
     with ui.expansion('Caractéristique Principale', icon='fitness_center').classes('w-full'):
         columns = [{'name': attribute, 'label': field_info.serialization_alias, 'align': 'center', 'field': attribute} for attribute, field_info in PrimaryAttributes.model_fields.items()]
-        rows =[{name: value['base'] for name, value in primary_attribute_random_factory(character_data["race"].value).model_dump().items()}]
+        rows = [primary_attribute_random_factory(character_data["race"].value)]
         table = ui.table(columns=columns, rows=rows).classes('w-full').props('bordered').classes('text-primary')
     ui.separator().classes('my-4')
     with ui.expansion('Caractéristique Secondaire', icon='fitness_center').classes('w-full'):
         columns = [{'name': attribute, 'label': field_info.serialization_alias, 'align': 'center', 'field': attribute} for attribute, field_info in SecondaryAttributes.model_fields.items()]
-        rows = rows =[{name: value['base'] for name, value in secondary_attribute_random_factory(character_data["race"].value).model_dump().items()}]
+        rows = [secondary_attribute_random_factory(character_data["race"].value)]
         table = ui.table(columns=columns, rows=rows).classes('w-full').props('bordered').classes('text-primary')
     def save_character_sheet():
         # Here you would implement the logic to save the character sheet

@@ -7,12 +7,9 @@ models are implemented with Pydantic for validation and convenient defaults.
 
 from __future__ import annotations
 import datetime
-import random
 from typing import Literal, Optional, Self, get_args
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, model_validator
-
-from .random import DicePool, dice_roll_map
 
 PrimaryAttributeName = Literal[
     "fight_capacity",
@@ -91,6 +88,7 @@ class MetaInformations(BaseModel):
     last_update : datetime.date | None
         Last update date of the character.
     """
+
     player_name: Optional[str] = Field(default=None, description="Nom réel du joueur", examples=["Jean", "Marie"])
     master_name: Optional[str] = Field(default=None, description="Nom réel du maitre du jeu", examples=["Jean", "Marie"])
     campaign_name: Optional[str] = Field(default=None, description="Nom de la campagne", examples=["Bienvenue à Altdorf", "Meurtre à Nuln"])
@@ -124,6 +122,7 @@ class DetailedInformations(BaseModel):
     chaos_mutations : list[str]
         Chaos mutations, if any.
     """
+
     age: Optional[int] = Field(gt=0, default=None, le=200, examples=[25, 30, 45], description="Âge du personnage en années")
     eye_color: Optional[EyeColor] = Field(default=None, description="Couleur des yeux du personnage", examples=["Bleu", "Marron", "Noir"])
     hair_color: Optional[HairColor] = Field(default=None, description="Couleur des cheveux du personnage", examples=["Blond", "Brun", "Roux"])
@@ -150,6 +149,7 @@ class PrimaryAttribute(BaseModel, validate_assignment=True):
     -----
     The effective attribute used in checks is ``base + advanced``.
     """
+
     base: int = Field(ge=0, default=0, le=100, description="Statistique de base du personnage entre 1 et 100", examples=[30, 40, 50])
     # TODO: maybe consider adding a "permanent" field to handle bonus from some talents
     # TODO: maybe consider adding a "from_object" field to handle bonus from some objects
@@ -181,6 +181,7 @@ class PrimaryAttributes(BaseModel):
     mental_strength : PrimaryAttribute
     sociability : PrimaryAttribute
     """
+
     fight_capacity: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="CC")
     shooting_capacity: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="CT")
     strength: PrimaryAttribute = Field(default=PrimaryAttribute(), serialization_alias="F")
@@ -225,6 +226,7 @@ class Talent(BaseModel, frozen=True):
     permanent_bonus : tuple[PrimaryAttributeName, int] | None
         Optional permanent bonus applied to a primary attribute.
     """
+
     name: str
     description: str
     permanent_bonus: Optional[tuple[PrimaryAttributeName, int]] = Field(default=None, description="Permanent bonus to a primary attribute, in the form (attribute_name, bonus_amount)", examples=[("strength", 5), ("agility", 10)])
@@ -233,13 +235,15 @@ class Talent(BaseModel, frozen=True):
 class SpecializedTalent(Talent, frozen=True):
     """A talent with a specialization string.
     The specialization is for example "Crafting (blacksmithing)"."""
+
     specialization: str
+
 
 class Skill(BaseModel, frozen=True):
     """A skill tied to a primary attribute.
     A basic skill can be used untrained, but then the character suffers a attribute penalty of 50%.
     An advanced skill can only be used if the character has at least one level in it.
-    
+
     Related talents can provide bonuses or special rules when using the skill.
 
     Attributes
@@ -255,6 +259,7 @@ class Skill(BaseModel, frozen=True):
     talents : list[Talent]
         Related talents.
     """
+
     name: str
     basic: bool = True
     description: str
@@ -265,6 +270,7 @@ class Skill(BaseModel, frozen=True):
 
 class SpecializedSkill(Skill, frozen=True):
     """A skill with a specialization string (e.g. Craft (Bow))."""
+
     specialization: str
 
 
@@ -278,12 +284,14 @@ class CharacterSkill(BaseModel):
     bonus : int
         Advancement bonus in steps of 10 (0, 10, 20).
     """
+
     skill: Skill | SpecializedSkill
     bonus: int = Field(ge=0, default=0, le=20, multiple_of=10, examples=[0, 10, 20])  # +0,+10,+20
 
 
 class SecondaryAttribute(BaseModel):
     """A secondary attribute with base and advanced parts."""
+
     base: int = Field(ge=0, default=0)
     advanced: int = Field(ge=0, default=0)
 
@@ -295,10 +303,11 @@ class SecondaryAttribute(BaseModel):
 
 class SecondaryAttributes(BaseModel):
     """Container of all secondary attributes."""
-    attack: SecondaryAttribute = Field(default = SecondaryAttribute(base=1, advanced=0), serialization_alias="A", description="Number of attacks per round", examples=[1, 2, 3])
-    wounds: SecondaryAttribute = Field(default = SecondaryAttribute(), serialization_alias="B", description="Point de blessures", examples=[8, 12, 18])
-    movement: SecondaryAttribute = Field(default = SecondaryAttribute(), serialization_alias="M", description="Points de mouvement", examples=[3, 4, 5, 10])
-    magic_point: SecondaryAttribute = Field(default = SecondaryAttribute(), serialization_alias="Mag", description="Points de magie", examples=[0, 1, 2, 3])
+
+    attack: SecondaryAttribute = Field(default=SecondaryAttribute(base=1, advanced=0), serialization_alias="A", description="Number of attacks per round", examples=[1, 2, 3])
+    wounds: SecondaryAttribute = Field(default=SecondaryAttribute(), serialization_alias="B", description="Point de blessures", examples=[8, 12, 18])
+    movement: SecondaryAttribute = Field(default=SecondaryAttribute(), serialization_alias="M", description="Points de mouvement", examples=[3, 4, 5, 10])
+    magic_point: SecondaryAttribute = Field(default=SecondaryAttribute(), serialization_alias="Mag", description="Points de magie", examples=[0, 1, 2, 3])
 
 
 class Money(BaseModel, validate_assignment=True):
@@ -313,6 +322,7 @@ class Money(BaseModel, validate_assignment=True):
     copper_coins : int
         Number of Copper Coins (CC).
     """
+
     golden_crown: int = Field(ge=0, default=0)
     silver_pistol: int = Field(ge=0, default=0)
     copper_coins: int = Field(ge=0, default=0)
@@ -366,12 +376,22 @@ class Money(BaseModel, validate_assignment=True):
             New instance with the sum.
         """
         if not isinstance(other, Money):
-            return NotImplemented # pragma: no cover
+            return NotImplemented  # pragma: no cover
         gc = self.golden_crown + other.golden_crown
         sp = self.silver_pistol + other.silver_pistol
         cc = self.copper_coins + other.copper_coins
         gc, sp, cc = self.coerce_money(gc, sp, cc)
         return Money(golden_crown=gc, silver_pistol=sp, copper_coins=cc)
+
+    def to_copper_coins(self) -> int:
+        """Convert the entire money amount to copper coins.
+
+        Returns
+        -------
+        int
+            Total amount in copper coins.
+        """
+        return self.golden_crown * 240 + self.silver_pistol * 12 + self.copper_coins
 
     def __sub__(self, other: Money) -> Money:
         """Subtract money, raising if the result would be negative.
@@ -392,22 +412,20 @@ class Money(BaseModel, validate_assignment=True):
             If subtraction would result in negative money.
         """
         if not isinstance(other, Money):
-            return NotImplemented # pragma: no cover
+            return NotImplemented  # pragma: no cover
         # Convert everything to copper coins to handle subtraction
-        total_cc_self = self.golden_crown * 240 + self.silver_pistol * 12 + self.copper_coins
-        total_cc_other = other.golden_crown * 240 + other.silver_pistol * 12 + other.copper_coins
+        total_cc_self = self.to_copper_coins()
+        total_cc_other = other.to_copper_coins()
         if total_cc_self < total_cc_other:
             raise ValueError("Cannot have negative money")
         total_cc_result = total_cc_self - total_cc_other
-        gc = total_cc_result // 240
-        sp = (total_cc_result % 240) // 12
-        cc = total_cc_result % 12
-        return Money(golden_crown=gc, silver_pistol=sp, copper_coins=cc)
+        return Money(**dict(zip(("golden_crown", "silver_pistol", "copper_coins"), self.coerce_money(0, 0, total_cc_result))))
 
 
 class EquipmentCategory(BaseModel):
     # TODO: maybe consider adding subcategories for "Divers"
     """Category and optional subcategory for an equipment item."""
+
     category: Literal["Armes", "Armures", "Munitions", "Divers"]
     subcategory: Optional[str] = None
 
@@ -432,18 +450,20 @@ class Equipment(BaseModel):
     quantity : int
         Owned quantity.
     """
+
     name: str
     description: Optional[str] = None
     quality: Literal["Médiocre", "Moyenne", "Bonne", "Exceptionnelle"] = "Moyenne"
     category: EquipmentCategory = Field(default=EquipmentCategory(category="Divers"))
     clutter: int = Field(ge=0, default=0)
     # Value in money, automatically coerced
-    value: Money = Field(default=Money(), description="Valeur unitaire de l'équipement")
+    value: Optional[Money] = Field(default=None, description="Valeur unitaire de l'équipement")
     quantity: int = Field(ge=1, default=1)
 
 
 class Inventory(BaseModel):
     """A character's inventory and money balance."""
+
     equipments: list[Equipment] = []
     money: Money = Field(default=Money(), description="Somme d'argent possédée par le personnage")
 
@@ -479,6 +499,7 @@ class Career(BaseModel):
     accessible_careers : list[str]
         Careers accessible after this one.
     """
+
     name: str = Field(description="Nom de la carrière", examples=["Guerrier", "Prêtre", "Voleur"])
     description: Optional[str] = Field(default=None, description="Description de la carrière")
     basic: bool = True
@@ -497,7 +518,6 @@ class Career(BaseModel):
     endowments: list[str] = Field(default=[], description="Liste des dotations en début de carrière ou des objets à avoir pour accéder à cette carrière")
     money: Money = Field(default=Money(), description="Monnaie de départ lors de l'entrée dans cette carrière, ou argent à avoir pour accéder à cette carrière")
 
-
     accessible_careers: list[str] = Field(default=[], description="List of careers accessible after this one")
 
     @model_validator(mode="after")
@@ -511,10 +531,10 @@ class Career(BaseModel):
         """
         for primary_attribute in get_args(PrimaryAttributeName):
             if primary_attribute not in self.primary_attributes:
-                raise ValueError(f"{primary_attribute} must be in career plan")
+                raise ValueError(f"{primary_attribute} must be in career plan")  # pragma: no cover
         for secondary_attribute in get_args(SecondaryAttributeName):
             if secondary_attribute not in self.secondary_attributes:
-                raise ValueError(f"{secondary_attribute} must be in career plan")
+                raise ValueError(f"{secondary_attribute} must be in career plan")  # pragma: no cover
         return self
 
     @property
@@ -538,6 +558,7 @@ class Career(BaseModel):
 
 class Experience(BaseModel):
     """Track total and spent experience points (XP)."""
+
     total: int = Field(ge=0, default=0)
     spent: int = Field(ge=0, default=0, multiple_of=100)  # TODO: check id multiple of 100 is correct
 
@@ -550,111 +571,6 @@ class Experience(BaseModel):
     def spendable_ticks(self) -> int:
         """Return the number of 100-XP steps available."""
         return self.available // 100
-
-
-# TODO: primary attribute factory must depends on a race
-def primary_attribute_random_factory(race: Literal["Elfe", "Nain", "Humain", "Halfling"], seed: int| None =None) -> dict[PrimaryAttributeName, int]:
-    """Generate random primary attributes using 2d10+20 for each stat.
-
-    Returns
-    -------
-    PrimaryAttributes
-        A new set of randomized primary attributes.
-    """
-    primary_attribute_race_modifiers = {
-        'fight_capacity':{
-            'Humain':20,
-            'Nain':30,
-            'Elfe':20,
-            'Halfling':10},
-        'shooting_capacity':{
-            'Humain':20,
-            'Nain':20,
-            'Elfe':30,
-            'Halfling':30},
-        'strength':{
-            'Humain':20,
-            'Nain':20,
-            'Elfe':20,
-            'Halfling':20},
-        'toughness':{
-            'Humain':20,
-            'Nain':30,
-            'Elfe':20,
-            'Halfling':10},
-        'agility':{
-            'Humain':20,
-            'Nain':10,
-            'Elfe':30,
-            'Halfling':30},
-        'intelligence':{
-            'Humain':20,
-            'Nain':20,
-            'Elfe':20,
-            'Halfling':20},
-        'mental_strength':{
-            'Humain':20,
-            'Nain':20,
-            'Elfe':20,
-            'Halfling':20},
-        'sociability':{
-            'Humain':20,
-            'Nain':10,
-            'Elfe':20,
-            'Halfling':30},
-    }
-    if seed is not None:
-        random.seed(seed)
-    attrs = {}
-    for attr in get_args(PrimaryAttributeName):
-        base_value = DicePool({10: 2}, primary_attribute_race_modifiers[attr][race]).roll()  # 2d10+20
-        attrs[attr] = base_value
-    return attrs
-
-
-# TODO: secondary attribute factory must depends on a race
-def secondary_attribute_random_factory(race: Literal["Elfe", "Nain", "Humain", "Halfling"], seed: int| None =None) -> dict[SecondaryAttributeName, int]:
-    """Generate default secondary attributes for a new character.
-
-    Returns
-    -------
-    SecondaryAttributes
-        Default values: A=1, B=12, M=4, Mag=0.
-    """
-    if seed is not None:
-        random.seed(seed)
-    attr = {}
-    attr["attack"] = 1  # Always 1 attack at start
-    wounds_race_pool_map = {"Humain": {(1,3):10, (4,6):11, (7,9):12, (10,12):13},
-                             "Nain": {(1,3):11, (4,6):12, (7,9):13, (10,12):14},
-                             "Elfe": {(1,3):9, (4,6):10, (7,9):11, (10,12):12},
-                             "Halfling": {(1,3):8, (4,6):9, (7,9):10, (10,12):11}}
-    attr["wounds"] = dice_roll_map(10, wounds_race_pool_map[race])
-    movement_race_modifier = {"Humain":4, "Nain":3, "Elfe":5, "Halfling":4}
-    attr["movement"] = movement_race_modifier[race]
-    attr["magic_point"] = 0  # Always 0 at start
-
-    return attr
-
-
-def race_skill_factory(race: Literal["Elfe", "Nain", "Humain", "Halfling"]) -> set[CharacterSkill]:
-    """Return race-specific starting skills.
-
-    Parameters
-    ----------
-    race : {"Elfe", "Nain", "Humain", "Halfling"}
-        Character race.
-
-    Returns
-    -------
-    set[CharacterSkill]
-        A set of starting skills for the given race.
-
-    Notes
-    -----
-    Currently returns an empty set (placeholder implementation).
-    """
-    return set() # pragma: no cover
 
 
 class Character(BaseModel, validate_assignment=True):
@@ -691,6 +607,7 @@ class Character(BaseModel, validate_assignment=True):
     meta_informations : MetaInformations
         Sheet meta-data.
     """
+
     # UUID to uniquifie characters, only useful in app
     id: UUID = Field(default_factory=uuid4)
     # Mandatory informations
@@ -701,8 +618,8 @@ class Character(BaseModel, validate_assignment=True):
     detailed_informations: DetailedInformations = Field(default=DetailedInformations())
 
     # Attributes
-    primary_attributes: PrimaryAttributes = Field(default = PrimaryAttributes())
-    secondary_attributes: SecondaryAttributes = Field(default = SecondaryAttributes())
+    primary_attributes: PrimaryAttributes = Field(default=PrimaryAttributes())
+    secondary_attributes: SecondaryAttributes = Field(default=SecondaryAttributes())
     current_wounds: int = Field(default=0, ge=0, description="Current wounds of the character")
     # Special attributes
     madness_points: int = Field(ge=0, default=0)
@@ -829,7 +746,7 @@ class Character(BaseModel, validate_assignment=True):
     def add_talent(self, new_talent: Talent):
         """Add a talent to the character's set of talents."""
         self.talents.add(new_talent)
-    
+
     def delete_talent(self, talent: Talent):
         """Remove a talent if present."""
         if talent in self.talents:
