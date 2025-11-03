@@ -1,3 +1,4 @@
+from typing import Generator
 import pytest
 
 from wjdr.models.models import Money, Equipment, Inventory, Experience, Career, PrimaryAttributeName, SecondaryAttribute, Talent, primary_attribute_random_factory, PrimaryAttribute, Character, CharacterSkill, Skill, Talent
@@ -114,7 +115,7 @@ def test_career_experience_amount(career):
 @pytest.mark.unitary
 def test_primary_attribute_random_factory(fixed_seed):
     with fixed_seed:
-        primary_attributes = primary_attribute_random_factory()
+        primary_attributes = primary_attribute_random_factory(race="Humain")
         assert primary_attributes.model_dump() == {'fight_capacity': {'base': 23, 'advanced': 0}, 'shooting_capacity': {'base': 29, 'advanced': 0}, 'strength': {'base': 27, 'advanced': 0}, 'toughness': {'base': 31, 'advanced': 0}, 'agility': {'base': 29, 'advanced': 0}, 'intelligence': {'base': 31, 'advanced': 0}, 'mental_strength': {'base': 26, 'advanced': 0}, 'sociability': {'base': 33, 'advanced': 0}}
         assert primary_attributes.strength_bonus == 2
         assert primary_attributes.toughness_bonus == 3
@@ -146,15 +147,33 @@ def test_character(career):
     assert character_with_several_careers.careers == careers
     assert character_with_several_careers.current_career == career
 
+
 @pytest.fixture()
-def character(career, fixed_seed):
-    with fixed_seed: # Here we fix the seed to have reproducible primary attributes
-        yield Character(
-            name="Test Character",
-            gender="Masculin",
-            race="Humain",
-            careers=[career],
-        )
+def primary_attribute():
+    yield PrimaryAttribute(base=27, advanced=0)
+
+@pytest.fixture()
+def primary_attributes(primary_attribute):
+    yield {
+        'fight_capacity': primary_attribute,
+        'shooting_capacity': primary_attribute,
+        'strength': primary_attribute,
+        'toughness': primary_attribute,
+        'agility': primary_attribute,
+        'intelligence': primary_attribute,
+        'mental_strength': primary_attribute,
+        'sociability': primary_attribute,
+    }
+
+@pytest.fixture()
+def character(career, primary_attributes) -> Generator[Character, None, None]:
+    yield Character(
+        name="Test Character",
+        gender="Masculin",
+        race="Humain",
+        careers=[career],
+        primary_attributes=primary_attributes
+    )
 
 @pytest.mark.unitary
 def test_character_current_career(character, career):

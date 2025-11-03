@@ -1,5 +1,5 @@
 import pytest
-from wjdr.models.random import DicePool
+from wjdr.models.random import DicePool, dice_roll_map
 
 
 @pytest.fixture
@@ -63,3 +63,29 @@ def test_roll_with_negative_modifier(fixed_seed):
 def test_invalid_from_string(bad_string):
     with pytest.raises(ValueError):
         DicePool.from_string(bad_string)
+
+@pytest.mark.unitary
+def test_dice_roll_map_basic(fixed_seed):
+    pool_map = {(1, 1): 10, (2, 2): 20, (3, 3): 30, (4, 4): 40, (5, 5): 50, (6, 6): 60}
+    with fixed_seed:
+        result = dice_roll_map(6, pool_map)
+    assert result == 60
+    
+@pytest.mark.unitary
+def test_dice_roll_map_range(fixed_seed):
+    pool_map = {(1, 3): "Low", (4, 6): "High"}
+    with fixed_seed:
+        result = dice_roll_map(6, pool_map)
+    assert result == "High"
+
+@pytest.mark.unitary
+@pytest.mark.parametrize(
+    "pool_map",
+    [
+        {1: "One", (2, 3): "TwoThree"},
+        {(3, 1): "InvalidRangeOrder"},
+    ],
+)
+def test_dice_roll_map_invalid_key(pool_map):
+    with pytest.raises(ValueError):
+        dice_roll_map(6, pool_map)
