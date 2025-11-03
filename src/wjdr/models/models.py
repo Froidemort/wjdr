@@ -7,11 +7,12 @@ models are implemented with Pydantic for validation and convenient defaults.
 
 from __future__ import annotations
 import datetime
-from functools import partial
+import random
 from typing import Literal, Optional, Self, get_args
+from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, model_validator
 
-from .random import DicePool
+from .random import DicePool, dice_roll_map
 
 PrimaryAttributeName = Literal[
     "fight_capacity",
@@ -294,10 +295,10 @@ class SecondaryAttribute(BaseModel):
 
 class SecondaryAttributes(BaseModel):
     """Container of all secondary attributes."""
-    attack: SecondaryAttribute = Field(serialization_alias="A", description="Number of attacks per round", examples=[1, 2, 3])
-    wounds: SecondaryAttribute = Field(serialization_alias="B", description="Point de blessures", examples=[8, 12, 18])
-    movement: SecondaryAttribute = Field(serialization_alias="M", description="Points de mouvement", examples=[3, 4, 5, 10])
-    magic_point: SecondaryAttribute = Field(serialization_alias="Mag", description="Points de magie", examples=[0, 1, 2, 3])
+    attack: SecondaryAttribute = Field(default = SecondaryAttribute(base=1, advanced=0), serialization_alias="A", description="Number of attacks per round", examples=[1, 2, 3])
+    wounds: SecondaryAttribute = Field(default = SecondaryAttribute(), serialization_alias="B", description="Point de blessures", examples=[8, 12, 18])
+    movement: SecondaryAttribute = Field(default = SecondaryAttribute(), serialization_alias="M", description="Points de mouvement", examples=[3, 4, 5, 10])
+    magic_point: SecondaryAttribute = Field(default = SecondaryAttribute(), serialization_alias="Mag", description="Points de magie", examples=[0, 1, 2, 3])
 
 
 class Money(BaseModel, validate_assignment=True):
@@ -493,7 +494,7 @@ class Career(BaseModel):
     # A sequence of talents where each item can be a talent string or a tuple of alternatives
     talents: tuple[str | tuple[str], ...]
 
-    endowments: list[str] = Field(default=[], description="Liste des dotations en début de carrière ou des objets à avoir pour acccéder à cette carrière")
+    endowments: list[str] = Field(default=[], description="Liste des dotations en début de carrière ou des objets à avoir pour accéder à cette carrière")
     money: Money = Field(default=Money(), description="Monnaie de départ lors de l'entrée dans cette carrière, ou argent à avoir pour accéder à cette carrière")
 
 
@@ -552,7 +553,7 @@ class Experience(BaseModel):
 
 
 # TODO: primary attribute factory must depends on a race
-def primary_attribute_random_factory() -> PrimaryAttributes:
+def primary_attribute_random_factory(race: Literal["Elfe", "Nain", "Humain", "Halfling"], seed: int| None =None) -> dict[PrimaryAttributeName, int]:
     """Generate random primary attributes using 2d10+20 for each stat.
 
     Returns
@@ -560,15 +561,59 @@ def primary_attribute_random_factory() -> PrimaryAttributes:
     PrimaryAttributes
         A new set of randomized primary attributes.
     """
+    primary_attribute_race_modifiers = {
+        'fight_capacity':{
+            'Humain':20,
+            'Nain':30,
+            'Elfe':20,
+            'Halfling':10},
+        'shooting_capacity':{
+            'Humain':20,
+            'Nain':20,
+            'Elfe':30,
+            'Halfling':30},
+        'strength':{
+            'Humain':20,
+            'Nain':20,
+            'Elfe':20,
+            'Halfling':20},
+        'toughness':{
+            'Humain':20,
+            'Nain':30,
+            'Elfe':20,
+            'Halfling':10},
+        'agility':{
+            'Humain':20,
+            'Nain':10,
+            'Elfe':30,
+            'Halfling':30},
+        'intelligence':{
+            'Humain':20,
+            'Nain':20,
+            'Elfe':20,
+            'Halfling':20},
+        'mental_strength':{
+            'Humain':20,
+            'Nain':20,
+            'Elfe':20,
+            'Halfling':20},
+        'sociability':{
+            'Humain':20,
+            'Nain':10,
+            'Elfe':20,
+            'Halfling':30},
+    }
+    if seed is not None:
+        random.seed(seed)
     attrs = {}
     for attr in get_args(PrimaryAttributeName):
-        base_value = DicePool({10: 2}, 20).roll()  # 2d10+20
-        attrs[attr] = PrimaryAttribute(base=base_value, advanced=0)
-    return PrimaryAttributes(**attrs)
+        base_value = DicePool({10: 2}, primary_attribute_race_modifiers[attr][race]).roll()  # 2d10+20
+        attrs[attr] = base_value
+    return attrs
 
 
 # TODO: secondary attribute factory must depends on a race
-def secondary_attribute_random_factory() -> SecondaryAttributes:
+def secondary_attribute_random_factory(race: Literal["Elfe", "Nain", "Humain", "Halfling"], seed: int| None =None) -> dict[SecondaryAttributeName, int]:
     """Generate default secondary attributes for a new character.
 
     Returns
@@ -576,12 +621,20 @@ def secondary_attribute_random_factory() -> SecondaryAttributes:
     SecondaryAttributes
         Default values: A=1, B=12, M=4, Mag=0.
     """
+    if seed is not None:
+        random.seed(seed)
     attr = {}
-    attr["attack"] = SecondaryAttribute(base=1, advanced=0)  # Always 1 attack at start
-    attr["wounds"] = SecondaryAttribute(base=12, advanced=0)  # 2d10+20
-    attr["movement"] = SecondaryAttribute(base=4, advanced=0)  # 4 for now
-    attr["magic_point"] = SecondaryAttribute(base=0, advanced=0)  # Always 0 at start
-    return SecondaryAttributes(**attr)
+    attr["attack"] = 1  # Always 1 attack at start
+    wounds_race_pool_map = {"Humain": {(1,3):10, (4,6):11, (7,9):12, (10,12):13},
+                             "Nain": {(1,3):11, (4,6):12, (7,9):13, (10,12):14},
+                             "Elfe": {(1,3):9, (4,6):10, (7,9):11, (10,12):12},
+                             "Halfling": {(1,3):8, (4,6):9, (7,9):10, (10,12):11}}
+    attr["wounds"] = dice_roll_map(10, wounds_race_pool_map[race])
+    movement_race_modifier = {"Humain":4, "Nain":3, "Elfe":5, "Halfling":4}
+    attr["movement"] = movement_race_modifier[race]
+    attr["magic_point"] = 0  # Always 0 at start
+
+    return attr
 
 
 def race_skill_factory(race: Literal["Elfe", "Nain", "Humain", "Halfling"]) -> set[CharacterSkill]:
@@ -638,6 +691,8 @@ class Character(BaseModel, validate_assignment=True):
     meta_informations : MetaInformations
         Sheet meta-data.
     """
+    # UUID to uniquifie characters, only useful in app
+    id: UUID = Field(default_factory=uuid4)
     # Mandatory informations
     name: str = Field(description="Nom du personnage", examples=["Randuil", "Tharn", "Gruber"])
     gender: Literal["Masculin", "Feminin"]
@@ -646,11 +701,13 @@ class Character(BaseModel, validate_assignment=True):
     detailed_informations: DetailedInformations = Field(default=DetailedInformations())
 
     # Attributes
-    primary_attributes: PrimaryAttributes = Field(default_factory=primary_attribute_random_factory)
-    secondary_attributes: SecondaryAttributes = Field(default_factory=secondary_attribute_random_factory)
+    primary_attributes: PrimaryAttributes = Field(default = PrimaryAttributes())
+    secondary_attributes: SecondaryAttributes = Field(default = SecondaryAttributes())
+    current_wounds: int = Field(default=0, ge=0, description="Current wounds of the character")
     # Special attributes
     madness_points: int = Field(ge=0, default=0)
     destiny_points: int = Field(ge=0, default=0)
+    fortune_points: int = Field(ge=0, default=0)
 
     # Skills & Talents
     skills: set[CharacterSkill] = set()
