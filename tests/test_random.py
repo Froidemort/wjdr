@@ -55,14 +55,13 @@ def test_roll_with_negative_modifier(fixed_seed):
         result = pool.roll()
     assert result == 0
 
+
 @pytest.mark.unitary
-@pytest.mark.parametrize(
-    "bad_string",
-    ["abc", "a+2", "z-9"]
-)
+@pytest.mark.parametrize("bad_string", ["abc", "a+2", "z-9"])
 def test_invalid_from_string(bad_string):
     with pytest.raises(ValueError):
         DicePool.from_string(bad_string)
+
 
 @pytest.mark.unitary
 def test_dice_roll_map_basic(fixed_seed):
@@ -70,13 +69,15 @@ def test_dice_roll_map_basic(fixed_seed):
     with fixed_seed:
         result = dice_roll_map(6, pool_map)
     assert result == 60
-    
+
+
 @pytest.mark.unitary
 def test_dice_roll_map_range(fixed_seed):
     pool_map = {(1, 3): "Low", (4, 6): "High"}
     with fixed_seed:
         result = dice_roll_map(6, pool_map)
     assert result == "High"
+
 
 @pytest.mark.unitary
 @pytest.mark.parametrize(
