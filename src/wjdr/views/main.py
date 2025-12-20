@@ -1,17 +1,21 @@
 from __future__ import annotations
 import os
-from nicegui import ui
+from pathlib import Path
+from nicegui import app, ui
 
 from wjdr.views.theme import frame
 from wjdr.views.pages import character_page
 
+
 @ui.page("/character")
-def character() -> None:
+def character_creation() -> None:
+    """Character creation page."""
     character_page()
 
+
 def index() -> None:
-    with ui.row().classes('items-center justify-center gap-4'):
-        ui.link('Créer une fiche de personnage', '/character').classes('text-lg font-bold text-primary mt-6')
+    with ui.row().classes("items-center justify-center gap-4"):
+        ui.link("Créer une fiche de personnage", "/character").classes("text-lg font-bold text-primary mt-6")
     # ui.markdown('# Welcome to WJDR').classes('text-primary font-bold')
     # ui.markdown('This is the main page of the WJDR application.').classes('text-info')
     # ui.markdown('This place is very dark, be careful!)').classes('text-warning')
@@ -22,14 +26,21 @@ def index() -> None:
     # ui.markdown('Explore the features and have fun!').classes('text-primary')
     # ui.markdown('This sentence is in accent color.').classes('text-accent')
 
-@ui.page('/')
+
+@ui.page("/")
 def root() -> None:
-    with frame('WJDR'):
+    with frame("WJDR"):
         index()
 
+
 def main() -> None:
-    port = int(os.getenv('PORT', '8080'))
-    ui.run(title='WJDR', reload=True, port=port, dark=True, uvicorn_reload_dirs='src/wjdr/views/')
+    # Configure static files for resources (images, etc.)
+    resources_path = Path(__file__).parent.parent.parent.parent / "resources"
+    app.add_static_files("/resources", resources_path)
+
+    port = int(os.getenv("PORT", "8080"))
+    ui.run(title="WJDR", reload=True, port=port, dark=True, uvicorn_reload_dirs="src/wjdr/views/")
+
 
 if __name__ in {"__main__", "__mp_main__"}:
     main()
