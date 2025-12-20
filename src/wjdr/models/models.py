@@ -11,6 +11,8 @@ from typing import Literal, Optional, Self, get_args
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field, model_validator
 
+from wjdr.models.rules import get_skill_from_json, get_talent_from_json
+
 PrimaryAttributeName = Literal[
     "fight_capacity",
     "shooting_capacity",
@@ -230,13 +232,32 @@ class Talent(BaseModel, frozen=True):
     name: str
     description: str
     permanent_bonus: Optional[tuple[PrimaryAttributeName, int]] = Field(default=None, description="Permanent bonus to a primary attribute, in the form (attribute_name, bonus_amount)", examples=[("strength", 5), ("agility", 10)])
+    specialization: Optional[str] = Field(default=None, description="Specialization of the talent, e.g. 'Crafting (blacksmithing)'.")
 
+    @classmethod
+    def from_rules(cls, name: str, specialization: Optional[str] = None) -> Self:
+        """Create a Talent instance from predefined rules.
 
-class SpecializedTalent(Talent, frozen=True):
-    """A talent with a specialization string.
-    The specialization is for example "Crafting (blacksmithing)"."""
+        Parameters
+        ----------
+        name : str
+            Name of the talent.
+        specialization : Optional[str], optional
+            Specialization string if applicable, by default None.
 
-    specialization: str
+        Returns
+        -------
+        Talent
+            The corresponding Talent instance.
+
+        Raises
+        ------
+        ValueError
+            If the talent name is not recognized.
+        """
+
+        talent = get_talent_from_json(name, specialization)
+        return cls(**talent)
 
 
 class Skill(BaseModel, frozen=True):
@@ -264,14 +285,35 @@ class Skill(BaseModel, frozen=True):
     basic: bool = True
     description: str
     attribute: PrimaryAttributeName
+    specialization: Optional[str] = Field(default=None, description="Specialization of the skill, e.g. 'Craft (Bow)'.")
 
     talents: list[Talent] = Field(default=[], description="List of related talents")
 
+    @classmethod
+    def from_rules(cls, name: str, specialization: Optional[str] = None) -> Self:
+        """Create a Skill instance from predefined rules.
 
-class SpecializedSkill(Skill, frozen=True):
-    """A skill with a specialization string (e.g. Craft (Bow))."""
+        Parameters
+        ----------
+        name : str
+            Name of the skill.
+        specialization : Optional[str], optional
+            Specialization string if applicable, by default None.
 
-    specialization: str
+        Returns
+        -------
+        Skill
+            The corresponding Skill instance.
+
+        Raises
+        ------
+        ValueError
+            If the skill name is not recognized.
+        """
+
+        skill = get_skill_from_json(name, specialization)
+        # TODO: add related talents is a dedicated part.
+        return cls(**skill)
 
 
 class CharacterSkill(BaseModel):
@@ -279,13 +321,13 @@ class CharacterSkill(BaseModel):
 
     Attributes
     ----------
-    skill : Skill | SpecializedSkill
+    skill : Skill
         The referenced skill.
     bonus : int
         Advancement bonus in steps of 10 (0, 10, 20).
     """
 
-    skill: Skill | SpecializedSkill
+    skill: Skill
     bonus: int = Field(ge=0, default=0, le=20, multiple_of=10, examples=[0, 10, 20])  # +0,+10,+20
 
 
@@ -469,7 +511,7 @@ class Inventory(BaseModel):
 
     @property
     def total_clutter(self) -> int:
-        """Return the total encumbrance across all items (clutter × qty)."""
+        """Return the total encumbrance across all items (clutter * qty)."""
         return sum(e.clutter * e.quantity for e in self.equipments)
 
 
@@ -483,7 +525,7 @@ class Career(BaseModel):
     description : str | None
         Optional description.
     basic : bool
-        Whether the career is basic.
+        Whether the career is basic or advanced.
     primary_attributes : dict[PrimaryAttributeName, int]
         Max ticks available for primary attributes (advanced part), in steps of 5.
     secondary_attributes : dict[SecondaryAttributeName, int]
@@ -502,6 +544,7 @@ class Career(BaseModel):
 
     name: str = Field(description="Nom de la carrière", examples=["Guerrier", "Prêtre", "Voleur"])
     description: Optional[str] = Field(default=None, description="Description de la carrière")
+    specialization: Optional[str] = Field(default=None, description="Spécialisation éventuelle de la carrière", examples=["Morr", "Ulric", "Magie de la Bête", "Magie du Feu"])
     basic: bool = True
     # Primary and secondary attributes that will be set to the character
     primary_attributes: dict[PrimaryAttributeName, int]
@@ -516,7 +559,6 @@ class Career(BaseModel):
     talents: tuple[str | tuple[str], ...]
 
     endowments: list[str] = Field(default=[], description="Liste des dotations en début de carrière ou des objets à avoir pour accéder à cette carrière")
-    money: Money = Field(default=Money(), description="Monnaie de départ lors de l'entrée dans cette carrière, ou argent à avoir pour accéder à cette carrière")
 
     accessible_careers: list[str] = Field(default=[], description="List of careers accessible after this one")
 

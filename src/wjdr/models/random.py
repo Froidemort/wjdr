@@ -17,6 +17,8 @@ from random import sample
 from typing import Self, Any
 from dataclasses import dataclass
 import re
+
+
 @dataclass(frozen=True)
 class DicePool:
     """Represent and roll a pool of dice with an optional modifier.
@@ -36,9 +38,9 @@ class DicePool:
     modifier : int
         Value added to the final result.
     """
+
     dices: dict[int, int]
     modifier: int
-
 
     def roll(self) -> int:
         """Roll the pool and return the resulting sum.
@@ -55,8 +57,8 @@ class DicePool:
         using ``random.sample(range(1, n_face+1), n_dice)``. See module
         notes for the implications of sampling without replacement.
         """
-        return sum((sum(sample(range(1,n_face+1), n_dice)) for n_face, n_dice in self.dices.items())) + self.modifier
-    
+        return sum((sum(sample(range(1, n_face + 1), n_dice)) for n_face, n_dice in self.dices.items())) + self.modifier
+
     @classmethod
     def from_string(cls, pool_str: str) -> Self:
         """Parse a dice pool from a compact string representation.
@@ -88,7 +90,7 @@ class DicePool:
         >>> DicePool.from_string("1d6+1d6-2").dices
         {6: 2}
         """
-        pattern = r'(\d+)d(\d+)'
+        pattern = r"(\d+)d(\d+)"
         dices: dict[int, int] = {}
         modifier = 0
 
@@ -100,16 +102,17 @@ class DicePool:
         if not dices:
             raise ValueError(f"Invalid dice pool string: {pool_str}")
         # Remove dice expressions to isolate modifier
-        rest = re.sub(pattern, '', pool_str)
-        rest = rest.replace('++', '+').replace('--', '+').replace('+-', '-').replace('-+', '-')
-        rest = rest.replace(' ', '')
+        rest = re.sub(pattern, "", pool_str)
+        rest = rest.replace("++", "+").replace("--", "+").replace("+-", "-").replace("-+", "-")
+        rest = rest.replace(" ", "")
 
         if rest:
             # Find all modifiers (+/- numbers)
-            mod_matches = re.findall(r'([+-]\d+)', rest)
+            mod_matches = re.findall(r"([+-]\d+)", rest)
             modifier = sum(int(m) for m in mod_matches) if mod_matches else 0
 
         return cls(dices, modifier)
+
 
 def dice_roll_map(dice_face: int, pool_map: dict[tuple[int, int], Any]) -> Any:
     """Roll a dice, map to the pool map in order to return the corresponding value.

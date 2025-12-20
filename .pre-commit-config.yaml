@@ -1,21 +1,30 @@
 # pre-commit configuration for the wjdr project
 # Installs hooks to lint (ruff), validate commit messages (Conventional Commits)
 # and run the test-suite on pre-push (pytest).
+#
+# Usage:
+#   pip install pre-commit
+#   pre-commit install            # installs prepare-commit-msg, pre-commit hooks
+#   pre-commit install --hook-type commit-msg
+#   pre-commit install --hook-type pre-push
 
 repos:
-  - repo: https://github.com/pre-commit/mirrors-ruff
-    # pin a ruff mirror tag here; change to a specific ruff version if desired
-    rev: v0.1.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.14.10
     hooks:
-      - id: ruff
-        name: Ruff (python linter)
-        # If you want ruff to auto-fix, change `args` to ['--fix']
+      # Run the linter.
+      - id: ruff-check
+        types_or: [ python, pyi ]
+        args: [ --fix ]
+      # Run the formatter.
+      - id: ruff-format
+        types_or: [ python, pyi ]
 
   - repo: https://github.com/compilerla/conventional-pre-commit
-    # pin to a released tag or commit here; adjust as needed
-    rev: v1.0.0
+    rev: v4.3.0
     hooks:
-      - id: conventional-commits
+      - id: conventional-pre-commit
         name: conventional-commits (validate commit-msg)
         stages: [commit-msg]
 
