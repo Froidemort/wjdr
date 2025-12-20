@@ -11,16 +11,29 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
+
+hooks = [
+    "pre-commit>=4.5.1",
+]
+
+lint = [
     "interrogate>=1.7.0",
     "mypy>=1.18.2",
-    "pre-commit>=4.5.1",
-    "pytest>=8.4.1",
-    "pytest-cov>=7.0.0",
-    "pytest-mock>=3.15.1",
     "ruff>=0.12.11",
 ]
 
+test = [
+    "pytest>=8.4.1",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.1",
+]
+
+# Aggregate developer group that nests lint and test
+dev = [
+    { include-group = "lint" },
+    { include-group = "test" },
+    { include-group = "hooks" },
+]
 
 # Tools section
 [tool.uv.sources]
