@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "WJDR is a Python application to help a GM create and manage their RPG campaigns."
 readme = "README.md"
 requires-python = ">=3.12"
+
 dependencies = [
     "nicegui>=3.1.0",
     "pydantic>=2.11.7",
@@ -13,19 +14,13 @@ dependencies = [
 dev = [
     "interrogate>=1.7.0",
     "mypy>=1.18.2",
+    "pre-commit>=4.5.1",
     "pytest>=8.4.1",
     "pytest-cov>=7.0.0",
     "pytest-mock>=3.15.1",
     "ruff>=0.12.11",
-    "wjdr",
 ]
-# Dependencies for tools 
-# These tools are not required for the application
-# but to perform OCR, PDF conversion, etc.
-ocr = [
-    "easyocr>=1.7.2",
-    "pdf2image>=1.16.3",
-]
+
 
 # Tools section
 [tool.uv.sources]
