@@ -181,7 +181,11 @@
     },
     {
         "name": "Force accrue",
-        "description": "Vous bénéficiez d'un bonus permanent de +5% en Force. Modifiez votre profil de départ en conséquence."
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Force. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "strength",
+            5
+        ]
     },
     {
         "name": "Frénésie",
@@ -201,7 +205,11 @@
     },
     {
         "name": "Guerrier né",
-        "description": "Vous bénéficiez d'un bonus permanent de +5% en Capacité de Combat. Modifiez votre profil de départ en conséquence."
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Capacité de Combat. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "combat_skill",
+            5
+        ]
     },
     {
         "name": "Harmonie aethyrique",
@@ -267,7 +275,11 @@
     },
     {
         "name": "Intelligent",
-        "description": "Vous bénéficiez d'un bonus permanent de +5% en Intelligence. Modifiez votre profil de départ en conséquence."
+        "description": "Vous bénéficiez d'un bonus permanent de +5% en Intelligence. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "intelligence",
+            5
+        ]
     },
     {
         "name": "Intrigant",
@@ -351,12 +363,57 @@
     },
     {
         "name": "Magie commune",
-        "specialization": "(à spécifier)",
+        "specialization": "divine",
+        "description": "Vous connaissez la plus élémentaire des formes de magie. Magie commune est un talent particulier car il n'est pas unique, il en existe différentes formes. Chaque talent de Magie commune correspond à la maîtrise d'une forme de magie, cette spécialité étant indiquée entre parenthèses. Par exemple, Magie commune (occulte) est différent de Magie commune (divine)."
+    },
+    {
+        "name": "Magie commune",
+        "specialization": "occulte",
+        "description": "Vous connaissez la plus élémentaire des formes de magie. Magie commune est un talent particulier car il n'est pas unique, il en existe différentes formes. Chaque talent de Magie commune correspond à la maîtrise d'une forme de magie, cette spécialité étant indiquée entre parenthèses. Par exemple, Magie commune (occulte) est différent de Magie commune (divine)."
+    },
+    {
+        "name": "Magie commune",
+        "specialization": "vulgaire",
         "description": "Vous connaissez la plus élémentaire des formes de magie. Magie commune est un talent particulier car il n'est pas unique, il en existe différentes formes. Chaque talent de Magie commune correspond à la maîtrise d'une forme de magie, cette spécialité étant indiquée entre parenthèses. Par exemple, Magie commune (occulte) est différent de Magie commune (divine)."
     },
     {
         "name": "Magie mineure",
-        "specialization": "(à spécifier)",
+        "specialization": "alarme magique",
+        "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
+    },
+    {
+        "name": "Magie mineure",
+        "specialization": "arme consacrée",
+        "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
+    },
+    {
+        "name": "Magie mineure",
+        "specialization": "armure aethyrique",
+        "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
+    },
+    {
+        "name": "Magie mineure",
+        "specialization": "dissipation",
+        "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
+    },
+    {
+        "name": "Magie mineure",
+        "specialization": "manipulation distante",
+        "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
+    },
+    {
+        "name": "Magie mineure",
+        "specialization": "marche dans les airs",
+        "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
+    },
+    {
+        "name": "Magie mineure",
+        "specialization": "silence",
+        "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
+    },
+    {
+        "name": "Magie mineure",
+        "specialization": "verrou magique",
         "description": "Vous connaissez un sort commun à tous les types de magie. Magie mineure est un talent particulier. Il en existe plusieurs formes, chacune devant être acquise individuellement. Chaque talent de Magie mineure représente un sort séparé, dont le nom apparaît entre parenthèses. Par exemple, Magie mineure (dissipation) est différent de Magie mineure (marche dans les airs)."
     },
     {
@@ -375,11 +432,7 @@
         "name": "Résistance",
         "description": "Vous bénéficiez d'un bonus de +10% aux tests d'Endurance."
     },
-    {
-        "name": "Sombre savoir",
-        "specialization": "à spécifier",
-        "description": "Vous avez étudié une forme interdite de magie noire. Sombre savoir est un talent particulier, chaque spécialisation correspondant à une tradition occulte différente. Par exemple, Sombre savoir (Chaos) ou Sombre savoir (nécromancie)."
-    },
+
     {
         "name": "Sombre savoir",
         "specialization": "Nécromancie",
@@ -437,7 +490,11 @@
     },
     {
         "name": "Tireur d'élite",
-        "description": "Vous bénéficiez d'un bonus permanent de +10% en Capacité de Tir. Modifiez votre profil de départ en conséquence."
+        "description": "Vous bénéficiez d'un bonus permanent de +10% en Capacité de Tir. Modifiez votre profil de départ en conséquence.",
+        "permanent_bonus": [
+            "shooting_skill",
+            10
+        ]
     },
     {
         "name": "Troublant",

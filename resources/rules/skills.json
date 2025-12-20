@@ -636,196 +636,196 @@
     "name": "Métier",
     "basic": false,
     "specialization": "Apothicaire",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "intelligence"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Arquebusier",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Artiste",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Brasseur",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "intelligence"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Calligraphe",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Cartographe",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Charpentier",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Charpentier naval",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "intelligence"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Cordonnier",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Cristallier",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Cuisinier",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "intelligence"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Embaumeur",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "intelligence"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Fabricant d'arcs",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Fabricant d'armes",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Fabricant d'armures",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Fabricant de bougies",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Fermier",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Forgeron",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Herboriste",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "intelligence"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Maçon",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Marchand",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "sociability"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Meunier",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Mineur",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Orfèvre",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Prospecteur",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Tailleur",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "agility"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Tanneur",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   },
   {
     "name": "Métier",
     "basic": false,
     "specialization": "Tonnelier",
-    "description": "Cette compétence permet de pratiquer un métier. Chaque métier est une compétence distincte.",
+    "description": "Cette compétence permet de pratiquer un métier. A l'instar de Connaissances académiques, cette compétence n'est pas unique mais multiple.",
     "attribute": "strength"
   }
 ]
