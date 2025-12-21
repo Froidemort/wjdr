@@ -1,6 +1,7 @@
-import pytest
-import random
 import contextlib
+import random
+
+import pytest
 
 
 # We use here the same seed value for all the tests

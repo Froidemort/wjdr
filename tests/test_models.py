@@ -1,22 +1,23 @@
 from typing import Generator
+
 import pytest
 
+from wjdr.models.factory import primary_attribute_random_factory, secondary_attribute_random_factory, skill_factory, talent_factory
 from wjdr.models.models import (
-    Money,
-    Equipment,
-    Inventory,
-    Experience,
     Career,
+    Character,
+    CharacterSkill,
+    Equipment,
+    Experience,
+    Inventory,
+    Money,
+    PrimaryAttribute,
     PrimaryAttributes,
     SecondaryAttribute,
     SecondaryAttributes,
-    Talent,
-    PrimaryAttribute,
-    Character,
-    CharacterSkill,
     Skill,
+    Talent,
 )
-from wjdr.models.factory import primary_attribute_random_factory, secondary_attribute_random_factory, talent_factory, skill_factory
 
 
 @pytest.mark.unitary
