@@ -13,10 +13,10 @@ Notes
   behavior is intentional to preserve existing semantics and tests.
 """
 
-from random import sample
-from typing import Self, Any
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
+from random import sample
+from typing import Any, Self
 
 
 @dataclass(frozen=True)

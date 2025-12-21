@@ -1,10 +1,12 @@
 from __future__ import annotations
+
 import os
 from pathlib import Path
+
 from nicegui import app, ui
 
+from wjdr.views.pages.character import character_page
 from wjdr.views.theme import frame
-from wjdr.views.pages import character_page
 
 
 @ui.page("/character")

@@ -10,11 +10,11 @@ from __future__ import annotations
 import random
 from typing import Literal, get_args
 
-from .random import DicePool, dice_roll_map
 from .models import (
     PrimaryAttributeName,
     SecondaryAttributeName,
 )
+from .random import DicePool, dice_roll_map
 
 
 def primary_attribute_random_factory(

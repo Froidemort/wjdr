@@ -6,9 +6,11 @@ models are implemented with Pydantic for validation and convenient defaults.
 """
 
 from __future__ import annotations
+
 import datetime
 from typing import Literal, Optional, Self, get_args
 from uuid import UUID, uuid4
+
 from pydantic import BaseModel, Field, model_validator
 
 from wjdr.models.rules import get_skill_from_json, get_talent_from_json
@@ -461,7 +463,7 @@ class Money(BaseModel, validate_assignment=True):
         if total_cc_self < total_cc_other:
             raise ValueError("Cannot have negative money")
         total_cc_result = total_cc_self - total_cc_other
-        return Money(**dict(zip(("golden_crown", "silver_pistol", "copper_coins"), self.coerce_money(0, 0, total_cc_result))))
+        return Money(**dict(zip(("golden_crown", "silver_pistol", "copper_coins"), self.coerce_money(0, 0, total_cc_result), strict=False)))
 
 
 class EquipmentCategory(BaseModel):
@@ -692,7 +694,7 @@ class Character(BaseModel, validate_assignment=True):
             return None
 
     @model_validator(mode="after")
-    def validate_character(self):
+    def validate_character(self):  # noqa: C901
         """Ensure attributes are consistent with career progression rules.
 
         Raises
