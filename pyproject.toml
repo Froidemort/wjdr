@@ -18,7 +18,6 @@ hooks = [
 
 lint = [
     "interrogate>=1.7.0",
-    "mypy>=1.18.2",
     "ruff>=0.12.11",
 ]
 
@@ -28,7 +27,6 @@ test = [
     "pytest-mock>=3.15.1",
 ]
 
-# Aggregate developer group that nests lint and test
 dev = [
     { include-group = "lint" },
     { include-group = "test" },
@@ -39,7 +37,12 @@ dev = [
 [tool.uv.sources]
 wjdr = { workspace = true }
 
+[tool.uv]
+package = true
+
+
 [tool.pytest.ini_options]
+addopts = ["-ra", "-q"]
 markers = [
     "unitary", # Unit tests
     "integration", # Integration tests
@@ -49,3 +52,19 @@ markers = [
 
 [tool.ruff]
 line-length = 240
+# Rules that are selected :
+# E : Pycodestyle errors
+# F : Pyflakes codes
+# W : Pycodestyle warnings
+# C90 : McCabe complexity plugin
+# B : Bugbear plugin
+# B9 : Bugbear plugin (new rules)
+# I : Import conventions plugin
+# Q000 : Security plugin
+lint.select = ["E", "F", "W", "C90", "B", "B9", "I", "Q000"]
+# Rules to ignore :
+# E501 : line too long (handled by line-length setting)
+lint.ignore = ["E501"]
+# Exclude docs and test data folders
+exclude = ["docs", "tests/data"]
+
