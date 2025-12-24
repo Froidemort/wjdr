@@ -6,7 +6,7 @@ from nicegui import ui
 
 from wjdr.models.factory import primary_attribute_random_factory, secondary_attribute_random_factory
 from wjdr.models.models import AstralSign, PrimaryAttributes, SecondaryAttributes
-from wjdr.models.rules import map_careers_files
+from wjdr.models.rules.data_json import map_careers_files
 from wjdr.views.theme import frame
 
 if TYPE_CHECKING:
