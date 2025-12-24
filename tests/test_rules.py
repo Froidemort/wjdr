@@ -1,6 +1,6 @@
 import pytest
 
-from wjdr.models.rules import get_resources_rules_path, get_skill_from_json, get_skill_from_string, get_talent_from_json, get_talent_from_string
+from wjdr.models.rules.data_json import get_career_from_json, get_resources_rules_path, get_skill_from_json, get_skill_from_string, get_talent_from_json, get_talent_from_string, map_careers_files
 
 
 @pytest.mark.unitary
@@ -91,3 +91,31 @@ def test_get_skill_from_string_parses_name_and_specialization(
 def test_get_skill_from_string_unknown_raises_value_error():
     with pytest.raises(ValueError):
         get_skill_from_string("Compétence Inconnue (Spécialisation inconnue)")
+
+
+@pytest.mark.unitary
+def test_map_careers_files(mocker, tmp_path):
+    mock_get_path = mocker.patch("wjdr.models.rules.data_json.get_resources_rules_path")
+    mock_get_path.return_value = tmp_path
+    # Create fake career file
+    career_dir = tmp_path / "careers"
+    career_dir.mkdir()
+    career_file = career_dir / "career_example.json"
+    career_file.write_text('{"name": "Example Career"}')
+    careers = map_careers_files()
+    for name, path in careers:
+        assert name == "Example Career"
+        assert path == career_file
+
+
+def test_get_career_from_json(mocker, tmp_path):
+    mocker_map_careers_files = mocker.patch("wjdr.models.rules.data_json.map_careers_files")
+    mocker_map_careers_files.return_value = [("Example Career", tmp_path / "career_example.json")]
+    # Create fake career file
+    career_file = tmp_path / "career_example.json"
+    career_file.write_text('{"name": "Example Career", "description": "An example career."}')
+    career = get_career_from_json("Example Career")
+    assert career["name"] == "Example Career"
+    assert career["description"] == "An example career."
+    with pytest.raises(ValueError):
+        get_career_from_json("NonExistentCareer")

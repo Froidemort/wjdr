@@ -1,7 +1,7 @@
 import json
 from functools import cache
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Optional
 
 
 @cache
@@ -155,20 +155,21 @@ def get_skill_from_string(skill_str: str) -> dict:
 
 
 @cache
-def map_careers_files() -> Generator[tuple[str, Path], None, None]:
+def map_careers_files() -> list[tuple[str, Path]]:
     """Map career names to their JSON file paths.
 
     Returns
     -------
-    dict[str, Path]
-        A dictionary mapping career names to their JSON file paths.
+    list[tuple[str, Path]]
+        A list of pairs ``(career_name, json_path)``.
     """
     career_dir = get_resources_rules_path() / "careers"
-    career_files = career_dir.glob("*.json")
-    for career_json in career_files:
+    result: list[tuple[str, Path]] = []
+    for career_json in career_dir.glob("*.json"):
         with career_json.open("r", encoding="utf-8") as f:
             career_data = json.load(f)
-            yield career_data["name"], career_json
+            result.append((career_data["name"], career_json))
+    return result
 
 
 def get_career_from_json(name: str) -> dict:
@@ -189,8 +190,8 @@ def get_career_from_json(name: str) -> dict:
     ValueError
         If the career is not found.
     """
-    for name, career_json in map_careers_files():
-        if name == name:
+    for career_name, career_json in map_careers_files():
+        if career_name == name:
             with career_json.open("r", encoding="utf-8") as f:
                 return json.load(f)
     raise ValueError(f"Career {name} not found.")
