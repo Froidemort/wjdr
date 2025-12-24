@@ -8,12 +8,12 @@
 ## Architecture and patterns
 - Treat `wjdr` as the root package; imports should be absolute (e.g. `from wjdr.models.models import Character`) in new code, even though internal modules sometimes use relative imports.
 - Core models:
-  - `Character`, `PrimaryAttributes`, `SecondaryAttributes`, `Money`, `Career`, etc. are defined in `models.py` and use rich type hints and Pydantic validators.
-  - Random generation helpers live in `factory.py` and `random.py` and are already covered by tests (`tests/test_models.py`, `tests/test_random.py`). Reuse them instead of re-implementing dice or race tables.
+  - are defined in `models.py` and use rich type hints and Pydantic validators.
+  - Random generation helpers live in `factory.py` and `random.py`. Reuse them instead of re-implementing dice or race tables.
 - Rules I/O:
-  - `wjdr.models.rules` loads JSON from `resources/rules/{skills,talents,careers}.json` using cached functions (`@cache`). New rule-based features should go through these helpers rather than reading files directly.
+  - New rule-based features should go in module `wjdr.models.rules` rather than reading files directly.
 - UI patterns:
-  - All UI is built with NiceGUI. Pages are functions decorated with `@ui.page` and compose smaller helpers (see `character_page()` and stepper functions in `views/pages/character.py`).
+  - All UI is built with NiceGUI. Pages are functions decorated with `@ui.page`.
   - The `frame()` context manager in `views/theme.py` applies the global theme and standard header/footer; wrap new pages in `frame()` unless explicitly opting out.
 
 ## Workflows
@@ -27,7 +27,6 @@
   - Existing tests live in `tests/`; mirror their style and fixtures (notably `fixed_seed` in `tests/conftest.py` for deterministic randomness).
 - Linting & typing:
   - Ruff config is in `pyproject.toml` (`[tool.ruff]`); run `ruff check src tests` for new instructions.
-  - Mypy is configured under `tool.mypy` (if present); target the `wjdr` package when suggesting commands.
 
 ## Conventions for new code
 - Use Pydantic models and `Field` metadata for new domain entities; follow existing naming (French labels, `serialization_alias` for abbreviations like `CC`, `CT`).
