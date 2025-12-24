@@ -109,9 +109,17 @@ def test_primary_attribute_actual(base, advanced, permanent_bonus, object_bonus,
 
 
 @pytest.mark.unitary
-def test_secondary_attribute_actual():
-    secondary_attribute = SecondaryAttribute(base=12, advanced=3)
-    assert secondary_attribute.actual == 15
+@pytest.mark.parametrize(
+    ("base", "advanced", "permanent_bonus", "object_bonus", "expected_actual"),
+    [
+        (12, 3, 0, 0, 15),
+        (10, 2, 1, 1, 14),
+        (8, 4, 2, 1, 15),
+    ],
+)
+def test_secondary_attribute_actual(base, advanced, permanent_bonus, object_bonus, expected_actual):
+    secondary_attribute = SecondaryAttribute(base=base, advanced=advanced, permanent_bonus=permanent_bonus, object_bonus=object_bonus)
+    assert secondary_attribute.actual == expected_actual
 
 
 @pytest.fixture

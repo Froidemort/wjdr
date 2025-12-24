@@ -344,11 +344,25 @@ class SecondaryAttribute(BaseModel):
 
     base: int = Field(ge=0, default=0)
     advanced: int = Field(ge=0, default=0)
+    permanent_bonus: int = Field(ge=0, default=0, description="Permanent bonus applied to the secondary attribute, for example via a talent", examples=[0, 1, 2])
+    object_bonus: int = Field(ge=0, default=0, description="Temporary bonus applied to the secondary attribute via an object", examples=[0, 1, 2])
 
     @property
     def actual(self) -> int:
-        """Return the effective value (base + advanced)."""
-        return self.base + self.advanced
+        """Return the effective value (base + advanced + permanent_bonus + object_bonus).
+
+        Returns
+        -------
+        int
+            Sum of ``base``, ``advanced``, ``permanent_bonus``, and ``object_bonus``.
+
+        Examples
+        --------
+        >>> attr = SecondaryAttribute(base=8, advanced=2, permanent_bonus=1, object_bonus=0)
+        >>> attr.actual
+        11
+        """
+        return self.base + self.advanced + self.permanent_bonus + self.object_bonus
 
 
 class SecondaryAttributes(BaseModel):
