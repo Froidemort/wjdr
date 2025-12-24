@@ -95,9 +95,17 @@ def test_experience_gain():
 
 
 @pytest.mark.unitary
-def test_primary_attribute_actual():
-    primary_attribute = PrimaryAttribute(base=15, advanced=5)
-    assert primary_attribute.actual == 20
+@pytest.mark.parametrize(
+    ("base", "advanced", "permanent_bonus", "object_bonus", "expected_actual"),
+    [
+        (15, 5, 0, 0, 20),
+        (10, 0, 5, 5, 20),
+        (20, 10, 5, 5, 40),
+    ],
+)
+def test_primary_attribute_actual(base, advanced, permanent_bonus, object_bonus, expected_actual):
+    primary_attribute = PrimaryAttribute(base=base, advanced=advanced, permanent_bonus=permanent_bonus, object_bonus=object_bonus)
+    assert primary_attribute.actual == expected_actual
 
 
 @pytest.mark.unitary

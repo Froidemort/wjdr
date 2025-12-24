@@ -155,8 +155,8 @@ class PrimaryAttribute(BaseModel, validate_assignment=True):
     """
 
     base: int = Field(ge=0, default=0, le=100, description="Statistique de base du personnage entre 1 et 100", examples=[30, 40, 50])
-    # TODO: maybe consider adding a "permanent" field to handle bonus from some talents
-    # TODO: maybe consider adding a "from_object" field to handle bonus from some objects
+    permanent_bonus: int = Field(ge=0, default=0, description="Bonus permanent appliqué à la statistique, par exemple via un talent", examples=[0, 5, 10])
+    object_bonus: int = Field(ge=0, default=0, description="Bonus temporaire appliqué à la statistique via un objet équipé", examples=[0, 5, 10])
     advanced: int = Field(ge=0, default=0, le=100, multiple_of=5, description="Statistique d'amélioration du personnage achetable avec l'expérience, entre 0 et 100, par pas de 5", examples=[0, 5, 10, 15, 20])
 
     @property
@@ -166,9 +166,15 @@ class PrimaryAttribute(BaseModel, validate_assignment=True):
         Returns
         -------
         int
-            Sum of ``base`` and ``advanced``.
+            Sum of ``base``, ``advanced``, ``permanent_bonus``, and ``from_objects``.
+
+        Examples
+        --------
+        >>> attr = PrimaryAttribute(base=30, advanced=10, permanent_bonus=5, from_objects=0)
+        >>> attr.actual
+        45
         """
-        return self.base + self.advanced
+        return self.base + self.advanced + self.permanent_bonus + self.object_bonus
 
 
 class PrimaryAttributes(BaseModel):
