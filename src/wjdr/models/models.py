@@ -24,10 +24,6 @@ class MetaInformations(BaseModel):
     ----------
     player_name : str | None
         Real name of the player.
-    master_name : str | None
-        Real name of the game master.
-    campaign_name : str | None
-        Campaign title.
     date_creation : datetime.date | None
         Creation date of the character.
     last_update : datetime.date | None
@@ -35,8 +31,6 @@ class MetaInformations(BaseModel):
     """
 
     player_name: Optional[str] = Field(default=None, description="Nom réel du joueur", examples=["Jean", "Marie"])
-    master_name: Optional[str] = Field(default=None, description="Nom réel du maitre du jeu", examples=["Jean", "Marie"])
-    campaign_name: Optional[str] = Field(default=None, description="Nom de la campagne", examples=["Bienvenue à Altdorf", "Meurtre à Nuln"])
     date_creation: Optional[datetime.date] = Field(default_factory=datetime.date.today, description="Date de création du personnage")
     last_update: Optional[datetime.date] = Field(default_factory=datetime.datetime.now, description="Date de la dernière mise à jour du personnage")
 

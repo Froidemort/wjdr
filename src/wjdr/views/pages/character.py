@@ -13,12 +13,10 @@ if TYPE_CHECKING:
     from nicegui.events import ValueChangeEventArguments
 
 
-def step_campaign_infos(stepper: ui.stepper, character_data: dict[str, Any]):
+def step_player_infos(stepper: ui.stepper, character_data: dict[str, Any]):
     with ui.step("Informations de campagne"):
         ui.markdown("## Remplissez les informations de la campagne dans le Vieux Monde.").classes("mt-2 text-primary text-italic")
         character_data["player_name"] = ui.input("Nom du Joueur", value="", placeholder="Votre nom").classes("w-full").tooltip("Entrez votre nom de joueur")
-        character_data["master_name"] = ui.input("Nom du Maître de Jeu", value="", placeholder="Nom du MJ").classes("w-full").tooltip("Entrez le nom de votre maître de jeu")
-        character_data["campaign_name"] = ui.input("Nom de la Campagne", value="", placeholder="Nom de la campagne").classes("w-full").tooltip("Entrez le nom de la campagne")
         with ui.stepper_navigation():
             ui.button("Suivant", on_click=lambda: stepper.next()).classes("primary")
 
@@ -177,7 +175,7 @@ def character_view():
     # Some fields are inputs, other are read-only because computed
     # With pydantic, we create the Character model from a dictionary
     with ui.stepper() as stepper:
-        step_campaign_infos(stepper, character_data)
+        step_player_infos(stepper, character_data)
         step_name_race_and_gender(stepper, character_data)
         step_detailed_infos(stepper, character_data)
         step_attributes(stepper, character_data)
