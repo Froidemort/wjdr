@@ -17,6 +17,20 @@ from wjdr.models.rules.data_json import get_skill_from_json, get_talent_from_jso
 from wjdr.models.rules.types import AstralSign, EyeColor, HairColor, PrimaryAttributeName, SecondaryAttributeName
 
 
+class Campaign(BaseModel):
+    """Model representing a Warhammer RPG campaign."""
+
+    name: str = Field(description="Nom de la campagne", examples=["La Malédiction de la Momie", "Les Ombres de la Forêt Noire"])
+    description: Optional[str] = Field(default=None, description="Description de la campagne")
+    game_master_name: Optional[str] = Field(default=None, description="Nom du maître du jeu")
+    # Characters involved in the campaign
+    characters: list[Character] = Field(default=[], description="Liste des personnages joueur dans la campagne")
+    # TODO: add a Scenario model
+    # Dates of the campaign
+    start_date: datetime.date = Field(default_factory=datetime.date.today, description="Date de début de la campagne")
+    end_date: Optional[datetime.date] = Field(default=None, description="Date de fin de la campagne")
+
+
 class MetaInformations(BaseModel):
     """Meta-information about a character sheet.
 
