@@ -13,67 +13,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, model_validator
 
-from wjdr.models.rules import get_skill_from_json, get_talent_from_json
-
-PrimaryAttributeName = Literal[
-    "fight_capacity",
-    "shooting_capacity",
-    "strength",
-    "toughness",
-    "agility",
-    "intelligence",
-    "mental_strength",
-    "sociability",
-]
-SecondaryAttributeName = Literal["attack", "wounds", "magic_point", "movement"]
-EyeColor = Literal[
-    "Gris-bleu",
-    "Bleu",
-    "Vert",
-    "Cuivre",
-    "Marron clair",
-    "Marron",
-    "Marron foncé",
-    "Argent",
-    "Mauve",
-    "Noir",
-    "Noisette",
-]
-HairColor = Literal[
-    "Argenté",
-    "Blond cendré",
-    "Paille",
-    "Blond",
-    "Auburn",
-    "Châtain clair",
-    "Châtain",
-    "Brun",
-    "Noir",
-    "Roux",
-    "Bleu foncé",
-]
-AstralSign = Literal[
-    "Wymund l'Anachorète",
-    "La Grande Croix",
-    "Le Trait du Peintre",
-    "Gnutus le Buffle",
-    "Dragomas le Dragon",
-    "Le Crépuscule",
-    "Le Fourreau de Grungni",
-    "Mammit le Sage",
-    "Mummit le Fou",
-    "Les Deux Boeufs",
-    "Le Danseur",
-    "Le Tambour",
-    "Le Flûtiste",
-    "Vobist le Pâle",
-    "La Charrette Brisée",
-    "La Chèvre Sauvage",
-    "Le Chaudron de Rhya",
-    "Cackelfax le Coq",
-    "Le Grimoire",
-    "L'Étoile du Sorcier",
-]
+from wjdr.models.rules.data_json import get_skill_from_json, get_talent_from_json
+from wjdr.models.rules.types import AstralSign, EyeColor, HairColor, PrimaryAttributeName, SecondaryAttributeName
 
 
 class MetaInformations(BaseModel):
