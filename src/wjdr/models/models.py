@@ -25,10 +25,36 @@ class Campaign(BaseModel):
     game_master_name: Optional[str] = Field(default=None, description="Nom du maître du jeu")
     # Characters involved in the campaign
     characters: list[Character] = Field(default=[], description="Liste des personnages joueur dans la campagne")
-    # TODO: add a Scenario model
+    # We can have multiple scenarios in a campaign
+    scenarios: dict[str, Scenario] = Field(default={}, description="Scénarios de la campagne")
     # Dates of the campaign
     start_date: datetime.date = Field(default_factory=datetime.date.today, description="Date de début de la campagne")
     end_date: Optional[datetime.date] = Field(default=None, description="Date de fin de la campagne")
+
+
+class Scenario(BaseModel):
+    """Basic model representing a scenario within a Warhammer RPG campaign.
+
+    > Note : a scenarion is not linear, so chapters are just a way to organize the
+    content, not a strict progression.
+    """
+
+    name: str = Field(description="Nom du scénario", examples=["Ombre sur Middenheim", "Nuln est en danger !"])
+    description: Optional[str] = Field(default=None, description="Description du scénario")
+    chapters: dict[str, Chapter] = Field(default={}, description="Chapitres du scénario")
+
+
+class Chapter(BaseModel):
+    """Basic model representing a chapter within a scenario.
+
+    > Note: a chapter should be an independant part of the scenario,
+    that can be played in any order.
+    >
+    > In this way, the game master can adapt the scenario to the players' actions."""
+
+    name: str = Field(description="Titre du chapitre", examples=["Chapitre 1 : Et vous vous rencontrèrent dans une taverne...", "Chapitre 2 : Le culte de Slaneesh"])
+    description: Optional[str] = Field(default=None, description="Description du chapitre")
+    chapter_rewards: Optional[dict[str, Money | list[Equipment] | str]] = Field(default=None, description="Récompenses indicativesobtenues à la fin du chapitre")
 
 
 class MetaInformations(BaseModel):
@@ -269,7 +295,7 @@ class Skill(BaseModel, frozen=True):
         """
 
         skill = get_skill_from_json(name, specialization)
-        # TODO: add related talents is a dedicated part.
+        # TODO: add related talents in a dedicated part.
         return cls(**skill)
 
 
@@ -357,6 +383,12 @@ class Money(BaseModel, validate_assignment=True):
         -------
         tuple[int, int, int]
             Normalized ``(golden_crown, silver_pistol, copper_coins)``.
+
+        Examples
+        --------
+        >>> Money.coerce_money(2, 25, 50)
+        (3, 6, 2)
+        25 SP = 1 GC + 5 SP
         """
         # Calculate the correct values without mutating self
         silver_pistol += copper_coins // 12
@@ -433,6 +465,23 @@ class Money(BaseModel, validate_assignment=True):
             raise ValueError("Cannot have negative money")
         total_cc_result = total_cc_self - total_cc_other
         return Money(**dict(zip(("golden_crown", "silver_pistol", "copper_coins"), self.coerce_money(0, 0, total_cc_result), strict=False)))
+
+    def __str__(self) -> str:
+        """Return a human-readable string representation.
+
+        Returns
+        -------
+        str
+            Formatted string like "X GC, Y SP, Z CC".
+        """
+        parts = []
+        if self.golden_crown > 0:
+            parts.append(f"{self.golden_crown} GC")
+        if self.silver_pistol > 0:
+            parts.append(f"{self.silver_pistol} SP")
+        if self.copper_coins > 0:
+            parts.append(f"{self.copper_coins} CC")
+        return ", ".join(parts) if parts else "0 CC"
 
 
 class EquipmentCategory(BaseModel):
@@ -786,3 +835,46 @@ class Character(BaseModel, validate_assignment=True):
     def is_cluttered(self) -> bool:
         """Whether the inventory total clutter exceeds ``max_clutter``."""
         return self.inventory.total_clutter > self.max_clutter
+
+
+class NonPlayableCharacter(BaseModel):
+    """A non-playable character (NPC) with basic attributes and description.
+    * It can be a creature, a merchant, a guard captain, etc.
+    * A NPC does not have experience or career progression.
+    * A NPC can be friendly or hostile to player characters.
+
+    Attributes
+    ----------
+    name : str
+        NPC name.
+    description : str | None
+        Optional description.
+    primary_attributes : PrimaryAttributes
+        Primary stats.
+    secondary_attributes : SecondaryAttributes
+        Secondary stats.
+    skills : set[CharacterSkill]
+        Owned skills with bonuses.
+    talents : set[Talent]
+        Owned talents.
+    career: Career | None
+        Optional career information (basically for human, dwarf, elf, halfling).
+    weapons: list[Equipment]
+        List of weapons owned by the NPC.
+    armours: list[Equipment]
+        List of armours owned by the NPC.
+    equipment: list[Equipment]
+        List of other equipment owned by the NPC.
+    """
+
+    name: str = Field(description="Nom du personnage non-joueur", examples=["Gobelin", "Marchand itinérant", "Capitaine de la garde", "Archaon, Seigneur de la Fin des Temps"])
+    description: Optional[str] = Field(default=None, description="Description éventuelle du personnage non-joueur")
+    primary_attributes: PrimaryAttributes = Field(default=PrimaryAttributes())
+    secondary_attributes: SecondaryAttributes = Field(default=SecondaryAttributes())
+    career: Optional[str] = Field(default=None, description="Carrière du personnage non-joueur, si applicable")
+    skills: set[CharacterSkill] = set()
+    talents: set[Talent] = set()
+    weapons: list[Equipment] = Field(default=[], description="Liste des armes possédées par le PNJ")
+    armours: list[Equipment] = Field(default=[], description="Liste des armures possédées par le PNJ")
+    equipment: list[Equipment] = Field(default=[], description="Liste des autres équipements possédés par le PNJ")
+    friendly: bool = Field(default=False, description="Indique si le PNJ est amical envers les personnages-joueurs")
