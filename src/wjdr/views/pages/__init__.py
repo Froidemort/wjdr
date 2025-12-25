@@ -2,4 +2,4 @@
 
 * Character page : This page displays the character sheet."""
 
-from .character import character_page  # noqa: F401
+from .character_creation import character_page  # noqa: F401

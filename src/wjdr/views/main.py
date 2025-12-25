@@ -5,11 +5,11 @@ from pathlib import Path
 
 from nicegui import app, ui
 
-from wjdr.views.pages.character import character_page
+from wjdr.views.pages.character_creation import character_page
 from wjdr.views.theme import frame
 
 
-@ui.page("/character")
+@ui.page("/character-creation")
 def character_creation() -> None:
     """Character creation page."""
     character_page()
