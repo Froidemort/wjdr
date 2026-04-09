@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import CheckConstraint, Enum as SAEnum, Identity
 from typing import Any, cast
+from sqlmodel import SQLModel
 
 from wjdr.models.sql_dump import (
     ArmourTable,
@@ -126,6 +127,55 @@ def test_foundation_table_names_are_registered():
     assert _sa_table(WeaponTable).name == "WeaponTable"
     assert _sa_table(WeaponWeaponAttributesTable).name == "WeaponWeaponAttributesTable"
     assert _sa_table(DiceTable).name == "DiceTable"
+
+
+def test_sql_dump_table_inventory_matches_source_schema():
+    assert set(SQLModel.metadata.tables) == {
+        "ArmourTable",
+        "CampaignTable",
+        "CareerCareerLinkTable",
+        "CareerObjectLinkTable",
+        "CareerObjectObjectChoiceLinkTable",
+        "CareerSkillChoiceSkillFreeChoiceSkillLinkTable",
+        "CareerSkillLinkTable",
+        "CareerTable",
+        "CareerTalentChoiceTalentFreeChoiceTalentLinkTable",
+        "CareerTalentLinkTable",
+        "CharacterCareerLinkTable",
+        "CharacterInventorySlotLinkTable",
+        "CharacterSkillLinkTable",
+        "CharacterSpellLinkTable",
+        "CharacterTable",
+        "CharacterTalentLinkTable",
+        "ChapterInventorySlotLinkTable",
+        "ChapterMediaLinkTable",
+        "ChapterTable",
+        "ChoiceSkillTable",
+        "ChoiceTalentTable",
+        "DiceTable",
+        "EquipmentLink",
+        "ExperienceTable",
+        "FreeChoiceSkillTable",
+        "FreeChoiceTalentTable",
+        "InventorySlotTable",
+        "MediaTable",
+        "MoneyTable",
+        "ObjectChoiceTable",
+        "ObjectObjectChoiceLinkTable",
+        "ObjectTable",
+        "PrimaryAttributesTable",
+        "Scenario",
+        "SecondaryAttributesTable",
+        "SkillChoiceSkillLinkTable",
+        "SkillTable",
+        "SpellCategoryTable",
+        "SpellTable",
+        "TalentChoiceSkillLinkTable",
+        "TalentTable",
+        "WeaponAttributesTable",
+        "WeaponTable",
+        "WeaponWeaponAttributesTable",
+    }
 
 
 def test_foundation_identity_primary_keys_match_sql_dump():
