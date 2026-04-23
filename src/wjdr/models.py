@@ -72,7 +72,9 @@ class PrimaryAttributeEnum(str, Enum):
     FELLOWSHIP = "fellowship"
 
 
-# Link tables
+# ==================
+# Link Tables
+# ==================
 
 
 class DicePoolDiceLinkTable(SQLModel, table=True):
@@ -140,7 +142,15 @@ class PlayableCharacterCapacityLinkTable(SQLModel, table=True):
     skill_level: Optional[SkillLevelEnum] = Field(default=None, nullable=True)
 
 
-# Dice
+class WeaponWeaponAttributesLinkTable(SQLModel, table=True):
+    __tablename__ = cast(declared_attr, "WeaponWeaponAttributesLinkTable")
+
+    weapon_id: int = Field(foreign_key="ObjectTable.id", primary_key=True)
+    weapon_attributes_id: int = Field(foreign_key="WeaponAttributeTable.id", primary_key=True)
+
+# ==================
+# Dice Tables
+# ==================
 # NOTE: These tables may be useless because in Warhammer RPG, we only use d10.
 # But they can be useful for the future, if we want to add support for other RPG systems,
 # or if we want to add support for custom dice (for example, a d12 with custom faces),
@@ -178,7 +188,9 @@ class DicePoolTable(SQLModel, table=True):
         return buffer
 
 
-# Spell
+# ==================
+# Spell Tables
+# ==================
 
 
 class SpellCategoryTable(SQLModel, table=True):
@@ -208,7 +220,9 @@ class SpellTable(SQLModel, table=True):
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="spells", link_model=PlayableCharacterSpellLinkTable)
 
 
-# Media table
+# ==================
+# Media Tables
+# ==================
 # NOTE: this table is used to store the media files (images, videos, etc.) that can be linked to campaigns, scenarios and chapters, or to other tables later.
 
 
@@ -226,7 +240,9 @@ class MediaTable(SQLModel, table=True):
     chapter_medias: list["ChapterTable"] = Relationship(back_populates="medias", link_model=ChapterMediaLinkTable)
 
 
-# Campaign tables
+# ==================
+# Campaign Tables
+# ==================
 
 
 class CampaignTable(SQLModel, table=True):
@@ -282,7 +298,9 @@ class ChapterTable(SQLModel, table=True):
     scenario: Optional[ScenarioTable] = Relationship(back_populates="chapters")
 
 
-# Equipment tables
+# ==================
+# Equipment Tables
+# ==================
 
 
 class CurrencyTable(SQLModel, table=True):
@@ -297,14 +315,6 @@ class CurrencyTable(SQLModel, table=True):
 
 
 # TODO: add an SQL event to automatically coerce the currency to a correct resprensentation (1 gold crown = 20 silver shillings = 240 brass pennies).
-
-
-class WeaponWeaponAttributesLinkTable(SQLModel, table=True):
-    __tablename__ = cast(declared_attr, "WeaponWeaponAttributesLinkTable")
-
-    weapon_id: int = Field(foreign_key="ObjectTable.id", primary_key=True)
-    weapon_attributes_id: int = Field(foreign_key="WeaponAttributeTable.id", primary_key=True)
-
 
 class ObjectTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "ObjectTable")
@@ -352,7 +362,9 @@ class EquipmentTable(SQLModel, table=True):
     careers: list["CareerTable"] = Relationship(back_populates="trappings", link_model=CareerEquipmentLinkTable)
 
 
-# Atributes, capacity = skill&talent, ...
+# ===========================
+# Attributes And Capacities Tables
+# ===========================
 
 
 class AttributesTable(SQLModel, table=True):
@@ -405,7 +417,9 @@ class CapacityTable(SQLModel, table=True):
     careers: list["CareerTable"] = Relationship(back_populates="capacities", link_model=CareerCapacityLinkTable)
 
 
-# Career
+# ==================
+# Career Tables
+# ==================
 # NOTE: Complex table, with a lot of relationships
 
 
@@ -449,7 +463,9 @@ class CareerTable(SQLModel, table=True):
     )
 
 
-# PlayableCharacter table
+# ==================
+# Character Tables
+# ==================
 # NOTE: Complex table, with a lot of relationships
 
 
