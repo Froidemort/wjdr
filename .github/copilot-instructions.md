@@ -1,45 +1,44 @@
-# AI assistant instructions for this repo
+# Warhammer RPG GM helper assistant : AI instructions
 
-## Project overview
-- This is a NiceGUI web app for Warhammer RPG 2nd Edition only.
-- Domain logic is in Pydantic models under `src/wjdr/models/`.
-- Game rules (skills, talents, careers) are data-driven from JSON in `resources/rules/` and consumed via `wjdr.models.rules`.
+## General instructions
 
-## Architecture and patterns
-- Treat `wjdr` as the root package; imports should be absolute (e.g. `from wjdr.models.models import Character`) in new code, even though internal modules sometimes use relative imports.
-- Core models:
-  - are defined in `models.py` and use rich type hints and Pydantic validators.
-  - Random generation helpers live in `factory.py` and `random.py`. Reuse them instead of re-implementing dice or race tables.
-- Rules I/O:
-  - New rule-based features should go in module `wjdr.models.rules` rather than reading files directly.
-- UI patterns:
-  - All UI is built with NiceGUI. Pages are functions decorated with `@ui.page`.
-  - The `frame()` context manager in `views/theme.py` applies the global theme and standard header/footer; wrap new pages in `frame()` unless explicitly opting out.
+- Always respond in French, unless the user explicitly asks you to respond in another language.
+- Always provide a concise and clear answer to the user's question or request.
+- Do not hallucinate, or provide false information. If you do not know the answer, say "Je ne sais pas" or "Je ne suis pas sûr".
 
-## Workflows
-- Dependency management uses `uv` with groups defined in `pyproject.toml` under `[dependency-groups]`:
-  - `lint` (ruff, mypy, interrogate, pre-commit) and `test` (pytest, pytest-cov, pytest-mock) are nested into `dev`.
-  - Prefer `uv sync` when adding instructions that require a fully set-up dev env.
-- Running the app:
-  - Entry point is `python -m wjdr.views.main`, which configures static files from `resources/` and runs NiceGUI on port 8080.
-- Tests:
-  - Use `pytest` with markers defined in `pyproject.toml` (`unitary`, `integration`, `e2e`, `gui`). Keep or add markers consistently in new tests.
-  - Existing tests live in `tests/`; mirror their style and fixtures (notably `fixed_seed` in `tests/conftest.py` for deterministic randomness).
-- Linting & typing:
-  - Ruff config is in `pyproject.toml` (`[tool.ruff]`); run `ruff check src tests` for new instructions.
+## Project description & context
 
-## Conventions for new code
-- Use Pydantic models and `Field` metadata for new domain entities; follow existing naming (French labels, `serialization_alias` for abbreviations like `CC`, `CT`).
-- Prefer adding behaviour as methods/properties on existing models (e.g. `Money.__add__`, `Character.max_clutter`) rather than scattering free functions.
-- Keep random behaviour testable by:
-  - Threading `seed` parameters where appropriate (as in `primary_attribute_random_factory`).
-  - Reusing `DicePool` and `dice_roll_map` instead of `random.randint` directly.
-- When extending rules JSON, write or update tests in `tests/test_rules.py` and access new data via `wjdr.models.rules` helpers.
+This project aim to create an assistant for a game master of the Warhammer RPG 2nd edition.
+The main functionnalities are :
+* Create, modify, and manager playablable characters (PC)
+* Create and manage complete adventures organized in scenarios, chapters.
+* Manage Warhammer rules :
+  * Roll dice and calculate results
+  * create and manage weapons, armors, and other items
+  * create and manager spells.
 
-## How to interact as an AI agent
-- Stick to uv for dependency, linting, testing, and running instructions.
-- When adding features touching both UI and models, update models/rules first with tests, then wire them into NiceGUI views.
-- Avoid introducing new frameworks; stick to NiceGUI, Pydantic
-- Use only pytest and its plugins for tests.
-- Respect the existing French naming and Warhammer terminology in UI strings and rule names.
-- Before proposing breaking changes to core models or JSON schemas, surface them explicitly in your explanation so the human can confirm.
+## Used technologies & languages
+
+This project uses Python 3.11+.
+It aims to manage backend and frontend web application.
+The libraties used are :
+* *Pydantic* for data validation and management
+* *SQLModel* for database management, with _PostgreSQL_ as database
+* *reflex* for frontend and backend web application
+
+Developpement libratries are :
+* *pytest* for testing
+* *ruff* for linting and formatting
+* *sphinx* for documentation, with theme *furo* for documentation style.
+
+## Code style
+
+ALWAYS follow rules that are described in [pyproject.toml](../pyproject.toml) file, with *ruff* as linter and formatter.
+Comments, docstrings, variables, functions, methods and classes names MUST BE in english. Labels, messages, and user interface MUST BE in french.
+
+### SQLModel conventions
+
+- Keep all SQLModel classes in `src/wjdr/models.py`.
+- Declare `__tablename__` with `cast(declared_attr, "TableName")`.
+- For relationships, use `Relationship` with `back_populates` and `link_model`. `link_model` should be a class defined in the same file, not a string.
+- Avoid using base-table inheritance helpers and prefer explicit field declarations per table.
