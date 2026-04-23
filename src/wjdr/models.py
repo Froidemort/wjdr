@@ -3,26 +3,30 @@
 import datetime
 import uuid
 from enum import Enum, StrEnum
-from typing import Literal, Optional, cast
+from typing import Optional, cast
 
 from pydantic import computed_field
 from sqlalchemy import Index
 from sqlalchemy.ext.declarative import declared_attr
 from sqlmodel import Field, Relationship, SQLModel
 
-PrimaryAttribute = Literal["weapon_skill", "ballistic_skill", "strength", "toughness", "agility", "intelligence", "willpower", "fellowship"]
-
-
 # Enums definitions
 
 
 class GenderEnum(StrEnum):
+    """Gender enum for playable characters.
+
+    We use a string enum to be able to easily display the gender in the frontend.
+    """
     MASCULIN = "masculin"
     FEMININ = "feminin"
     OTHER = "autre"
 
 
 class PlayableRaceEnum(StrEnum):
+    """Playable races enum for playable characters.
+
+    In Warhammer RPG, there are only 4 playable races."""
     DWARF = "nain"
     HUMAN = "humain"
     ELF = "elfe"
@@ -30,17 +34,29 @@ class PlayableRaceEnum(StrEnum):
 
 
 class DynamicBonusEnum(str, Enum):
+    """Dynamic bonus enum for dice pools.
+
+    BE : Toughness Bonus, used for example to mitigate the damage of a weapon with the "Toughness Bonus" attribute.
+    BF : Strength Bonus, used for example to increase the damage of a weapon with the "Strength Bonus" attribute.
+
+    NOTE: this enum might be useless if we consider DicePoolTable useless.
+    """
     BE = "BE"
     BF = "BF"
 
 
 class SkillLevelEnum(Enum):
+    """Skill level enum for the skill level of a capacity for a playable character.
+
+    The level are a bonus in percent linked to the skill primary attribute.
+    """
     BASE = 0
     LVL1 = 10
     LVL2 = 20
 
 
 class QualityEnum(str, Enum):
+    """Quality enum for objects."""
     EXCEPTIONAL = "exceptionelle"
     GOOD = "bonne"
     NORMAL = "normale"
@@ -48,6 +64,10 @@ class QualityEnum(str, Enum):
 
 
 class LocationEnum(str, Enum):
+    """Location enum for objects, used for armor pieces.
+
+    This enum is useful when we play the advanced armour rules, where the location of the armor piece is important to know how it works.
+    """
     HEAD = "tete"
     LEFT_ARM = "bras gauche"
     RIGHT_ARM = "bras droit"
@@ -57,11 +77,19 @@ class LocationEnum(str, Enum):
 
 
 class CategoryEnum(str, Enum):
+    """Category enum. It disciminate between talent and skill.
+
+    This is a modelisation choice, because skills and talents are very "similar" in term of data, but not in term of game mechanics.
+    """
     TALENT = "talent"
     SKILL = "skill"
 
 
 class PrimaryAttributeEnum(str, Enum):
+    """Primary attribute enum for playable characters.
+
+    This enum will not be updated.
+    """
     WEAPON_SKILL = "weapon_skill"
     BALLISTIC_SKILL = "ballistic_skill"
     STRENGTH = "strength"
@@ -70,6 +98,17 @@ class PrimaryAttributeEnum(str, Enum):
     INTELLIGENCE = "intelligence"
     WILLPOWER = "willpower"
     FELLOWSHIP = "fellowship"
+
+class SecondaryAttributeEnum(str, Enum):
+    """Secondary attribute enum for playable characters.
+
+    This enum will not be updated.
+    """
+    ATTACKS = "attacks"
+    WOUNDS = "wounds"
+    MOVEMENT = "movement"
+    INSANITY_POINTS = "insanity_points"
+    FATE_POINTS = "fate_points"
 
 
 # ==================
@@ -162,8 +201,8 @@ class DiceTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "DiceTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    faces: int = Field(ge=1, nullable=False)
-    quantity: int = Field(ge=1, nullable=False)
+    faces: int = Field(ge=1, nullable=False, description="Number of faces of the dice, for example 6 for a d6, 10 for a d10, etc.")
+    quantity: int = Field(ge=1, nullable=False, description="Number of dice of this type.")
 
     dice_pools: list["DicePoolTable"] = Relationship(back_populates="dices", link_model=DicePoolDiceLinkTable)
     damage_objects: list["ObjectTable"] = Relationship(back_populates="damages")
@@ -197,8 +236,8 @@ class SpellCategoryTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "SpellCategoryTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: Optional[str] = Field(default=None, max_length=1023)
+    name: str = Field(max_length=255, nullable=False, description="Name of the spell category")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the spell category")
 
     spells: list["SpellTable"] = Relationship(back_populates="category")
 
@@ -207,11 +246,12 @@ class SpellTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "SpellTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: Optional[str] = Field(default=None, max_length=1023)
+    name: str = Field(max_length=255, nullable=False, description="Name of the spell")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the spell")
+    is_ritual: bool = Field(default=False, nullable=False, description="Whether the spell is a ritual or not")
 
     category_id: int = Field(foreign_key="SpellCategoryTable.id", nullable=False)
-    difficulty: int = Field(ge=0, nullable=False)
+    difficulty: int = Field(ge=0, nullable=False, description="Difficulty level of the spell")
     damage_id: Optional[int] = Field(default=None, foreign_key="DicePoolTable.id", nullable=True)
 
     category: SpellCategoryTable = Relationship(back_populates="spells")
@@ -231,8 +271,8 @@ class MediaTable(SQLModel, table=True):
     __table_args__ = (Index("MediaTable_name_index", "name"),)
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    url: str = Field(max_length=255, nullable=False)
+    name: str = Field(max_length=255, nullable=False, description="Name of the media file")
+    url: str = Field(max_length=255, nullable=False, description="URL of the media file, can be a local path or a remote URL")
 
     campaigns: list["CampaignTable"] = Relationship(back_populates="illustration_image")
     scenarios: list["ScenarioTable"] = Relationship(back_populates="illustration_image")
@@ -254,12 +294,12 @@ class CampaignTable(SQLModel, table=True):
     )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: Optional[str] = Field(default=None, max_length=1023)
+    name: str = Field(max_length=255, nullable=False, description="Name of the campaign")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the campaign")
 
-    gm_name: Optional[str] = Field(default=None, max_length=127)
-    start_date: datetime.datetime = Field(default_factory=datetime.datetime.now, nullable=False)
-    end_date: Optional[datetime.datetime] = Field(default=None)
+    gm_name: Optional[str] = Field(default=None, max_length=127, description="Name of the game master")
+    start_date: datetime.datetime = Field(default_factory=datetime.datetime.now, nullable=False, description="Start date of the campaign")
+    end_date: Optional[datetime.datetime] = Field(default=None, description="End date of the campaign")
     illustration_image_id: Optional[uuid.UUID] = Field(default=None, foreign_key="MediaTable.id", nullable=True)
 
     illustration_image: Optional[MediaTable] = Relationship(back_populates="campaigns")
@@ -271,8 +311,8 @@ class ScenarioTable(SQLModel, table=True):
     __table_args__ = (Index("scenarioTable_name_index", "name"),)
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: Optional[str] = Field(default=None, max_length=1023)
+    name: str = Field(max_length=255, nullable=False, description="Title of the scenario")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the scenario")
 
     campaign_id: Optional[uuid.UUID] = Field(default=None, foreign_key="CampaignTable.id", nullable=True)
     illustration_image_id: Optional[uuid.UUID] = Field(default=None, foreign_key="MediaTable.id", nullable=True)
@@ -287,8 +327,8 @@ class ChapterTable(SQLModel, table=True):
     __table_args__ = (Index("chapterTable_name_index", "name"),)
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: Optional[str] = Field(default=None, max_length=255)
+    name: str = Field(max_length=255, nullable=False, description="Title of the chapter")
+    description: Optional[str] = Field(default=None, max_length=255, description="Description of the chapter")
 
     scenario_id: Optional[uuid.UUID] = Field(default=None, foreign_key="ScenarioTable.id", nullable=True)
     illustration_image_id: Optional[uuid.UUID] = Field(default=None, foreign_key="MediaTable.id", nullable=True)
@@ -307,9 +347,9 @@ class CurrencyTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "CurrencyTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    brass_pennies: int = Field(default=0, ge=0, nullable=False)
-    silver_shillings: int = Field(default=0, ge=0, nullable=False)
-    gold_crowns: int = Field(default=0, ge=0, nullable=False)
+    brass_pennies: int = Field(default=0, ge=0, nullable=False, description="Amount of brass pennies")
+    silver_shillings: int = Field(default=0, ge=0, nullable=False, description="Amount of silver shillings")
+    gold_crowns: int = Field(default=0, ge=0, nullable=False, description="Amount of gold crowns")
 
     objects: list["ObjectTable"] = Relationship(back_populates="price")
 
@@ -322,15 +362,15 @@ class ObjectTable(SQLModel, table=True):
     # TODO: add constraints to ensure that either damage_id or armour_points and armour_location are set, but not both.
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: Optional[str] = Field(default=None, max_length=1023)
-    clutter: Optional[int] = Field(default=0, ge=0, nullable=True)
-    quality: QualityEnum = Field(default=QualityEnum.NORMAL, nullable=False)
+    name: str = Field(max_length=255, nullable=False, description="Name of the object")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the object")
+    clutter: Optional[int] = Field(default=0, ge=0, nullable=True, description="Clutter value of the object")
+    quality: QualityEnum = Field(default=QualityEnum.NORMAL, nullable=False, description="Quality of the object")
     price_id: Optional[int] = Field(default=None, foreign_key="CurrencyTable.id", nullable=True)
 
     damages_id: Optional[int] = Field(default=None, foreign_key="DiceTable.id", nullable=True)
-    armour_points: Optional[int] = Field(default=None, ge=0, nullable=True)
-    armour_location: Optional[LocationEnum] = Field(default=None, nullable=True)
+    armour_points: Optional[int] = Field(default=None, ge=0, nullable=True, description="Armour points of the object, used for armor pieces")
+    armour_location: Optional[LocationEnum] = Field(default=None, nullable=True, description="Location of the armour on the character")
 
     price: Optional[CurrencyTable] = Relationship(back_populates="objects")
     damages: Optional[DiceTable] = Relationship(back_populates="damage_objects")
@@ -343,8 +383,8 @@ class WeaponAttributeTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "WeaponAttributeTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: str = Field(max_length=255, nullable=False)
+    name: str = Field(max_length=255, nullable=False, description="Name of the weapon attribute")
+    description: str = Field(max_length=255, nullable=False, description="Description of the weapon attribute, especially the potential effects.")
 
     objects: list[ObjectTable] = Relationship(back_populates="weapon_attributes", link_model=WeaponWeaponAttributesLinkTable)
 
@@ -354,7 +394,7 @@ class EquipmentTable(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     object_id: int = Field(foreign_key="ObjectTable.id", nullable=False)
-    quantity: int = Field(default=1, ge=1, nullable=False)
+    quantity: int = Field(default=1, ge=1, nullable=False, description="Quantity of the object, used for example for arrows, or potions, etc.")
 
     object: ObjectTable = Relationship(back_populates="equipment")
 
@@ -372,20 +412,22 @@ class AttributesTable(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     # Primary attributes
-    weapon_skill: int = Field(ge=0, le=100, nullable=False)
-    ballistic_skill: int = Field(ge=0, le=100, nullable=False)
-    strength: int = Field(ge=0, le=100, nullable=False)
-    toughness: int = Field(ge=0, le=100, nullable=False)
-    agility: int = Field(ge=0, le=100, nullable=False)
-    intelligence: int = Field(ge=0, le=100, nullable=False)
-    willpower: int = Field(ge=0, le=100, nullable=False)
-    fellowship: int = Field(ge=0, le=100, nullable=False)
+    weapon_skill: int = Field(ge=0, le=100, nullable=False, description="Weapon skill of the character, used for melee attacks")
+    ballistic_skill: int = Field(ge=0, le=100, nullable=False, description="Ballistic skill of the character, used for ranged attacks")
+    strength: int = Field(ge=0, le=100, nullable=False, description="Strength of the character, used for physical power")
+    toughness: int = Field(ge=0, le=100, nullable=False, description="Toughness of the character, used for resilience")
+    agility: int = Field(ge=0, le=100, nullable=False, description="Agility of the character, used for dexterity and initiative in combat")
+    intelligence: int = Field(ge=0, le=100, nullable=False, description="Intelligence of the character, used for mental acuity, knowledge, and focalisation for casting spells")
+    willpower: int = Field(ge=0, le=100, nullable=False, description="Willpower of the character, used for resisting mental attacks and maintaining focus")
+    fellowship: int = Field(ge=0, le=100, nullable=False, description="Fellowship of the character, used for social interactions and leadership")
     # Secondary attributes
-    attacks: int = Field(ge=0, nullable=False)
-    wounds: int = Field(ge=0, nullable=False)
-    movement: int = Field(ge=0, nullable=False)
-    insanity_points: int = Field(ge=0, nullable=False)
-    fate_points: int = Field(ge=0, nullable=False)
+    attacks: int = Field(ge=0, nullable=False, description="Number of actions (and attack) of the character, used for combat")
+    wounds: int = Field(ge=0, nullable=False, description="Number of wounds the character can take before dying.")
+    movement: int = Field(ge=0, nullable=False, description="Movement speed of the character, used for determining how far they can move in a turn.")
+    insanity_points: int = Field(ge=0, nullable=False, description="Insanity points of the character, used for tracking mental stability.")
+    fate_points: int = Field(ge=0, nullable=False, description="Fate points of the character, used for influencing outcomes in their favor.")
+
+    # TODO: add mental illness many-to-many relationship to list potential mental illness of the character.
 
     careers: list["CareerTable"] = Relationship(back_populates="attributes")
     base_playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="base_attributes", sa_relationship_kwargs={"foreign_keys": "[PlayableCharacterTable.base_attributes_id]"})
@@ -394,11 +436,13 @@ class AttributesTable(SQLModel, table=True):
     @computed_field
     @property
     def strength_bonus(self) -> int:
+        """Strength bonus of the character, used for example to increase the damage of a weapon with the "Strength Bonus" attribute."""
         return self.strength // 10
 
     @computed_field
     @property
     def toughness_bonus(self) -> int:
+        """Toughness bonus of the character, used for example to mitigate the damage of a weapon with the "Toughness Bonus" attribute."""
         return self.toughness // 10
 
 
@@ -406,11 +450,11 @@ class CapacityTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "CapacityTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: Optional[str] = Field(default=None, max_length=1023)
-    category: CategoryEnum = Field(nullable=False)
-    skill_attribute: Optional[PrimaryAttributeEnum] = Field(default=None, nullable=True)
-    talent_bonus: Optional[int] = Field(default=None, nullable=True)
+    name: str = Field(max_length=255, nullable=False, description="Name of the capacity (talent or skill)")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the capacity (talent or skill)")
+    category: CategoryEnum = Field(nullable=False, description="Category of the capacity (talent or skill)")
+    skill_attribute: Optional[PrimaryAttributeEnum] = Field(default=None, nullable=True, description="Primary attribute associated with the capacity (talent or skill)")
+    talent_bonus: Optional[int] = Field(default=None, nullable=True, description="Bonus provided by the talent, if applicable")
     # NOTE: we could modelize the fact that a talent is possibly linked to a list of skills... But this is not very simple, and it is not very useful, because we can put it in the description of the talent.
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="capacities", link_model=PlayableCharacterCapacityLinkTable)
@@ -427,10 +471,10 @@ class CareerTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "CareerTable")
 
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=255, nullable=False)
-    description: Optional[str] = Field(default=None, max_length=1023)
-    is_basic: bool = Field(nullable=False)
-    special_access_rule: Optional[str] = Field(default=None, max_length=128)
+    name: str = Field(max_length=255, nullable=False, description="Name of the career")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the career")
+    is_basic: bool = Field(nullable=False, description="Indicates if the career is a basic career (e.g. a career that can be taken at the beginning of the character creation) or not (for example, a career that can only be taken after reaching a certain level in another career).")
+    special_access_rule: Optional[str] = Field(default=None, max_length=128, description="Special access rule for the career, if any")
 
     attributes_id: Optional[int] = Field(default=None, foreign_key="AttributesTable.id", nullable=True)
 
@@ -473,14 +517,16 @@ class PersonalDetailTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "PersonalDetailTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    age: Optional[int] = Field(default=None, ge=0, nullable=True)
-    height: Optional[int] = Field(default=None, ge=0, nullable=True)
-    weight: Optional[int] = Field(default=None, ge=0, nullable=True)
-    eye_color: Optional[str] = Field(default=None, max_length=255)
-    hair_color: Optional[str] = Field(default=None, max_length=255)
-    siblings_number: Optional[int] = Field(default=None, ge=0, nullable=True)
-    astral_sign: Optional[str] = Field(default=None, max_length=255)
-    birthplace: Optional[str] = Field(default=None, max_length=255)
+    biography: Optional[str] = Field(default=None, max_length=1023, description="Biography of the character, used for roleplay purposes")
+    age: Optional[int] = Field(default=None, ge=0, nullable=True, description="Age of the character, used for roleplay purposes")
+    height: Optional[int] = Field(default=None, ge=0, nullable=True, description="Height of the character, used for roleplay purposes")
+    weight: Optional[int] = Field(default=None, ge=0, nullable=True, description="Weight of the character, used for roleplay purposes")
+    eye_color: Optional[str] = Field(default=None, max_length=255, description="Eye color of the character, used for roleplay purposes")
+    hair_color: Optional[str] = Field(default=None, max_length=255, description="Hair color of the character, used for roleplay purposes")
+    siblings_number: Optional[int] = Field(default=None, ge=0, nullable=True, description="Number of siblings of the character, used for roleplay purposes")
+    # TODO: use enum for astral_sign, because the number of astral sign is limited.
+    astral_sign: Optional[str] = Field(default=None, max_length=255, description="Astral sign of the character, used for roleplay purposes")
+    birthplace: Optional[str] = Field(default=None, max_length=255, description="Birthplace of the character, used for roleplay purposes")
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="personal_details")
 
@@ -489,14 +535,13 @@ class PlayableCharacterTable(SQLModel, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterTable")
 
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
-    description: Optional[str] = Field(default=None, max_length=1023)
-    name: str = Field(max_length=255, nullable=False)
-    surname: Optional[str] = Field(default=None, max_length=255)
-    gender: GenderEnum = Field(nullable=False)
-    race: PlayableRaceEnum = Field(nullable=False)
+    name: str = Field(max_length=255, nullable=False, description="Name of the playable character")
+    surname: Optional[str] = Field(default=None, max_length=255, description="Surname of the playable character")
+    gender: GenderEnum = Field(nullable=False, description="Gender of the playable character")
+    race: PlayableRaceEnum = Field(nullable=False, description="Race of the playable character")
+    current_experience: int = Field(default=0, ge=0, nullable=False, description="Current experience points of the playable character")
+    total_experience: int = Field(default=0, ge=0, nullable=False, description="Total experience points of the playable character")
     personal_details_id: Optional[int] = Field(default=None, foreign_key="PersonalDetailTable.id", nullable=True)
-    current_experience: int = Field(default=0, ge=0, nullable=False)
-    total_experience: int = Field(default=0, ge=0, nullable=False)
     # Base attribute valuue, initialized when a character is created
     base_attributes_id: int = Field(foreign_key="AttributesTable.id", nullable=False)
     # Base + career attribute bonus that can evolve when the character progress in his career with experience points.
@@ -517,6 +562,7 @@ class PlayableCharacterTable(SQLModel, table=True):
     @computed_field
     @property
     def spent_experience(self) -> int:
+        """Spent experience points of the playable character, used for tracking how many experience points the character has spent."""
         return self.total_experience - self.current_experience
 
 
