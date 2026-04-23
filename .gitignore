@@ -24,3 +24,5 @@ htmlcov/
 # tools directories
 data/
 output/
+
+.trash
