@@ -280,6 +280,14 @@ class MediaTable(Model, table=True):
     chapters: list["ChapterTable"] = Relationship(back_populates="illustration_image")
     chapter_medias: list["ChapterTable"] = Relationship(back_populates="medias", link_model=ChapterMediaLinkTable)
 
+class ChapterMarkdownTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "ChapterMarkdownTable")
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    url: str = Field(nullable=False, description="URL of the markdown file, can be a local path or a remote URL")
+
+    chapter: Optional["ChapterTable"] = Relationship(back_populates="markdown")
+
 
 # ==================
 # Campaign Tables
@@ -333,10 +341,12 @@ class ChapterTable(Model, table=True):
 
     scenario_id: Optional[uuid.UUID] = Field(default=None, foreign_key="ScenarioTable.id", nullable=True)
     illustration_image_id: Optional[uuid.UUID] = Field(default=None, foreign_key="MediaTable.id", nullable=True)
+    markdown_content_id: Optional[int] = Field(default=None, foreign_key="ChapterMarkdownTable.id", nullable=True)
 
     medias: list[MediaTable] = Relationship(back_populates="chapter_medias", link_model=ChapterMediaLinkTable)
     illustration_image: Optional[MediaTable] = Relationship(back_populates="chapters")
     scenario: Optional[ScenarioTable] = Relationship(back_populates="chapters")
+    markdown_content: Optional["ChapterMarkdownTable"] = Relationship(back_populates="chapter", sa_relationship_kwargs={"uselist": False})
 
 
 # ==================
