@@ -1,4 +1,4 @@
-"""Unified SQLModel tables and enums for the application domain."""
+"""Unified Model tables and enums for the application domain."""
 
 import datetime
 import uuid
@@ -6,9 +6,10 @@ from enum import Enum, StrEnum
 from typing import Optional, cast
 
 from pydantic import computed_field
+from reflex import Model
 from sqlalchemy import Index
 from sqlalchemy.ext.declarative import declared_attr
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship
 
 # Enums definitions
 
@@ -116,49 +117,49 @@ class SecondaryAttributeEnum(str, Enum):
 # ==================
 
 
-class DicePoolDiceLinkTable(SQLModel, table=True):
+class DicePoolDiceLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "DicePoolDiceLinkTable")
 
     dice_pool_id: int = Field(foreign_key="DicePoolTable.id", primary_key=True)
     dices_id: int = Field(foreign_key="DiceTable.id", primary_key=True)
 
 
-class ChapterMediaLinkTable(SQLModel, table=True):
+class ChapterMediaLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "ChapterMediaLinkTable")
 
     chapter_id: int = Field(foreign_key="ChapterTable.id", primary_key=True)
     media_id: uuid.UUID = Field(foreign_key="MediaTable.id", primary_key=True)
 
 
-class CareerCapacityLinkTable(SQLModel, table=True):
+class CareerCapacityLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CareerCapacityLinkTable")
 
     career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
     capacity_id: int = Field(foreign_key="CapacityTable.id", primary_key=True)
 
 
-class CareerEquipmentLinkTable(SQLModel, table=True):
+class CareerEquipmentLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CareerEquipmentLinkTable")
 
     career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
     equipment_id: int = Field(foreign_key="EquipmentTable.id", primary_key=True)
 
 
-class CareerCareerLinkTable(SQLModel, table=True):
+class CareerCareerLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CareerCareerLinkTable")
 
     upstream_career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
     downstream_career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
 
 
-class PlayableCharacterEquipmentLinkTable(SQLModel, table=True):
+class PlayableCharacterEquipmentLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterEquipmentLinkTable")
 
     playable_character_id: int = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
     equipment_id: int = Field(foreign_key="EquipmentTable.id", primary_key=True)
 
 
-class PlayableCharacterCareerLinkTable(SQLModel, table=True):
+class PlayableCharacterCareerLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterCareerLinkTable")
 
     playable_character_id: int = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
@@ -166,14 +167,14 @@ class PlayableCharacterCareerLinkTable(SQLModel, table=True):
     order: int = Field(default=0, ge=0, nullable=False)
 
 
-class PlayableCharacterSpellLinkTable(SQLModel, table=True):
+class PlayableCharacterSpellLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterSpellLinkTable")
 
     playable_character_id: int = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
     spell_id: int = Field(foreign_key="SpellTable.id", primary_key=True)
 
 
-class PlayableCharacterCapacityLinkTable(SQLModel, table=True):
+class PlayableCharacterCapacityLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterCapacityLinkTable")
 
     playable_character_id: int = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
@@ -181,7 +182,7 @@ class PlayableCharacterCapacityLinkTable(SQLModel, table=True):
     skill_level: Optional[SkillLevelEnum] = Field(default=None, nullable=True)
 
 
-class WeaponWeaponAttributesLinkTable(SQLModel, table=True):
+class WeaponWeaponAttributesLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "WeaponWeaponAttributesLinkTable")
 
     weapon_id: int = Field(foreign_key="ObjectTable.id", primary_key=True)
@@ -197,7 +198,7 @@ class WeaponWeaponAttributesLinkTable(SQLModel, table=True):
 # So we keep them for now, but they will be removed if it is too complex to maintain them.
 
 
-class DiceTable(SQLModel, table=True):
+class DiceTable(Model, table=True):
     __tablename__ = cast(declared_attr, "DiceTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -208,7 +209,7 @@ class DiceTable(SQLModel, table=True):
     damage_objects: list["ObjectTable"] = Relationship(back_populates="damages")
 
 
-class DicePoolTable(SQLModel, table=True):
+class DicePoolTable(Model, table=True):
     __tablename__ = cast(declared_attr, "DicePoolTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -232,7 +233,7 @@ class DicePoolTable(SQLModel, table=True):
 # ==================
 
 
-class SpellCategoryTable(SQLModel, table=True):
+class SpellCategoryTable(Model, table=True):
     __tablename__ = cast(declared_attr, "SpellCategoryTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -242,7 +243,7 @@ class SpellCategoryTable(SQLModel, table=True):
     spells: list["SpellTable"] = Relationship(back_populates="category")
 
 
-class SpellTable(SQLModel, table=True):
+class SpellTable(Model, table=True):
     __tablename__ = cast(declared_attr, "SpellTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -266,7 +267,7 @@ class SpellTable(SQLModel, table=True):
 # NOTE: this table is used to store the media files (images, videos, etc.) that can be linked to campaigns, scenarios and chapters, or to other tables later.
 
 
-class MediaTable(SQLModel, table=True):
+class MediaTable(Model, table=True):
     __tablename__ = cast(declared_attr, "MediaTable")
     __table_args__ = (Index("MediaTable_name_index", "name"),)
 
@@ -285,7 +286,7 @@ class MediaTable(SQLModel, table=True):
 # ==================
 
 
-class CampaignTable(SQLModel, table=True):
+class CampaignTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CampaignTable")
     __table_args__ = (
         Index("campaignTable_name_index", "name"),
@@ -306,7 +307,7 @@ class CampaignTable(SQLModel, table=True):
     scenarios: list["ScenarioTable"] = Relationship(back_populates="campaign")
 
 
-class ScenarioTable(SQLModel, table=True):
+class ScenarioTable(Model, table=True):
     __tablename__ = cast(declared_attr, "ScenarioTable")
     __table_args__ = (Index("scenarioTable_name_index", "name"),)
 
@@ -322,7 +323,7 @@ class ScenarioTable(SQLModel, table=True):
     chapters: list["ChapterTable"] = Relationship(back_populates="scenario")
 
 
-class ChapterTable(SQLModel, table=True):
+class ChapterTable(Model, table=True):
     __tablename__ = cast(declared_attr, "ChapterTable")
     __table_args__ = (Index("chapterTable_name_index", "name"),)
 
@@ -343,7 +344,7 @@ class ChapterTable(SQLModel, table=True):
 # ==================
 
 
-class CurrencyTable(SQLModel, table=True):
+class CurrencyTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CurrencyTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -356,7 +357,7 @@ class CurrencyTable(SQLModel, table=True):
 
 # TODO: add an SQL event to automatically coerce the currency to a correct resprensentation (1 gold crown = 20 silver shillings = 240 brass pennies).
 
-class ObjectTable(SQLModel, table=True):
+class ObjectTable(Model, table=True):
     __tablename__ = cast(declared_attr, "ObjectTable")
 
     # TODO: add constraints to ensure that either damage_id or armour_points and armour_location are set, but not both.
@@ -379,7 +380,7 @@ class ObjectTable(SQLModel, table=True):
     weapon_attributes: list["WeaponAttributeTable"] = Relationship(back_populates="objects", link_model=WeaponWeaponAttributesLinkTable)
 
 
-class WeaponAttributeTable(SQLModel, table=True):
+class WeaponAttributeTable(Model, table=True):
     __tablename__ = cast(declared_attr, "WeaponAttributeTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -389,7 +390,7 @@ class WeaponAttributeTable(SQLModel, table=True):
     objects: list[ObjectTable] = Relationship(back_populates="weapon_attributes", link_model=WeaponWeaponAttributesLinkTable)
 
 
-class EquipmentTable(SQLModel, table=True):
+class EquipmentTable(Model, table=True):
     __tablename__ = cast(declared_attr, "EquipmentTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -407,7 +408,7 @@ class EquipmentTable(SQLModel, table=True):
 # ===========================
 
 
-class AttributesTable(SQLModel, table=True):
+class AttributesTable(Model, table=True):
     __tablename__ = cast(declared_attr, "AttributesTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -446,7 +447,7 @@ class AttributesTable(SQLModel, table=True):
         return self.toughness // 10
 
 
-class CapacityTable(SQLModel, table=True):
+class CapacityTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CapacityTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -467,7 +468,7 @@ class CapacityTable(SQLModel, table=True):
 # NOTE: Complex table, with a lot of relationships
 
 
-class CareerTable(SQLModel, table=True):
+class CareerTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CareerTable")
 
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -513,7 +514,7 @@ class CareerTable(SQLModel, table=True):
 # NOTE: Complex table, with a lot of relationships
 
 
-class PersonalDetailTable(SQLModel, table=True):
+class PersonalDetailTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PersonalDetailTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -531,7 +532,7 @@ class PersonalDetailTable(SQLModel, table=True):
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="personal_details")
 
 
-class PlayableCharacterTable(SQLModel, table=True):
+class PlayableCharacterTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterTable")
 
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
