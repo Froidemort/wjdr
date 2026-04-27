@@ -9,7 +9,7 @@ dependencies = [
     "alembic>=1.16.5",
     "pydantic>=2.13.3",
     "psycopg[binary]>=3.2.10",
-    "reflex>=0.9.0",
+    "reflex<0.9.0",
     "sqlmodel>=0.0.24",
 ]
 
