@@ -10,6 +10,7 @@ from reflex import Model
 from sqlalchemy import Index
 from sqlalchemy.ext.declarative import declared_attr
 from sqlmodel import Field, Relationship
+from sqlmodel import SQLModel as Model
 
 # Enums definitions
 
