@@ -19,6 +19,7 @@ class GenderEnum(StrEnum):
 
     We use a string enum to be able to easily display the gender in the frontend.
     """
+
     MASCULIN = "masculin"
     FEMININ = "feminin"
     OTHER = "autre"
@@ -28,6 +29,7 @@ class PlayableRaceEnum(StrEnum):
     """Playable races enum for playable characters.
 
     In Warhammer RPG, there are only 4 playable races."""
+
     DWARF = "nain"
     HUMAN = "humain"
     ELF = "elfe"
@@ -42,6 +44,7 @@ class DynamicBonusEnum(str, Enum):
 
     NOTE: this enum might be useless if we consider DicePoolTable useless.
     """
+
     BE = "BE"
     BF = "BF"
 
@@ -51,6 +54,7 @@ class SkillLevelEnum(Enum):
 
     The level are a bonus in percent linked to the skill primary attribute.
     """
+
     BASE = 0
     LVL1 = 10
     LVL2 = 20
@@ -58,6 +62,7 @@ class SkillLevelEnum(Enum):
 
 class QualityEnum(str, Enum):
     """Quality enum for objects."""
+
     EXCEPTIONAL = "exceptionelle"
     GOOD = "bonne"
     NORMAL = "normale"
@@ -69,6 +74,7 @@ class LocationEnum(str, Enum):
 
     This enum is useful when we play the advanced armour rules, where the location of the armor piece is important to know how it works.
     """
+
     HEAD = "tete"
     LEFT_ARM = "bras gauche"
     RIGHT_ARM = "bras droit"
@@ -82,6 +88,7 @@ class CategoryEnum(str, Enum):
 
     This is a modelisation choice, because skills and talents are very "similar" in term of data, but not in term of game mechanics.
     """
+
     TALENT = "talent"
     SKILL = "skill"
 
@@ -91,6 +98,7 @@ class PrimaryAttributeEnum(str, Enum):
 
     This enum will not be updated.
     """
+
     WEAPON_SKILL = "weapon_skill"
     BALLISTIC_SKILL = "ballistic_skill"
     STRENGTH = "strength"
@@ -100,16 +108,31 @@ class PrimaryAttributeEnum(str, Enum):
     WILLPOWER = "willpower"
     FELLOWSHIP = "fellowship"
 
+
 class SecondaryAttributeEnum(str, Enum):
     """Secondary attribute enum for playable characters.
 
     This enum will not be updated.
     """
+
     ATTACKS = "attacks"
     WOUNDS = "wounds"
     MOVEMENT = "movement"
     INSANITY_POINTS = "insanity_points"
     FATE_POINTS = "fate_points"
+
+
+class DifficultyEnum(str, Enum):
+    """Difficulty enum for NPCs"""
+
+    VERY_EASY = "très facile"
+    MEDIUM_EASY = "assez facile"
+    EASY = "facile"
+    AVERAGE = "moyen"
+    HARD = "difficile"
+    MEDIUM_HARD = "assez difficile"
+    VERY_HARD = "très difficile"
+    IMPOSSIBLE = "impossible"
 
 
 # ==================
@@ -188,6 +211,29 @@ class WeaponWeaponAttributesLinkTable(Model, table=True):
     weapon_id: int = Field(foreign_key="ObjectTable.id", primary_key=True)
     weapon_attributes_id: int = Field(foreign_key="WeaponAttributeTable.id", primary_key=True)
 
+
+class NonPlayableCharacterSpoilLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "NonPlayableCharacterSpoilLinkTable")
+
+    non_playable_character_id: uuid.UUID = Field(foreign_key="NonPlayableCharacterTable.id", primary_key=True)
+    equipment_id: int = Field(foreign_key="EquipmentTable.id", primary_key=True)
+
+
+class NonPlayableCharacterCapacityLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "NonPlayableCharacterCapacityLinkTable")
+
+    non_playable_character_id: uuid.UUID = Field(foreign_key="NonPlayableCharacterTable.id", primary_key=True)
+    capacity_id: int = Field(foreign_key="CapacityTable.id", primary_key=True)
+    skill_level: Optional[SkillLevelEnum] = Field(default=None, nullable=True)
+
+
+class NonPlayableCharacterSpellLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "NonPlayableCharacterSpellLinkTable")
+
+    non_playable_character_id: uuid.UUID = Field(foreign_key="NonPlayableCharacterTable.id", primary_key=True)
+    spell_id: int = Field(foreign_key="SpellTable.id", primary_key=True)
+
+
 # ==================
 # Dice Tables
 # ==================
@@ -259,6 +305,7 @@ class SpellTable(Model, table=True):
     damage: Optional[DicePoolTable] = Relationship(back_populates="spells")
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="spells", link_model=PlayableCharacterSpellLinkTable)
+    non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="spells", link_model=NonPlayableCharacterSpellLinkTable)
 
 
 # ==================
@@ -279,6 +326,7 @@ class MediaTable(Model, table=True):
     scenarios: list["ScenarioTable"] = Relationship(back_populates="illustration_image")
     chapters: list["ChapterTable"] = Relationship(back_populates="illustration_image")
     chapter_medias: list["ChapterTable"] = Relationship(back_populates="medias", link_model=ChapterMediaLinkTable)
+
 
 class ChapterMarkdownTable(Model, table=True):
     __tablename__ = cast(declared_attr, "ChapterMarkdownTable")
@@ -347,6 +395,7 @@ class ChapterTable(Model, table=True):
     illustration_image: Optional[MediaTable] = Relationship(back_populates="chapters")
     scenario: Optional[ScenarioTable] = Relationship(back_populates="chapters")
     markdown_content: Optional["ChapterMarkdownTable"] = Relationship(back_populates="chapter", sa_relationship_kwargs={"uselist": False})
+    non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="chapter")
 
 
 # ==================
@@ -366,6 +415,7 @@ class CurrencyTable(Model, table=True):
 
 
 # TODO: add an SQL event to automatically coerce the currency to a correct resprensentation (1 gold crown = 20 silver shillings = 240 brass pennies).
+
 
 class ObjectTable(Model, table=True):
     __tablename__ = cast(declared_attr, "ObjectTable")
@@ -411,6 +461,7 @@ class EquipmentTable(Model, table=True):
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="equipments", link_model=PlayableCharacterEquipmentLinkTable)
     careers: list["CareerTable"] = Relationship(back_populates="trappings", link_model=CareerEquipmentLinkTable)
+    non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="spoils", link_model=NonPlayableCharacterSpoilLinkTable)
 
 
 # ===========================
@@ -443,6 +494,7 @@ class AttributesTable(Model, table=True):
     careers: list["CareerTable"] = Relationship(back_populates="attributes")
     base_playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="base_attributes", sa_relationship_kwargs={"foreign_keys": "[PlayableCharacterTable.base_attributes_id]"})
     total_playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="total_attributes", sa_relationship_kwargs={"foreign_keys": "[PlayableCharacterTable.total_attributes_id]"})
+    npc_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="attributes")
 
     @computed_field
     @property
@@ -461,15 +513,17 @@ class CapacityTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CapacityTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the capacity (talent or skill)")
-    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the capacity (talent or skill)")
+    name: str = Field(max_length=255, nullable=False, description="Name of the capacity")
+    specialization: Optional[str] = Field(default=None, max_length=255, description="Specialization of the capacity")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the capacity")
     category: CategoryEnum = Field(nullable=False, description="Category of the capacity (talent or skill)")
-    skill_attribute: Optional[PrimaryAttributeEnum] = Field(default=None, nullable=True, description="Primary attribute associated with the capacity (talent or skill)")
-    talent_bonus: Optional[int] = Field(default=None, nullable=True, description="Bonus provided by the talent, if applicable")
+    skill_attribute: Optional[PrimaryAttributeEnum] = Field(default=None, nullable=True, description="Primary attribute associated with the capacity, for skill only")
+    talent_bonus: Optional[int] = Field(default=None, nullable=True, description="Bonus provided, talent only")
     # NOTE: we could modelize the fact that a talent is possibly linked to a list of skills... But this is not very simple, and it is not very useful, because we can put it in the description of the talent.
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="capacities", link_model=PlayableCharacterCapacityLinkTable)
     careers: list["CareerTable"] = Relationship(back_populates="capacities", link_model=CareerCapacityLinkTable)
+    non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="capacities", link_model=NonPlayableCharacterCapacityLinkTable)
 
 
 # ==================
@@ -484,7 +538,10 @@ class CareerTable(Model, table=True):
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(max_length=255, nullable=False, description="Name of the career")
     description: Optional[str] = Field(default=None, max_length=1023, description="Description of the career")
-    is_basic: bool = Field(nullable=False, description="Indicates if the career is a basic career (e.g. a career that can be taken at the beginning of the character creation) or not (for example, a career that can only be taken after reaching a certain level in another career).")
+    is_basic: bool = Field(
+        nullable=False,
+        description="Indicates if the career is a basic career (e.g. a career that can be taken at the beginning of the character creation) or not (for example, a career that can only be taken after reaching a certain level in another career).",
+    )
     special_access_rule: Optional[str] = Field(default=None, max_length=128, description="Special access rule for the career, if any")
 
     attributes_id: Optional[int] = Field(default=None, foreign_key="AttributesTable.id", nullable=True)
@@ -516,6 +573,7 @@ class CareerTable(Model, table=True):
         back_populates="career",
         link_model=PlayableCharacterCareerLinkTable,
     )
+    non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="career")
 
 
 # ==================
@@ -577,11 +635,28 @@ class PlayableCharacterTable(Model, table=True):
         return self.total_experience - self.current_experience
 
 
-# TODO: add a NonPlayableCharacterTable with the same fields as PlayableCharacterTable.
-# The differences are :
-# * attributes of a non playable character are not split into base and total attributes, because they don't have careers and don't evolve with experience points.
-# * a non playable character eventually have a career (optional), but not a list
-# * a non playable character don't have "equipments", but "spoils".
-# * race is not in an enum, but a free text field, or a link to a RaceTable, because there are a lot of non playable character races, and we should not limit them to the 4 playable.
-# * a non playable character don't have personal details, description is enough to describe them. But, a "special rules" could be added.
-# * a non playable character can be linked to a campaign, a scenario and a chapter, to know where they appear in the story.
+class NonPlayableCharacterTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "NonPlayableCharacterTable")
+
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(max_length=255, nullable=False, description="Name of the non playable character")
+    gender: Optional[GenderEnum] = Field(default=None, nullable=True, description="Gender of the non playable character")
+    race: Optional[str] = Field(default=None, max_length=255, nullable=True, description="Race of the non playable character, free text to allow any race beyond the 4 playable ones")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the non playable character")
+    special_rules: Optional[str] = Field(default=None, max_length=1023, description="Special rules applying to this non playable character during encounters")
+
+    difficulty: Optional[DifficultyEnum] = Field(default=None, nullable=True, description="Difficulty level of the non playable character")
+
+    attributes_id: int = Field(foreign_key="AttributesTable.id", nullable=False)
+    career_id: Optional[uuid.UUID] = Field(default=None, foreign_key="CareerTable.id", nullable=True)
+
+    chapter_id: Optional[int] = Field(default=None, foreign_key="ChapterTable.id", nullable=True)
+
+    attributes: AttributesTable = Relationship(back_populates="npc_characters")
+    career: Optional[CareerTable] = Relationship(back_populates="non_playable_characters")
+
+    spoils: list[EquipmentTable] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterSpoilLinkTable)
+    capacities: list[CapacityTable] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterCapacityLinkTable)
+    spells: list[SpellTable] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterSpellLinkTable)
+
+    chapter: Optional[ChapterTable] = Relationship(back_populates="non_playable_characters")
