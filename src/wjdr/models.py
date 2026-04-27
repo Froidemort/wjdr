@@ -334,7 +334,7 @@ class ChapterMarkdownTable(Model, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     url: str = Field(nullable=False, description="URL of the markdown file, can be a local path or a remote URL")
 
-    chapter: Optional["ChapterTable"] = Relationship(back_populates="markdown")
+    chapter: Optional["ChapterTable"] = Relationship(back_populates="markdown_content")
 
 
 # ==================
