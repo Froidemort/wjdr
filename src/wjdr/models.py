@@ -478,8 +478,16 @@ def coerce_currency(mapper, connection, target: CurrencyTable) -> None:  # noqa:
 
 class ObjectTable(Model, table=True):
     __tablename__ = cast(declared_attr, "ObjectTable")
-
-    # TODO: add constraints to ensure that either damage_id or armour_points and armour_location are set, but not both.
+    __table_args__ = (
+        CheckConstraint(
+            "damages_id IS NULL OR (armour_points IS NULL AND armour_location IS NULL)",
+            name="object_weapon_armour_xor_check",
+        ),
+        CheckConstraint(
+            "(armour_points IS NULL AND armour_location IS NULL) OR (armour_points IS NOT NULL AND armour_location IS NOT NULL)",
+            name="object_armour_fields_together_check",
+        ),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(max_length=255, nullable=False, description="Name of the object")
@@ -497,6 +505,18 @@ class ObjectTable(Model, table=True):
     equipment: list["EquipmentTable"] = Relationship(back_populates="object")
 
     weapon_attributes: list["WeaponAttributeTable"] = Relationship(back_populates="objects", link_model=WeaponWeaponAttributesLinkTable)
+
+    @computed_field
+    @property
+    def is_weapon(self) -> bool:
+        """Whether the object is a weapon or not, based on the presence of damages."""
+        return self.damages_id is not None
+
+    @computed_field
+    @property
+    def is_armour(self) -> bool:
+        """Whether the object is an armour piece or not, based on the presence of armour points and location."""
+        return self.armour_points is not None and self.armour_location is not None
 
 
 class WeaponAttributeTable(Model, table=True):

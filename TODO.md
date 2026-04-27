@@ -4,10 +4,7 @@ Liste des TODO extraits du code source du projet.
 
 ## src/wjdr/models.py
 
-1. Ligne 466
-   add constraints to ensure that either damage_id or armour_points and armour_location are set, but not both.
-
-2. Ligne 535
+1. Ligne 535
    add mental illness many-to-many relationship to list potential mental illness of the character.
 
 3. Ligne 638
