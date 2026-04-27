@@ -69,5 +69,5 @@ lint.select = ["E", "F", "W", "C90", "B", "B9", "I", "Q000"]
 # E501 : line too long (handled by line-length setting)
 lint.ignore = ["E501"]
 # Exclude docs and test data folders
-exclude = ["docs", "tests/data"]
+exclude = ["docs", "tests/data", "alembic"]
 

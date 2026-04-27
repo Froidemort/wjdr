@@ -204,36 +204,36 @@ class CareerEquipmentGroupTable(Model, table=True):
 class CareerCareerLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CareerCareerLinkTable")
 
-    upstream_career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
-    downstream_career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
+    upstream_career_id: uuid.UUID = Field(foreign_key="CareerTable.id", primary_key=True)
+    downstream_career_id: uuid.UUID = Field(foreign_key="CareerTable.id", primary_key=True)
 
 
 class PlayableCharacterEquipmentLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterEquipmentLinkTable")
 
-    playable_character_id: int = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
+    playable_character_id: uuid.UUID = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
     equipment_id: int = Field(foreign_key="EquipmentTable.id", primary_key=True)
 
 
 class PlayableCharacterCareerLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterCareerLinkTable")
 
-    playable_character_id: int = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
-    career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
+    playable_character_id: uuid.UUID = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
+    career_id: uuid.UUID = Field(foreign_key="CareerTable.id", primary_key=True)
     order: int = Field(default=0, ge=0, nullable=False)
 
 
 class PlayableCharacterSpellLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterSpellLinkTable")
 
-    playable_character_id: int = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
+    playable_character_id: uuid.UUID = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
     spell_id: int = Field(foreign_key="SpellTable.id", primary_key=True)
 
 
 class PlayableCharacterCapacityLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterCapacityLinkTable")
 
-    playable_character_id: int = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
+    playable_character_id: uuid.UUID = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
     capacity_id: int = Field(foreign_key="CapacityTable.id", primary_key=True)
     skill_level: Optional[SkillLevelEnum] = Field(default=None, nullable=True)
 

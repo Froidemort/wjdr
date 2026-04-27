@@ -2,11 +2,6 @@
 
 Liste des TODO extraits du code source du projet.
 
-## src/wjdr/database.py
-
-1. Ligne 18
-   Use Alembic to manage migrations instead of creating tables directly from the models.
-
 ## src/wjdr/models.py
 
 1. Ligne 460
