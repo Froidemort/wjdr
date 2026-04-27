@@ -6,7 +6,7 @@ from enum import Enum, StrEnum
 from typing import Optional, cast
 
 from pydantic import computed_field
-from sqlalchemy import CheckConstraint, Index, event
+from sqlalchemy import CheckConstraint, Index, UniqueConstraint, event
 from sqlalchemy.ext.declarative import declared_attr
 from sqlmodel import Field, Relationship
 from sqlmodel import SQLModel as Model
@@ -245,6 +245,7 @@ class PlayableCharacterEquipmentLinkTable(Model, table=True):
 
 class PlayableCharacterCareerLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterCareerLinkTable")
+    __table_args__ = (UniqueConstraint("playable_character_id", "order", name="playable_character_career_order_unique"),)
 
     playable_character_id: uuid.UUID = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
     career_id: uuid.UUID = Field(foreign_key="CareerTable.id", primary_key=True)
@@ -742,8 +743,7 @@ class PlayableCharacterTable(Model, table=True):
     # Base attribute valuue, initialized when a character is created
     base_attributes_id: int = Field(foreign_key="AttributesTable.id", nullable=False)
     # Base + career attribute bonus that can evolve when the character progress in his career with experience points.
-    # TODO: add constraints to ensure that total_attributes is always equal to base_attributes + the sum of the attributes of the current careers of the character.
-    # this contraints is complex to modelize, because it involves a lot of tables (PlayableCharacterTable, AttributesTable, CareerTable) and a lot of relationships (PlayableCharacterTable -> CareerTable through PlayableCharacterCareerLinkTable, CareerTable -> AttributesTable, PlayableCharacterTable -> AttributesTable for both base_attributes and total_attributes), but it is important to ensure data consistency.
+    # The validation is enforced at application-level with dedicated helper functions.
     total_attributes_id: int = Field(foreign_key="AttributesTable.id", nullable=False)
 
     # TODO: consider adding a many-to-many relationship between PlayableCharacterTable and CampaignTable.
