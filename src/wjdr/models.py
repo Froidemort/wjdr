@@ -6,7 +6,7 @@ from enum import Enum, StrEnum
 from typing import Optional, cast
 
 from pydantic import computed_field
-from sqlalchemy import CheckConstraint, Index
+from sqlalchemy import CheckConstraint, Index, event
 from sqlalchemy.ext.declarative import declared_attr
 from sqlmodel import Field, Relationship
 from sqlmodel import SQLModel as Model
@@ -457,7 +457,23 @@ class CurrencyTable(Model, table=True):
     objects: list["ObjectTable"] = Relationship(back_populates="price")
 
 
-# TODO: add an SQL event to automatically coerce the currency to a correct resprensentation (1 gold crown = 20 silver shillings = 240 brass pennies).
+BRASS_PER_SHILLING = 12
+BRASS_PER_CROWN = 240  # 20 shillings * 12 brass
+
+
+@event.listens_for(CurrencyTable, "before_insert")
+@event.listens_for(CurrencyTable, "before_update")
+def coerce_currency(mapper, connection, target: CurrencyTable) -> None:  # noqa: ARG001
+    """Normalize currency so values stay in canonical form.
+
+    Converts the total amount to brass pennies, then redistributes into gold crowns,
+    silver shillings and brass pennies (1 crown = 20 shillings = 240 pennies).
+    """
+    total_brass = target.gold_crowns * BRASS_PER_CROWN + target.silver_shillings * BRASS_PER_SHILLING + target.brass_pennies
+    target.gold_crowns = total_brass // BRASS_PER_CROWN
+    remaining = total_brass % BRASS_PER_CROWN
+    target.silver_shillings = remaining // BRASS_PER_SHILLING
+    target.brass_pennies = remaining % BRASS_PER_SHILLING
 
 
 class ObjectTable(Model, table=True):
