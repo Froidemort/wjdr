@@ -35,3 +35,35 @@ def test_dice_pool(session_fixture, dice10):
     assert dice_pool.modifier == -3
     assert len(dice_pool.dices) == 1
     assert dice_pool.dices[0].faces == 10
+
+def test_dice_from_string():
+    dice = DiceTable.from_string("2d6")
+    assert dice.faces == 6
+    assert dice.quantity == 2
+
+    dice = DiceTable.from_string("1d10")
+    assert dice.faces == 10
+    assert dice.quantity == 1
+
+    with pytest.raises(ValueError):
+        DiceTable.from_string("2d16+9")
+
+def test_dice_pool_from_string():
+    dice_pool = DicePoolTable.from_string("2d6+1d10-3")
+    assert dice_pool.modifier == -3
+    assert len(dice_pool.dices) == 2
+    faces_quantity = {dice.faces: dice.quantity for dice in dice_pool.dices}
+    assert faces_quantity[6] == 2
+    assert faces_quantity[10] == 1
+    dice_pool = DicePoolTable.from_string("1d8+1d10+5")
+    assert dice_pool.modifier == 5
+    assert len(dice_pool.dices) == 2
+    faces_quantity = {dice.faces: dice.quantity for dice in dice_pool.dices}
+    assert faces_quantity[8] == 1
+    assert faces_quantity[10] == 1
+    dice_pool = DicePoolTable.from_string("3d4+BF")
+    assert dice_pool.modifier == 0
+    assert dice_pool.dynamic_modifier == "BF"
+    assert len(dice_pool.dices) == 1
+    faces_quantity = {dice.faces: dice.quantity for dice in dice_pool.dices}
+    assert faces_quantity[4] == 3

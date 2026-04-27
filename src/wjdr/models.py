@@ -1,6 +1,7 @@
 """Unified Model tables and enums for the application domain."""
 
 import datetime
+import re
 import uuid
 from enum import Enum, StrEnum
 from typing import Optional, cast
@@ -403,6 +404,19 @@ class DiceTable(Model, table=True):
     dice_pools: list["DicePoolTable"] = Relationship(back_populates="dices", link_model=DicePoolDiceLinkTable)
     damage_objects: list["ObjectTable"] = Relationship(back_populates="damages")
 
+    @classmethod
+    def from_string(cls, dice_string: str) -> "DiceTable":
+        """Create a DiceTable from a string in the format "XdY", where X is the quantity and Y is the number of faces."""
+        try:
+            quantity_str, faces_str = dice_string.lower().split("d")
+            quantity = int(quantity_str)
+            faces = int(faces_str)
+            return cls(faces=faces, quantity=quantity)
+        except Exception as e:
+            raise ValueError(f"Invalid dice string format: {dice_string}") from e
+
+    def __str__(self) -> str:
+        return f"{self.quantity}d{self.faces}"
 
 class DicePoolTable(Model, table=True):
     __tablename__ = cast(declared_attr, "DicePoolTable")
@@ -422,6 +436,33 @@ class DicePoolTable(Model, table=True):
             buffer += f"{self.modifier:+}"
         return buffer
 
+    @classmethod
+    def from_string(cls, dice_pool_string: str) -> "DicePoolTable":
+        """Create a DicePoolTable from a string like '2d6+1d10-3' or '3d4+BF'.
+
+        Dice tokens (e.g. 2d6, 1d10) become DiceTable instances.
+        A numeric token becomes the modifier (cumulative, signed).
+        A letter-only token (e.g. BF, BE) becomes the dynamic_modifier.
+        """
+        try:
+            tokens = re.findall(r"([+-]?)(\d+d\d+|\d+|[A-Za-z]+)", dice_pool_string)
+            if not tokens:
+                raise ValueError("No tokens found")
+            dices: list[DiceTable] = []
+            modifier = 0
+            dynamic_modifier: Optional[DynamicBonusEnum] = None
+            for sign, value in tokens:
+                if "d" in value:
+                    dices.append(DiceTable.from_string(value))
+                elif value.isalpha():
+                    dynamic_modifier = DynamicBonusEnum(value.upper())
+                else:
+                    modifier += int(sign + value) if sign else int(value)
+            if not dices:
+                raise ValueError("No dice found")
+            return cls(dices=dices, modifier=modifier, dynamic_modifier=dynamic_modifier)
+        except Exception as e:
+            raise ValueError(f"Invalid dice pool string format: {dice_pool_string}") from e
 
 # ==================
 # Spell Tables
