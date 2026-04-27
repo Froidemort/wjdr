@@ -10,12 +10,14 @@ def campaign(session_fixture):
     session_fixture.commit()
     yield campaign
 
+
 @pytest.fixture(scope="session")
 def scenario(session_fixture, campaign):
     scenario = ScenarioTable(name="Test Scenario", description="A test scenario", campaign_id=campaign.id)
     session_fixture.add(scenario)
     session_fixture.commit()
     yield scenario
+
 
 @pytest.fixture(scope="session")
 def chapter(session_fixture, scenario):
@@ -24,12 +26,14 @@ def chapter(session_fixture, scenario):
     session_fixture.commit()
     yield chapter
 
+
 @pytest.mark.unitary
 def test_campaign(campaign):
     assert campaign.id is not None
     assert campaign.name == "Test Campaign"
     assert campaign.description == "A test campaign"
     assert campaign.gm_name == "Test GM"
+
 
 @pytest.mark.unitary
 def test_scenario(scenario, campaign):
@@ -38,6 +42,7 @@ def test_scenario(scenario, campaign):
     assert scenario.description == "A test scenario"
     assert scenario.campaign_id == campaign.id
 
+
 @pytest.mark.unitary
 def test_chapter(chapter, scenario):
     assert chapter.id is not None
@@ -45,11 +50,13 @@ def test_chapter(chapter, scenario):
     assert chapter.description == "A test chapter"
     assert chapter.scenario_id == scenario.id
 
+
 @pytest.mark.unitary
 def test_campaign_scenarios(campaign, scenario):
     campaign.scenarios.append(scenario)
     assert scenario in campaign.scenarios
     assert campaign.scenarios[0].name == "Test Scenario"
+
 
 @pytest.mark.unitary
 def test_scenario_chapters(scenario, chapter):

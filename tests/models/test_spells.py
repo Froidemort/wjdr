@@ -10,6 +10,7 @@ def spell_category(session_fixture):
     session_fixture.commit()
     yield category
 
+
 @pytest.fixture(scope="session")
 def spell(session_fixture, spell_category):
     dice = DiceTable(faces=10, quantity=1)
@@ -19,17 +20,18 @@ def spell(session_fixture, spell_category):
     session_fixture.add(dice_pool)
     session_fixture.commit()
 
-    spell = SpellTable(name="Test Spell", description="A test spell",
-                       category_id=spell_category.id, difficulty=5, damage_id=dice_pool.id)
+    spell = SpellTable(name="Test Spell", description="A test spell", category=spell_category, difficulty=5, damage=dice_pool)
     session_fixture.add(spell)
     session_fixture.commit()
     yield spell
+
 
 @pytest.mark.unitary
 def test_spell_category(spell_category):
     assert spell_category.id is not None
     assert spell_category.name == "Test Category"
     assert spell_category.description == "A test category"
+
 
 @pytest.mark.unitary
 def test_spell(spell, spell_category):
