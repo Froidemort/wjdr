@@ -327,6 +327,62 @@ class NonPlayableCharacterMentalIllnessLinkTable(Model, table=True):
     mental_illness_id: int = Field(foreign_key="MentalIllnessTable.id", primary_key=True)
 
 
+class ScenarioRewardGroupOptionLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "ScenarioRewardGroupOptionLinkTable")
+    __table_args__ = (
+        CheckConstraint(
+            "(CASE WHEN fixed_quantity IS NULL THEN 0 ELSE 1 END) + (CASE WHEN random_quantity_dice_pool_id IS NULL THEN 0 ELSE 1 END) = 1",
+            name="scenario_reward_quantity_xor_check",
+        ),
+    )
+
+    scenario_reward_group_id: int = Field(foreign_key="ScenarioRewardGroupTable.id", primary_key=True)
+    equipment_id: int = Field(foreign_key="EquipmentTable.id", primary_key=True)
+    fixed_quantity: Optional[int] = Field(default=None, ge=1, nullable=True)
+    random_quantity_dice_pool_id: Optional[int] = Field(default=None, foreign_key="DicePoolTable.id", nullable=True)
+
+    random_quantity_dice_pool: Optional["DicePoolTable"] = Relationship()
+
+
+class ScenarioRewardGroupTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "ScenarioRewardGroupTable")
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    scenario_id: uuid.UUID = Field(foreign_key="ScenarioTable.id", nullable=False)
+    pick_count: int = Field(default=1, ge=1, nullable=False)
+
+    scenario: "ScenarioTable" = Relationship(back_populates="reward_groups")
+    options: list["EquipmentTable"] = Relationship(back_populates="scenario_reward_groups", link_model=ScenarioRewardGroupOptionLinkTable)
+
+
+class ChapterRewardGroupOptionLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "ChapterRewardGroupOptionLinkTable")
+    __table_args__ = (
+        CheckConstraint(
+            "(CASE WHEN fixed_quantity IS NULL THEN 0 ELSE 1 END) + (CASE WHEN random_quantity_dice_pool_id IS NULL THEN 0 ELSE 1 END) = 1",
+            name="chapter_reward_quantity_xor_check",
+        ),
+    )
+
+    chapter_reward_group_id: int = Field(foreign_key="ChapterRewardGroupTable.id", primary_key=True)
+    equipment_id: int = Field(foreign_key="EquipmentTable.id", primary_key=True)
+    fixed_quantity: Optional[int] = Field(default=None, ge=1, nullable=True)
+    random_quantity_dice_pool_id: Optional[int] = Field(default=None, foreign_key="DicePoolTable.id", nullable=True)
+
+    random_quantity_dice_pool: Optional["DicePoolTable"] = Relationship()
+
+
+class ChapterRewardGroupTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "ChapterRewardGroupTable")
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    chapter_id: int = Field(foreign_key="ChapterTable.id", nullable=False)
+    pick_count: int = Field(default=1, ge=1, nullable=False)
+
+    chapter: "ChapterTable" = Relationship(back_populates="reward_groups")
+    options: list["EquipmentTable"] = Relationship(back_populates="chapter_reward_groups", link_model=ChapterRewardGroupOptionLinkTable)
+
+
 # ==================
 # Dice Tables
 # ==================
@@ -471,6 +527,7 @@ class ScenarioTable(Model, table=True):
     illustration_image: Optional[MediaTable] = Relationship(back_populates="scenarios")
     campaign: Optional[CampaignTable] = Relationship(back_populates="scenarios")
     chapters: list["ChapterTable"] = Relationship(back_populates="scenario")
+    reward_groups: list["ScenarioRewardGroupTable"] = Relationship(back_populates="scenario")
 
 
 class ChapterTable(Model, table=True):
@@ -490,6 +547,7 @@ class ChapterTable(Model, table=True):
     scenario: Optional[ScenarioTable] = Relationship(back_populates="chapters")
     markdown_content: Optional["ChapterMarkdownTable"] = Relationship(back_populates="chapter", sa_relationship_kwargs={"uselist": False})
     non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="chapter")
+    reward_groups: list["ChapterRewardGroupTable"] = Relationship(back_populates="chapter")
 
 
 # ==================
@@ -592,6 +650,8 @@ class EquipmentTable(Model, table=True):
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="equipments", link_model=PlayableCharacterEquipmentLinkTable)
     career_trapping_groups: list[CareerEquipmentGroupTable] = Relationship(back_populates="options", link_model=CareerEquipmentGroupOptionLinkTable)
     non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="spoils", link_model=NonPlayableCharacterSpoilLinkTable)
+    scenario_reward_groups: list["ScenarioRewardGroupTable"] = Relationship(back_populates="options", link_model=ScenarioRewardGroupOptionLinkTable)
+    chapter_reward_groups: list["ChapterRewardGroupTable"] = Relationship(back_populates="options", link_model=ChapterRewardGroupOptionLinkTable)
 
 
 # ===========================
