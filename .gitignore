@@ -30,4 +30,5 @@ htmlcov/
 data/
 output/
 
-.trash
+.trash/
+.devcontainer/
