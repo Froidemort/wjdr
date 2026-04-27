@@ -6,7 +6,6 @@ from enum import Enum, StrEnum
 from typing import Optional, cast
 
 from pydantic import computed_field
-from reflex import Model
 from sqlalchemy import Index
 from sqlalchemy.ext.declarative import declared_attr
 from sqlmodel import Field, Relationship
@@ -574,7 +573,6 @@ class CareerTable(Model, table=True):
         back_populates="career",
         link_model=PlayableCharacterCareerLinkTable,
     )
-    non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="career")
 
 
 # ==================
@@ -649,12 +647,10 @@ class NonPlayableCharacterTable(Model, table=True):
     difficulty: Optional[DifficultyEnum] = Field(default=None, nullable=True, description="Difficulty level of the non playable character")
 
     attributes_id: int = Field(foreign_key="AttributesTable.id", nullable=False)
-    career_id: Optional[uuid.UUID] = Field(default=None, foreign_key="CareerTable.id", nullable=True)
 
     chapter_id: Optional[int] = Field(default=None, foreign_key="ChapterTable.id", nullable=True)
 
     attributes: AttributesTable = Relationship(back_populates="npc_characters")
-    career: Optional[CareerTable] = Relationship(back_populates="non_playable_characters")
 
     spoils: list[EquipmentTable] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterSpoilLinkTable)
     capacities: list[CapacityTable] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterCapacityLinkTable)
