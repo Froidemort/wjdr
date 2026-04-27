@@ -4,10 +4,7 @@ Liste des TODO extraits du code source du projet.
 
 ## src/wjdr/models.py
 
-1. Ligne 535
-   add mental illness many-to-many relationship to list potential mental illness of the character.
-
-3. Ligne 638
+1. Ligne 638
    use enum for astral_sign, because the number of astral sign is limited.
 
 4. Lignes 659-660 (multiligne)

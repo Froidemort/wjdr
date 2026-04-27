@@ -277,6 +277,20 @@ class NonPlayableCharacterSpellLinkTable(Model, table=True):
     spell_id: int = Field(foreign_key="SpellTable.id", primary_key=True)
 
 
+class PlayableCharacterMentalIllnessLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "PlayableCharacterMentalIllnessLinkTable")
+
+    playable_character_id: uuid.UUID = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
+    mental_illness_id: int = Field(foreign_key="MentalIllnessTable.id", primary_key=True)
+
+
+class NonPlayableCharacterMentalIllnessLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "NonPlayableCharacterMentalIllnessLinkTable")
+
+    non_playable_character_id: uuid.UUID = Field(foreign_key="NonPlayableCharacterTable.id", primary_key=True)
+    mental_illness_id: int = Field(foreign_key="MentalIllnessTable.id", primary_key=True)
+
+
 # ==================
 # Dice Tables
 # ==================
@@ -568,8 +582,6 @@ class AttributesTable(Model, table=True):
     insanity_points: int = Field(ge=0, nullable=False, description="Insanity points of the character, used for tracking mental stability.")
     fate_points: int = Field(ge=0, nullable=False, description="Fate points of the character, used for influencing outcomes in their favor.")
 
-    # TODO: add mental illness many-to-many relationship to list potential mental illness of the character.
-
     careers: list["CareerTable"] = Relationship(back_populates="attributes")
     base_playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="base_attributes", sa_relationship_kwargs={"foreign_keys": "[PlayableCharacterTable.base_attributes_id]"})
     total_playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="total_attributes", sa_relationship_kwargs={"foreign_keys": "[PlayableCharacterTable.total_attributes_id]"})
@@ -586,6 +598,17 @@ class AttributesTable(Model, table=True):
     def toughness_bonus(self) -> int:
         """Toughness bonus of the character, used for example to mitigate the damage of a weapon with the "Toughness Bonus" attribute."""
         return self.toughness // 10
+
+
+class MentalIllnessTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "MentalIllnessTable")
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(max_length=255, nullable=False, description="Name of the mental illness")
+    description: Optional[str] = Field(default=None, max_length=1023, description="Description of the mental illness and its effects on the character")
+
+    playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="mental_illnesses", link_model=PlayableCharacterMentalIllnessLinkTable)
+    non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="mental_illnesses", link_model=NonPlayableCharacterMentalIllnessLinkTable)
 
 
 class CapacityTable(Model, table=True):
@@ -705,6 +728,7 @@ class PlayableCharacterTable(Model, table=True):
     spells: list[SpellTable] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterSpellLinkTable)
     capacities: list[CapacityTable] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterCapacityLinkTable)
     career: list[CareerTable] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterCareerLinkTable)
+    mental_illnesses: list["MentalIllnessTable"] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterMentalIllnessLinkTable)
 
     @computed_field
     @property
@@ -734,5 +758,6 @@ class NonPlayableCharacterTable(Model, table=True):
     spoils: list[EquipmentTable] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterSpoilLinkTable)
     capacities: list[CapacityTable] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterCapacityLinkTable)
     spells: list[SpellTable] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterSpellLinkTable)
+    mental_illnesses: list["MentalIllnessTable"] = Relationship(back_populates="non_playable_characters", link_model=NonPlayableCharacterMentalIllnessLinkTable)
 
     chapter: Optional[ChapterTable] = Relationship(back_populates="non_playable_characters")
