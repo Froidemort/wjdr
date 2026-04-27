@@ -4,7 +4,6 @@ from random import randint
 
 from wjdr.models import PlayableRaceEnum, PrimaryAttributeEnum, SecondaryAttributeEnum
 
-
 BASE_ATTRIBUTE_PLAYABLERACE = {
     PlayableRaceEnum.HUMAN: {
         PrimaryAttributeEnum.WEAPON_SKILL: 20,
@@ -78,39 +77,25 @@ RACE_WOUNDS_RULES: dict[PlayableRaceEnum, dict[tuple[int, int], int]] = {
 
 # Here are the intervals to roll 1d10 dice to determine the fate points of a character based on his race
 RACE_FATE_POINTS_RULES: dict[PlayableRaceEnum, dict[tuple[int, int], int]] = {
-    PlayableRaceEnum.HUMAN: {(1, 4): 2, (5, 7):3 , (8, 10): 3},
-    PlayableRaceEnum.DWARF: {(1, 4): 2, (5, 7):3 , (8, 10): 3},
-    PlayableRaceEnum.ELF: {(1, 4): 1, (5, 7):2 , (8, 10): 2},
-    PlayableRaceEnum.HALFLING: {(1, 4): 2, (5, 7):2 , (8, 10): 3},
+    PlayableRaceEnum.HUMAN: {(1, 4): 2, (5, 7): 3, (8, 10): 3},
+    PlayableRaceEnum.DWARF: {(1, 4): 2, (5, 7): 3, (8, 10): 3},
+    PlayableRaceEnum.ELF: {(1, 4): 1, (5, 7): 2, (8, 10): 2},
+    PlayableRaceEnum.HALFLING: {(1, 4): 2, (5, 7): 2, (8, 10): 3},
 }
 
 RACE_CAPACITIES: dict[PlayableRaceEnum, dict[str, dict[str, str | None]]] = {
-    PlayableRaceEnum.HUMAN: {
-        "skill":{
-
-        },
-        "talent": {
-        }
-    },
-    PlayableRaceEnum.ELF: {
-        "skill":{
-        },
-        "talent": {
-        }
-    },
+    PlayableRaceEnum.HUMAN: {"skill": {}, "talent": {}},
+    PlayableRaceEnum.ELF: {"skill": {}, "talent": {}},
     PlayableRaceEnum.DWARF: {
-        "skill":{
-        },
-        "talent": {
-        },
+        "skill": {},
+        "talent": {},
     },
     PlayableRaceEnum.HALFLING: {
-        "skill":{
-        },
-        "talent": {
-        },
+        "skill": {},
+        "talent": {},
     },
 }
+
 
 def roll_interval(faces: int, intervals: dict[tuple[int, int], int]) -> int:
     """Roll a dice with the given number of faces and return the value corresponding to the interval in which the roll falls.
@@ -128,6 +113,7 @@ def roll_interval(faces: int, intervals: dict[tuple[int, int], int]) -> int:
             return value
     raise ValueError(f"Invalid roll {roll} for intervals {intervals}")
 
+
 def generate_attributes(playable_race: PlayableRaceEnum) -> dict[PrimaryAttributeEnum | SecondaryAttributeEnum, int]:
     """Generate the base attributes of a character based on his race.
     It uses the BASE_ATTRIBUTE_PLAYABLERACE constant to generate the attributes of the character.
@@ -140,11 +126,11 @@ def generate_attributes(playable_race: PlayableRaceEnum) -> dict[PrimaryAttribut
     attributes[SecondaryAttributeEnum.FATE_POINTS] = roll_interval(fate_points_roll, RACE_FATE_POINTS_RULES[playable_race])
     return attributes
 
+
 def generate_capacities(playable_race: PlayableRaceEnum) -> dict[str, list[tuple[str, str | None]]]:
     """Generate the capacities of a character based on his race.
     The capacities are determined by the race, and some of them are randomly chosen, others can be chosen between a list of possible capacities.
     """
-    capacities = {"skill": [],
-                  "talent": []}
+    capacities = {"skill": [], "talent": []}
     # TODO: implement the skill and talents for races.
     return capacities

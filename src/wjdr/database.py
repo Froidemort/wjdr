@@ -15,6 +15,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
 # Keep one shared engine for the whole application.
 engine = create_engine(DATABASE_URL, echo=False)
 
+
 # TODO: Use Alembic to manage migrations instead of creating tables directly from the models.
 def create_db_and_tables() -> None:
     """Create all SQLModel tables.

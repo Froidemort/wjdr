@@ -8,6 +8,7 @@ from rxconfig import config  # noqa: F401
 class IndexState(rx.State):
     """The app state."""
 
+
 def create_campaign() -> rx.Component:
     # Create Campaign Page
     return rx.container(
@@ -18,6 +19,7 @@ def create_campaign() -> rx.Component:
         min_height="85vh",
     )
 
+
 def about() -> rx.Component:
     # About Page
     return rx.container(
@@ -27,6 +29,7 @@ def about() -> rx.Component:
         justify="center",
         min_height="85vh",
     )
+
 
 def index() -> rx.Component:
     # Welcome Page (Index)
