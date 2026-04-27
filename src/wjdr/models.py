@@ -259,6 +259,13 @@ class PlayableCharacterSpellLinkTable(Model, table=True):
     spell_id: int = Field(foreign_key="SpellTable.id", primary_key=True)
 
 
+class PlayableCharacterCampaignLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "PlayableCharacterCampaignLinkTable")
+
+    playable_character_id: uuid.UUID = Field(foreign_key="PlayableCharacterTable.id", primary_key=True)
+    campaign_id: uuid.UUID = Field(foreign_key="CampaignTable.id", primary_key=True)
+
+
 class PlayableCharacterCapacityLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterCapacityLinkTable")
 
@@ -447,6 +454,7 @@ class CampaignTable(Model, table=True):
 
     illustration_image: Optional[MediaTable] = Relationship(back_populates="campaigns")
     scenarios: list["ScenarioTable"] = Relationship(back_populates="campaign")
+    playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="campaigns", link_model=PlayableCharacterCampaignLinkTable)
 
 
 class ScenarioTable(Model, table=True):
@@ -746,8 +754,6 @@ class PlayableCharacterTable(Model, table=True):
     # The validation is enforced at application-level with dedicated helper functions.
     total_attributes_id: int = Field(foreign_key="AttributesTable.id", nullable=False)
 
-    # TODO: consider adding a many-to-many relationship between PlayableCharacterTable and CampaignTable.
-
     base_attributes: "AttributesTable" = Relationship(back_populates="base_playable_characters", sa_relationship_kwargs={"foreign_keys": "[PlayableCharacterTable.base_attributes_id]"})
     total_attributes: "AttributesTable" = Relationship(back_populates="total_playable_characters", sa_relationship_kwargs={"foreign_keys": "[PlayableCharacterTable.total_attributes_id]"})
     personal_details: Optional[PersonalDetailTable] = Relationship(back_populates="playable_characters")
@@ -755,6 +761,7 @@ class PlayableCharacterTable(Model, table=True):
     spells: list[SpellTable] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterSpellLinkTable)
     capacities: list[CapacityTable] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterCapacityLinkTable)
     career: list[CareerTable] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterCareerLinkTable)
+    campaigns: list[CampaignTable] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterCampaignLinkTable)
     mental_illnesses: list["MentalIllnessTable"] = Relationship(back_populates="playable_characters", link_model=PlayableCharacterMentalIllnessLinkTable)
 
     @computed_field
