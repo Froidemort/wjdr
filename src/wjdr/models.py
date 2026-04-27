@@ -135,6 +135,34 @@ class DifficultyEnum(str, Enum):
     IMPOSSIBLE = "impossible"
 
 
+class AstralSignEnum(str, Enum):
+    """Astral signs for personal details.
+
+    Source: https://wjrf.bimondiens.com/html/Bonus/Divination/Zodiac.html
+    """
+
+    WYMUND_THE_ANCHORITE = "Wymund l'Anachorete"
+    THE_GREAT_CROSS = "La Grande Croix"
+    THE_PAINTER_STROKE = "Le Trait du Peintre"
+    GNUTHUX_THE_BUFFALO = "Gnuthux le Buffle"
+    DRAGOMAS_THE_DRAGON = "Dragomas le Dragon"
+    TWILIGHT = "Le Crepuscule"
+    GRUNGNI_S_SCABBARD = "Le Fourreau de Grungni"
+    MAMMIT_THE_WISE = "Mammit le Sage"
+    MUMMIT_THE_FOOL = "Mummit le Fou"
+    THE_TWO_OXEN = "Les Deux Boeufs"
+    THE_DANCER = "Le Danseur"
+    THE_DRUM = "Le Tambour"
+    THE_PIPER = "Le Flutiste"
+    VOBIST_THE_PALE = "Vobist le Pale"
+    THE_BROKEN_CART = "La Charrette Brisee"
+    THE_WILD_GOAT = "La Chevre Sauvage"
+    RHYA_S_CAULDRON = "Le Chaudron de Rhya"
+    CACKELFAX_THE_COCK = "Cackelfax le Coq"
+    THE_GRIMOIRE_BONESAW = "Le Grimoire"
+    THE_WIZARD_S_STAR = "L'Etoile du Sorcier"
+
+
 # ==================
 # Link Tables
 # ==================
@@ -694,8 +722,7 @@ class PersonalDetailTable(Model, table=True):
     eye_color: Optional[str] = Field(default=None, max_length=255, description="Eye color of the character, used for roleplay purposes")
     hair_color: Optional[str] = Field(default=None, max_length=255, description="Hair color of the character, used for roleplay purposes")
     siblings_number: Optional[int] = Field(default=None, ge=0, nullable=True, description="Number of siblings of the character, used for roleplay purposes")
-    # TODO: use enum for astral_sign, because the number of astral sign is limited.
-    astral_sign: Optional[str] = Field(default=None, max_length=255, description="Astral sign of the character, used for roleplay purposes")
+    astral_sign: Optional[AstralSignEnum] = Field(default=None, nullable=True, description="Astral sign of the character, used for roleplay purposes")
     birthplace: Optional[str] = Field(default=None, max_length=255, description="Birthplace of the character, used for roleplay purposes")
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="personal_details")
