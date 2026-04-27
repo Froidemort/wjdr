@@ -6,7 +6,7 @@ from enum import Enum, StrEnum
 from typing import Optional, cast
 
 from pydantic import computed_field
-from sqlalchemy import Index
+from sqlalchemy import CheckConstraint, Index
 from sqlalchemy.ext.declarative import declared_attr
 from sqlmodel import Field, Relationship
 from sqlmodel import SQLModel as Model
@@ -154,18 +154,51 @@ class ChapterMediaLinkTable(Model, table=True):
     media_id: uuid.UUID = Field(foreign_key="MediaTable.id", primary_key=True)
 
 
-class CareerCapacityLinkTable(Model, table=True):
-    __tablename__ = cast(declared_attr, "CareerCapacityLinkTable")
+class CareerCapacityGroupOptionLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "CareerCapacityGroupOptionLinkTable")
 
-    career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
+    career_capacity_group_id: int = Field(foreign_key="CareerCapacityGroupTable.id", primary_key=True)
     capacity_id: int = Field(foreign_key="CapacityTable.id", primary_key=True)
 
 
-class CareerEquipmentLinkTable(Model, table=True):
-    __tablename__ = cast(declared_attr, "CareerEquipmentLinkTable")
+class CareerCapacityGroupTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "CareerCapacityGroupTable")
 
-    career_id: int = Field(foreign_key="CareerTable.id", primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    career_id: uuid.UUID = Field(foreign_key="CareerTable.id", nullable=False)
+    pick_count: int = Field(default=1, ge=1, nullable=False)
+    any_specialization: bool = Field(default=False, nullable=False)
+
+    career: "CareerTable" = Relationship(back_populates="capacity_groups")
+    options: list["CapacityTable"] = Relationship(back_populates="career_groups", link_model=CareerCapacityGroupOptionLinkTable)
+
+
+class CareerEquipmentGroupOptionLinkTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "CareerEquipmentGroupOptionLinkTable")
+    __table_args__ = (
+        CheckConstraint(
+            "(CASE WHEN fixed_quantity IS NULL THEN 0 ELSE 1 END) + (CASE WHEN random_quantity_dice_pool_id IS NULL THEN 0 ELSE 1 END) = 1",
+            name="career_equipment_quantity_xor_check",
+        ),
+    )
+
+    career_equipment_group_id: int = Field(foreign_key="CareerEquipmentGroupTable.id", primary_key=True)
     equipment_id: int = Field(foreign_key="EquipmentTable.id", primary_key=True)
+    fixed_quantity: Optional[int] = Field(default=None, ge=1, nullable=True)
+    random_quantity_dice_pool_id: Optional[int] = Field(default=None, foreign_key="DicePoolTable.id", nullable=True)
+
+    random_quantity_dice_pool: Optional["DicePoolTable"] = Relationship()
+
+
+class CareerEquipmentGroupTable(Model, table=True):
+    __tablename__ = cast(declared_attr, "CareerEquipmentGroupTable")
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    career_id: uuid.UUID = Field(foreign_key="CareerTable.id", nullable=False)
+    pick_count: int = Field(default=1, ge=1, nullable=False)
+
+    career: "CareerTable" = Relationship(back_populates="trapping_groups")
+    options: list["EquipmentTable"] = Relationship(back_populates="career_trapping_groups", link_model=CareerEquipmentGroupOptionLinkTable)
 
 
 class CareerCareerLinkTable(Model, table=True):
@@ -214,9 +247,19 @@ class WeaponWeaponAttributesLinkTable(Model, table=True):
 
 class NonPlayableCharacterSpoilLinkTable(Model, table=True):
     __tablename__ = cast(declared_attr, "NonPlayableCharacterSpoilLinkTable")
+    __table_args__ = (
+        CheckConstraint(
+            "(CASE WHEN fixed_quantity IS NULL THEN 0 ELSE 1 END) + (CASE WHEN random_quantity_dice_pool_id IS NULL THEN 0 ELSE 1 END) = 1",
+            name="npc_spoil_quantity_xor_check",
+        ),
+    )
 
     non_playable_character_id: uuid.UUID = Field(foreign_key="NonPlayableCharacterTable.id", primary_key=True)
     equipment_id: int = Field(foreign_key="EquipmentTable.id", primary_key=True)
+    fixed_quantity: Optional[int] = Field(default=None, ge=1, nullable=True)
+    random_quantity_dice_pool_id: Optional[int] = Field(default=None, foreign_key="DicePoolTable.id", nullable=True)
+
+    random_quantity_dice_pool: Optional["DicePoolTable"] = Relationship()
 
 
 class NonPlayableCharacterCapacityLinkTable(Model, table=True):
@@ -460,7 +503,7 @@ class EquipmentTable(Model, table=True):
     object: ObjectTable = Relationship(back_populates="equipment")
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="equipments", link_model=PlayableCharacterEquipmentLinkTable)
-    careers: list["CareerTable"] = Relationship(back_populates="trappings", link_model=CareerEquipmentLinkTable)
+    career_trapping_groups: list[CareerEquipmentGroupTable] = Relationship(back_populates="options", link_model=CareerEquipmentGroupOptionLinkTable)
     non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="spoils", link_model=NonPlayableCharacterSpoilLinkTable)
 
 
@@ -522,7 +565,7 @@ class CapacityTable(Model, table=True):
     # NOTE: we could modelize the fact that a talent is possibly linked to a list of skills... But this is not very simple, and it is not very useful, because we can put it in the description of the talent.
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="capacities", link_model=PlayableCharacterCapacityLinkTable)
-    careers: list["CareerTable"] = Relationship(back_populates="capacities", link_model=CareerCapacityLinkTable)
+    career_groups: list[CareerCapacityGroupTable] = Relationship(back_populates="options", link_model=CareerCapacityGroupOptionLinkTable)
     non_playable_characters: list["NonPlayableCharacterTable"] = Relationship(back_populates="capacities", link_model=NonPlayableCharacterCapacityLinkTable)
 
 
@@ -547,8 +590,8 @@ class CareerTable(Model, table=True):
     attributes_id: Optional[int] = Field(default=None, foreign_key="AttributesTable.id", nullable=True)
 
     attributes: Optional[AttributesTable] = Relationship(back_populates="careers")
-    capacities: list[CapacityTable] = Relationship(back_populates="careers", link_model=CareerCapacityLinkTable)
-    trappings: list[EquipmentTable] = Relationship(back_populates="careers", link_model=CareerEquipmentLinkTable)
+    capacity_groups: list[CareerCapacityGroupTable] = Relationship(back_populates="career")
+    trapping_groups: list[CareerEquipmentGroupTable] = Relationship(back_populates="career")
     # Here we need to manage a complex many-to-many relationship with the CareerCareerLinkTable as association table, and two relationships to the CareerTable itself, one for the upstream careers and one for the downstream careers, with custom primaryjoin and secondaryjoin to manage the fact that we have two foreign keys to the same table in the association table.
     # This is useful because we can create a career progression tree, with the possibility to have multiple progression paths (for example, a career A can lead to both career B and career C, and career B and C can both lead to career D), and we can easily query the upstream and downstream careers of a given career.
     upstream_careers: list["CareerTable"] = Relationship(
