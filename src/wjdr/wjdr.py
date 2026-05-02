@@ -37,18 +37,7 @@ def index() -> rx.Component:
         rx.color_mode.button(position="top-right"),
         rx.vstack(
             rx.heading("Assistant de WJDR, 2ème édition", size="9"),
-            rx.link(
-                rx.button("Créer une campagne"),
-                href="/create-campaign",
-            ),
-            rx.link(
-                rx.button("Créer un personnage"),
-                href="/create-character",
-            ),
-            rx.link(
-                rx.button("Créer une carrière"),
-                href="/create-career",
-            ),
+
             spacing="5",
             justify="center",
             min_height="85vh",
