@@ -1,4 +1,37 @@
-"""Unified Model tables and enums for the application domain."""
+"""Unified Model tables and enums for the application domain.
+
+Description:
+
+Main tables:
+- CampaignTable: represents a campaign, and contains `ScenarioTable` that contains `ChapterTable`. A campaign can also have `PlayableCharacterTable` and `NonPlayableCharacterTable`.
+- CareerTable: represents a career, which is a set of capacities and equipment that a playable character can have.
+- PlayableCharacterTable: represents a playable character. This is an important table to manage players in a campaign.
+- NonPlayableCharacterTable: represents a non playable character. NPCs are used along the chapters, and reprensent allies, foes or monsters.
+
+Enums :
+- GenderEnum: represents the gender of a playable character or a non playable character.
+- PlayableRaceEnum: represents the race of a playable character.
+- DynamicBonusEnum: represents the dynamic bonus of a dice pool, which can be either BE (Toughness Bonus) or BF (Strength Bonus).
+- SkillLevelEnum: represents the skill level of a capacity for a playable character, which can be either BASE, LVL1 or LVL2.
+- QualityEnum: represents the quality of an object, which can be either EXCEPTIONAL, GOOD, NORMAL or MEDIOCRE.
+- LocationEnum: represents the location of an armor piece, which can be either HEAD, LEFT_ARM, RIGHT_ARM, BODY, LEFT_LEG or RIGHT_LEG.
+- CategoryEnum: represents the category of a capacity, which can be either TALENT or SKILL.
+- PrimaryAttributeEnum: represents the primary attribute of a playable character.
+- SecondaryAttributeEnum: represents the secondary attribute of a playable character.
+- DifficultyEnum: represents the difficulty of a non playable character, which can be either VERY_EASY, MEDIUM_EASY, EASY, AVERAGE, HARD, MEDIUM_HARD, VERY_HARD or IMPOSSIBLE.
+- AstralSignEnum: represents the astral sign of a playable character, which can be one of the 20 astral signs described in the Warhammer RPG.
+
+Other tables are only here to modelize things properly :
+- CapacityTable: represents a capacity, which can be a talent or a skill. A capacity can have a specialization, for example "Weapon Skill (Halberd)" is a specialization of the "Weapon Skill" capacity.
+- EquipmentTable: represents an equipment, which is a combination of an object and a quantity. The quantity can be fixed or random (based on a dice pool).
+- ObjectTable: represents an object, which can be a weapon, an armor piece, a trinket, etc. It is used to store the name and description of the object, and to link it to the equipment table.
+- SpellTable: represents a spell, which has a name, a description, a category, a difficulty and a damage (represented by a dice pool).
+- SpellCategoryTable: represents a spell category, which is used to categorize spells.
+- DiceTable: represents a dice, which is defined by its number of faces and its quantity.
+- DicePoolTable: represents a dice pool, which is a combination of dices and a modifier. The modifier can be either fixed or dynamic (based on a primary attribute of the playable character).
+
+These tables are linked together by link tables, which are used to modelize many-to-many relationships between tables, and to store additional information about the relationship (for example, the skill level of a capacity for a playable character).
+"""
 
 import datetime
 import re
