@@ -56,6 +56,17 @@ def _create_attributes() -> AttributesTable:
     )
 
 
+def _get_or_create_dice(session_fixture, faces: int = 10, quantity: int = 1) -> DiceTable:
+    dice = session_fixture.exec(select(DiceTable).where(DiceTable.faces == faces, DiceTable.quantity == quantity)).first()
+    if dice is not None:
+        return dice
+
+    dice = DiceTable(faces=faces, quantity=quantity)
+    session_fixture.add(dice)
+    session_fixture.flush()
+    return dice
+
+
 def test_career_capacity_group_single_explicit_capacity(session_fixture):
     career = _create_career(f"career-{uuid.uuid4()}")
     survival = _create_capacity("Survie")
@@ -172,14 +183,13 @@ def test_career_trapping_group_choose_one_among_known_options(session_fixture):
 def test_career_trapping_group_random_quantity_dice_pool(session_fixture):
     career = _create_career(f"career-{uuid.uuid4()}")
     political_leaflets = _create_equipment(session_fixture, "Tracts politiques", quantity=1)
-    dice = DiceTable(faces=10, quantity=1)
+    dice = _get_or_create_dice(session_fixture)
     dice_pool = DicePoolTable(dices=[dice])
 
     group = CareerEquipmentGroupTable(career=career, pick_count=1)
 
     session_fixture.add(career)
     session_fixture.add(political_leaflets)
-    session_fixture.add(dice)
     session_fixture.add(dice_pool)
     session_fixture.add(group)
     session_fixture.commit()
@@ -212,13 +222,12 @@ def test_career_trapping_group_random_quantity_dice_pool(session_fixture):
 def test_career_trapping_group_quantity_xor_constraint(session_fixture):
     career = _create_career(f"career-{uuid.uuid4()}")
     arrows = _create_equipment(session_fixture, "Flèches")
-    dice = DiceTable(faces=10, quantity=1)
+    dice = _get_or_create_dice(session_fixture)
     dice_pool = DicePoolTable(dices=[dice])
     group = CareerEquipmentGroupTable(career=career, pick_count=1)
 
     session_fixture.add(career)
     session_fixture.add(arrows)
-    session_fixture.add(dice)
     session_fixture.add(dice_pool)
     session_fixture.add(group)
     session_fixture.commit()
@@ -241,13 +250,12 @@ def test_npc_spoils_can_use_random_quantity_dice_pool(session_fixture):
     attributes = _create_attributes()
     npc = NonPlayableCharacterTable(name=f"npc-{uuid.uuid4()}", attributes=attributes)
     loot = _create_equipment(session_fixture, "Pièces")
-    dice = DiceTable(faces=10, quantity=1)
+    dice = _get_or_create_dice(session_fixture)
     dice_pool = DicePoolTable(dices=[dice])
 
     session_fixture.add(attributes)
     session_fixture.add(npc)
     session_fixture.add(loot)
-    session_fixture.add(dice)
     session_fixture.add(dice_pool)
     session_fixture.commit()
 

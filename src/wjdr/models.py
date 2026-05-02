@@ -396,6 +396,8 @@ class ChapterRewardGroupTable(Model, table=True):
 
 class DiceTable(Model, table=True):
     __tablename__ = cast(declared_attr, "DiceTable")
+    # Add a unique constraint on the combination of faces and quantity to avoid having multiple entries for the same type of dice (e.g. 1d10, 2d10, etc.)
+    __table_args__ = (UniqueConstraint("faces", "quantity", name="unique_faces_quantity"),)
 
     id: Optional[int] = Field(default=None, primary_key=True)
     faces: int = Field(ge=1, nullable=False, description="Number of faces of the dice, for example 6 for a d6, 10 for a d10, etc.")
@@ -420,6 +422,7 @@ class DiceTable(Model, table=True):
 
 class DicePoolTable(Model, table=True):
     __tablename__ = cast(declared_attr, "DicePoolTable")
+    __table_args__ = (UniqueConstraint("modifier", "dynamic_modifier", name="unique_modifier_dynamic_modifier"),)
 
     id: Optional[int] = Field(default=None, primary_key=True)
     modifier: int = Field(default=0, nullable=False)
@@ -473,7 +476,7 @@ class SpellCategoryTable(Model, table=True):
     __tablename__ = cast(declared_attr, "SpellCategoryTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the spell category")
+    name: str = Field(max_length=255, nullable=False, description="Name of the spell category", unique=True, index=True)
     description: Optional[str] = Field(default=None, max_length=1023, description="Description of the spell category")
 
     spells: list["SpellTable"] = Relationship(back_populates="category")
@@ -483,7 +486,7 @@ class SpellTable(Model, table=True):
     __tablename__ = cast(declared_attr, "SpellTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the spell")
+    name: str = Field(max_length=255, nullable=False, description="Name of the spell", unique=True, index=True)
     description: Optional[str] = Field(default=None, max_length=1023, description="Description of the spell")
     is_ritual: bool = Field(default=False, nullable=False, description="Whether the spell is a ritual or not")
 
@@ -506,10 +509,10 @@ class SpellTable(Model, table=True):
 
 class MediaTable(Model, table=True):
     __tablename__ = cast(declared_attr, "MediaTable")
-    __table_args__ = (Index("MediaTable_name_index", "name"),)
+    __table_args__ = (UniqueConstraint("name", "url", name="unique_media_name_url"),)
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the media file")
+    name: str = Field(max_length=255, nullable=False, description="Name of the media file", index=True)
     url: str = Field(max_length=255, nullable=False, description="URL of the media file, can be a local path or a remote URL")
 
     campaigns: list["CampaignTable"] = Relationship(back_populates="illustration_image")
@@ -522,7 +525,8 @@ class ChapterMarkdownTable(Model, table=True):
     __tablename__ = cast(declared_attr, "ChapterMarkdownTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    url: str = Field(nullable=False, description="URL of the markdown file, can be a local path or a remote URL")
+    name: str = Field(max_length=255, nullable=False, description="Name of the markdown to locate it more easily", index=True)
+    url: str = Field(nullable=False, description="URL of the markdown file, can be a local path or a remote URL", unique=True)
 
     chapter: Optional["ChapterTable"] = Relationship(back_populates="markdown_content")
 
@@ -535,16 +539,15 @@ class ChapterMarkdownTable(Model, table=True):
 class CampaignTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CampaignTable")
     __table_args__ = (
-        Index("campaignTable_name_index", "name"),
-        Index("campaignTable_gm_name_index", "gm_name"),
-        Index("campaignTable_start_date_index", "start_date"),
+        UniqueConstraint("name", "start_date", name="unique_campaign_name_start_date"),
+        Index("campaignTable_name_gm_name_index", "name", "gm_name"),
     )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the campaign")
+    name: str = Field(max_length=255, nullable=False, description="Name of the campaign", index=True)
     description: Optional[str] = Field(default=None, max_length=1023, description="Description of the campaign")
 
-    gm_name: Optional[str] = Field(default=None, max_length=127, description="Name of the game master")
+    gm_name: Optional[str] = Field(default=None, max_length=127, description="Name of the game master", index=True)
     start_date: datetime.datetime = Field(default_factory=datetime.datetime.now, nullable=False, description="Start date of the campaign")
     end_date: Optional[datetime.datetime] = Field(default=None, description="End date of the campaign")
     illustration_image_id: Optional[uuid.UUID] = Field(default=None, foreign_key="MediaTable.id", nullable=True)
@@ -598,6 +601,7 @@ class ChapterTable(Model, table=True):
 
 class CurrencyTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CurrencyTable")
+    __table_args__ = (UniqueConstraint("brass_pennies", "silver_shillings", "gold_crowns", name="unique_currency_combination"),)
 
     id: Optional[int] = Field(default=None, primary_key=True)
     brass_pennies: int = Field(default=0, ge=0, nullable=False, description="Amount of brass pennies")
@@ -640,7 +644,7 @@ class ObjectTable(Model, table=True):
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the object")
+    name: str = Field(max_length=255, nullable=False, description="Name of the object", index=True)
     description: Optional[str] = Field(default=None, max_length=1023, description="Description of the object")
     clutter: Optional[int] = Field(default=0, ge=0, nullable=True, description="Clutter value of the object")
     quality: QualityEnum = Field(default=QualityEnum.NORMAL, nullable=False, description="Quality of the object")
@@ -673,7 +677,7 @@ class WeaponAttributeTable(Model, table=True):
     __tablename__ = cast(declared_attr, "WeaponAttributeTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the weapon attribute")
+    name: str = Field(max_length=255, nullable=False, description="Name of the weapon attribute", unique=True, index=True)
     description: str = Field(max_length=255, nullable=False, description="Description of the weapon attribute, especially the potential effects.")
 
     objects: list[ObjectTable] = Relationship(back_populates="weapon_attributes", link_model=WeaponWeaponAttributesLinkTable)
@@ -742,7 +746,7 @@ class MentalIllnessTable(Model, table=True):
     __tablename__ = cast(declared_attr, "MentalIllnessTable")
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the mental illness")
+    name: str = Field(max_length=255, nullable=False, description="Name of the mental illness", unique=True, index=True)
     description: Optional[str] = Field(default=None, max_length=1023, description="Description of the mental illness and its effects on the character")
 
     playable_characters: list["PlayableCharacterTable"] = Relationship(back_populates="mental_illnesses", link_model=PlayableCharacterMentalIllnessLinkTable)
@@ -751,9 +755,10 @@ class MentalIllnessTable(Model, table=True):
 
 class CapacityTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CapacityTable")
+    __table_args__ = (UniqueConstraint("name", "specialization", name="unique_capacity_name_specialization"),)
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the capacity")
+    name: str = Field(max_length=255, nullable=False, description="Name of the capacity", index=True)
     specialization: Optional[str] = Field(default=None, max_length=255, description="Specialization of the capacity")
     description: Optional[str] = Field(default=None, max_length=1023, description="Description of the capacity")
     category: CategoryEnum = Field(nullable=False, description="Category of the capacity (talent or skill)")
@@ -776,7 +781,7 @@ class CareerTable(Model, table=True):
     __tablename__ = cast(declared_attr, "CareerTable")
 
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
-    name: str = Field(max_length=255, nullable=False, description="Name of the career")
+    name: str = Field(max_length=255, nullable=False, description="Name of the career", unique=True, index=True)
     description: Optional[str] = Field(default=None, max_length=1023, description="Description of the career")
     is_basic: bool = Field(
         nullable=False,
@@ -840,6 +845,7 @@ class PersonalDetailTable(Model, table=True):
 
 class PlayableCharacterTable(Model, table=True):
     __tablename__ = cast(declared_attr, "PlayableCharacterTable")
+    __table_args__ = (Index("playableCharacterTable_name_surname_index", "name", "surname"), UniqueConstraint("name", "surname", "gender", "race", "personal_details_id", name="unique_playable_character"))
 
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(max_length=255, nullable=False, description="Name of the playable character")

@@ -55,10 +55,20 @@ def _make_equipment(session_fixture, name: str, quantity: int = 1) -> EquipmentT
     return equipment
 
 
-def _make_dice_pool(session_fixture) -> DicePoolTable:
-    dice = DiceTable(faces=10, quantity=1)
-    dice_pool = DicePoolTable(dices=[dice])
+def _get_or_create_dice(session_fixture, faces: int = 10, quantity: int = 1) -> DiceTable:
+    dice = session_fixture.exec(select(DiceTable).where(DiceTable.faces == faces, DiceTable.quantity == quantity)).first()
+    if dice is not None:
+        return dice
+
+    dice = DiceTable(faces=faces, quantity=quantity)
     session_fixture.add(dice)
+    session_fixture.flush()
+    return dice
+
+
+def _make_dice_pool(session_fixture) -> DicePoolTable:
+    dice = _get_or_create_dice(session_fixture)
+    dice_pool = DicePoolTable(dices=[dice])
     session_fixture.add(dice_pool)
     session_fixture.commit()
     return dice_pool

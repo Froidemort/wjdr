@@ -1,6 +1,18 @@
 import pytest
+from sqlmodel import select
 
 from wjdr.models import DicePoolTable, DiceTable, SpellCategoryTable, SpellTable
+
+
+def _get_or_create_dice(session_fixture, faces: int = 10, quantity: int = 1) -> DiceTable:
+    dice = session_fixture.exec(select(DiceTable).where(DiceTable.faces == faces, DiceTable.quantity == quantity)).first()
+    if dice is not None:
+        return dice
+
+    dice = DiceTable(faces=faces, quantity=quantity)
+    session_fixture.add(dice)
+    session_fixture.flush()
+    return dice
 
 
 @pytest.fixture(scope="session")
@@ -13,10 +25,9 @@ def spell_category(session_fixture):
 
 @pytest.fixture(scope="session")
 def spell(session_fixture, spell_category):
-    dice = DiceTable(faces=10, quantity=1)
+    dice = _get_or_create_dice(session_fixture)
     dice_pool = DicePoolTable(modifier=0, dices=[dice])
     # Store data
-    session_fixture.add(dice)
     session_fixture.add(dice_pool)
     session_fixture.commit()
 

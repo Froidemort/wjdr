@@ -1,21 +1,29 @@
 import pytest
+from sqlmodel import select
 
 from wjdr.models import DicePoolTable, DiceTable
 
 
-@pytest.fixture(scope="session")
-def dice6(session_fixture):
-    dice = DiceTable(faces=6, quantity=1)
+def _get_or_create_dice(session_fixture, faces: int, quantity: int) -> DiceTable:
+    dice = session_fixture.exec(select(DiceTable).where(DiceTable.faces == faces, DiceTable.quantity == quantity)).first()
+    if dice is not None:
+        return dice
+
+    dice = DiceTable(faces=faces, quantity=quantity)
     session_fixture.add(dice)
     session_fixture.commit()
+    return dice
+
+
+@pytest.fixture(scope="session")
+def dice6(session_fixture):
+    dice = _get_or_create_dice(session_fixture, faces=6, quantity=1)
     yield dice
 
 
 @pytest.fixture(scope="session")
 def dice10(session_fixture):
-    dice = DiceTable(faces=10, quantity=1)
-    session_fixture.add(dice)
-    session_fixture.commit()
+    dice = _get_or_create_dice(session_fixture, faces=10, quantity=1)
     yield dice
 
 
