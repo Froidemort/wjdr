@@ -28,42 +28,36 @@
           </ion-col>
 
           <ion-col size="12">
-            <ion-card>
-              <ion-card-header>
-                <ion-card-title>Points de blessures</ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <h2 data-testid="wounds-value">{{ character.wounds.current }} / {{ character.wounds.max }}</h2>
-                <ion-button data-testid="wounds-minus" @click="adjustWounds(-1)">-1</ion-button>
-                <ion-button data-testid="wounds-plus" @click="adjustWounds(1)">+1</ion-button>
-              </ion-card-content>
-            </ion-card>
+            <resource-tracker-card
+              title="Points de blessures"
+              test-id-prefix="wounds"
+              :current="character.wounds.current"
+              :max="character.wounds.max"
+              @adjust-current="adjustWounds"
+              @save="saveWounds"
+            />
           </ion-col>
 
           <ion-col size="12" size-md="6">
-            <ion-card>
-              <ion-card-header>
-                <ion-card-title>Points de fortune</ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <h2 data-testid="fortune-value">{{ character.fortune }}</h2>
-                <ion-button data-testid="fortune-minus" @click="adjustFortune(-1)">-1</ion-button>
-                <ion-button data-testid="fortune-plus" @click="adjustFortune(1)">+1</ion-button>
-              </ion-card-content>
-            </ion-card>
+            <resource-tracker-card
+              title="Points de fortune"
+              test-id-prefix="fortune"
+              :current="character.fortune.current"
+              :max="character.fortune.max"
+              @adjust-current="adjustFortune"
+              @save="saveFortune"
+            />
           </ion-col>
 
           <ion-col size="12" size-md="6">
-            <ion-card>
-              <ion-card-header>
-                <ion-card-title>Points de destin</ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <h2 data-testid="fate-value">{{ character.fate }}</h2>
-                <ion-button data-testid="fate-minus" @click="adjustFate(-1)">-1</ion-button>
-                <ion-button data-testid="fate-plus" @click="adjustFate(1)">+1</ion-button>
-              </ion-card-content>
-            </ion-card>
+            <resource-tracker-card
+              title="Points de destin"
+              test-id-prefix="fate"
+              :current="character.fate.current"
+              :max="character.fate.max"
+              @adjust-current="adjustFate"
+              @save="saveFate"
+            />
           </ion-col>
 
           <ion-col size="12">
@@ -73,6 +67,46 @@
               </ion-card-header>
               <ion-card-content>
                 <span data-testid="money-value">{{ character.money.co }} co / {{ character.money.pa }} pa / {{ character.money.s }} s</span>
+                <ion-grid class="money-edit-grid">
+                  <ion-row>
+                    <ion-col size="12" size-md="4">
+                      <ion-item>
+                        <ion-input
+                          data-testid="money-edit-co-input"
+                          v-model.number="moneyCoDraft"
+                          type="number"
+                          label="Couronnes d'or (co)"
+                          label-placement="stacked"
+                        />
+                      </ion-item>
+                    </ion-col>
+                    <ion-col size="12" size-md="4">
+                      <ion-item>
+                        <ion-input
+                          data-testid="money-edit-pa-input"
+                          v-model.number="moneyPaDraft"
+                          type="number"
+                          label="Pistoles d'argent (pa)"
+                          label-placement="stacked"
+                        />
+                      </ion-item>
+                    </ion-col>
+                    <ion-col size="12" size-md="4">
+                      <ion-item>
+                        <ion-input
+                          data-testid="money-edit-s-input"
+                          v-model.number="moneySDraft"
+                          type="number"
+                          label="Sous de cuivre (s)"
+                          label-placement="stacked"
+                        />
+                      </ion-item>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+                <ion-button data-testid="money-save-button" expand="block" fill="outline" @click="saveMoney">
+                  Sauvegarder l'argent
+                </ion-button>
               </ion-card-content>
             </ion-card>
           </ion-col>
@@ -242,7 +276,7 @@
                     <ion-col size="6" size-md="4">
                       <div class="characteristic-item">
                         <span class="label">Attaques (A)</span>
-                        <span class="value">{{ character.actions }}</span>
+                        <span data-testid="character-actions-value" class="value">{{ getActionsTotal() }}</span>
                       </div>
                     </ion-col>
                     <!-- M -->
@@ -256,7 +290,7 @@
                     <ion-col size="6" size-md="4">
                       <div class="characteristic-item">
                         <span class="label">Bonus Force (BF)</span>
-                        <span class="value">{{ getBonusForce() }}</span>
+                        <span data-testid="character-bf-value" class="value">{{ getBonusForce() }}</span>
                       </div>
                     </ion-col>
                   </ion-row>
@@ -272,7 +306,7 @@
                     <ion-col size="6" size-md="4">
                       <div class="characteristic-item">
                         <span class="label">Magie (Mag)</span>
-                        <span class="value">{{ character.magic }}</span>
+                        <span data-testid="character-magic-value" class="value">{{ getMagicTotal() }}</span>
                       </div>
                     </ion-col>
                     <!-- PF -->
@@ -351,6 +385,7 @@ import {
   IonContent,
   IonGrid,
   IonHeader,
+  IonInput,
   IonItem,
   IonLabel,
   IonList,
@@ -360,12 +395,14 @@ import {
   IonToolbar,
   onIonViewWillEnter
 } from '@ionic/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   RACE_OPTIONS,
   formatSkillLabel,
   formatTalentLabel,
+  getActionsTotal as domainGetActionsTotal,
+  getMagicTotal as domainGetMagicTotal,
   toCharacterExportJson,
   type Character,
   type CharacterSkill,
@@ -375,12 +412,20 @@ import {
   getBonusForce as domainGetBonusForce,
   getBonusEndurance as domainGetBonusEndurance
 } from '../../domain/character'
-import { getCharacterById, patchCharacterResources } from '../../repositories/characterRepository'
+import {
+  getCharacterById,
+  patchCharacterMoney,
+  patchCharacterResources
+} from '../../repositories/characterRepository'
+import ResourceTrackerCard from '../components/ResourceTrackerCard.vue'
 
 const route = useRoute()
 const router = useRouter()
 
 const character = ref<Character>()
+const moneyCoDraft = ref(0)
+const moneyPaDraft = ref(0)
+const moneySDraft = ref(0)
 
 const characterId = computed(() => String(route.params.id ?? ''))
 
@@ -398,6 +443,16 @@ const loadCharacter = async (): Promise<void> => {
   character.value = await getCharacterById(characterId.value)
 }
 
+watch(character, (nextCharacter) => {
+  if (!nextCharacter) {
+    return
+  }
+
+  moneyCoDraft.value = nextCharacter.money.co
+  moneyPaDraft.value = nextCharacter.money.pa
+  moneySDraft.value = nextCharacter.money.s
+})
+
 onIonViewWillEnter(() => {
   void loadCharacter()
 })
@@ -413,13 +468,37 @@ const adjustWounds = async (delta: number): Promise<void> => {
   character.value = next
 }
 
+const saveWounds = async (payload: { current: number; max: number }): Promise<void> => {
+  if (!character.value) {
+    return
+  }
+
+  const next = await patchCharacterResources(character.value.id, {
+    woundsCurrent: payload.current,
+    woundsMax: payload.max
+  })
+  character.value = next
+}
+
 const adjustFortune = async (delta: number): Promise<void> => {
   if (!character.value) {
     return
   }
 
   const next = await patchCharacterResources(character.value.id, {
-    fortune: character.value.fortune + delta
+    fortuneCurrent: character.value.fortune.current + delta
+  })
+  character.value = next
+}
+
+const saveFortune = async (payload: { current: number; max: number }): Promise<void> => {
+  if (!character.value) {
+    return
+  }
+
+  const next = await patchCharacterResources(character.value.id, {
+    fortuneCurrent: payload.current,
+    fortuneMax: payload.max
   })
   character.value = next
 }
@@ -430,8 +509,34 @@ const adjustFate = async (delta: number): Promise<void> => {
   }
 
   const next = await patchCharacterResources(character.value.id, {
-    fate: character.value.fate + delta
+    fateCurrent: character.value.fate.current + delta
   })
+  character.value = next
+}
+
+const saveFate = async (payload: { current: number; max: number }): Promise<void> => {
+  if (!character.value) {
+    return
+  }
+
+  const next = await patchCharacterResources(character.value.id, {
+    fateCurrent: payload.current,
+    fateMax: payload.max
+  })
+  character.value = next
+}
+
+const saveMoney = async (): Promise<void> => {
+  if (!character.value) {
+    return
+  }
+
+  const next = await patchCharacterMoney(character.value.id, {
+    co: moneyCoDraft.value,
+    pa: moneyPaDraft.value,
+    s: moneySDraft.value
+  })
+
   character.value = next
 }
 
@@ -478,6 +583,22 @@ const getBonusEndurance = (): number => {
   return domainGetBonusEndurance(character.value)
 }
 
+const getActionsTotal = (): number => {
+  if (!character.value) {
+    return 0
+  }
+
+  return domainGetActionsTotal(character.value)
+}
+
+const getMagicTotal = (): number => {
+  if (!character.value) {
+    return 0
+  }
+
+  return domainGetMagicTotal(character.value)
+}
+
 const getSkillLabel = (skill: CharacterSkill): string => formatSkillLabel(skill)
 
 const getTalentLabel = (talent: CharacterTalent): string => formatTalentLabel(talent)
@@ -489,6 +610,11 @@ const getCharacteristicTotal = getCharacteristicTotalValue
 <style scoped>
 .characteristics-grid {
   padding: 0;
+}
+
+.money-edit-grid {
+  padding: 0;
+  margin-top: 0.5rem;
 }
 
 .characteristic-item {

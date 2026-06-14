@@ -5,9 +5,11 @@ import {
   createCharacter,
   formatNameWithSpecialization,
   formatSkillLabel,
+  getActionsTotal,
   getCharacteristicTotal,
   getBonusForce,
   getBonusEndurance,
+  getMagicTotal,
   isValidCharacter,
   normalizeExperience,
   parseCharacterImportJson,
@@ -25,8 +27,8 @@ describe('character domain', () => {
     expect(character.id).toHaveLength(10)
     expect(character.name).toBe('Konrad')
     expect(character.wounds).toEqual({ current: 10, max: 10 })
-    expect(character.fortune).toBe(2)
-    expect(character.fate).toBe(1)
+    expect(character.fortune).toEqual({ current: 2, max: 2 })
+    expect(character.fate).toEqual({ current: 1, max: 1 })
     expect(character.race).toBe('human')
     expect(character.money).toEqual({ co: 0, pa: 0, s: 0 })
     expect(character.experience).toEqual({ total: 0, spent: 0, available: 0 })
@@ -34,13 +36,16 @@ describe('character domain', () => {
     expect(character.talents).toEqual([])
     expect(character.careers).toEqual({ current: null, previous: [] })
     expect(character.inventory).toEqual([])
-    expect(character.characteristics.cc).toEqual({ base: 30, advance: 0 })
+    expect(character.characteristics.cc).toEqual({ base: 30, advance: 0, ticks: 0 })
+    expect(character.actionsTicks).toBe(0)
+    expect(character.magicTicks).toBe(0)
+    expect(character.bonusForceTicks).toBe(0)
   })
 
   it('computes characteristic total from base + advance', () => {
     const character = createCharacter('A')
     character.characteristics.cc.base = 34
-    character.characteristics.cc.advance = 10
+    character.characteristics.cc.ticks = 2
 
     expect(getCharacteristicTotal(character, 'cc')).toBe(44)
   })
@@ -51,13 +56,14 @@ describe('character domain', () => {
     const patched = patchResources(character, {
       woundsCurrent: 999,
       woundsMax: 12,
-      fortune: -2,
-      fate: 3.9
+      fortuneCurrent: -2,
+      fateCurrent: 3.9,
+      fateMax: 5.8
     })
 
     expect(patched.wounds).toEqual({ current: 12, max: 12 })
-    expect(patched.fortune).toBe(0)
-    expect(patched.fate).toBe(3)
+    expect(patched.fortune).toEqual({ current: 0, max: 2 })
+    expect(patched.fate).toEqual({ current: 3, max: 5 })
   })
 
   it('renames character with trimmed value', () => {
@@ -141,23 +147,35 @@ describe('character domain', () => {
 
   it('calculates bonus force as tens digit of F characteristic', () => {
     const character = createCharacter('A')
-    character.characteristics.f = { base: 35, advance: 0 }
+    character.characteristics.f = { base: 35, advance: 0, ticks: 0 }
 
     expect(getBonusForce(character)).toBe(3)
   })
 
-  it('calculates bonus force with advance', () => {
+  it('calculates bonus force with ticks and secondary bonus tick', () => {
     const character = createCharacter('A')
-    character.characteristics.f = { base: 30, advance: 15 }
+    character.characteristics.f = { base: 30, advance: 15, ticks: 3 }
+    character.bonusForceTicks = 1
 
-    expect(getBonusForce(character)).toBe(4)
+    expect(getBonusForce(character)).toBe(5)
   })
 
   it('calculates bonus endurance as tens digit of E characteristic', () => {
     const character = createCharacter('A')
-    character.characteristics.e = { base: 53, advance: 0 }
+    character.characteristics.e = { base: 53, advance: 0, ticks: 0 }
 
     expect(getBonusEndurance(character)).toBe(5)
+  })
+
+  it('calculates actions and magic totals with ticks', () => {
+    const character = createCharacter('A')
+    character.actions = 2
+    character.actionsTicks = 1
+    character.magic = 3
+    character.magicTicks = 2
+
+    expect(getActionsTotal(character)).toBe(3)
+    expect(getMagicTotal(character)).toBe(5)
   })
 
   it('initializes secondary characteristics with defaults', () => {
@@ -199,6 +217,18 @@ describe('character domain', () => {
     expect(parsed.careers).toEqual({ current: null, previous: [] })
   })
 
+  it('imports legacy numeric fortune and fate as current/max', () => {
+    const source = createCharacter('Legacy Resources')
+    const exported = JSON.parse(toCharacterExportJson(source)) as Record<string, unknown>
+    exported.fortune = 4
+    exported.fate = 2
+
+    const parsed = parseCharacterImportJson(JSON.stringify(exported))
+
+    expect(parsed.fortune).toEqual({ current: 4, max: 4 })
+    expect(parsed.fate).toEqual({ current: 2, max: 2 })
+  })
+
   it('imports legacy careerIds into previous careers', () => {
     const source = createCharacter('Legacy')
     const exported = JSON.parse(toCharacterExportJson(source)) as Record<string, unknown>
@@ -220,11 +250,11 @@ describe('character domain', () => {
 
   it('rejects unknown skills and talents', () => {
     const character = createCharacter('A')
-    character.skills = [{ id: 's1', skillId: 'unknown-skill' }]
+    character.skills = [{ id: 's1', skillId: 'unknown-skill', mastery: 0 }]
 
     expect(isValidCharacter(character)).toBe(false)
 
-    character.skills = [{ id: 's1', skillId: SKILL_CATALOG[0].id }]
+    character.skills = [{ id: 's1', skillId: SKILL_CATALOG[0].id, mastery: 0 }]
     character.talents = [{ id: 't1', talentId: 'unknown-talent' }]
 
     expect(isValidCharacter(character)).toBe(false)
@@ -242,11 +272,49 @@ describe('character domain', () => {
     const label = formatSkillLabel({
       id: 'skill-1',
       skillId: firstSkill!.id,
-      specialization: firstSkill!.specialization
+      specialization: firstSkill!.specialization,
+      mastery: 10
     })
 
     expect(label).toContain(firstSkill!.name)
     expect(label).toContain(`(${firstSkill!.specialization})`)
+    expect(label).toContain('+10%')
+  })
+
+  it('imports skills with default mastery when missing', () => {
+    const source = createCharacter('Skill Legacy')
+    const exported = JSON.parse(toCharacterExportJson(source)) as Record<string, unknown>
+    exported.skills = [
+      {
+        id: 'skill-legacy',
+        skillId: SKILL_CATALOG[0].id,
+        specialization: SKILL_CATALOG[0].specialization
+      }
+    ]
+
+    const parsed = parseCharacterImportJson(JSON.stringify(exported))
+
+    expect(parsed.skills).toEqual([
+      {
+        id: 'skill-legacy',
+        skillId: SKILL_CATALOG[0].id,
+        specialization: SKILL_CATALOG[0].specialization,
+        mastery: 0
+      }
+    ])
+  })
+
+  it('rejects invalid skill mastery values', () => {
+    const character = createCharacter('A')
+    character.skills = [
+      {
+        id: 's1',
+        skillId: SKILL_CATALOG[0].id,
+        mastery: 15
+      } as unknown as (typeof character.skills)[number]
+    ]
+
+    expect(isValidCharacter(character)).toBe(false)
   })
 
   it('validates careers current not duplicated in previous', () => {

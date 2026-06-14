@@ -6,6 +6,7 @@ import {
   getCharacterById,
   importCharacterFromJson,
   listCharacters,
+  patchCharacterMoney,
   patchCharacterResources,
   saveCharacter
 } from '../../src/repositories/characterRepository'
@@ -60,16 +61,33 @@ describe('characterRepository', () => {
 
     const patched = await patchCharacterResources(created.id, {
       woundsCurrent: 7,
-      fortune: 4,
-      fate: 2
+      fortuneCurrent: 4,
+      fortuneMax: 4,
+      fateCurrent: 2,
+      fateMax: 2
     })
 
     expect(patched.wounds.current).toBe(7)
-    expect(patched.fortune).toBe(4)
-    expect(patched.fate).toBe(2)
+    expect(patched.fortune).toEqual({ current: 4, max: 4 })
+    expect(patched.fate).toEqual({ current: 2, max: 2 })
 
     const stored = await getCharacterById(created.id)
     expect(stored?.wounds.current).toBe(7)
+  })
+
+  it('patches money for an existing character with coercion', async () => {
+    const created = await createAndSaveCharacter('Money Hero')
+
+    const patched = await patchCharacterMoney(created.id, {
+      co: 0,
+      pa: 40,
+      s: 15
+    })
+
+    expect(patched.money).toEqual({ co: 2, pa: 1, s: 3 })
+
+    const stored = await getCharacterById(created.id)
+    expect(stored?.money).toEqual({ co: 2, pa: 1, s: 3 })
   })
 
   it('throws on invalid save payload', async () => {
@@ -97,7 +115,7 @@ describe('characterRepository', () => {
 
   it('throws when patch target does not exist', async () => {
     await expect(
-      patchCharacterResources('missing-id', { fortune: 1 })
+      patchCharacterResources('missing-id', { fortuneCurrent: 1 })
     ).rejects.toThrow('Character not found.')
   })
 
@@ -111,14 +129,14 @@ describe('characterRepository', () => {
         fate: 2,
         money: { co: 0, pa: 40, s: 15 },
         characteristics: {
-          cc: { base: 30, advance: 0 },
-          ct: { base: 30, advance: 0 },
-          f: { base: 30, advance: 0 },
-          e: { base: 30, advance: 0 },
-          ag: { base: 30, advance: 0 },
-          int: { base: 30, advance: 0 },
-          fm: { base: 30, advance: 0 },
-          soc: { base: 30, advance: 0 }
+          cc: { base: 30, advance: 0, ticks: 0 },
+          ct: { base: 30, advance: 0, ticks: 0 },
+          f: { base: 30, advance: 0, ticks: 0 },
+          e: { base: 30, advance: 0, ticks: 0 },
+          ag: { base: 30, advance: 0, ticks: 0 },
+          int: { base: 30, advance: 0, ticks: 0 },
+          fm: { base: 30, advance: 0, ticks: 0 },
+          soc: { base: 30, advance: 0, ticks: 0 }
         },
         careerIds: [],
         inventory: [

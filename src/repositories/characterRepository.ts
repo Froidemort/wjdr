@@ -1,8 +1,11 @@
 import {
   createCharacter,
   isValidCharacter,
+  patchMoney,
   parseCharacterImportJson,
+  patchResources,
   type Character,
+  type MoneyPatch,
   type ResourcePatch
 } from '../domain/character'
 import { db } from '../db/schema'
@@ -44,17 +47,22 @@ export const patchCharacterResources = async (
     throw new Error('Character not found.')
   }
 
-  const next: Character = {
-    ...existing,
-    wounds: {
-      current:
-        patch.woundsCurrent === undefined ? existing.wounds.current : patch.woundsCurrent,
-      max: patch.woundsMax === undefined ? existing.wounds.max : patch.woundsMax
-    },
-    fortune: patch.fortune === undefined ? existing.fortune : patch.fortune,
-    fate: patch.fate === undefined ? existing.fate : patch.fate,
-    updatedAt: new Date().toISOString()
+  const next = patchResources(existing, patch)
+
+  await saveCharacter(next)
+  return next
+}
+
+export const patchCharacterMoney = async (
+  id: string,
+  patch: MoneyPatch
+): Promise<Character> => {
+  const existing = await getCharacterById(id)
+  if (!existing) {
+    throw new Error('Character not found.')
   }
+
+  const next = patchMoney(existing, patch)
 
   await saveCharacter(next)
   return next

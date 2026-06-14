@@ -19,6 +19,7 @@ export interface CharacterSkill {
   id: string
   skillId: string
   specialization?: string
+  mastery: SkillMastery
 }
 
 export interface CharacterTalent {
@@ -35,6 +36,14 @@ export interface CharacterCareers {
 export interface CharacteristicValue {
   base: number
   advance: number
+  ticks: number
+}
+
+export type SkillMastery = 0 | 10 | 20
+
+export interface SkillMasteryOption {
+  value: SkillMastery
+  label: string
 }
 
 export type Characteristics = Record<CharacteristicKey, CharacteristicValue>
@@ -59,6 +68,11 @@ export interface Experience {
   available: number
 }
 
+export interface TrackedResource {
+  current: number
+  max: number
+}
+
 export interface Character {
   id: string
   name: string
@@ -67,8 +81,8 @@ export interface Character {
     current: number
     max: number
   }
-  fortune: number
-  fate: number
+  fortune: TrackedResource
+  fate: TrackedResource
   money: Money
   experience: Experience
   characteristics: Characteristics
@@ -77,22 +91,25 @@ export interface Character {
   careers: CharacterCareers
   inventory: InventoryItem[]
   actions: number
+  actionsTicks: number
   movement: number
   magic: number
+  magicTicks: number
+  bonusForceTicks: number
   insanity: number
   createdAt: string
   updatedAt: string
 }
 
 const defaultCharacteristics = (): Characteristics => ({
-  cc: { base: 30, advance: 0 },
-  ct: { base: 30, advance: 0 },
-  f: { base: 30, advance: 0 },
-  e: { base: 30, advance: 0 },
-  ag: { base: 30, advance: 0 },
-  int: { base: 30, advance: 0 },
-  fm: { base: 30, advance: 0 },
-  soc: { base: 30, advance: 0 }
+  cc: { base: 30, advance: 0, ticks: 0 },
+  ct: { base: 30, advance: 0, ticks: 0 },
+  f: { base: 30, advance: 0, ticks: 0 },
+  e: { base: 30, advance: 0, ticks: 0 },
+  ag: { base: 30, advance: 0, ticks: 0 },
+  int: { base: 30, advance: 0, ticks: 0 },
+  fm: { base: 30, advance: 0, ticks: 0 },
+  soc: { base: 30, advance: 0, ticks: 0 }
 })
 
 export const RACE_OPTIONS: RaceOption[] = [
@@ -130,6 +147,12 @@ export const CAREER_CATALOG: string[] = [
   'Chasseur de primes'
 ]
 
+export const SKILL_MASTERY_OPTIONS: SkillMasteryOption[] = [
+  { value: 0, label: 'Acquis' },
+  { value: 10, label: '+10%' },
+  { value: 20, label: '+20%' }
+]
+
 const defaultRace = (): RaceKey => 'human'
 
 const defaultCareers = (): CharacterCareers => ({
@@ -149,16 +172,32 @@ const defaultExperience = (): Experience => ({
   available: 0
 })
 
+const defaultFortune = (): TrackedResource => ({
+  current: 2,
+  max: 2
+})
+
+const defaultFate = (): TrackedResource => ({
+  current: 1,
+  max: 1
+})
+
 const raceSet = new Set<RaceKey>(RACE_OPTIONS.map((option) => option.key))
 const skillSet = new Set<string>(SKILL_CATALOG.map((entry) => entry.id))
 const talentSet = new Set<string>(TALENT_CATALOG.map((entry) => entry.id))
 const careerSet = new Set<string>(CAREER_CATALOG)
+const masterySet = new Set<SkillMastery>(SKILL_MASTERY_OPTIONS.map((option) => option.value))
 
 const isRaceKey = (value: unknown): value is RaceKey =>
   typeof value === 'string' && raceSet.has(value as RaceKey)
 
 export const formatNameWithSpecialization = (name: string, specialization?: string): string =>
   specialization ? `${name} (${specialization})` : name
+
+export const formatSkillMasteryLabel = (mastery: SkillMastery): string => {
+  const option = SKILL_MASTERY_OPTIONS.find((entry) => entry.value === mastery)
+  return option?.label ?? 'Acquis'
+}
 
 const getCatalogEntry = (catalog: CatalogEntry[], id: string): CatalogEntry | undefined =>
   catalog.find((entry) => entry.id === id)
@@ -169,7 +208,7 @@ export const formatSkillLabel = (skill: CharacterSkill): string => {
     return skill.skillId
   }
 
-  return formatNameWithSpecialization(entry.name, skill.specialization)
+  return `${formatNameWithSpecialization(entry.name, skill.specialization)} - ${formatSkillMasteryLabel(skill.mastery)}`
 }
 
 export const formatTalentLabel = (talent: CharacterTalent): string => {
@@ -220,8 +259,8 @@ export const createCharacter = (name: string): Character => {
       current: 10,
       max: 10
     },
-    fortune: 2,
-    fate: 1,
+    fortune: defaultFortune(),
+    fate: defaultFate(),
     money: defaultMoney(),
     experience: defaultExperience(),
     characteristics: defaultCharacteristics(),
@@ -230,8 +269,11 @@ export const createCharacter = (name: string): Character => {
     careers: defaultCareers(),
     inventory: [],
     actions: 1,
+    actionsTicks: 0,
     movement: 4,
     magic: 0,
+    magicTicks: 0,
+    bonusForceTicks: 0,
     insanity: 0,
     createdAt: now,
     updatedAt: now
@@ -241,11 +283,17 @@ export const createCharacter = (name: string): Character => {
 export const getCharacteristicTotal = (
   character: Character,
   key: CharacteristicKey
-): number => character.characteristics[key].base + character.characteristics[key].advance
+): number => character.characteristics[key].base + character.characteristics[key].ticks * 5
+
+export const getActionsTotal = (character: Character): number =>
+  character.actions + character.actionsTicks
+
+export const getMagicTotal = (character: Character): number =>
+  character.magic + character.magicTicks
 
 export const getBonusForce = (character: Character): number => {
   const total = getCharacteristicTotal(character, 'f')
-  return Math.floor(total / 10)
+  return Math.floor(total / 10) + character.bonusForceTicks
 }
 
 export const getBonusEndurance = (character: Character): number => {
@@ -258,8 +306,10 @@ const clampAtZero = (value: number): number => Math.max(0, Math.trunc(value))
 export interface ResourcePatch {
   woundsCurrent?: number
   woundsMax?: number
-  fortune?: number
-  fate?: number
+  fortuneCurrent?: number
+  fortuneMax?: number
+  fateCurrent?: number
+  fateMax?: number
 }
 
 export interface MoneyPatch {
@@ -275,6 +325,16 @@ export const patchResources = (
   const woundsMax = patch.woundsMax ?? character.wounds.max
   const woundsCurrentRaw = patch.woundsCurrent ?? character.wounds.current
   const woundsCurrent = Math.min(clampAtZero(woundsCurrentRaw), clampAtZero(woundsMax))
+  const fortuneMax = clampAtZero(patch.fortuneMax ?? character.fortune.max)
+  const fortuneCurrent = Math.min(
+    clampAtZero(patch.fortuneCurrent ?? character.fortune.current),
+    fortuneMax
+  )
+  const fateMax = clampAtZero(patch.fateMax ?? character.fate.max)
+  const fateCurrent = Math.min(
+    clampAtZero(patch.fateCurrent ?? character.fate.current),
+    fateMax
+  )
 
   return {
     ...character,
@@ -282,8 +342,14 @@ export const patchResources = (
       current: woundsCurrent,
       max: clampAtZero(woundsMax)
     },
-    fortune: clampAtZero(patch.fortune ?? character.fortune),
-    fate: clampAtZero(patch.fate ?? character.fate),
+    fortune: {
+      current: fortuneCurrent,
+      max: fortuneMax
+    },
+    fate: {
+      current: fateCurrent,
+      max: fateMax
+    },
     updatedAt: new Date().toISOString()
   }
 }
@@ -325,6 +391,15 @@ const normalizeSpecialization = (value: unknown, fallback?: string): string | un
   return trimmed.length > 0 ? trimmed : undefined
 }
 
+const normalizeSkillMastery = (value: unknown, fallback: SkillMastery = 0): SkillMastery => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return fallback
+  }
+
+  const truncated = Math.trunc(value) as SkillMastery
+  return masterySet.has(truncated) ? truncated : fallback
+}
+
 const normalizeCharacterSkill = (skill: CharacterSkill): CharacterSkill | null => {
   if (!skillSet.has(skill.skillId)) {
     return null
@@ -336,7 +411,8 @@ const normalizeCharacterSkill = (skill: CharacterSkill): CharacterSkill | null =
   return {
     id: skill.id,
     skillId: skill.skillId,
-    specialization
+    specialization,
+    mastery: normalizeSkillMastery(skill.mastery)
   }
 }
 
@@ -419,7 +495,19 @@ export const isValidCharacter = (character: Character): boolean => {
     return false
   }
 
-  if (character.fortune < 0 || character.fate < 0) {
+  if (character.fortune.max < 0 || character.fortune.current < 0) {
+    return false
+  }
+
+  if (character.fortune.current > character.fortune.max) {
+    return false
+  }
+
+  if (character.fate.max < 0 || character.fate.current < 0) {
+    return false
+  }
+
+  if (character.fate.current > character.fate.max) {
     return false
   }
 
@@ -447,7 +535,11 @@ export const isValidCharacter = (character: Character): boolean => {
     return false
   }
 
-  if (character.skills.some((skill) => !skill.id || !skillSet.has(skill.skillId))) {
+  if (
+    character.skills.some(
+      (skill) => !skill.id || !skillSet.has(skill.skillId) || !masterySet.has(skill.mastery)
+    )
+  ) {
     return false
   }
 
@@ -471,6 +563,10 @@ export const isValidCharacter = (character: Character): boolean => {
   }
 
   if (character.actions < 1 || character.movement <= 0 || character.magic < 0 || character.insanity < 0) {
+    return false
+  }
+
+  if (character.actionsTicks < 0 || character.magicTicks < 0 || character.bonusForceTicks < 0) {
     return false
   }
 
@@ -528,6 +624,31 @@ const normalizeImportedExperience = (value: unknown): Experience => {
   })
 }
 
+const normalizeImportedTrackedResource = (
+  value: unknown,
+  fallback: TrackedResource
+): TrackedResource => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const resource = clampAtZero(value)
+    return {
+      current: resource,
+      max: resource
+    }
+  }
+
+  if (!isRecord(value)) {
+    return fallback
+  }
+
+  const max = clampAtZero(asFiniteNumber(value.max, fallback.max))
+  const current = Math.min(clampAtZero(asFiniteNumber(value.current, fallback.current)), max)
+
+  return {
+    current,
+    max
+  }
+}
+
 const normalizeImportedSkills = (value: unknown): CharacterSkill[] => {
   if (!Array.isArray(value)) {
     return []
@@ -538,7 +659,8 @@ const normalizeImportedSkills = (value: unknown): CharacterSkill[] => {
     .map((entry): CharacterSkill => ({
       id: typeof entry.id === 'string' && entry.id ? entry.id : nanoid(10),
       skillId: typeof entry.skillId === 'string' ? entry.skillId : '',
-      specialization: normalizeSpecialization(entry.specialization)
+      specialization: normalizeSpecialization(entry.specialization),
+      mastery: normalizeSkillMastery(entry.mastery)
     }))
     .map(normalizeCharacterSkill)
     .filter((skill): skill is CharacterSkill => skill !== null)
@@ -605,35 +727,43 @@ const normalizeCharacteristics = (value: unknown): Characteristics => {
   return {
     cc: {
       base: clampAtZero(asFiniteNumber(value.cc && isRecord(value.cc) ? value.cc.base : undefined, fallback.cc.base)),
-      advance: clampAtZero(asFiniteNumber(value.cc && isRecord(value.cc) ? value.cc.advance : undefined, fallback.cc.advance))
+      advance: clampAtZero(asFiniteNumber(value.cc && isRecord(value.cc) ? value.cc.advance : undefined, fallback.cc.advance)),
+      ticks: clampAtZero(asFiniteNumber(value.cc && isRecord(value.cc) ? value.cc.ticks : undefined, fallback.cc.ticks))
     },
     ct: {
       base: clampAtZero(asFiniteNumber(value.ct && isRecord(value.ct) ? value.ct.base : undefined, fallback.ct.base)),
-      advance: clampAtZero(asFiniteNumber(value.ct && isRecord(value.ct) ? value.ct.advance : undefined, fallback.ct.advance))
+      advance: clampAtZero(asFiniteNumber(value.ct && isRecord(value.ct) ? value.ct.advance : undefined, fallback.ct.advance)),
+      ticks: clampAtZero(asFiniteNumber(value.ct && isRecord(value.ct) ? value.ct.ticks : undefined, fallback.ct.ticks))
     },
     f: {
       base: clampAtZero(asFiniteNumber(value.f && isRecord(value.f) ? value.f.base : undefined, fallback.f.base)),
-      advance: clampAtZero(asFiniteNumber(value.f && isRecord(value.f) ? value.f.advance : undefined, fallback.f.advance))
+      advance: clampAtZero(asFiniteNumber(value.f && isRecord(value.f) ? value.f.advance : undefined, fallback.f.advance)),
+      ticks: clampAtZero(asFiniteNumber(value.f && isRecord(value.f) ? value.f.ticks : undefined, fallback.f.ticks))
     },
     e: {
       base: clampAtZero(asFiniteNumber(value.e && isRecord(value.e) ? value.e.base : undefined, fallback.e.base)),
-      advance: clampAtZero(asFiniteNumber(value.e && isRecord(value.e) ? value.e.advance : undefined, fallback.e.advance))
+      advance: clampAtZero(asFiniteNumber(value.e && isRecord(value.e) ? value.e.advance : undefined, fallback.e.advance)),
+      ticks: clampAtZero(asFiniteNumber(value.e && isRecord(value.e) ? value.e.ticks : undefined, fallback.e.ticks))
     },
     ag: {
       base: clampAtZero(asFiniteNumber(value.ag && isRecord(value.ag) ? value.ag.base : undefined, fallback.ag.base)),
-      advance: clampAtZero(asFiniteNumber(value.ag && isRecord(value.ag) ? value.ag.advance : undefined, fallback.ag.advance))
+      advance: clampAtZero(asFiniteNumber(value.ag && isRecord(value.ag) ? value.ag.advance : undefined, fallback.ag.advance)),
+      ticks: clampAtZero(asFiniteNumber(value.ag && isRecord(value.ag) ? value.ag.ticks : undefined, fallback.ag.ticks))
     },
     int: {
       base: clampAtZero(asFiniteNumber(value.int && isRecord(value.int) ? value.int.base : undefined, fallback.int.base)),
-      advance: clampAtZero(asFiniteNumber(value.int && isRecord(value.int) ? value.int.advance : undefined, fallback.int.advance))
+      advance: clampAtZero(asFiniteNumber(value.int && isRecord(value.int) ? value.int.advance : undefined, fallback.int.advance)),
+      ticks: clampAtZero(asFiniteNumber(value.int && isRecord(value.int) ? value.int.ticks : undefined, fallback.int.ticks))
     },
     fm: {
       base: clampAtZero(asFiniteNumber(value.fm && isRecord(value.fm) ? value.fm.base : undefined, fallback.fm.base)),
-      advance: clampAtZero(asFiniteNumber(value.fm && isRecord(value.fm) ? value.fm.advance : undefined, fallback.fm.advance))
+      advance: clampAtZero(asFiniteNumber(value.fm && isRecord(value.fm) ? value.fm.advance : undefined, fallback.fm.advance)),
+      ticks: clampAtZero(asFiniteNumber(value.fm && isRecord(value.fm) ? value.fm.ticks : undefined, fallback.fm.ticks))
     },
     soc: {
       base: clampAtZero(asFiniteNumber(value.soc && isRecord(value.soc) ? value.soc.base : undefined, fallback.soc.base)),
-      advance: clampAtZero(asFiniteNumber(value.soc && isRecord(value.soc) ? value.soc.advance : undefined, fallback.soc.advance))
+      advance: clampAtZero(asFiniteNumber(value.soc && isRecord(value.soc) ? value.soc.advance : undefined, fallback.soc.advance)),
+      ticks: clampAtZero(asFiniteNumber(value.soc && isRecord(value.soc) ? value.soc.ticks : undefined, fallback.soc.ticks))
     }
   }
 }
@@ -666,8 +796,8 @@ export const parseCharacterImportJson = (json: string): Character => {
         asFiniteNumber(isRecord(raw.wounds) ? raw.wounds.max : undefined, 10)
       )
     },
-    fortune: clampAtZero(asFiniteNumber(raw.fortune, 2)),
-    fate: clampAtZero(asFiniteNumber(raw.fate, 1)),
+    fortune: normalizeImportedTrackedResource(raw.fortune, defaultFortune()),
+    fate: normalizeImportedTrackedResource(raw.fate, defaultFate()),
     money: normalizeImportedMoney(raw.money),
     experience: normalizeImportedExperience(raw.experience),
     characteristics: normalizeCharacteristics(raw.characteristics),
@@ -676,8 +806,11 @@ export const parseCharacterImportJson = (json: string): Character => {
     careers: normalizeImportedCareers(raw),
     inventory: normalizeInventory(raw.inventory),
     actions: clampAtZero(asFiniteNumber(raw.actions, 1)) || 1,
+    actionsTicks: clampAtZero(asFiniteNumber(raw.actionsTicks, 0)),
     movement: clampAtZero(asFiniteNumber(raw.movement, 4)) || 4,
     magic: clampAtZero(asFiniteNumber(raw.magic, 0)),
+    magicTicks: clampAtZero(asFiniteNumber(raw.magicTicks, 0)),
+    bonusForceTicks: clampAtZero(asFiniteNumber(raw.bonusForceTicks, 0)),
     insanity: clampAtZero(asFiniteNumber(raw.insanity, 0)),
     createdAt: asIsoDate(raw.createdAt, now),
     updatedAt: asIsoDate(raw.updatedAt, now)
@@ -686,8 +819,10 @@ export const parseCharacterImportJson = (json: string): Character => {
   const normalized = patchResources(character, {
     woundsCurrent: character.wounds.current,
     woundsMax: character.wounds.max,
-    fortune: character.fortune,
-    fate: character.fate
+    fortuneCurrent: character.fortune.current,
+    fortuneMax: character.fortune.max,
+    fateCurrent: character.fate.current,
+    fateMax: character.fate.max
   })
 
   const nextCharacter: Character = {
