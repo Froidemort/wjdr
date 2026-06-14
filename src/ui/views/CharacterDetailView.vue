@@ -21,16 +21,6 @@
     <ion-content class="ion-padding">
       <ion-grid v-if="character">
         <ion-row>
-          <ion-col size="12">
-            <ion-card>
-              <ion-card-header>
-                <ion-card-title>Race</ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
-                <span data-testid="character-race-value">{{ raceIcon }} {{ raceLabel }}</span>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
 
           <ion-col size="12">
             <resource-tracker-card
@@ -157,6 +147,20 @@
                     </ion-col>
                   </ion-row>
                 </ion-grid>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>Identité</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <p>
+                  <strong>Race:</strong>
+                  <span data-testid="character-race-value">{{ raceIcon }} {{ getRaceLabel(character.race) }}</span>
+                </p>
               </ion-card-content>
             </ion-card>
           </ion-col>
@@ -448,14 +452,6 @@ const moneyPaDraft = ref(0)
 const moneySDraft = ref(0)
 
 const characterId = computed(() => String(route.params.id ?? ''))
-
-const raceLabel = computed(() => {
-  if (!character.value) {
-    return ''
-  }
-
-  return getRaceLabel(character.value.race)
-})
 
 const raceIcon = computed(() => {
   if (!character.value) {

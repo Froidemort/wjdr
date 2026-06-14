@@ -31,6 +31,27 @@ npm run test:e2e
 npm test
 ```
 
+Smoke deploye preview/prod:
+
+```bash
+PLAYWRIGHT_BASE_URL=https://your-preview-url.vercel.app npm run test:e2e:deploy
+```
+
+## Deploy Vercel
+
+Build Vercel:
+
+```bash
+npm run build
+```
+
+Points couverts:
+
+- SPA fallback sur `/index.html`
+- cache long sur assets Vite versionnes
+- `no-cache` sur service worker et manifest
+- smoke test deployee sur app shell, manifest et service worker
+
 Documentation detaillee des tests M1:
 
 - `docs/testing-m1.md`

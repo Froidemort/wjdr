@@ -11,7 +11,8 @@
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:deploy": "playwright test -c playwright.deploy.config.ts"
   },
   "dependencies": {
     "@ionic/vue": "^8.8.10",

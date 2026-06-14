@@ -5,7 +5,7 @@ const localBaseUrl = 'http://127.0.0.1:4173'
 
 export default defineConfig({
   testDir: './tests/e2e',
-  testIgnore: ['tests/e2e/deploy-smoke.spec.ts'],
+  testMatch: ['deploy-smoke.spec.ts'],
   timeout: 45_000,
   expect: {
     timeout: 10_000
@@ -21,7 +21,7 @@ export default defineConfig({
   webServer: deployedBaseUrl
     ? undefined
     : {
-        command: 'npm run dev -- --host 127.0.0.1 --port 4173',
+        command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173',
         port: 4173,
         reuseExistingServer: true,
         timeout: 120_000
