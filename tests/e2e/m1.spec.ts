@@ -55,6 +55,8 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await setIonInputValue(page, '[data-testid="edit-money-co-input"]', '0')
   await setIonInputValue(page, '[data-testid="edit-money-pa-input"]', '40')
   await setIonInputValue(page, '[data-testid="edit-money-s-input"]', '15')
+  await setIonInputValue(page, '[data-testid="edit-cc-base-input"]', '42')
+  await setIonInputValue(page, '[data-testid="edit-cc-advance-input"]', '8')
 
   await page.getByTestId('save-editor-button').click()
   await expect(page).not.toHaveURL(/\/edit$/)
@@ -63,6 +65,7 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByTestId('fortune-value')).toHaveText('4')
   await expect(page.getByTestId('fate-value')).toHaveText('3')
   await expect(page.getByTestId('money-value')).toHaveText('2 co / 1 pa / 3 s')
+  await expect(page.getByTestId('character-cc-value')).toHaveText('50%')
 
   const downloadPromise = page.waitForEvent('download')
   await page.getByTestId('export-json-button').click()
@@ -79,4 +82,17 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page).toHaveURL(/\/character\//)
   await expect(page.getByRole('button', { name: 'Exporter' })).toBeVisible()
   await expect(page.getByTestId('money-value')).toHaveText('2 co / 1 pa / 3 s')
+  await expect(page.getByTestId('character-cc-value')).toHaveText('50%')
+
+  // Verify main characteristics section is displayed
+  const mainCharacteristicsCard = page.getByRole('heading', { name: 'Caractéristiques Principales' })
+  await expect(mainCharacteristicsCard).toBeVisible()
+
+  // Verify secondary characteristics section is displayed
+  const secondaryCharacteristicsCard = page.getByRole('heading', { name: 'Caractéristiques Secondaires' })
+  await expect(secondaryCharacteristicsCard).toBeVisible()
+
+  // Verify we can see characteristic labels in the page
+  await expect(page.locator('text=Attaques (A)')).toBeVisible()
+  await expect(page.locator('text=Mouvement (M)')).toBeVisible()
 })

@@ -37,6 +37,58 @@
         </ion-item>
 
         <ion-item lines="none">
+          <ion-label>Caractéristiques Principales</ion-label>
+        </ion-item>
+        <ion-grid class="main-characteristics-grid">
+          <ion-row>
+            <ion-col
+              v-for="field in mainCharacteristicFields"
+              :key="field.key"
+              size="12"
+              size-md="6"
+            >
+              <div class="main-characteristic-block">
+                <h3>{{ field.label }}</h3>
+                <ion-item>
+                  <ion-input
+                    :data-testid="`edit-${field.key}-base-input`"
+                    v-model.number="mainCharacteristics[field.key].base"
+                    type="number"
+                    :label="`${field.label} base (%)`"
+                    label-placement="stacked"
+                  />
+                </ion-item>
+                <ion-item>
+                  <ion-input
+                    :data-testid="`edit-${field.key}-advance-input`"
+                    v-model.number="mainCharacteristics[field.key].advance"
+                    type="number"
+                    :label="`${field.label} avance (%)`"
+                    label-placement="stacked"
+                  />
+                </ion-item>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+
+        <ion-item lines="none">
+          <ion-label>Caractéristiques Secondaires</ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-input data-testid="edit-actions-input" v-model.number="actions" type="number" label="Attaques/Actions (A)" label-placement="stacked" />
+        </ion-item>
+        <ion-item>
+          <ion-input data-testid="edit-movement-input" v-model.number="movement" type="number" label="Mouvement (M)" label-placement="stacked" />
+        </ion-item>
+        <ion-item>
+          <ion-input data-testid="edit-magic-input" v-model.number="magic" type="number" label="Magie (Mag)" label-placement="stacked" />
+        </ion-item>
+        <ion-item>
+          <ion-input data-testid="edit-insanity-input" v-model.number="insanity" type="number" label="Points de Folie (PF)" label-placement="stacked" />
+        </ion-item>
+
+        <ion-item lines="none">
           <ion-label>Équipement</ion-label>
         </ion-item>
         <ion-item>
@@ -73,19 +125,24 @@ import {
   IonButton,
   IonButtons,
   IonContent,
+  IonCol,
+  IonGrid,
   IonHeader,
   IonInput,
   IonItem,
   IonLabel,
   IonList,
   IonPage,
+  IonRow,
   IonTitle,
   IonToolbar,
   onIonViewWillEnter
 } from '@ionic/vue'
-import { computed, ref, toRaw } from 'vue'
+import { computed, reactive, ref, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
+  type CharacteristicKey,
+  type Characteristics,
   patchInventory,
   patchMoney,
   patchResources,
@@ -111,10 +168,71 @@ const fate = ref(0)
 const moneyCo = ref(0)
 const moneyPa = ref(0)
 const moneyS = ref(0)
+const actions = ref(1)
+const movement = ref(4)
+const magic = ref(0)
+const insanity = ref(0)
+const mainCharacteristics = reactive<Characteristics>({
+  cc: { base: 30, advance: 0 },
+  ct: { base: 30, advance: 0 },
+  f: { base: 30, advance: 0 },
+  e: { base: 30, advance: 0 },
+  ag: { base: 30, advance: 0 },
+  int: { base: 30, advance: 0 },
+  fm: { base: 30, advance: 0 },
+  soc: { base: 30, advance: 0 }
+})
+const mainCharacteristicFields: Array<{ key: CharacteristicKey; label: string }> = [
+  { key: 'cc', label: 'CC' },
+  { key: 'ct', label: 'CT' },
+  { key: 'f', label: 'F' },
+  { key: 'e', label: 'E' },
+  { key: 'ag', label: 'Ag' },
+  { key: 'int', label: 'Int' },
+  { key: 'fm', label: 'FM' },
+  { key: 'soc', label: 'Soc' }
+]
 const inventory = ref<InventoryItem[]>([])
 const newItemName = ref('')
 const newItemQuantity = ref(1)
 const newItemWeight = ref(0)
+
+const normalizeMainCharacteristics = (value: Characteristics): Characteristics => {
+  return {
+    cc: {
+      base: Math.max(0, Math.trunc(value.cc.base)),
+      advance: Math.max(0, Math.trunc(value.cc.advance))
+    },
+    ct: {
+      base: Math.max(0, Math.trunc(value.ct.base)),
+      advance: Math.max(0, Math.trunc(value.ct.advance))
+    },
+    f: {
+      base: Math.max(0, Math.trunc(value.f.base)),
+      advance: Math.max(0, Math.trunc(value.f.advance))
+    },
+    e: {
+      base: Math.max(0, Math.trunc(value.e.base)),
+      advance: Math.max(0, Math.trunc(value.e.advance))
+    },
+    ag: {
+      base: Math.max(0, Math.trunc(value.ag.base)),
+      advance: Math.max(0, Math.trunc(value.ag.advance))
+    },
+    int: {
+      base: Math.max(0, Math.trunc(value.int.base)),
+      advance: Math.max(0, Math.trunc(value.int.advance))
+    },
+    fm: {
+      base: Math.max(0, Math.trunc(value.fm.base)),
+      advance: Math.max(0, Math.trunc(value.fm.advance))
+    },
+    soc: {
+      base: Math.max(0, Math.trunc(value.soc.base)),
+      advance: Math.max(0, Math.trunc(value.soc.advance))
+    }
+  }
+}
 
 const fillForm = (current: Character): void => {
   name.value = current.name
@@ -125,6 +243,11 @@ const fillForm = (current: Character): void => {
   moneyCo.value = current.money.co
   moneyPa.value = current.money.pa
   moneyS.value = current.money.s
+  Object.assign(mainCharacteristics, structuredClone(current.characteristics))
+  actions.value = current.actions
+  movement.value = current.movement
+  magic.value = current.magic
+  insanity.value = current.insanity
   inventory.value = structuredClone(current.inventory)
 }
 
@@ -164,9 +287,16 @@ const onSave = async (): Promise<void> => {
   })
 
   const withInventory = patchInventory(withMoney, inventory.value)
+  const withCharacteristics = normalizeMainCharacteristics(mainCharacteristics)
 
   const next: Character = {
-    ...withInventory
+    ...withInventory,
+    characteristics: withCharacteristics,
+    actions: Math.max(1, Math.trunc(actions.value)),
+    movement: Math.max(1, Math.trunc(movement.value)),
+    magic: Math.max(0, Math.trunc(magic.value)),
+    insanity: Math.max(0, Math.trunc(insanity.value)),
+    updatedAt: new Date().toISOString()
   }
 
   await saveCharacter(next)
@@ -202,3 +332,22 @@ const toggleEquipped = (id: string): void => {
   )
 }
 </script>
+
+<style scoped>
+.main-characteristics-grid {
+  padding: 0 0.5rem 1rem;
+}
+
+.main-characteristic-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.main-characteristic-block h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+</style>

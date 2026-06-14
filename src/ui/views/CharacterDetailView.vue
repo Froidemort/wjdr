@@ -85,6 +85,138 @@
               </ion-card-content>
             </ion-card>
           </ion-col>
+
+          <!-- Caractéristiques Principales -->
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>Caractéristiques Principales</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-grid class="characteristics-grid">
+                  <ion-row>
+                    <!-- CC -->
+                    <ion-col size="6" size-md="3">
+                      <div class="characteristic-item">
+                        <span class="label">CC</span>
+                        <span data-testid="character-cc-value" class="value">{{ getCharacteristicTotal('cc') }}%</span>
+                      </div>
+                    </ion-col>
+                    <!-- CT -->
+                    <ion-col size="6" size-md="3">
+                      <div class="characteristic-item">
+                        <span class="label">CT</span>
+                        <span data-testid="character-ct-value" class="value">{{ getCharacteristicTotal('ct') }}%</span>
+                      </div>
+                    </ion-col>
+                    <!-- F -->
+                    <ion-col size="6" size-md="3">
+                      <div class="characteristic-item">
+                        <span class="label">F</span>
+                        <span data-testid="character-f-value" class="value">{{ getCharacteristicTotal('f') }}%</span>
+                      </div>
+                    </ion-col>
+                    <!-- E -->
+                    <ion-col size="6" size-md="3">
+                      <div class="characteristic-item">
+                        <span class="label">E</span>
+                        <span data-testid="character-e-value" class="value">{{ getCharacteristicTotal('e') }}%</span>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                  <ion-row>
+                    <!-- Ag -->
+                    <ion-col size="6" size-md="3">
+                      <div class="characteristic-item">
+                        <span class="label">Ag</span>
+                        <span data-testid="character-ag-value" class="value">{{ getCharacteristicTotal('ag') }}%</span>
+                      </div>
+                    </ion-col>
+                    <!-- Int -->
+                    <ion-col size="6" size-md="3">
+                      <div class="characteristic-item">
+                        <span class="label">Int</span>
+                        <span data-testid="character-int-value" class="value">{{ getCharacteristicTotal('int') }}%</span>
+                      </div>
+                    </ion-col>
+                    <!-- FM -->
+                    <ion-col size="6" size-md="3">
+                      <div class="characteristic-item">
+                        <span class="label">FM</span>
+                        <span data-testid="character-fm-value" class="value">{{ getCharacteristicTotal('fm') }}%</span>
+                      </div>
+                    </ion-col>
+                    <!-- Soc -->
+                    <ion-col size="6" size-md="3">
+                      <div class="characteristic-item">
+                        <span class="label">Soc</span>
+                        <span data-testid="character-soc-value" class="value">{{ getCharacteristicTotal('soc') }}%</span>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <!-- Caractéristiques Secondaires -->
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>Caractéristiques Secondaires</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-grid class="characteristics-grid">
+                  <ion-row>
+                    <!-- A -->
+                    <ion-col size="6" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Attaques (A)</span>
+                        <span class="value">{{ character.actions }}</span>
+                      </div>
+                    </ion-col>
+                    <!-- M -->
+                    <ion-col size="6" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Mouvement (M)</span>
+                        <span class="value">{{ character.movement }}</span>
+                      </div>
+                    </ion-col>
+                    <!-- BF -->
+                    <ion-col size="6" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Bonus Force (BF)</span>
+                        <span class="value">{{ getBonusForce() }}</span>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                  <ion-row>
+                    <!-- BE -->
+                    <ion-col size="6" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Bonus Endurance (BE)</span>
+                        <span class="value">{{ getBonusEndurance() }}</span>
+                      </div>
+                    </ion-col>
+                    <!-- Mag -->
+                    <ion-col size="6" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Magie (Mag)</span>
+                        <span class="value">{{ character.magic }}</span>
+                      </div>
+                    </ion-col>
+                    <!-- PF -->
+                    <ion-col size="6" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Folie (PF)</span>
+                        <span class="value">{{ character.insanity }}</span>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
         </ion-row>
       </ion-grid>
 
@@ -120,7 +252,14 @@ import {
 } from '@ionic/vue'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { toCharacterExportJson, type Character } from '../../domain/character'
+import {
+  toCharacterExportJson,
+  type Character,
+  type CharacteristicKey,
+  getCharacteristicTotal as domainGetCharacteristicTotal,
+  getBonusForce as domainGetBonusForce,
+  getBonusEndurance as domainGetBonusEndurance
+} from '../../domain/character'
 import { getCharacterById, patchCharacterResources } from '../../repositories/characterRepository'
 
 const route = useRoute()
@@ -189,4 +328,80 @@ const exportJson = (): void => {
   link.click()
   URL.revokeObjectURL(url)
 }
+
+const getCharacteristicTotalValue = (key: CharacteristicKey): number => {
+  if (!character.value) {
+    return 0
+  }
+
+  return domainGetCharacteristicTotal(character.value, key)
+}
+
+const getBonusForce = (): number => {
+  if (!character.value) {
+    return 0
+  }
+
+  return domainGetBonusForce(character.value)
+}
+
+const getBonusEndurance = (): number => {
+  if (!character.value) {
+    return 0
+  }
+
+  return domainGetBonusEndurance(character.value)
+}
+
+// Alias for template convenience
+const getCharacteristicTotal = getCharacteristicTotalValue
 </script>
+
+<style scoped>
+.characteristics-grid {
+  padding: 0;
+}
+
+.characteristic-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  border-right: 1px solid var(--ion-border-color);
+  border-bottom: 1px solid var(--ion-border-color);
+}
+
+.characteristic-item:nth-child(2n) {
+  border-right: 0;
+}
+
+@media (max-width: 575px) {
+  .characteristic-item {
+    padding: 0.75rem 0.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .characteristic-item:nth-child(4n) {
+    border-right: 0;
+  }
+
+  .characteristic-item:nth-child(2n) {
+    border-right: 1px solid var(--ion-border-color);
+  }
+}
+
+.characteristic-item .label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ion-text-color-step-150);
+  text-align: center;
+}
+
+.characteristic-item .value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--ion-color-primary);
+}
+</style>
