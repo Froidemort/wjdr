@@ -1,4 +1,4 @@
-# Warhammer Sheet (M2)
+# Warhammer Sheet (M3)
 
 Application offline-first de gestion de fiches Warhammer JDR V2.
 
@@ -9,6 +9,7 @@ Perimetre actuel:
 - rouvrir et modifier PV / Fortune / Destin
 - exporter/importer JSON
 - gerer un inventaire et l'equipement (quantite, poids, equipe)
+- gerer l'argent en co / pa / s avec conversion automatique
 
 ## Commandes
 

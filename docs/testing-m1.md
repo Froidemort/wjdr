@@ -1,12 +1,13 @@
-# Tests M2
+# Tests M3
 
-Ce document couvre la strategie de test pour le livrable M2:
+Ce document couvre la strategie de test pour le livrable M3:
 - creer un personnage
 - enregistrer en local (IndexedDB)
 - rouvrir
 - modifier PV/Fortune/Destin
 - exporter/importer JSON
 - gerer un inventaire et l'equipement
+- gerer la monnaie co/pa/s avec coercition automatique
 
 ## 1) Tests unitaires
 
@@ -28,6 +29,7 @@ Points verifies:
 - serialisation JSON d'export
 - parsing et validation d'un import JSON
 - normalisation et validation de l'inventaire
+- conversion monetaire automatique (co/pa/s)
 - CRUD repository Dexie (create/get/list/delete)
 - tri par date de mise a jour
 - erreurs metier (`Character data is invalid.`, `Character not found.`)
@@ -53,6 +55,7 @@ Scenario M1 couvert:
 - export JSON (telechargement)
 - import du fichier JSON exporte
 - edition des ressources et de l'inventaire/equipement
+- coercition monetaire en edition (40 pa -> 2 co, 15 s -> 1 pa et 3 s)
 - retour a la liste et verification de persistance
 
 ## 3) Suite complete
