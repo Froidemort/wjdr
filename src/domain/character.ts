@@ -17,6 +17,12 @@ export interface InventoryItem {
   equipped: boolean
 }
 
+export interface Money {
+  co: number
+  pa: number
+  s: number
+}
+
 export interface Character {
   id: string
   name: string
@@ -26,7 +32,7 @@ export interface Character {
   }
   fortune: number
   fate: number
-  money: number
+  money: Money
   characteristics: Characteristics
   careerIds: string[]
   inventory: InventoryItem[]
@@ -45,6 +51,29 @@ const defaultCharacteristics = (): Characteristics => ({
   soc: { base: 30, advance: 0 }
 })
 
+const defaultMoney = (): Money => ({
+  co: 0,
+  pa: 0,
+  s: 0
+})
+
+const toUnit = (value: number): number => Math.max(0, Math.trunc(value))
+
+const moneyToSous = (money: Money): number =>
+  toUnit(money.co) * 240 + toUnit(money.pa) * 12 + toUnit(money.s)
+
+export const sousToMoney = (totalSous: number): Money => {
+  const sous = clampAtZero(totalSous)
+  const co = Math.floor(sous / 240)
+  const remainderAfterCo = sous % 240
+  const pa = Math.floor(remainderAfterCo / 12)
+  const s = remainderAfterCo % 12
+
+  return { co, pa, s }
+}
+
+export const normalizeMoney = (money: Money): Money => sousToMoney(moneyToSous(money))
+
 export const createCharacter = (name: string): Character => {
   const now = new Date().toISOString()
 
@@ -57,7 +86,7 @@ export const createCharacter = (name: string): Character => {
     },
     fortune: 2,
     fate: 1,
-    money: 0,
+    money: defaultMoney(),
     characteristics: defaultCharacteristics(),
     careerIds: [],
     inventory: [],
@@ -80,6 +109,12 @@ export interface ResourcePatch {
   fate?: number
 }
 
+export interface MoneyPatch {
+  co?: number
+  pa?: number
+  s?: number
+}
+
 export const patchResources = (
   character: Character,
   patch: ResourcePatch
@@ -96,6 +131,20 @@ export const patchResources = (
     },
     fortune: clampAtZero(patch.fortune ?? character.fortune),
     fate: clampAtZero(patch.fate ?? character.fate),
+    updatedAt: new Date().toISOString()
+  }
+}
+
+export const patchMoney = (character: Character, patch: MoneyPatch): Character => {
+  const nextMoney = normalizeMoney({
+    co: patch.co ?? character.money.co,
+    pa: patch.pa ?? character.money.pa,
+    s: patch.s ?? character.money.s
+  })
+
+  return {
+    ...character,
+    money: nextMoney,
     updatedAt: new Date().toISOString()
   }
 }
@@ -146,6 +195,14 @@ export const isValidCharacter = (character: Character): boolean => {
     return false
   }
 
+  if (character.money.co < 0 || character.money.pa < 0 || character.money.s < 0) {
+    return false
+  }
+
+  if (character.money.pa >= 20 || character.money.s >= 12) {
+    return false
+  }
+
   return true
 }
 
@@ -169,6 +226,23 @@ const asIsoDate = (value: unknown, fallback: string): string => {
   }
 
   return Number.isNaN(Date.parse(value)) ? fallback : value
+}
+
+const normalizeImportedMoney = (value: unknown): Money => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    // Backward compatibility with previous numeric money representation.
+    return sousToMoney(value)
+  }
+
+  if (!isRecord(value)) {
+    return defaultMoney()
+  }
+
+  return normalizeMoney({
+    co: asFiniteNumber(value.co, 0),
+    pa: asFiniteNumber(value.pa, 0),
+    s: asFiniteNumber(value.s, 0)
+  })
 }
 
 const normalizeInventory = (value: unknown): InventoryItem[] => {
@@ -259,7 +333,7 @@ export const parseCharacterImportJson = (json: string): Character => {
     },
     fortune: clampAtZero(asFiniteNumber(raw.fortune, 2)),
     fate: clampAtZero(asFiniteNumber(raw.fate, 1)),
-    money: clampAtZero(asFiniteNumber(raw.money, 0)),
+    money: normalizeImportedMoney(raw.money),
     characteristics: normalizeCharacteristics(raw.characteristics),
     careerIds: Array.isArray(raw.careerIds)
       ? raw.careerIds.filter((careerId): careerId is string => typeof careerId === 'string')

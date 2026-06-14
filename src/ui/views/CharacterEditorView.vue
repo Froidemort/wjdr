@@ -27,7 +27,13 @@
           <ion-input data-testid="edit-fate-input" v-model.number="fate" type="number" label="Destin" label-placement="stacked" />
         </ion-item>
         <ion-item>
-          <ion-input data-testid="edit-money-input" v-model.number="money" type="number" label="Argent" label-placement="stacked" />
+          <ion-input data-testid="edit-money-co-input" v-model.number="moneyCo" type="number" label="Couronnes d'or (co)" label-placement="stacked" />
+        </ion-item>
+        <ion-item>
+          <ion-input data-testid="edit-money-pa-input" v-model.number="moneyPa" type="number" label="Pistoles d'argent (pa)" label-placement="stacked" />
+        </ion-item>
+        <ion-item>
+          <ion-input data-testid="edit-money-s-input" v-model.number="moneyS" type="number" label="Sous de cuivre (s)" label-placement="stacked" />
         </ion-item>
 
         <ion-item lines="none">
@@ -81,6 +87,7 @@ import { computed, ref, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   patchInventory,
+  patchMoney,
   patchResources,
   renameCharacter,
   type Character,
@@ -101,7 +108,9 @@ const woundsCurrent = ref(0)
 const woundsMax = ref(0)
 const fortune = ref(0)
 const fate = ref(0)
-const money = ref(0)
+const moneyCo = ref(0)
+const moneyPa = ref(0)
+const moneyS = ref(0)
 const inventory = ref<InventoryItem[]>([])
 const newItemName = ref('')
 const newItemQuantity = ref(1)
@@ -113,7 +122,9 @@ const fillForm = (current: Character): void => {
   woundsMax.value = current.wounds.max
   fortune.value = current.fortune
   fate.value = current.fate
-  money.value = current.money
+  moneyCo.value = current.money.co
+  moneyPa.value = current.money.pa
+  moneyS.value = current.money.s
   inventory.value = structuredClone(current.inventory)
 }
 
@@ -146,11 +157,16 @@ const onSave = async (): Promise<void> => {
     fate: fate.value
   })
 
-  const withInventory = patchInventory(patched, inventory.value)
+  const withMoney = patchMoney(patched, {
+    co: moneyCo.value,
+    pa: moneyPa.value,
+    s: moneyS.value
+  })
+
+  const withInventory = patchInventory(withMoney, inventory.value)
 
   const next: Character = {
-    ...withInventory,
-    money: Math.max(0, Math.trunc(money.value))
+    ...withInventory
   }
 
   await saveCharacter(next)

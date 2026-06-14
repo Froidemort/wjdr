@@ -61,7 +61,7 @@
                 <ion-card-title>Argent</ion-card-title>
               </ion-card-header>
               <ion-card-content>
-                <span data-testid="money-value">{{ character.money }}</span>
+                <span data-testid="money-value">{{ character.money.co }} co / {{ character.money.pa }} pa / {{ character.money.s }} s</span>
               </ion-card-content>
             </ion-card>
           </ion-col>
