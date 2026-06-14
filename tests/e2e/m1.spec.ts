@@ -48,6 +48,12 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
 
   await page.goto('/')
 
+  await expect(page.getByTestId('theme-current-value')).toHaveText('heroic')
+  await page.getByTestId('theme-toggle-button').click()
+  await expect(page.getByTestId('theme-current-value')).toHaveText('classic')
+  await page.reload()
+  await expect(page.getByTestId('theme-current-value')).toHaveText('classic')
+
   await setIonInputValue(page, '[data-testid="character-name-input"]', uniqueName)
   await page.getByTestId('create-character-button').click()
 

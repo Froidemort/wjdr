@@ -11,12 +11,15 @@ import '@ionic/vue/css/text-alignment.css'
 import '@ionic/vue/css/text-transformation.css'
 import '@ionic/vue/css/flex-utils.css'
 import '@ionic/vue/css/display.css'
+import './styles/theme.css'
 
 import App from './App.vue'
 import router from './ui/router'
 import { initializeDatabase } from './db/initialize'
+import { initializeThemePreference } from './ui/theme/themePreference'
 
 void initializeDatabase()
+initializeThemePreference()
 
 const app = createApp(App)
 

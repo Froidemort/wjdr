@@ -1,11 +1,16 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar color="dark">
+      <ion-toolbar>
         <ion-title>
           <ion-icon :icon="peopleCircleOutline" />
           Warhammer Character Sheet
         </ion-title>
+        <ion-buttons slot="end">
+          <ion-button data-testid="theme-toggle-button" fill="outline" @click="onToggleTheme">
+            Theme: <span data-testid="theme-current-value">{{ themePreference }}</span>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -104,6 +109,7 @@
 <script setup lang="ts">
 import {
   IonButton,
+  IonButtons,
   IonCard,
   IonCardContent,
   IonCardHeader,
@@ -127,6 +133,13 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { getRaceIcon, getRaceLabel, type Character, type RaceKey } from "../../domain/character";
 import {
+  applyThemePreference,
+  readThemePreference,
+  toggleThemePreference,
+  writeThemePreference,
+  type ThemePreference,
+} from "../theme/themePreference";
+import {
   createAndSaveCharacter,
   deleteCharacter,
   importCharacterFromJson,
@@ -139,12 +152,15 @@ const newName = ref("");
 const characters = ref<Character[]>([]);
 const importError = ref("");
 const importInput = ref<HTMLInputElement>();
+const themePreference = ref<ThemePreference>(readThemePreference());
 
 const refreshCharacters = async (): Promise<void> => {
   characters.value = await listCharacters();
 };
 
 onIonViewWillEnter(() => {
+  themePreference.value = readThemePreference();
+  applyThemePreference(themePreference.value);
   void refreshCharacters();
 });
 
@@ -191,6 +207,13 @@ const openCharacter = (id: string): void => {
 const onDeleteCharacter = async (id: string): Promise<void> => {
   await deleteCharacter(id);
   await refreshCharacters();
+};
+
+const onToggleTheme = (): void => {
+  const next = toggleThemePreference(themePreference.value);
+  themePreference.value = next;
+  writeThemePreference(next);
+  applyThemePreference(next);
 };
 
 const getCharacterRaceLabel = (race: RaceKey): string => getRaceLabel(race);
