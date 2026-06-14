@@ -69,6 +69,38 @@
           <ion-col size="12">
             <ion-card>
               <ion-card-header>
+                <ion-card-title>Expérience</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-grid class="characteristics-grid">
+                  <ion-row>
+                    <ion-col size="12" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Disponible</span>
+                        <span data-testid="experience-available-value" class="value">{{ character.experience.available }}</span>
+                      </div>
+                    </ion-col>
+                    <ion-col size="12" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Dépensé</span>
+                        <span data-testid="experience-spent-value" class="value">{{ character.experience.spent }}</span>
+                      </div>
+                    </ion-col>
+                    <ion-col size="12" size-md="4">
+                      <div class="characteristic-item">
+                        <span class="label">Total</span>
+                        <span data-testid="experience-total-value" class="value">{{ character.experience.total }}</span>
+                      </div>
+                    </ion-col>
+                  </ion-row>
+                </ion-grid>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
                 <ion-card-title>Équipement</ion-card-title>
               </ion-card-header>
               <ion-card-content>

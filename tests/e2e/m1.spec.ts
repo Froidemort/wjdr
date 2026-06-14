@@ -55,6 +55,8 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await setIonInputValue(page, '[data-testid="edit-money-co-input"]', '0')
   await setIonInputValue(page, '[data-testid="edit-money-pa-input"]', '40')
   await setIonInputValue(page, '[data-testid="edit-money-s-input"]', '15')
+  await setIonInputValue(page, '[data-testid="edit-experience-spent-input"]', '200')
+  await setIonInputValue(page, '[data-testid="edit-experience-available-input"]', '50')
   await setIonInputValue(page, '[data-testid="edit-cc-base-input"]', '42')
   await setIonInputValue(page, '[data-testid="edit-cc-advance-input"]', '8')
 
@@ -65,6 +67,9 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByTestId('fortune-value')).toHaveText('4')
   await expect(page.getByTestId('fate-value')).toHaveText('3')
   await expect(page.getByTestId('money-value')).toHaveText('2 co / 1 pa / 3 s')
+  await expect(page.getByTestId('experience-total-value')).toHaveText('250')
+  await expect(page.getByTestId('experience-spent-value')).toHaveText('200')
+  await expect(page.getByTestId('experience-available-value')).toHaveText('50')
   await expect(page.getByTestId('character-cc-value')).toHaveText('50%')
 
   const downloadPromise = page.waitForEvent('download')
@@ -82,6 +87,7 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page).toHaveURL(/\/character\//)
   await expect(page.getByRole('button', { name: 'Exporter' })).toBeVisible()
   await expect(page.getByTestId('money-value')).toHaveText('2 co / 1 pa / 3 s')
+  await expect(page.getByTestId('experience-total-value')).toHaveText('250')
   await expect(page.getByTestId('character-cc-value')).toHaveText('50%')
 
   // Verify main characteristics section is displayed

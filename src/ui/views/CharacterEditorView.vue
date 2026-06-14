@@ -37,6 +37,16 @@
         </ion-item>
 
         <ion-item lines="none">
+          <ion-label>Expérience</ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-input data-testid="edit-experience-available-input" v-model.number="experience.available" type="number" label="Disponible" label-placement="stacked" />
+        </ion-item>
+        <ion-item>
+          <ion-input data-testid="edit-experience-spent-input" v-model.number="experience.spent" type="number" label="Dépensé" label-placement="stacked" />
+        </ion-item>
+
+        <ion-item lines="none">
           <ion-label>Caractéristiques Principales</ion-label>
         </ion-item>
         <ion-grid class="main-characteristics-grid">
@@ -141,8 +151,10 @@ import {
 import { computed, reactive, ref, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
+  type Experience,
   type CharacteristicKey,
   type Characteristics,
+  normalizeExperience,
   patchInventory,
   patchMoney,
   patchResources,
@@ -168,6 +180,11 @@ const fate = ref(0)
 const moneyCo = ref(0)
 const moneyPa = ref(0)
 const moneyS = ref(0)
+const experience = reactive<Experience>({
+  total: 0,
+  spent: 0,
+  available: 0
+})
 const actions = ref(1)
 const movement = ref(4)
 const magic = ref(0)
@@ -243,6 +260,7 @@ const fillForm = (current: Character): void => {
   moneyCo.value = current.money.co
   moneyPa.value = current.money.pa
   moneyS.value = current.money.s
+  Object.assign(experience, structuredClone(current.experience))
   Object.assign(mainCharacteristics, structuredClone(current.characteristics))
   actions.value = current.actions
   movement.value = current.movement
@@ -288,9 +306,11 @@ const onSave = async (): Promise<void> => {
 
   const withInventory = patchInventory(withMoney, inventory.value)
   const withCharacteristics = normalizeMainCharacteristics(mainCharacteristics)
+  const withExperience = normalizeExperience(experience)
 
   const next: Character = {
     ...withInventory,
+    experience: withExperience,
     characteristics: withCharacteristics,
     actions: Math.max(1, Math.trunc(actions.value)),
     movement: Math.max(1, Math.trunc(movement.value)),
