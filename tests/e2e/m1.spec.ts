@@ -25,6 +25,24 @@ const setIonInputValue = async (
   }, value)
 }
 
+const setIonSelectValue = async (
+  page: import('@playwright/test').Page,
+  selector: string,
+  value: string | null
+): Promise<void> => {
+  await page.locator(selector).evaluate((el, nextValue) => {
+    const ionSelect = el as HTMLElement & { value?: string | null }
+    ionSelect.value = nextValue
+    ionSelect.dispatchEvent(
+      new CustomEvent('ionChange', {
+        bubbles: true,
+        composed: true,
+        detail: { value: nextValue }
+      })
+    )
+  }, value)
+}
+
 test('M1 flow: create, reopen, edit resources, export json', async ({ page }) => {
   const uniqueName = `Konrad-${Date.now()}`
 
@@ -57,6 +75,14 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await setIonInputValue(page, '[data-testid="edit-money-s-input"]', '15')
   await setIonInputValue(page, '[data-testid="edit-experience-spent-input"]', '200')
   await setIonInputValue(page, '[data-testid="edit-experience-available-input"]', '50')
+  await setIonSelectValue(page, '[data-testid="edit-race-input"]', 'elf')
+  await setIonSelectValue(page, '[data-testid="edit-current-career-input"]', 'Apprenti Sorcier')
+  await setIonSelectValue(page, '[data-testid="edit-previous-career-input"]', 'Fanatique')
+  await page.getByTestId('add-previous-career-button').click()
+  await setIonSelectValue(page, '[data-testid="edit-skill-input"]', 'language-reikspiel')
+  await page.getByTestId('add-skill-button').click()
+  await setIonSelectValue(page, '[data-testid="edit-talent-input"]', 'sixth-sense')
+  await page.getByTestId('add-talent-button').click()
   await setIonInputValue(page, '[data-testid="edit-cc-base-input"]', '42')
   await setIonInputValue(page, '[data-testid="edit-cc-advance-input"]', '8')
 
@@ -70,6 +96,11 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByTestId('experience-total-value')).toHaveText('250')
   await expect(page.getByTestId('experience-spent-value')).toHaveText('200')
   await expect(page.getByTestId('experience-available-value')).toHaveText('50')
+  await expect(page.getByTestId('character-race-value')).toHaveText('Elfe')
+  await expect(page.getByTestId('character-current-career-value')).toHaveText('Apprenti Sorcier')
+  await expect(page.getByTestId('character-previous-career-0')).toHaveText('Fanatique')
+  await expect(page.getByTestId('character-skill-0')).toHaveText('Langue (reikspiel)')
+  await expect(page.getByTestId('character-talent-0')).toHaveText('Sixième sens')
   await expect(page.getByTestId('character-cc-value')).toHaveText('50%')
 
   const downloadPromise = page.waitForEvent('download')
@@ -88,6 +119,11 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByRole('button', { name: 'Exporter' })).toBeVisible()
   await expect(page.getByTestId('money-value')).toHaveText('2 co / 1 pa / 3 s')
   await expect(page.getByTestId('experience-total-value')).toHaveText('250')
+  await expect(page.getByTestId('character-race-value')).toHaveText('Elfe')
+  await expect(page.getByTestId('character-current-career-value')).toHaveText('Apprenti Sorcier')
+  await expect(page.getByTestId('character-previous-career-0')).toHaveText('Fanatique')
+  await expect(page.getByTestId('character-skill-0')).toHaveText('Langue (reikspiel)')
+  await expect(page.getByTestId('character-talent-0')).toHaveText('Sixième sens')
   await expect(page.getByTestId('character-cc-value')).toHaveText('50%')
 
   // Verify main characteristics section is displayed

@@ -19,6 +19,17 @@
           <ion-col size="12">
             <ion-card>
               <ion-card-header>
+                <ion-card-title>Race</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <span data-testid="character-race-value">{{ raceLabel }}</span>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
                 <ion-card-title>Points de blessures</ion-card-title>
               </ion-card-header>
               <ion-card-content>
@@ -94,6 +105,33 @@
                     </ion-col>
                   </ion-row>
                 </ion-grid>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>Carrières</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <p>
+                  <strong>Actuelle:</strong>
+                  <span data-testid="character-current-career-value">{{ character.careers.current ?? 'Aucune' }}</span>
+                </p>
+                <div v-if="character.careers.previous.length > 0">
+                  <p><strong>Anciennes:</strong></p>
+                  <ion-list lines="none">
+                    <ion-item
+                      v-for="(career, index) in character.careers.previous"
+                      :key="`career-${career}-${index}`"
+                      :data-testid="`character-previous-career-${index}`"
+                    >
+                      <ion-label>{{ career }}</ion-label>
+                    </ion-item>
+                  </ion-list>
+                </div>
+                <p v-else data-testid="character-previous-careers-empty">Aucune ancienne carrière.</p>
               </ion-card-content>
             </ion-card>
           </ion-col>
@@ -249,6 +287,46 @@
               </ion-card-content>
             </ion-card>
           </ion-col>
+
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>Compétences</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-list v-if="character.skills.length > 0" lines="none">
+                  <ion-item
+                    v-for="(skill, index) in character.skills"
+                    :key="skill.id"
+                    :data-testid="`character-skill-${index}`"
+                  >
+                    <ion-label>{{ getSkillLabel(skill) }}</ion-label>
+                  </ion-item>
+                </ion-list>
+                <p v-else data-testid="character-skills-empty">Aucune compétence.</p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>Talents</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-list v-if="character.talents.length > 0" lines="none">
+                  <ion-item
+                    v-for="(talent, index) in character.talents"
+                    :key="talent.id"
+                    :data-testid="`character-talent-${index}`"
+                  >
+                    <ion-label>{{ getTalentLabel(talent) }}</ion-label>
+                  </ion-item>
+                </ion-list>
+                <p v-else data-testid="character-talents-empty">Aucun talent.</p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
         </ion-row>
       </ion-grid>
 
@@ -285,8 +363,13 @@ import {
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
+  RACE_OPTIONS,
+  formatSkillLabel,
+  formatTalentLabel,
   toCharacterExportJson,
   type Character,
+  type CharacterSkill,
+  type CharacterTalent,
   type CharacteristicKey,
   getCharacteristicTotal as domainGetCharacteristicTotal,
   getBonusForce as domainGetBonusForce,
@@ -300,6 +383,16 @@ const router = useRouter()
 const character = ref<Character>()
 
 const characterId = computed(() => String(route.params.id ?? ''))
+
+const raceLabelMap = new Map(RACE_OPTIONS.map((option) => [option.key, option.label]))
+
+const raceLabel = computed(() => {
+  if (!character.value) {
+    return ''
+  }
+
+  return raceLabelMap.get(character.value.race) ?? character.value.race
+})
 
 const loadCharacter = async (): Promise<void> => {
   character.value = await getCharacterById(characterId.value)
@@ -384,6 +477,10 @@ const getBonusEndurance = (): number => {
 
   return domainGetBonusEndurance(character.value)
 }
+
+const getSkillLabel = (skill: CharacterSkill): string => formatSkillLabel(skill)
+
+const getTalentLabel = (talent: CharacterTalent): string => formatTalentLabel(talent)
 
 // Alias for template convenience
 const getCharacteristicTotal = getCharacteristicTotalValue
