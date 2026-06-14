@@ -2,6 +2,36 @@ import { nanoid } from 'nanoid'
 
 export type CharacteristicKey = 'cc' | 'ct' | 'f' | 'e' | 'ag' | 'int' | 'fm' | 'soc'
 
+export type RaceKey = 'human' | 'dwarf' | 'halfling' | 'elf'
+
+export interface RaceOption {
+  key: RaceKey
+  label: string
+}
+
+export interface CatalogEntry {
+  id: string
+  name: string
+  specialization?: string
+}
+
+export interface CharacterSkill {
+  id: string
+  skillId: string
+  specialization?: string
+}
+
+export interface CharacterTalent {
+  id: string
+  talentId: string
+  specialization?: string
+}
+
+export interface CharacterCareers {
+  current: string | null
+  previous: string[]
+}
+
 export interface CharacteristicValue {
   base: number
   advance: number
@@ -32,6 +62,7 @@ export interface Experience {
 export interface Character {
   id: string
   name: string
+  race: RaceKey
   wounds: {
     current: number
     max: number
@@ -41,7 +72,9 @@ export interface Character {
   money: Money
   experience: Experience
   characteristics: Characteristics
-  careerIds: string[]
+  skills: CharacterSkill[]
+  talents: CharacterTalent[]
+  careers: CharacterCareers
   inventory: InventoryItem[]
   actions: number
   movement: number
@@ -62,6 +95,48 @@ const defaultCharacteristics = (): Characteristics => ({
   soc: { base: 30, advance: 0 }
 })
 
+export const RACE_OPTIONS: RaceOption[] = [
+  { key: 'human', label: 'Humain' },
+  { key: 'dwarf', label: 'Nain' },
+  { key: 'halfling', label: 'Halfling' },
+  { key: 'elf', label: 'Elfe' }
+]
+
+export const SKILL_CATALOG: CatalogEntry[] = [
+  { id: 'general-knowledge-empire', name: 'Connaissances générales', specialization: 'Empire' },
+  { id: 'language-reikspiel', name: 'Langue', specialization: 'reikspiel' },
+  { id: 'academic-knowledge-magic', name: 'Connaissance académiques', specialization: 'Magie' },
+  { id: 'focus', name: 'Focalisation' },
+  { id: 'read-write', name: 'Lire/Écrire' },
+  { id: 'perception', name: 'Perception' },
+  { id: 'sense-magic', name: 'Sens de la magie' },
+  { id: 'gossip', name: 'Commérage' },
+  { id: 'search', name: 'Fouille' }
+]
+
+export const TALENT_CATALOG: CatalogEntry[] = [
+  { id: 'lightning-reflexes', name: 'Réflexes éclair' },
+  { id: 'sixth-sense', name: 'Sixième sens' },
+  { id: 'aethyric-attunement', name: 'Harmonie Aethyrique' },
+  { id: 'intelligent', name: 'Intelligent' },
+  { id: 'magine-commune-occult', name: 'Magine commune', specialization: 'occulte' }
+]
+
+export const CAREER_CATALOG: string[] = [
+  'Apprenti Sorcier',
+  'Combattant des tunnels',
+  'Fanatique',
+  'Tueur de trolls',
+  'Chasseur de primes'
+]
+
+const defaultRace = (): RaceKey => 'human'
+
+const defaultCareers = (): CharacterCareers => ({
+  current: null,
+  previous: []
+})
+
 const defaultMoney = (): Money => ({
   co: 0,
   pa: 0,
@@ -73,6 +148,38 @@ const defaultExperience = (): Experience => ({
   spent: 0,
   available: 0
 })
+
+const raceSet = new Set<RaceKey>(RACE_OPTIONS.map((option) => option.key))
+const skillSet = new Set<string>(SKILL_CATALOG.map((entry) => entry.id))
+const talentSet = new Set<string>(TALENT_CATALOG.map((entry) => entry.id))
+const careerSet = new Set<string>(CAREER_CATALOG)
+
+const isRaceKey = (value: unknown): value is RaceKey =>
+  typeof value === 'string' && raceSet.has(value as RaceKey)
+
+export const formatNameWithSpecialization = (name: string, specialization?: string): string =>
+  specialization ? `${name} (${specialization})` : name
+
+const getCatalogEntry = (catalog: CatalogEntry[], id: string): CatalogEntry | undefined =>
+  catalog.find((entry) => entry.id === id)
+
+export const formatSkillLabel = (skill: CharacterSkill): string => {
+  const entry = getCatalogEntry(SKILL_CATALOG, skill.skillId)
+  if (!entry) {
+    return skill.skillId
+  }
+
+  return formatNameWithSpecialization(entry.name, skill.specialization)
+}
+
+export const formatTalentLabel = (talent: CharacterTalent): string => {
+  const entry = getCatalogEntry(TALENT_CATALOG, talent.talentId)
+  if (!entry) {
+    return talent.talentId
+  }
+
+  return formatNameWithSpecialization(entry.name, talent.specialization)
+}
 
 const toUnit = (value: number): number => Math.max(0, Math.trunc(value))
 
@@ -108,6 +215,7 @@ export const createCharacter = (name: string): Character => {
   return {
     id: nanoid(10),
     name: name.trim(),
+    race: defaultRace(),
     wounds: {
       current: 10,
       max: 10
@@ -117,7 +225,9 @@ export const createCharacter = (name: string): Character => {
     money: defaultMoney(),
     experience: defaultExperience(),
     characteristics: defaultCharacteristics(),
-    careerIds: [],
+    skills: [],
+    talents: [],
+    careers: defaultCareers(),
     inventory: [],
     actions: 1,
     movement: 4,
@@ -206,6 +316,55 @@ const normalizeInventoryItem = (item: InventoryItem): InventoryItem => ({
   equipped: Boolean(item.equipped)
 })
 
+const normalizeSpecialization = (value: unknown, fallback?: string): string | undefined => {
+  if (typeof value !== 'string') {
+    return fallback
+  }
+
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
+
+const normalizeCharacterSkill = (skill: CharacterSkill): CharacterSkill | null => {
+  if (!skillSet.has(skill.skillId)) {
+    return null
+  }
+
+  const entry = getCatalogEntry(SKILL_CATALOG, skill.skillId)
+  const specialization = normalizeSpecialization(skill.specialization, entry?.specialization)
+
+  return {
+    id: skill.id,
+    skillId: skill.skillId,
+    specialization
+  }
+}
+
+const normalizeCharacterTalent = (talent: CharacterTalent): CharacterTalent | null => {
+  if (!talentSet.has(talent.talentId)) {
+    return null
+  }
+
+  const entry = getCatalogEntry(TALENT_CATALOG, talent.talentId)
+  const specialization = normalizeSpecialization(talent.specialization, entry?.specialization)
+
+  return {
+    id: talent.id,
+    talentId: talent.talentId,
+    specialization
+  }
+}
+
+const normalizeCareers = (careers: CharacterCareers): CharacterCareers => {
+  const current = careers.current && careerSet.has(careers.current) ? careers.current : null
+  const previous = careers.previous.filter((career) => careerSet.has(career) && career !== current)
+
+  return {
+    current,
+    previous: [...new Set(previous)]
+  }
+}
+
 export const patchInventory = (
   character: Character,
   inventory: InventoryItem[]
@@ -214,6 +373,36 @@ export const patchInventory = (
   inventory: inventory
     .map(normalizeInventoryItem)
     .filter((item) => item.name.length > 0),
+  updatedAt: new Date().toISOString()
+})
+
+export const patchSkills = (character: Character, skills: CharacterSkill[]): Character => {
+  const nextSkills = skills
+    .map(normalizeCharacterSkill)
+    .filter((skill): skill is CharacterSkill => skill !== null)
+
+  return {
+    ...character,
+    skills: nextSkills,
+    updatedAt: new Date().toISOString()
+  }
+}
+
+export const patchTalents = (character: Character, talents: CharacterTalent[]): Character => {
+  const nextTalents = talents
+    .map(normalizeCharacterTalent)
+    .filter((talent): talent is CharacterTalent => talent !== null)
+
+  return {
+    ...character,
+    talents: nextTalents,
+    updatedAt: new Date().toISOString()
+  }
+}
+
+export const patchCareers = (character: Character, careers: CharacterCareers): Character => ({
+  ...character,
+  careers: normalizeCareers(careers),
   updatedAt: new Date().toISOString()
 })
 
@@ -251,6 +440,33 @@ export const isValidCharacter = (character: Character): boolean => {
   }
 
   if (character.experience.total !== character.experience.spent + character.experience.available) {
+    return false
+  }
+
+  if (!isRaceKey(character.race)) {
+    return false
+  }
+
+  if (character.skills.some((skill) => !skill.id || !skillSet.has(skill.skillId))) {
+    return false
+  }
+
+  if (character.talents.some((talent) => !talent.id || !talentSet.has(talent.talentId))) {
+    return false
+  }
+
+  if (character.careers.current && !careerSet.has(character.careers.current)) {
+    return false
+  }
+
+  if (character.careers.previous.some((career) => !careerSet.has(career))) {
+    return false
+  }
+
+  if (
+    character.careers.current &&
+    character.careers.previous.includes(character.careers.current)
+  ) {
     return false
   }
 
@@ -310,6 +526,57 @@ const normalizeImportedExperience = (value: unknown): Experience => {
     spent: asFiniteNumber(value.spent, 0),
     available: asFiniteNumber(value.available, 0)
   })
+}
+
+const normalizeImportedSkills = (value: unknown): CharacterSkill[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .filter(isRecord)
+    .map((entry): CharacterSkill => ({
+      id: typeof entry.id === 'string' && entry.id ? entry.id : nanoid(10),
+      skillId: typeof entry.skillId === 'string' ? entry.skillId : '',
+      specialization: normalizeSpecialization(entry.specialization)
+    }))
+    .map(normalizeCharacterSkill)
+    .filter((skill): skill is CharacterSkill => skill !== null)
+}
+
+const normalizeImportedTalents = (value: unknown): CharacterTalent[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .filter(isRecord)
+    .map((entry): CharacterTalent => ({
+      id: typeof entry.id === 'string' && entry.id ? entry.id : nanoid(10),
+      talentId: typeof entry.talentId === 'string' ? entry.talentId : '',
+      specialization: normalizeSpecialization(entry.specialization)
+    }))
+    .map(normalizeCharacterTalent)
+    .filter((talent): talent is CharacterTalent => talent !== null)
+}
+
+const normalizeImportedCareers = (raw: Record<string, unknown>): CharacterCareers => {
+  if (isRecord(raw.careers)) {
+    const current = typeof raw.careers.current === 'string' ? raw.careers.current : null
+    const previous = Array.isArray(raw.careers.previous)
+      ? raw.careers.previous.filter((career): career is string => typeof career === 'string')
+      : []
+
+    return normalizeCareers({ current, previous })
+  }
+
+  // Backward compatibility for older careerIds format.
+  if (Array.isArray(raw.careerIds)) {
+    const previous = raw.careerIds.filter((career): career is string => typeof career === 'string')
+    return normalizeCareers({ current: null, previous })
+  }
+
+  return defaultCareers()
 }
 
 const normalizeInventory = (value: unknown): InventoryItem[] => {
@@ -390,6 +657,7 @@ export const parseCharacterImportJson = (json: string): Character => {
   const character: Character = {
     id: typeof raw.id === 'string' && raw.id ? raw.id : nanoid(10),
     name: importedName,
+    race: isRaceKey(raw.race) ? raw.race : defaultRace(),
     wounds: {
       current: clampAtZero(
         asFiniteNumber(isRecord(raw.wounds) ? raw.wounds.current : undefined, 10)
@@ -403,9 +671,9 @@ export const parseCharacterImportJson = (json: string): Character => {
     money: normalizeImportedMoney(raw.money),
     experience: normalizeImportedExperience(raw.experience),
     characteristics: normalizeCharacteristics(raw.characteristics),
-    careerIds: Array.isArray(raw.careerIds)
-      ? raw.careerIds.filter((careerId): careerId is string => typeof careerId === 'string')
-      : [],
+    skills: normalizeImportedSkills(raw.skills),
+    talents: normalizeImportedTalents(raw.talents),
+    careers: normalizeImportedCareers(raw),
     inventory: normalizeInventory(raw.inventory),
     actions: clampAtZero(asFiniteNumber(raw.actions, 1)) || 1,
     movement: clampAtZero(asFiniteNumber(raw.movement, 4)) || 4,

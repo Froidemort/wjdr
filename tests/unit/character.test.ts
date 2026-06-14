@@ -1,5 +1,10 @@
 import {
+  CAREER_CATALOG,
+  SKILL_CATALOG,
+  TALENT_CATALOG,
   createCharacter,
+  formatNameWithSpecialization,
+  formatSkillLabel,
   getCharacteristicTotal,
   getBonusForce,
   getBonusEndurance,
@@ -22,9 +27,12 @@ describe('character domain', () => {
     expect(character.wounds).toEqual({ current: 10, max: 10 })
     expect(character.fortune).toBe(2)
     expect(character.fate).toBe(1)
+    expect(character.race).toBe('human')
     expect(character.money).toEqual({ co: 0, pa: 0, s: 0 })
     expect(character.experience).toEqual({ total: 0, spent: 0, available: 0 })
-    expect(character.careerIds).toEqual([])
+    expect(character.skills).toEqual([])
+    expect(character.talents).toEqual([])
+    expect(character.careers).toEqual({ current: null, previous: [] })
     expect(character.inventory).toEqual([])
     expect(character.characteristics.cc).toEqual({ base: 30, advance: 0 })
   })
@@ -173,6 +181,87 @@ describe('character domain', () => {
     expect(parsed.movement).toBe(4)
     expect(parsed.magic).toBe(5)
     expect(parsed.insanity).toBe(2)
+  })
+
+  it('imports character with default race and abilities when missing', () => {
+    const source = createCharacter('Otto')
+    const exported = JSON.parse(toCharacterExportJson(source)) as Record<string, unknown>
+    delete exported.race
+    delete exported.skills
+    delete exported.talents
+    delete exported.careers
+
+    const parsed = parseCharacterImportJson(JSON.stringify(exported))
+
+    expect(parsed.race).toBe('human')
+    expect(parsed.skills).toEqual([])
+    expect(parsed.talents).toEqual([])
+    expect(parsed.careers).toEqual({ current: null, previous: [] })
+  })
+
+  it('imports legacy careerIds into previous careers', () => {
+    const source = createCharacter('Legacy')
+    const exported = JSON.parse(toCharacterExportJson(source)) as Record<string, unknown>
+    delete exported.careers
+    exported.careerIds = [CAREER_CATALOG[0], CAREER_CATALOG[1], 'Invalid Career']
+
+    const parsed = parseCharacterImportJson(JSON.stringify(exported))
+
+    expect(parsed.careers.current).toBeNull()
+    expect(parsed.careers.previous).toEqual([CAREER_CATALOG[0], CAREER_CATALOG[1]])
+  })
+
+  it('rejects invalid race', () => {
+    const character = createCharacter('A')
+    ;(character as unknown as { race: string }).race = 'orc'
+
+    expect(isValidCharacter(character)).toBe(false)
+  })
+
+  it('rejects unknown skills and talents', () => {
+    const character = createCharacter('A')
+    character.skills = [{ id: 's1', skillId: 'unknown-skill' }]
+
+    expect(isValidCharacter(character)).toBe(false)
+
+    character.skills = [{ id: 's1', skillId: SKILL_CATALOG[0].id }]
+    character.talents = [{ id: 't1', talentId: 'unknown-talent' }]
+
+    expect(isValidCharacter(character)).toBe(false)
+  })
+
+  it('formats name with specialization', () => {
+    expect(formatNameWithSpecialization('Langue', 'reikspiel')).toBe('Langue (reikspiel)')
+    expect(formatNameWithSpecialization('Perception')).toBe('Perception')
+  })
+
+  it('formats skill label from catalog', () => {
+    const firstSkill = SKILL_CATALOG.find((entry) => entry.specialization)
+    expect(firstSkill).toBeDefined()
+
+    const label = formatSkillLabel({
+      id: 'skill-1',
+      skillId: firstSkill!.id,
+      specialization: firstSkill!.specialization
+    })
+
+    expect(label).toContain(firstSkill!.name)
+    expect(label).toContain(`(${firstSkill!.specialization})`)
+  })
+
+  it('validates careers current not duplicated in previous', () => {
+    const character = createCharacter('A')
+    character.careers.current = CAREER_CATALOG[0]
+    character.careers.previous = [CAREER_CATALOG[0]]
+
+    expect(isValidCharacter(character)).toBe(false)
+  })
+
+  it('keeps known talent ids valid', () => {
+    const character = createCharacter('A')
+    character.talents = [{ id: 'tal-1', talentId: TALENT_CATALOG[0].id }]
+
+    expect(isValidCharacter(character)).toBe(true)
   })
 
   it('validates character with secondary stats constraints', () => {
