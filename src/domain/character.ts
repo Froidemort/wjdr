@@ -23,6 +23,12 @@ export interface Money {
   s: number
 }
 
+export interface Experience {
+  total: number
+  spent: number
+  available: number
+}
+
 export interface Character {
   id: string
   name: string
@@ -33,6 +39,7 @@ export interface Character {
   fortune: number
   fate: number
   money: Money
+  experience: Experience
   characteristics: Characteristics
   careerIds: string[]
   inventory: InventoryItem[]
@@ -61,6 +68,12 @@ const defaultMoney = (): Money => ({
   s: 0
 })
 
+const defaultExperience = (): Experience => ({
+  total: 0,
+  spent: 0,
+  available: 0
+})
+
 const toUnit = (value: number): number => Math.max(0, Math.trunc(value))
 
 const moneyToSous = (money: Money): number =>
@@ -78,6 +91,17 @@ export const sousToMoney = (totalSous: number): Money => {
 
 export const normalizeMoney = (money: Money): Money => sousToMoney(moneyToSous(money))
 
+export const normalizeExperience = (experience: Experience): Experience => {
+  const spent = clampAtZero(experience.spent)
+  const available = clampAtZero(experience.available)
+
+  return {
+    spent,
+    available,
+    total: spent + available
+  }
+}
+
 export const createCharacter = (name: string): Character => {
   const now = new Date().toISOString()
 
@@ -91,6 +115,7 @@ export const createCharacter = (name: string): Character => {
     fortune: 2,
     fate: 1,
     money: defaultMoney(),
+    experience: defaultExperience(),
     characteristics: defaultCharacteristics(),
     careerIds: [],
     inventory: [],
@@ -221,6 +246,14 @@ export const isValidCharacter = (character: Character): boolean => {
     return false
   }
 
+  if (character.experience.spent < 0 || character.experience.available < 0) {
+    return false
+  }
+
+  if (character.experience.total !== character.experience.spent + character.experience.available) {
+    return false
+  }
+
   if (character.actions < 1 || character.movement <= 0 || character.magic < 0 || character.insanity < 0) {
     return false
   }
@@ -264,6 +297,18 @@ const normalizeImportedMoney = (value: unknown): Money => {
     co: asFiniteNumber(value.co, 0),
     pa: asFiniteNumber(value.pa, 0),
     s: asFiniteNumber(value.s, 0)
+  })
+}
+
+const normalizeImportedExperience = (value: unknown): Experience => {
+  if (!isRecord(value)) {
+    return defaultExperience()
+  }
+
+  return normalizeExperience({
+    total: asFiniteNumber(value.total, 0),
+    spent: asFiniteNumber(value.spent, 0),
+    available: asFiniteNumber(value.available, 0)
   })
 }
 
@@ -356,6 +401,7 @@ export const parseCharacterImportJson = (json: string): Character => {
     fortune: clampAtZero(asFiniteNumber(raw.fortune, 2)),
     fate: clampAtZero(asFiniteNumber(raw.fate, 1)),
     money: normalizeImportedMoney(raw.money),
+    experience: normalizeImportedExperience(raw.experience),
     characteristics: normalizeCharacteristics(raw.characteristics),
     careerIds: Array.isArray(raw.careerIds)
       ? raw.careerIds.filter((careerId): careerId is string => typeof careerId === 'string')
@@ -379,6 +425,7 @@ export const parseCharacterImportJson = (json: string): Character => {
   const nextCharacter: Character = {
     ...normalized,
     money: character.money,
+    experience: character.experience,
     inventory: character.inventory,
     createdAt: character.createdAt,
     updatedAt: character.updatedAt

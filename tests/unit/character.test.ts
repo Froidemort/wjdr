@@ -4,6 +4,7 @@ import {
   getBonusForce,
   getBonusEndurance,
   isValidCharacter,
+  normalizeExperience,
   parseCharacterImportJson,
   patchInventory,
   patchMoney,
@@ -22,6 +23,7 @@ describe('character domain', () => {
     expect(character.fortune).toBe(2)
     expect(character.fate).toBe(1)
     expect(character.money).toEqual({ co: 0, pa: 0, s: 0 })
+    expect(character.experience).toEqual({ total: 0, spent: 0, available: 0 })
     expect(character.careerIds).toEqual([])
     expect(character.inventory).toEqual([])
     expect(character.characteristics.cc).toEqual({ base: 30, advance: 0 })
@@ -191,6 +193,33 @@ describe('character domain', () => {
 
     character.magic = 0
     character.insanity = -1
+    expect(isValidCharacter(character)).toBe(false)
+  })
+
+  it('normalizes experience with invariant total = spent + available', () => {
+    const normalized = normalizeExperience({ total: 999, spent: 120.8, available: 45.1 })
+
+    expect(normalized).toEqual({
+      total: 165,
+      spent: 120,
+      available: 45
+    })
+  })
+
+  it('imports character with default experience when missing', () => {
+    const source = createCharacter('Otto')
+    const exported = JSON.parse(toCharacterExportJson(source)) as Record<string, unknown>
+    delete exported.experience
+
+    const parsed = parseCharacterImportJson(JSON.stringify(exported))
+
+    expect(parsed.experience).toEqual({ total: 0, spent: 0, available: 0 })
+  })
+
+  it('rejects character when experience invariant is invalid', () => {
+    const character = createCharacter('A')
+    character.experience = { total: 10, spent: 8, available: 1 }
+
     expect(isValidCharacter(character)).toBe(false)
   })
 })
