@@ -65,6 +65,26 @@
               </ion-card-content>
             </ion-card>
           </ion-col>
+
+          <ion-col size="12">
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>Inventaire et equipement</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-list v-if="character.inventory.length > 0" lines="none">
+                  <ion-item v-for="item in character.inventory" :key="item.id">
+                    <ion-label>
+                      <h3>{{ item.name }}</h3>
+                      <p>Quantite: {{ item.quantity }} | Poids: {{ item.weight }}</p>
+                    </ion-label>
+                    <ion-badge v-if="item.equipped" color="success">Equipe</ion-badge>
+                  </ion-item>
+                </ion-list>
+                <p v-else data-testid="inventory-empty">Aucun objet.</p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
         </ion-row>
       </ion-grid>
 
@@ -78,6 +98,7 @@
 <script setup lang="ts">
 import {
   IonBackButton,
+  IonBadge,
   IonButton,
   IonButtons,
   IonCard,
@@ -88,6 +109,9 @@ import {
   IonContent,
   IonGrid,
   IonHeader,
+  IonItem,
+  IonLabel,
+  IonList,
   IonPage,
   IonRow,
   IonTitle,

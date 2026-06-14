@@ -30,6 +30,31 @@
           <ion-input data-testid="edit-money-input" v-model.number="money" type="number" label="Argent" label-placement="stacked" />
         </ion-item>
 
+        <ion-item lines="none">
+          <ion-label>Inventaire et equipement</ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-input v-model="newItemName" label="Objet" label-placement="stacked" placeholder="Ex: Epee" />
+        </ion-item>
+        <ion-item>
+          <ion-input v-model.number="newItemQuantity" type="number" label="Quantite" label-placement="stacked" />
+        </ion-item>
+        <ion-item>
+          <ion-input v-model.number="newItemWeight" type="number" label="Poids" label-placement="stacked" />
+        </ion-item>
+        <ion-button expand="block" fill="outline" @click="addInventoryItem">Ajouter objet</ion-button>
+
+        <ion-item v-for="item in inventory" :key="item.id">
+          <ion-label>
+            <h3>{{ item.name }}</h3>
+            <p>Quantite: {{ item.quantity }} | Poids: {{ item.weight }}</p>
+          </ion-label>
+          <ion-button size="small" fill="clear" @click="toggleEquipped(item.id)">
+            {{ item.equipped ? 'Equipe' : 'Non equipe' }}
+          </ion-button>
+          <ion-button size="small" color="danger" fill="clear" @click="removeInventoryItem(item.id)">Supprimer</ion-button>
+        </ion-item>
+
         <ion-button data-testid="save-editor-button" expand="block" class="ion-margin-top" @click="onSave">Sauvegarder</ion-button>
       </ion-list>
     </ion-content>
@@ -45,6 +70,7 @@ import {
   IonHeader,
   IonInput,
   IonItem,
+  IonLabel,
   IonList,
   IonPage,
   IonTitle,
@@ -53,7 +79,13 @@ import {
 } from '@ionic/vue'
 import { computed, ref, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { patchResources, renameCharacter, type Character } from '../../domain/character'
+import {
+  patchInventory,
+  patchResources,
+  renameCharacter,
+  type Character,
+  type InventoryItem
+} from '../../domain/character'
 import { getCharacterById, saveCharacter } from '../../repositories/characterRepository'
 
 const route = useRoute()
@@ -70,6 +102,10 @@ const woundsMax = ref(0)
 const fortune = ref(0)
 const fate = ref(0)
 const money = ref(0)
+const inventory = ref<InventoryItem[]>([])
+const newItemName = ref('')
+const newItemQuantity = ref(1)
+const newItemWeight = ref(0)
 
 const fillForm = (current: Character): void => {
   name.value = current.name
@@ -78,6 +114,7 @@ const fillForm = (current: Character): void => {
   fortune.value = current.fortune
   fate.value = current.fate
   money.value = current.money
+  inventory.value = structuredClone(current.inventory)
 }
 
 const loadCharacter = async (): Promise<void> => {
@@ -109,12 +146,43 @@ const onSave = async (): Promise<void> => {
     fate: fate.value
   })
 
+  const withInventory = patchInventory(patched, inventory.value)
+
   const next: Character = {
-    ...patched,
+    ...withInventory,
     money: Math.max(0, Math.trunc(money.value))
   }
 
   await saveCharacter(next)
   await router.push(`/character/${characterId.value}`)
+}
+
+const addInventoryItem = (): void => {
+  const name = newItemName.value.trim()
+  if (!name) {
+    return
+  }
+
+  inventory.value.push({
+    id: crypto.randomUUID(),
+    name,
+    quantity: Math.max(0, Math.trunc(newItemQuantity.value)),
+    weight: Math.max(0, Math.trunc(newItemWeight.value)),
+    equipped: false
+  })
+
+  newItemName.value = ''
+  newItemQuantity.value = 1
+  newItemWeight.value = 0
+}
+
+const removeInventoryItem = (id: string): void => {
+  inventory.value = inventory.value.filter((item) => item.id !== id)
+}
+
+const toggleEquipped = (id: string): void => {
+  inventory.value = inventory.value.map((item) =>
+    item.id === id ? { ...item, equipped: !item.equipped } : item
+  )
 }
 </script>

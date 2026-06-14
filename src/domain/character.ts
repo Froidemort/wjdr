@@ -9,6 +9,14 @@ export interface CharacteristicValue {
 
 export type Characteristics = Record<CharacteristicKey, CharacteristicValue>
 
+export interface InventoryItem {
+  id: string
+  name: string
+  quantity: number
+  weight: number
+  equipped: boolean
+}
+
 export interface Character {
   id: string
   name: string
@@ -21,6 +29,7 @@ export interface Character {
   money: number
   characteristics: Characteristics
   careerIds: string[]
+  inventory: InventoryItem[]
   createdAt: string
   updatedAt: string
 }
@@ -51,6 +60,7 @@ export const createCharacter = (name: string): Character => {
     money: 0,
     characteristics: defaultCharacteristics(),
     careerIds: [],
+    inventory: [],
     createdAt: now,
     updatedAt: now
   }
@@ -96,6 +106,25 @@ export const renameCharacter = (character: Character, name: string): Character =
   updatedAt: new Date().toISOString()
 })
 
+const normalizeInventoryItem = (item: InventoryItem): InventoryItem => ({
+  ...item,
+  name: item.name.trim(),
+  quantity: clampAtZero(item.quantity),
+  weight: clampAtZero(item.weight),
+  equipped: Boolean(item.equipped)
+})
+
+export const patchInventory = (
+  character: Character,
+  inventory: InventoryItem[]
+): Character => ({
+  ...character,
+  inventory: inventory
+    .map(normalizeInventoryItem)
+    .filter((item) => item.name.length > 0),
+  updatedAt: new Date().toISOString()
+})
+
 export const isValidCharacter = (character: Character): boolean => {
   if (!character.id || !character.name.trim()) {
     return false
@@ -110,6 +139,10 @@ export const isValidCharacter = (character: Character): boolean => {
   }
 
   if (character.fortune < 0 || character.fate < 0) {
+    return false
+  }
+
+  if (character.inventory.some((item) => !item.name.trim() || item.quantity < 0 || item.weight < 0)) {
     return false
   }
 
@@ -136,6 +169,23 @@ const asIsoDate = (value: unknown, fallback: string): string => {
   }
 
   return Number.isNaN(Date.parse(value)) ? fallback : value
+}
+
+const normalizeInventory = (value: unknown): InventoryItem[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .filter(isRecord)
+    .map((item): InventoryItem => ({
+      id: typeof item.id === 'string' && item.id ? item.id : nanoid(10),
+      name: typeof item.name === 'string' ? item.name.trim() : '',
+      quantity: clampAtZero(asFiniteNumber(item.quantity, 1)),
+      weight: clampAtZero(asFiniteNumber(item.weight, 0)),
+      equipped: Boolean(item.equipped)
+    }))
+    .filter((item) => item.name.length > 0)
 }
 
 const normalizeCharacteristics = (value: unknown): Characteristics => {
@@ -214,6 +264,7 @@ export const parseCharacterImportJson = (json: string): Character => {
     careerIds: Array.isArray(raw.careerIds)
       ? raw.careerIds.filter((careerId): careerId is string => typeof careerId === 'string')
       : [],
+    inventory: normalizeInventory(raw.inventory),
     createdAt: asIsoDate(raw.createdAt, now),
     updatedAt: asIsoDate(raw.updatedAt, now)
   }
@@ -228,6 +279,7 @@ export const parseCharacterImportJson = (json: string): Character => {
   const nextCharacter: Character = {
     ...normalized,
     money: character.money,
+    inventory: character.inventory,
     createdAt: character.createdAt,
     updatedAt: character.updatedAt
   }
