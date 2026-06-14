@@ -52,7 +52,9 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await setIonInputValue(page, '[data-testid="edit-wounds-current-input"]', '8')
   await setIonInputValue(page, '[data-testid="edit-fortune-input"]', '4')
   await setIonInputValue(page, '[data-testid="edit-fate-input"]', '3')
-  await setIonInputValue(page, '[data-testid="edit-money-input"]', '42')
+  await setIonInputValue(page, '[data-testid="edit-money-co-input"]', '0')
+  await setIonInputValue(page, '[data-testid="edit-money-pa-input"]', '40')
+  await setIonInputValue(page, '[data-testid="edit-money-s-input"]', '15')
 
   await page.getByTestId('save-editor-button').click()
   await expect(page).not.toHaveURL(/\/edit$/)
@@ -60,7 +62,7 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByTestId('wounds-value')).toHaveText('8 / 10')
   await expect(page.getByTestId('fortune-value')).toHaveText('4')
   await expect(page.getByTestId('fate-value')).toHaveText('3')
-  await expect(page.getByTestId('money-value')).toHaveText('42')
+  await expect(page.getByTestId('money-value')).toHaveText('2 co / 1 pa / 3 s')
 
   const downloadPromise = page.waitForEvent('download')
   await page.getByTestId('export-json-button').click()
@@ -76,5 +78,5 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
 
   await expect(page).toHaveURL(/\/character\//)
   await expect(page.getByRole('button', { name: 'Exporter' })).toBeVisible()
-  await expect(page.getByTestId('money-value')).toHaveText('42')
+  await expect(page.getByTestId('money-value')).toHaveText('2 co / 1 pa / 3 s')
 })

@@ -4,6 +4,7 @@ import {
   isValidCharacter,
   parseCharacterImportJson,
   patchInventory,
+  patchMoney,
   patchResources,
   renameCharacter,
   toCharacterExportJson
@@ -18,6 +19,7 @@ describe('character domain', () => {
     expect(character.wounds).toEqual({ current: 10, max: 10 })
     expect(character.fortune).toBe(2)
     expect(character.fate).toBe(1)
+    expect(character.money).toEqual({ co: 0, pa: 0, s: 0 })
     expect(character.careerIds).toEqual([])
     expect(character.inventory).toEqual([])
     expect(character.characteristics.cc).toEqual({ base: 30, advance: 0 })
@@ -71,6 +73,16 @@ describe('character domain', () => {
     })
   })
 
+  it('coerces money conversion for silver and copper', () => {
+    const character = createCharacter('A')
+
+    const fromSilver = patchMoney(character, { pa: 40 })
+    expect(fromSilver.money).toEqual({ co: 2, pa: 0, s: 0 })
+
+    const fromCopper = patchMoney(character, { s: 15 })
+    expect(fromCopper.money).toEqual({ co: 0, pa: 1, s: 3 })
+  })
+
   it('validates character integrity', () => {
     const character = createCharacter('A')
 
@@ -95,7 +107,7 @@ describe('character domain', () => {
 
   it('parses an exported character json payload', () => {
     const source = createCharacter('Felix')
-    source.money = 42
+    source.money = { co: 0, pa: 40, s: 15 }
     source.inventory = [
       { id: 'obj-1', name: 'Bouclier', quantity: 1, weight: 3, equipped: true }
     ]
@@ -105,7 +117,7 @@ describe('character domain', () => {
 
     expect(parsed.id).toBe(source.id)
     expect(parsed.name).toBe('Felix')
-    expect(parsed.money).toBe(42)
+    expect(parsed.money).toEqual({ co: 2, pa: 1, s: 3 })
     expect(parsed.inventory[0]?.name).toBe('Bouclier')
   })
 

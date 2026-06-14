@@ -109,7 +109,7 @@ describe('characterRepository', () => {
         wounds: { current: 8, max: 10 },
         fortune: 3,
         fate: 2,
-        money: 17,
+        money: { co: 0, pa: 40, s: 15 },
         characteristics: {
           cc: { base: 30, advance: 0 },
           ct: { base: 30, advance: 0 },
@@ -133,6 +133,7 @@ describe('characterRepository', () => {
 
     const stored = await getCharacterById('imported-id')
     expect(stored?.name).toBe('Imported Hero')
+    expect(stored?.money).toEqual({ co: 2, pa: 1, s: 3 })
     expect(stored?.inventory[0]?.name).toBe('Arbalete')
   })
 
