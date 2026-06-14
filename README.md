@@ -1,6 +1,14 @@
-# Warhammer Sheet (M1)
+# Warhammer Sheet (M1+1)
 
 Application offline-first de gestion de fiches Warhammer JDR V2.
+
+Perimetre actuel:
+
+- creer un personnage
+- enregistrer en local
+- rouvrir et modifier PV / Fortune / Destin
+- exporter en JSON
+- importer un JSON exporte depuis l'application
 
 ## Commandes
 
