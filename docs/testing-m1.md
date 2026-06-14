@@ -6,7 +6,7 @@ Ce document couvre la strategie de test pour le livrable M3:
 - rouvrir
 - modifier PV/Fortune/Destin
 - exporter/importer JSON
-- gerer un inventaire et l'equipement
+- gerer un inventaire et l'équipement
 - gerer la monnaie co/pa/s avec coercition automatique
 
 ## 1) Tests unitaires

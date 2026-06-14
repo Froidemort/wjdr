@@ -69,7 +69,7 @@
           <ion-col size="12">
             <ion-card>
               <ion-card-header>
-                <ion-card-title>Inventaire et equipement</ion-card-title>
+                <ion-card-title>Équipement</ion-card-title>
               </ion-card-header>
               <ion-card-content>
                 <ion-list v-if="character.inventory.length > 0" lines="none">

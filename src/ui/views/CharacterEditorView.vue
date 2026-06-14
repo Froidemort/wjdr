@@ -37,13 +37,13 @@
         </ion-item>
 
         <ion-item lines="none">
-          <ion-label>Inventaire et equipement</ion-label>
+          <ion-label>Équipement</ion-label>
         </ion-item>
         <ion-item>
-          <ion-input v-model="newItemName" label="Objet" label-placement="stacked" placeholder="Ex: Epee" />
+          <ion-input v-model="newItemName" label="Objet" label-placement="stacked" placeholder="Ex: Épée" />
         </ion-item>
         <ion-item>
-          <ion-input v-model.number="newItemQuantity" type="number" label="Quantite" label-placement="stacked" />
+          <ion-input v-model.number="newItemQuantity" type="number" label="Quantité" label-placement="stacked" />
         </ion-item>
         <ion-item>
           <ion-input v-model.number="newItemWeight" type="number" label="Poids" label-placement="stacked" />
@@ -53,10 +53,10 @@
         <ion-item v-for="item in inventory" :key="item.id">
           <ion-label>
             <h3>{{ item.name }}</h3>
-            <p>Quantite: {{ item.quantity }} | Poids: {{ item.weight }}</p>
+            <p>Quantité: {{ item.quantity }} | Poids: {{ item.weight }}</p>
           </ion-label>
           <ion-button size="small" fill="clear" @click="toggleEquipped(item.id)">
-            {{ item.equipped ? 'Equipe' : 'Non equipe' }}
+            {{ item.equipped ? 'Équipé' : 'Non équipé' }}
           </ion-button>
           <ion-button size="small" color="danger" fill="clear" @click="removeInventoryItem(item.id)">Supprimer</ion-button>
         </ion-item>
