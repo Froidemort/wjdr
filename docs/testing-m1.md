@@ -1,6 +1,6 @@
-# Tests M3
+# Tests M4
 
-Ce document couvre la strategie de test pour le livrable M3:
+Ce document couvre la strategie de test pour le livrable M4:
 - creer un personnage
 - enregistrer en local (IndexedDB)
 - rouvrir
@@ -8,6 +8,9 @@ Ce document couvre la strategie de test pour le livrable M3:
 - exporter/importer JSON
 - gerer un inventaire et l'équipement
 - gerer la monnaie co/pa/s avec coercition automatique
+- afficher les caracteristiques principales et secondaires
+- editer les caracteristiques principales (base et avance)
+- editer les caracteristiques secondaires
 
 ## 1) Tests unitaires
 
@@ -34,6 +37,12 @@ Points verifies:
 - tri par date de mise a jour
 - erreurs metier (`Character data is invalid.`, `Character not found.`)
 - erreur d'import (`Character import is invalid.`)
+- calcul bonus force = dizaines de F
+- calcul bonus endurance = dizaines de E
+- initialisation des caracteristiques secondaires (actions, mouvement, magie, folie)
+- validation des contraintes des caracteristiques secondaires
+- import retrocompatible des caracteristiques secondaires (defaults si manquants)
+- formatage des caracteristiques principales en pourcentage (CC, CT, F, E, Ag, Int, FM, Soc)
 
 ## 2) Tests fonctionnels E2E
 
@@ -56,7 +65,10 @@ Scenario M1 couvert:
 - import du fichier JSON exporte
 - edition des ressources et de l'inventaire/equipement
 - coercition monetaire en edition (40 pa -> 2 co, 15 s -> 1 pa et 3 s)
+- edition des caracteristiques principales en mode edition
 - retour a la liste et verification de persistance
+- verification que les sections de caracteristiques principales et secondaires s'affichent
+- verification que les valeurs editables (A, M, Mag, PF) s'affichent en edition
 
 ## 3) Suite complete
 

@@ -1,4 +1,4 @@
-# Warhammer Sheet (M3)
+# Warhammer Sheet (M4)
 
 Application offline-first de gestion de fiches Warhammer JDR V2.
 
@@ -10,6 +10,10 @@ Perimetre actuel:
 - exporter/importer JSON
 - gerer un inventaire et l'equipement (quantite, poids, equipe)
 - gerer l'argent en co / pa / s avec conversion automatique
+- afficher les caracteristiques principales (CC, CT, F, E, Ag, Int, FM, Soc)
+- afficher les caracteristiques secondaires (A, M, BF, BE, Mag, PF)
+- editer les caracteristiques principales (base et avance)
+- editer les caracteristiques secondaires (actions, mouvement, magie, folie)
 
 ## Commandes
 
