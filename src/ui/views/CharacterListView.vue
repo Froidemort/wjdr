@@ -24,6 +24,20 @@
           <ion-button data-testid="create-character-button" expand="block" class="ion-margin-top" @click="onCreateCharacter">
             Creer et ouvrir
           </ion-button>
+          <input
+            ref="importInput"
+            data-testid="import-json-input"
+            accept="application/json,.json"
+            hidden
+            type="file"
+            @change="onImportFile"
+          />
+          <ion-button data-testid="import-json-button" expand="block" fill="outline" class="ion-margin-top" @click="openImportDialog">
+            Importer JSON
+          </ion-button>
+          <ion-note v-if="importError" color="danger" class="ion-padding-top" data-testid="import-json-error">
+            {{ importError }}
+          </ion-note>
         </ion-card-content>
       </ion-card>
 
@@ -68,6 +82,7 @@ import {
   IonLabel,
   IonList,
   IonListHeader,
+  IonNote,
   IonPage,
   IonTitle,
   IonToolbar,
@@ -76,12 +91,19 @@ import {
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Character } from '../../domain/character'
-import { createAndSaveCharacter, deleteCharacter, listCharacters } from '../../repositories/characterRepository'
+import {
+  createAndSaveCharacter,
+  deleteCharacter,
+  importCharacterFromJson,
+  listCharacters
+} from '../../repositories/characterRepository'
 
 const router = useRouter()
 
 const newName = ref('')
 const characters = ref<Character[]>([])
+const importError = ref('')
+const importInput = ref<HTMLInputElement>()
 
 const refreshCharacters = async (): Promise<void> => {
   characters.value = await listCharacters()
@@ -100,6 +122,31 @@ const onCreateCharacter = async (): Promise<void> => {
   const character = await createAndSaveCharacter(trimmed)
   newName.value = ''
   await router.push(`/character/${character.id}`)
+}
+
+const openImportDialog = (): void => {
+  importError.value = ''
+  importInput.value?.click()
+}
+
+const onImportFile = async (event: Event): Promise<void> => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (!file) {
+    return
+  }
+
+  try {
+    const json = await file.text()
+    const character = await importCharacterFromJson(json)
+    target.value = ''
+    await refreshCharacters()
+    await router.push(`/character/${character.id}`)
+  } catch {
+    importError.value = 'Import JSON invalide.'
+    target.value = ''
+  }
 }
 
 const openCharacter = (id: string): void => {

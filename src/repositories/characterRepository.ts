@@ -1,4 +1,10 @@
-import { createCharacter, isValidCharacter, type Character, type ResourcePatch } from '../domain/character'
+import {
+  createCharacter,
+  isValidCharacter,
+  parseCharacterImportJson,
+  type Character,
+  type ResourcePatch
+} from '../domain/character'
 import { db } from '../db/schema'
 
 export const listCharacters = async (): Promise<Character[]> => {
@@ -21,6 +27,12 @@ export const saveCharacter = async (character: Character): Promise<void> => {
   }
 
   await db.characters.put(character)
+}
+
+export const importCharacterFromJson = async (json: string): Promise<Character> => {
+  const character = parseCharacterImportJson(json)
+  await saveCharacter(character)
+  return character
 }
 
 export const patchCharacterResources = async (
