@@ -3,6 +3,7 @@ import {
   getCharacteristicTotal,
   isValidCharacter,
   parseCharacterImportJson,
+  patchInventory,
   patchResources,
   renameCharacter,
   toCharacterExportJson
@@ -18,6 +19,7 @@ describe('character domain', () => {
     expect(character.fortune).toBe(2)
     expect(character.fate).toBe(1)
     expect(character.careerIds).toEqual([])
+    expect(character.inventory).toEqual([])
     expect(character.characteristics.cc).toEqual({ base: 30, advance: 0 })
   })
 
@@ -51,6 +53,24 @@ describe('character domain', () => {
     expect(renamed.name).toBe('Elsa')
   })
 
+  it('patches inventory and drops invalid item names', () => {
+    const character = createCharacter('A')
+
+    const patched = patchInventory(character, [
+      { id: '1', name: '  Epee  ', quantity: 2, weight: 1, equipped: true },
+      { id: '2', name: '   ', quantity: 5, weight: 0, equipped: false }
+    ])
+
+    expect(patched.inventory).toHaveLength(1)
+    expect(patched.inventory[0]).toEqual({
+      id: '1',
+      name: 'Epee',
+      quantity: 2,
+      weight: 1,
+      equipped: true
+    })
+  })
+
   it('validates character integrity', () => {
     const character = createCharacter('A')
 
@@ -76,6 +96,9 @@ describe('character domain', () => {
   it('parses an exported character json payload', () => {
     const source = createCharacter('Felix')
     source.money = 42
+    source.inventory = [
+      { id: 'obj-1', name: 'Bouclier', quantity: 1, weight: 3, equipped: true }
+    ]
     const json = toCharacterExportJson(source)
 
     const parsed = parseCharacterImportJson(json)
@@ -83,6 +106,7 @@ describe('character domain', () => {
     expect(parsed.id).toBe(source.id)
     expect(parsed.name).toBe('Felix')
     expect(parsed.money).toBe(42)
+    expect(parsed.inventory[0]?.name).toBe('Bouclier')
   })
 
   it('rejects invalid imported json payload', () => {

@@ -121,6 +121,9 @@ describe('characterRepository', () => {
           soc: { base: 30, advance: 0 }
         },
         careerIds: [],
+        inventory: [
+          { id: 'it-1', name: 'Arbalete', quantity: 1, weight: 4, equipped: false }
+        ],
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z'
       })
@@ -130,6 +133,7 @@ describe('characterRepository', () => {
 
     const stored = await getCharacterById('imported-id')
     expect(stored?.name).toBe('Imported Hero')
+    expect(stored?.inventory[0]?.name).toBe('Arbalete')
   })
 
   it('rejects invalid import payload', async () => {
