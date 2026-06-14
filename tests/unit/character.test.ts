@@ -2,6 +2,7 @@ import {
   createCharacter,
   getCharacteristicTotal,
   isValidCharacter,
+  parseCharacterImportJson,
   patchResources,
   renameCharacter,
   toCharacterExportJson
@@ -70,5 +71,23 @@ describe('character domain', () => {
 
     expect(parsed.id).toBe(character.id)
     expect(parsed.name).toBe('A')
+  })
+
+  it('parses an exported character json payload', () => {
+    const source = createCharacter('Felix')
+    source.money = 42
+    const json = toCharacterExportJson(source)
+
+    const parsed = parseCharacterImportJson(json)
+
+    expect(parsed.id).toBe(source.id)
+    expect(parsed.name).toBe('Felix')
+    expect(parsed.money).toBe(42)
+  })
+
+  it('rejects invalid imported json payload', () => {
+    expect(() => parseCharacterImportJson('{"foo":true}')).toThrow(
+      'Character import is invalid.'
+    )
   })
 })

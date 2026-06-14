@@ -71,4 +71,10 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
 
   await page.goto('/')
   await expect(page.getByText(uniqueName)).toBeVisible()
+
+  await page.locator('[data-testid="import-json-input"]').setInputFiles(filePath!)
+
+  await expect(page).toHaveURL(/\/character\//)
+  await expect(page.getByRole('button', { name: 'Exporter' })).toBeVisible()
+  await expect(page.getByTestId('money-value')).toHaveText('42')
 })

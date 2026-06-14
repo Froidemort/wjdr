@@ -4,6 +4,7 @@ import {
   createAndSaveCharacter,
   deleteCharacter,
   getCharacterById,
+  importCharacterFromJson,
   listCharacters,
   patchCharacterResources,
   saveCharacter
@@ -98,5 +99,42 @@ describe('characterRepository', () => {
     await expect(
       patchCharacterResources('missing-id', { fortune: 1 })
     ).rejects.toThrow('Character not found.')
+  })
+
+  it('imports a character from exported json', async () => {
+    const imported = await importCharacterFromJson(
+      JSON.stringify({
+        id: 'imported-id',
+        name: 'Imported Hero',
+        wounds: { current: 8, max: 10 },
+        fortune: 3,
+        fate: 2,
+        money: 17,
+        characteristics: {
+          cc: { base: 30, advance: 0 },
+          ct: { base: 30, advance: 0 },
+          f: { base: 30, advance: 0 },
+          e: { base: 30, advance: 0 },
+          ag: { base: 30, advance: 0 },
+          int: { base: 30, advance: 0 },
+          fm: { base: 30, advance: 0 },
+          soc: { base: 30, advance: 0 }
+        },
+        careerIds: [],
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      })
+    )
+
+    expect(imported.id).toBe('imported-id')
+
+    const stored = await getCharacterById('imported-id')
+    expect(stored?.name).toBe('Imported Hero')
+  })
+
+  it('rejects invalid import payload', async () => {
+    await expect(importCharacterFromJson('{"name":""}')).rejects.toThrow(
+      'Character import is invalid.'
+    )
   })
 })
