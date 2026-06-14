@@ -1,12 +1,12 @@
-# Tests M1+1
+# Tests M2
 
-Ce document couvre la strategie de test pour le livrable M1+1:
+Ce document couvre la strategie de test pour le livrable M2:
 - creer un personnage
 - enregistrer en local (IndexedDB)
 - rouvrir
 - modifier PV/Fortune/Destin
-- exporter en JSON
-- importer un JSON
+- exporter/importer JSON
+- gerer un inventaire et l'equipement
 
 ## 1) Tests unitaires
 
@@ -27,6 +27,7 @@ Points verifies:
 - validation du modele metier
 - serialisation JSON d'export
 - parsing et validation d'un import JSON
+- normalisation et validation de l'inventaire
 - CRUD repository Dexie (create/get/list/delete)
 - tri par date de mise a jour
 - erreurs metier (`Character data is invalid.`, `Character not found.`)
@@ -51,6 +52,7 @@ Scenario M1 couvert:
 - passage en mode edition et sauvegarde
 - export JSON (telechargement)
 - import du fichier JSON exporte
+- edition des ressources et de l'inventaire/equipement
 - retour a la liste et verification de persistance
 
 ## 3) Suite complete
