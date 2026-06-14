@@ -2,9 +2,43 @@
   <ion-page>
     <ion-header>
       <ion-toolbar color="dark">
-        <ion-title>Warhammer Sheet</ion-title>
+        <ion-title>
+          <ion-icon :icon="peopleCircleOutline" />
+          Warhammer Character Sheet
+        </ion-title>
       </ion-toolbar>
     </ion-header>
+
+    <ion-list inset>
+      <ion-list-header>Personnages</ion-list-header>
+      <ion-item
+        v-for="character in characters"
+        :key="character.id"
+        :data-testid="`character-row-${character.id}`"
+        button
+        @click="openCharacter(character.id)"
+      >
+        <ion-label>
+          <h2>{{ character.name }}</h2>
+          <p>
+            PV {{ character.wounds.current }}/{{ character.wounds.max }} |
+            Fortune {{ character.fortune }} | Destin {{ character.fate }}
+          </p>
+        </ion-label>
+        <ion-button
+          slot="end"
+          :data-testid="`delete-character-${character.id}`"
+          color="danger"
+          fill="clear"
+          @click.stop="onDeleteCharacter(character.id)"
+        >
+          Supprimer
+        </ion-button>
+      </ion-item>
+      <ion-item v-if="characters.length === 0">
+        <ion-label>Aucun personnage. Cree le premier.</ion-label>
+      </ion-item>
+    </ion-list>
 
     <ion-content class="ion-padding">
       <ion-card>
@@ -21,8 +55,13 @@
               placeholder="Ex: Konrad l'Audacieux"
             />
           </ion-item>
-          <ion-button data-testid="create-character-button" expand="block" class="ion-margin-top" @click="onCreateCharacter">
-            Creer et ouvrir
+          <ion-button
+            data-testid="create-character-button"
+            expand="block"
+            class="ion-margin-top"
+            @click="onCreateCharacter"
+          >
+            Créer
           </ion-button>
           <input
             ref="importInput"
@@ -32,38 +71,25 @@
             type="file"
             @change="onImportFile"
           />
-          <ion-button data-testid="import-json-button" expand="block" fill="outline" class="ion-margin-top" @click="openImportDialog">
+          <ion-button
+            data-testid="import-json-button"
+            expand="block"
+            fill="outline"
+            class="ion-margin-top"
+            @click="openImportDialog"
+          >
             Importer JSON
           </ion-button>
-          <ion-note v-if="importError" color="danger" class="ion-padding-top" data-testid="import-json-error">
+          <ion-note
+            v-if="importError"
+            color="danger"
+            class="ion-padding-top"
+            data-testid="import-json-error"
+          >
             {{ importError }}
           </ion-note>
         </ion-card-content>
       </ion-card>
-
-      <ion-list inset>
-        <ion-list-header>Personnages</ion-list-header>
-        <ion-item v-for="character in characters" :key="character.id" :data-testid="`character-row-${character.id}`" button @click="openCharacter(character.id)">
-          <ion-label>
-            <h2>{{ character.name }}</h2>
-            <p>
-              PV {{ character.wounds.current }}/{{ character.wounds.max }} | Fortune {{ character.fortune }} | Destin {{ character.fate }}
-            </p>
-          </ion-label>
-          <ion-button
-            slot="end"
-            :data-testid="`delete-character-${character.id}`"
-            color="danger"
-            fill="clear"
-            @click.stop="onDeleteCharacter(character.id)"
-          >
-            Supprimer
-          </ion-button>
-        </ion-item>
-        <ion-item v-if="characters.length === 0">
-          <ion-label>Aucun personnage. Cree le premier.</ion-label>
-        </ion-item>
-      </ion-list>
     </ion-content>
   </ion-page>
 </template>
@@ -77,6 +103,7 @@ import {
   IonCardTitle,
   IonContent,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
@@ -86,75 +113,76 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
-  onIonViewWillEnter
-} from '@ionic/vue'
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import type { Character } from '../../domain/character'
+  onIonViewWillEnter,
+} from "@ionic/vue";
+import { peopleCircleOutline } from "ionicons/icons";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import type { Character } from "../../domain/character";
 import {
   createAndSaveCharacter,
   deleteCharacter,
   importCharacterFromJson,
-  listCharacters
-} from '../../repositories/characterRepository'
+  listCharacters,
+} from "../../repositories/characterRepository";
 
-const router = useRouter()
+const router = useRouter();
 
-const newName = ref('')
-const characters = ref<Character[]>([])
-const importError = ref('')
-const importInput = ref<HTMLInputElement>()
+const newName = ref("");
+const characters = ref<Character[]>([]);
+const importError = ref("");
+const importInput = ref<HTMLInputElement>();
 
 const refreshCharacters = async (): Promise<void> => {
-  characters.value = await listCharacters()
-}
+  characters.value = await listCharacters();
+};
 
 onIonViewWillEnter(() => {
-  void refreshCharacters()
-})
+  void refreshCharacters();
+});
 
 const onCreateCharacter = async (): Promise<void> => {
-  const trimmed = newName.value.trim()
+  const trimmed = newName.value.trim();
   if (!trimmed) {
-    return
+    return;
   }
 
-  const character = await createAndSaveCharacter(trimmed)
-  newName.value = ''
-  await router.push(`/character/${character.id}`)
-}
+  const character = await createAndSaveCharacter(trimmed);
+  newName.value = "";
+  await router.push(`/character/${character.id}`);
+};
 
 const openImportDialog = (): void => {
-  importError.value = ''
-  importInput.value?.click()
-}
+  importError.value = "";
+  importInput.value?.click();
+};
 
 const onImportFile = async (event: Event): Promise<void> => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
 
   if (!file) {
-    return
+    return;
   }
 
   try {
-    const json = await file.text()
-    const character = await importCharacterFromJson(json)
-    target.value = ''
-    await refreshCharacters()
-    await router.push(`/character/${character.id}`)
+    const json = await file.text();
+    const character = await importCharacterFromJson(json);
+    target.value = "";
+    await refreshCharacters();
+    await router.push(`/character/${character.id}`);
   } catch {
-    importError.value = 'Import JSON invalide.'
-    target.value = ''
+    importError.value = "Import JSON invalide.";
+    target.value = "";
   }
-}
+};
 
 const openCharacter = (id: string): void => {
-  void router.push(`/character/${id}`)
-}
+  void router.push(`/character/${id}`);
+};
 
 const onDeleteCharacter = async (id: string): Promise<void> => {
-  await deleteCharacter(id)
-  await refreshCharacters()
-}
+  await deleteCharacter(id);
+  await refreshCharacters();
+};
 </script>
