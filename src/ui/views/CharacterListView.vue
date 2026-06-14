@@ -19,10 +19,17 @@
         @click="openCharacter(character.id)"
       >
         <ion-label>
-          <h2>{{ character.name }}</h2>
+          <h2>
+            <span class="list-name-with-race">
+              <span :data-testid="`character-race-icon-${character.id}`">{{ getCharacterRaceIcon(character.race) }}</span>
+              <span>{{ character.name }}</span>
+            </span>
+          </h2>
           <p>
+            <span :data-testid="`character-race-value-${character.id}`">{{ getCharacterRaceLabel(character.race) }}</span> |
             PV {{ character.wounds.current }}/{{ character.wounds.max }} |
-            Fortune {{ character.fortune }} | Destin {{ character.fate }}
+            Fortune {{ character.fortune.current }}/{{ character.fortune.max }} |
+            Destin {{ character.fate.current }}/{{ character.fate.max }}
           </p>
         </ion-label>
         <ion-button
@@ -118,7 +125,7 @@ import {
 import { peopleCircleOutline } from "ionicons/icons";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import type { Character } from "../../domain/character";
+import { getRaceIcon, getRaceLabel, type Character, type RaceKey } from "../../domain/character";
 import {
   createAndSaveCharacter,
   deleteCharacter,
@@ -185,4 +192,15 @@ const onDeleteCharacter = async (id: string): Promise<void> => {
   await deleteCharacter(id);
   await refreshCharacters();
 };
+
+const getCharacterRaceLabel = (race: RaceKey): string => getRaceLabel(race);
+const getCharacterRaceIcon = (race: RaceKey): string => getRaceIcon(race);
 </script>
+
+<style scoped>
+.list-name-with-race {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+</style>

@@ -5,7 +5,12 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/" />
         </ion-buttons>
-        <ion-title>{{ character?.name ?? 'Personnage' }}</ion-title>
+        <ion-title>
+          <span class="title-with-race">
+            <span data-testid="character-race-icon">{{ raceIcon }}</span>
+            <span>{{ character?.name ?? 'Personnage' }}</span>
+          </span>
+        </ion-title>
         <ion-buttons slot="end">
           <ion-button data-testid="open-editor-button" @click="goToEditor">Editer</ion-button>
           <ion-button data-testid="export-json-button" @click="exportJson">Exporter</ion-button>
@@ -22,7 +27,7 @@
                 <ion-card-title>Race</ion-card-title>
               </ion-card-header>
               <ion-card-content>
-                <span data-testid="character-race-value">{{ raceLabel }}</span>
+                <span data-testid="character-race-value">{{ raceIcon }} {{ raceLabel }}</span>
               </ion-card-content>
             </ion-card>
           </ion-col>
@@ -398,9 +403,10 @@ import {
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  RACE_OPTIONS,
   formatSkillLabel,
   formatTalentLabel,
+  getRaceIcon,
+  getRaceLabel,
   getActionsTotal as domainGetActionsTotal,
   getMagicTotal as domainGetMagicTotal,
   toCharacterExportJson,
@@ -429,14 +435,20 @@ const moneySDraft = ref(0)
 
 const characterId = computed(() => String(route.params.id ?? ''))
 
-const raceLabelMap = new Map(RACE_OPTIONS.map((option) => [option.key, option.label]))
-
 const raceLabel = computed(() => {
   if (!character.value) {
     return ''
   }
 
-  return raceLabelMap.get(character.value.race) ?? character.value.race
+  return getRaceLabel(character.value.race)
+})
+
+const raceIcon = computed(() => {
+  if (!character.value) {
+    return '🛡️'
+  }
+
+  return getRaceIcon(character.value.race)
 })
 
 const loadCharacter = async (): Promise<void> => {
@@ -615,6 +627,12 @@ const getCharacteristicTotal = getCharacteristicTotalValue
 .money-edit-grid {
   padding: 0;
   margin-top: 0.5rem;
+}
+
+.title-with-race {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
 }
 
 .characteristic-item {

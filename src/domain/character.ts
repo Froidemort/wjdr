@@ -7,6 +7,7 @@ export type RaceKey = 'human' | 'dwarf' | 'halfling' | 'elf'
 export interface RaceOption {
   key: RaceKey
   label: string
+  icon: string
 }
 
 export interface CatalogEntry {
@@ -113,10 +114,10 @@ const defaultCharacteristics = (): Characteristics => ({
 })
 
 export const RACE_OPTIONS: RaceOption[] = [
-  { key: 'human', label: 'Humain' },
-  { key: 'dwarf', label: 'Nain' },
-  { key: 'halfling', label: 'Halfling' },
-  { key: 'elf', label: 'Elfe' }
+  { key: 'human', label: 'Humain', icon: '🧑' },
+  { key: 'dwarf', label: 'Nain', icon: '⛏️' },
+  { key: 'halfling', label: 'Halfling', icon: '🍃' },
+  { key: 'elf', label: 'Elfe', icon: '🏹' }
 ]
 
 export const SKILL_CATALOG: CatalogEntry[] = [
@@ -190,6 +191,14 @@ const masterySet = new Set<SkillMastery>(SKILL_MASTERY_OPTIONS.map((option) => o
 
 const isRaceKey = (value: unknown): value is RaceKey =>
   typeof value === 'string' && raceSet.has(value as RaceKey)
+
+const raceOptionMap = new Map(RACE_OPTIONS.map((option) => [option.key, option]))
+
+export const getRaceLabel = (race: RaceKey): string =>
+  raceOptionMap.get(race)?.label ?? race
+
+export const getRaceIcon = (race: RaceKey): string =>
+  raceOptionMap.get(race)?.icon ?? '🛡️'
 
 export const formatNameWithSpecialization = (name: string, specialization?: string): string =>
   specialization ? `${name} (${specialization})` : name

@@ -4,6 +4,8 @@ import {
   TALENT_CATALOG,
   createCharacter,
   formatNameWithSpecialization,
+  getRaceIcon,
+  getRaceLabel,
   formatSkillLabel,
   getActionsTotal,
   getCharacteristicTotal,
@@ -246,6 +248,18 @@ describe('character domain', () => {
     ;(character as unknown as { race: string }).race = 'orc'
 
     expect(isValidCharacter(character)).toBe(false)
+  })
+
+  it('maps race to display label and icon', () => {
+    expect(getRaceLabel('human')).toBe('Humain')
+    expect(getRaceLabel('dwarf')).toBe('Nain')
+    expect(getRaceLabel('halfling')).toBe('Halfling')
+    expect(getRaceLabel('elf')).toBe('Elfe')
+
+    expect(getRaceIcon('human')).toBe('🧑')
+    expect(getRaceIcon('dwarf')).toBe('⛏️')
+    expect(getRaceIcon('halfling')).toBe('🍃')
+    expect(getRaceIcon('elf')).toBe('🏹')
   })
 
   it('rejects unknown skills and talents', () => {

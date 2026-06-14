@@ -123,7 +123,8 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByTestId('experience-total-value')).toHaveText('0')
   await expect(page.getByTestId('experience-spent-value')).toHaveText('0')
   await expect(page.getByTestId('experience-available-value')).toHaveText('0')
-  await expect(page.getByTestId('character-race-value')).toHaveText('Elfe')
+  await expect(page.getByTestId('character-race-icon')).toHaveText('🏹')
+  await expect(page.getByTestId('character-race-value')).toHaveText('🏹 Elfe')
   await expect(page.getByTestId('character-current-career-value')).toHaveText('Apprenti Sorcier')
   await expect(page.getByTestId('character-previous-career-0')).toHaveText('Fanatique')
   await expect(page.getByTestId('character-skill-0')).toHaveText('Langue (reikspiel) - +10%')
@@ -149,7 +150,8 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByRole('button', { name: 'Exporter' })).toBeVisible()
   await expect(page.getByTestId('money-value')).toHaveText('1 co / 6 pa / 3 s')
   await expect(page.getByTestId('experience-total-value')).toHaveText('0')
-  await expect(page.getByTestId('character-race-value')).toHaveText('Elfe')
+  await expect(page.getByTestId('character-race-icon')).toHaveText('🏹')
+  await expect(page.getByTestId('character-race-value')).toHaveText('🏹 Elfe')
   await expect(page.getByTestId('character-current-career-value')).toHaveText('Apprenti Sorcier')
   await expect(page.getByTestId('character-previous-career-0')).toHaveText('Fanatique')
   await expect(page.getByTestId('character-skill-0')).toHaveText('Langue (reikspiel) - +10%')
@@ -170,4 +172,13 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   // Verify we can see characteristic labels in the page
   await expect(page.locator('text=Attaques (A)')).toBeVisible()
   await expect(page.locator('text=Mouvement (M)')).toBeVisible()
+
+  await page.goto('/')
+  const createdRow = page
+    .locator('ion-item[data-testid^="character-row-"]')
+    .filter({ hasText: uniqueName })
+    .first()
+
+  await expect(createdRow.locator('[data-testid^="character-race-icon-"]')).toHaveText('🏹')
+  await expect(createdRow.locator('[data-testid^="character-race-value-"]')).toHaveText('Elfe')
 })
