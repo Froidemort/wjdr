@@ -36,6 +36,10 @@ export interface Character {
   characteristics: Characteristics
   careerIds: string[]
   inventory: InventoryItem[]
+  actions: number
+  movement: number
+  magic: number
+  insanity: number
   createdAt: string
   updatedAt: string
 }
@@ -90,6 +94,10 @@ export const createCharacter = (name: string): Character => {
     characteristics: defaultCharacteristics(),
     careerIds: [],
     inventory: [],
+    actions: 1,
+    movement: 4,
+    magic: 0,
+    insanity: 0,
     createdAt: now,
     updatedAt: now
   }
@@ -99,6 +107,16 @@ export const getCharacteristicTotal = (
   character: Character,
   key: CharacteristicKey
 ): number => character.characteristics[key].base + character.characteristics[key].advance
+
+export const getBonusForce = (character: Character): number => {
+  const total = getCharacteristicTotal(character, 'f')
+  return Math.floor(total / 10)
+}
+
+export const getBonusEndurance = (character: Character): number => {
+  const total = getCharacteristicTotal(character, 'e')
+  return Math.floor(total / 10)
+}
 
 const clampAtZero = (value: number): number => Math.max(0, Math.trunc(value))
 
@@ -200,6 +218,10 @@ export const isValidCharacter = (character: Character): boolean => {
   }
 
   if (character.money.pa >= 20 || character.money.s >= 12) {
+    return false
+  }
+
+  if (character.actions < 1 || character.movement <= 0 || character.magic < 0 || character.insanity < 0) {
     return false
   }
 
@@ -339,6 +361,10 @@ export const parseCharacterImportJson = (json: string): Character => {
       ? raw.careerIds.filter((careerId): careerId is string => typeof careerId === 'string')
       : [],
     inventory: normalizeInventory(raw.inventory),
+    actions: clampAtZero(asFiniteNumber(raw.actions, 1)) || 1,
+    movement: clampAtZero(asFiniteNumber(raw.movement, 4)) || 4,
+    magic: clampAtZero(asFiniteNumber(raw.magic, 0)),
+    insanity: clampAtZero(asFiniteNumber(raw.insanity, 0)),
     createdAt: asIsoDate(raw.createdAt, now),
     updatedAt: asIsoDate(raw.updatedAt, now)
   }

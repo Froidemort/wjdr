@@ -1,6 +1,8 @@
 import {
   createCharacter,
   getCharacteristicTotal,
+  getBonusForce,
+  getBonusEndurance,
   isValidCharacter,
   parseCharacterImportJson,
   patchInventory,
@@ -125,5 +127,70 @@ describe('character domain', () => {
     expect(() => parseCharacterImportJson('{"foo":true}')).toThrow(
       'Character import is invalid.'
     )
+  })
+
+  it('calculates bonus force as tens digit of F characteristic', () => {
+    const character = createCharacter('A')
+    character.characteristics.f = { base: 35, advance: 0 }
+
+    expect(getBonusForce(character)).toBe(3)
+  })
+
+  it('calculates bonus force with advance', () => {
+    const character = createCharacter('A')
+    character.characteristics.f = { base: 30, advance: 15 }
+
+    expect(getBonusForce(character)).toBe(4)
+  })
+
+  it('calculates bonus endurance as tens digit of E characteristic', () => {
+    const character = createCharacter('A')
+    character.characteristics.e = { base: 53, advance: 0 }
+
+    expect(getBonusEndurance(character)).toBe(5)
+  })
+
+  it('initializes secondary characteristics with defaults', () => {
+    const character = createCharacter('A')
+
+    expect(character.actions).toBe(1)
+    expect(character.movement).toBe(4)
+    expect(character.magic).toBe(0)
+    expect(character.insanity).toBe(0)
+  })
+
+  it('imports character with backward compatibility for secondary stats', () => {
+    const source = createCharacter('Konrad')
+    source.magic = 5
+    source.insanity = 2
+    const json = toCharacterExportJson(source)
+
+    const parsed = parseCharacterImportJson(json)
+
+    expect(parsed.actions).toBe(1)
+    expect(parsed.movement).toBe(4)
+    expect(parsed.magic).toBe(5)
+    expect(parsed.insanity).toBe(2)
+  })
+
+  it('validates character with secondary stats constraints', () => {
+    const character = createCharacter('A')
+
+    expect(isValidCharacter(character)).toBe(true)
+
+    character.actions = 0
+    expect(isValidCharacter(character)).toBe(false)
+
+    character.actions = 1
+    character.movement = 0
+    expect(isValidCharacter(character)).toBe(false)
+
+    character.movement = 4
+    character.magic = -1
+    expect(isValidCharacter(character)).toBe(false)
+
+    character.magic = 0
+    character.insanity = -1
+    expect(isValidCharacter(character)).toBe(false)
   })
 })
