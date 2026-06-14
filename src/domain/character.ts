@@ -74,6 +74,8 @@ export interface TrackedResource {
   max: number
 }
 
+export type WoundsStatus = 'critical' | 'warning' | 'healthy'
+
 export interface Character {
   id: string
   name: string
@@ -255,6 +257,18 @@ export const normalizeExperience = (experience: Experience): Experience => {
     available,
     total: spent + available
   }
+}
+
+export const getWoundsStatus = (wounds: TrackedResource): WoundsStatus => {
+  if (wounds.current <= 3) {
+    return 'critical'
+  }
+
+  if (wounds.current <= Math.floor(Math.max(0, wounds.max) / 2)) {
+    return 'warning'
+  }
+
+  return 'healthy'
 }
 
 export const createCharacter = (name: string): Character => {

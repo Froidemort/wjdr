@@ -38,6 +38,7 @@
               test-id-prefix="wounds"
               :current="character.wounds.current"
               :max="character.wounds.max"
+              :tone="woundsTone"
               @adjust-current="adjustWounds"
               @save="saveWounds"
             />
@@ -71,7 +72,13 @@
                 <ion-card-title>Argent</ion-card-title>
               </ion-card-header>
               <ion-card-content>
-                <span data-testid="money-value">{{ character.money.co }} co / {{ character.money.pa }} pa / {{ character.money.s }} s</span>
+                <span data-testid="money-value" class="money-value">
+                  <span data-testid="money-co" class="money-co">{{ character.money.co }} co</span>
+                  <span>/</span>
+                  <span data-testid="money-pa" class="money-pa">{{ character.money.pa }} pa</span>
+                  <span>/</span>
+                  <span data-testid="money-s" class="money-s">{{ character.money.s }} s</span>
+                </span>
                 <ion-grid class="money-edit-grid">
                   <ion-row>
                     <ion-col size="12" size-md="4">
@@ -127,7 +134,13 @@
                     <ion-col size="12" size-md="4">
                       <div class="characteristic-item">
                         <span class="label">Disponible</span>
-                        <span data-testid="experience-available-value" class="value">{{ character.experience.available }}</span>
+                        <span
+                          data-testid="experience-available-value"
+                          class="value"
+                          :class="{ 'experience-available-emphasis': character.experience.available > 0 }"
+                        >
+                          {{ character.experience.available }}
+                        </span>
                       </div>
                     </ion-col>
                     <ion-col size="12" size-md="4">
@@ -407,6 +420,7 @@ import {
   formatTalentLabel,
   getRaceIcon,
   getRaceLabel,
+  getWoundsStatus,
   getActionsTotal as domainGetActionsTotal,
   getMagicTotal as domainGetMagicTotal,
   toCharacterExportJson,
@@ -449,6 +463,14 @@ const raceIcon = computed(() => {
   }
 
   return getRaceIcon(character.value.race)
+})
+
+const woundsTone = computed<'default' | 'healthy' | 'warning' | 'critical'>(() => {
+  if (!character.value) {
+    return 'default'
+  }
+
+  return getWoundsStatus(character.value.wounds)
 })
 
 const loadCharacter = async (): Promise<void> => {
@@ -633,6 +655,32 @@ const getCharacteristicTotal = getCharacteristicTotalValue
   align-items: center;
   display: inline-flex;
   gap: 0.5rem;
+}
+
+.money-value {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+
+.money-co {
+  color: #b88700;
+  font-weight: 700;
+}
+
+.money-pa {
+  color: #6f6f6f;
+  font-weight: 700;
+}
+
+.money-s {
+  color: #9a5b2a;
+  font-weight: 700;
+}
+
+.experience-available-emphasis {
+  color: #2b8a3e !important;
+  font-weight: 800;
 }
 
 .characteristic-item {

@@ -85,7 +85,7 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await setIonInputValue(page, '[data-testid="money-edit-pa-input"]', '25')
   await setIonInputValue(page, '[data-testid="money-edit-s-input"]', '15')
   await page.getByTestId('money-save-button').click()
-  await expect(page.getByTestId('money-value')).toHaveText('1 co / 6 pa / 3 s')
+  await expect(page.getByTestId('money-value')).toHaveText('1 co/6 pa/3 s')
 
   await page.getByTestId('open-editor-button').click()
   await expect(page).toHaveURL(/\/edit$/)
@@ -119,7 +119,10 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByTestId('wounds-value')).toHaveText('8 / 10')
   await expect(page.getByTestId('fortune-value')).toHaveText('4 / 4')
   await expect(page.getByTestId('fate-value')).toHaveText('3 / 3')
-  await expect(page.getByTestId('money-value')).toHaveText('1 co / 6 pa / 3 s')
+  await expect(page.getByTestId('money-value')).toHaveText('1 co/6 pa/3 s')
+  await expect(page.getByTestId('money-co')).toHaveClass(/money-co/)
+  await expect(page.getByTestId('money-pa')).toHaveClass(/money-pa/)
+  await expect(page.getByTestId('money-s')).toHaveClass(/money-s/)
   await expect(page.getByTestId('experience-total-value')).toHaveText('0')
   await expect(page.getByTestId('experience-spent-value')).toHaveText('0')
   await expect(page.getByTestId('experience-available-value')).toHaveText('0')
@@ -133,6 +136,7 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByTestId('character-actions-value')).toHaveText('3')
   await expect(page.getByTestId('character-magic-value')).toHaveText('3')
   await expect(page.getByTestId('character-bf-value')).toHaveText('4')
+  await expect(page.getByTestId('wounds-value')).toHaveClass(/resource-value--healthy/)
 
   const downloadPromise = page.waitForEvent('download')
   await page.getByTestId('export-json-button').click()
@@ -148,7 +152,10 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
 
   await expect(page).toHaveURL(/\/character\//)
   await expect(page.getByRole('button', { name: 'Exporter' })).toBeVisible()
-  await expect(page.getByTestId('money-value')).toHaveText('1 co / 6 pa / 3 s')
+  await expect(page.getByTestId('money-value')).toHaveText('1 co/6 pa/3 s')
+  await expect(page.getByTestId('money-co')).toHaveClass(/money-co/)
+  await expect(page.getByTestId('money-pa')).toHaveClass(/money-pa/)
+  await expect(page.getByTestId('money-s')).toHaveClass(/money-s/)
   await expect(page.getByTestId('experience-total-value')).toHaveText('0')
   await expect(page.getByTestId('character-race-icon')).toHaveText('🏹')
   await expect(page.getByTestId('character-race-value')).toHaveText('🏹 Elfe')
@@ -160,6 +167,7 @@ test('M1 flow: create, reopen, edit resources, export json', async ({ page }) =>
   await expect(page.getByTestId('character-actions-value')).toHaveText('3')
   await expect(page.getByTestId('character-magic-value')).toHaveText('3')
   await expect(page.getByTestId('character-bf-value')).toHaveText('4')
+  await expect(page.getByTestId('wounds-value')).toHaveClass(/resource-value--healthy/)
 
   // Verify main characteristics section is displayed
   const mainCharacteristicsCard = page.getByRole('heading', { name: 'Caractéristiques Principales' })

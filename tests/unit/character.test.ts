@@ -9,6 +9,7 @@ import {
   formatSkillLabel,
   getActionsTotal,
   getCharacteristicTotal,
+  getWoundsStatus,
   getBonusForce,
   getBonusEndurance,
   getMagicTotal,
@@ -260,6 +261,12 @@ describe('character domain', () => {
     expect(getRaceIcon('dwarf')).toBe('⛏️')
     expect(getRaceIcon('halfling')).toBe('🍃')
     expect(getRaceIcon('elf')).toBe('🏹')
+  })
+
+  it('computes wounds status thresholds for UI colors', () => {
+    expect(getWoundsStatus({ current: 3, max: 12 })).toBe('critical')
+    expect(getWoundsStatus({ current: 6, max: 12 })).toBe('warning')
+    expect(getWoundsStatus({ current: 7, max: 12 })).toBe('healthy')
   })
 
   it('rejects unknown skills and talents', () => {

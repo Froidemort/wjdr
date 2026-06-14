@@ -1,10 +1,10 @@
 <template>
-  <ion-card>
+  <ion-card :data-testid="`${testIdPrefix}-card`" :class="cardClass">
     <ion-card-header>
       <ion-card-title>{{ title }}</ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <h2 :data-testid="`${testIdPrefix}-value`">{{ currentValue }} / {{ maxValue }}</h2>
+      <h2 :data-testid="`${testIdPrefix}-value`" class="resource-value" :class="valueClass">{{ currentValue }} / {{ maxValue }}</h2>
       <ion-button :data-testid="`${testIdPrefix}-minus`" @click="emit('adjustCurrent', -1)">-1</ion-button>
       <ion-button :data-testid="`${testIdPrefix}-plus`" @click="emit('adjustCurrent', 1)">+1</ion-button>
 
@@ -64,6 +64,7 @@ interface Props {
   testIdPrefix: string
   current: number
   max: number
+  tone?: 'default' | 'healthy' | 'warning' | 'critical'
 }
 
 const props = defineProps<Props>()
@@ -86,6 +87,8 @@ watch(
 
 const currentValue = computed(() => props.current)
 const maxValue = computed(() => props.max)
+const cardClass = computed(() => `resource-card--${props.tone ?? 'default'}`)
+const valueClass = computed(() => `resource-value--${props.tone ?? 'default'}`)
 
 const parseNumeric = (value: unknown, fallback: number): number => {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -122,5 +125,23 @@ const saveDraft = (): void => {
 .resource-edit-grid {
   padding: 0;
   margin-top: 0.5rem;
+}
+
+.resource-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.resource-value--healthy {
+  color: #2b8a3e;
+}
+
+.resource-value--warning {
+  color: #c47500;
+}
+
+.resource-value--critical {
+  color: #c0392b;
 }
 </style>
