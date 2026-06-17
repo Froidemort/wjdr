@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
+@import "tailwindcss";
+@plugin "daisyui";
+
+
+@theme {
+  --font-warhammer: "IM Fell English", serif;
+}
+
+@plugin "daisyui/theme" {
+  name: "warhammer-character-sheet-theme";
+  default: true;
+  prefersdark: true;
+  /* color-scheme : on passe en dark pour que les barres de défilement du navigateur s'adaptent au thème sombre */
+  color-scheme: dark; 
+
+  /* --- COULEURS DE FOND (Le Donjon et le Parchemin Sombre) --- */
+  /* base-100 : Fond principal très sombre, presque noir/charbon (Pierre de Malepierre) */
+  --color-base-100: oklch(17% 0.015 30);
+  /* base-200 : Sections, cartes secondaires (Acier usé) */
+  --color-base-200: oklch(22% 0.02 35);
+  /* base-300 : Bordures intérieures, lignes de tableau */
+  --color-base-300: oklch(28% 0.02 35);
+  /* base-content : Texte principal, couleur vieil ivoire / parchemin jauni */
+  --color-base-content: oklch(88% 0.04 75);
+
+  /* --- COULEURS DE MARQUE (L'identité Warhammer) --- */
+  /* primary : Un rouge sang séché / écarlate profond (Le Sang et la Guerre) */
+  --color-primary: oklch(45% 0.18 25);
+  --color-primary-content: oklch(95% 0.02 75);
+
+  /* secondary : Or vieilli / Laiton (Les couronnes d'or, les armures d'apparat) */
+  --color-secondary: oklch(65% 0.12 85);
+  --color-secondary-content: oklch(15% 0.03 35);
+
+  /* accent : Un vert de corruption / malepierre (Skavens, Chaos) ou violet de sorcellerie */
+  --color-accent: oklch(55% 0.15 140);
+  --color-accent-content: oklch(95% 0.02 140);
+
+  /* neutral : Gris d'armure de plates / fer froid */
+  --color-neutral: oklch(35% 0.02 50);
+  --color-neutral-content: oklch(90% 0.01 50);
+
+  /* --- COULEURS D'ÉTAT (Gothiques et lisibles) --- */
+  --color-info: oklch(50% 0.1 220);          /* Bleu nuit magique */
+  --color-info-content: oklch(95% 0.01 220);
+  --color-success: oklch(45% 0.14 145);      /* Vert forêt sombre */
+  --color-success-content: oklch(95% 0.01 145);
+  --color-warning: oklch(68% 0.15 70);       /* Ambre / Flamme de torche */
+  --color-warning-content: oklch(15% 0.05 70);
+  --color-error: oklch(40% 0.18 28);         /* Rouge vif / Blessure critique */
+  --color-error-content: oklch(95% 0.01 28);
+
+  /* --- TAILLES ET BORDURES (L'aspect "Fiche papier JDR") --- */
+  /* On réduit les arrondis pour donner un aspect plus brut, médiéval et tranchant */
+  --radius-selector: 0.125rem; /* Boutons très peu arrondis */
+  --radius-field: 0rem;        /* Champs de saisie carrés, comme un tableau imprimé */
+  --radius-box: 0.25rem;       /* Cartes et fiches légèrement émoussées */
+
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  
+  /* Des bordures un peu plus marquées pour accentuer l'effet "grille de personnage" */
+  --border: 1px;
+
+  /* --- EFFETS --- */
+  --depth: 0.5; /* Moins d'ombres modernes de type "SaaS iOS", plus de contrastes bruts */
+  --noise: 0;
+}
+
+h1, h2, h3, h4, .font-warhammer {
+  font-family: var(--font-warhammer);
+  letter-spacing: 0.03em;
+}
