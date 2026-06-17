@@ -1,9 +1,10 @@
 <template>
-  <ion-app>
-    <ion-router-outlet />
-  </ion-app>
+  <div id="app">
+    <nav-bar />
+    <router-view />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { IonApp, IonRouterOutlet } from '@ionic/vue'
+import NavBar from './ui/components/NavBar.vue';
 </script>

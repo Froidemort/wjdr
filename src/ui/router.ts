@@ -1,5 +1,6 @@
-import { createRouter, createWebHistory } from '@ionic/vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
+import HomeView from './views/HomeView.vue'
 import CharacterDetailView from './views/CharacterDetailView.vue'
 import CharacterEditorView from './views/CharacterEditorView.vue'
 import CharacterListView from './views/CharacterListView.vue'
@@ -9,15 +10,19 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      component: HomeView
+    },
+    {
+      path: '/characters',
       component: CharacterListView
     },
     {
-      path: '/character/:id',
+      path: '/characters/:id',
       component: CharacterDetailView,
       props: true
     },
     {
-      path: '/character/:id/edit',
+      path: '/characters/:id/edit',
       component: CharacterEditorView,
       props: true
     }

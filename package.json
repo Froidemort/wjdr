@@ -15,11 +15,12 @@
     "test:e2e:deploy": "playwright test -c playwright.deploy.config.ts"
   },
   "dependencies": {
-    "@ionic/vue": "^8.8.10",
-    "@ionic/vue-router": "^8.8.10",
+    "@lucide/vue": "^1.18.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "@tailwindcss/vite": "^4.3.1",
     "dexie": "^4.4.3",
-    "ionicons": "^8.0.13",
     "nanoid": "^5.1.11",
+    "tailwindcss": "^4.3.1",
     "vue": "^3.5.34",
     "vue-router": "^4.6.4"
   },
@@ -28,10 +29,10 @@
     "@types/node": "^24.12.3",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",
+    "daisyui": "^5.5.23",
     "fake-indexeddb": "^6.2.5",
     "typescript": "~6.0.2",
     "vite": "^8.0.12",
-    "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.8",
     "vue-tsc": "^3.2.8"
   }
