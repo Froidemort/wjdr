@@ -9,7 +9,7 @@
 			<div class="flex flex-wrap gap-2">
 				<button
 					class="btn btn-sm"
-					:class="requesting ? 'btn-disabled' : ''"
+					:disabled="requesting || Boolean(successMessage)"
 					@click="sendRequest"
 				>
 					<span v-if="requesting" class="loading loading-spinner loading-xs" aria-hidden="true" />

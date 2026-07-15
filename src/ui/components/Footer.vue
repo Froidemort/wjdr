@@ -1,6 +1,6 @@
 <template>
-<footer class="footer footer-horizontal hidden lg:flex border-t border-base-300 bg-base-200 text-base-content items-center p-4">
-  <aside class="grid-flow-col items-center gap-2">
+<footer class="footer footer-horizontal hidden lg:flex w-full justify-between border-t border-base-300 bg-base-200 text-base-content items-center p-4">
+  <aside class="flex items-center gap-2">
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
       width="28" 
@@ -17,17 +17,20 @@
       <path d="M6 6h10M6 10h10"/>
     </svg>
     
-    <div>
+    <div class="flex items-center gap-2">
       <p class="font-bold">Grimorium</p>
-      <p class="text-xs opacity-70">
+      <span class="text-primary">v{{ appVersion }}</span>
+    </div>
+    <div>
+      <p class="text-xs text-center opacity-70">
         Copyright © {{new Date().getFullYear()}} - Sous licence MIT
       </p>
     </div>
   </aside>
 
-  <nav class="grid-flow-col gap-4 md:place-self-center md:justify-self-end">
+  <nav class="flex items-center gap-4" aria-label="Liens externes">
     <a 
-      href="#placeholder-github-repo" 
+      href="https://github.com" 
       target="_blank" 
       rel="noopener noreferrer" 
       class="btn btn-ghost btn-sm btn-circle"
@@ -48,5 +51,5 @@
 </template>
 
 <script setup lang="ts">
-
+const appVersion = '0.0.5'
 </script>

@@ -32,7 +32,7 @@
 					<span>{{ errorMessage }}</span>
 				</div>
 
-				<button type="submit" class="btn w-full" :class="loading ? 'btn-disabled' : ''">
+				<button type="submit" class="btn btn-accent w-full" :disabled="loading">
 					<span v-if="loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
 					<span>Valider</span>
 				</button>
