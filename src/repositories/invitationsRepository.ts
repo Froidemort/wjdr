@@ -195,7 +195,7 @@ export async function createSessionInvitations(
     return
   }
 
-  const message = `Tu es invité à la trépidante aventure ${sessionName} !\nRejoins-là vite en cliquant sur "Ouvrir la session" ! Le Vieux Monde t'attend !\n${invitationMarker(sessionId)}`
+  const message = `Vous etes convie a la table "${sessionName}".\nLe Vieux Monde attend votre venue.\n${invitationMarker(sessionId)}`
   const rows = newIds.map((receiverId) => ({
     sender_user_id: mjId,
     receiver_user_id: receiverId,

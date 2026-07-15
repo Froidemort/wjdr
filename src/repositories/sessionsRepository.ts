@@ -197,3 +197,14 @@ export async function getSessionById(sessionId: string): Promise<SessionSummary 
     return data ? mapSession(data as SessionRow) : null
   })
 }
+
+export async function updateSessionArchivedState(sessionId: string, isArchived: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('sessions')
+    .update({ is_archived: isArchived })
+    .eq('id', sessionId)
+
+  if (error) {
+    throw mapSessionWriteError(error)
+  }
+}

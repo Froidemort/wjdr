@@ -15,7 +15,12 @@
             :data-tip="displayName?.substring(0, 20) || 'Profil'"
           >
             <router-link to="/profile" class="btn btn-ghost btn-sm btn-square text-primary">
-              <UserCircle class="h-6 w-6" />
+              <div v-if="avatarUrl" class="avatar">
+                <div class="w-7 rounded-full ring ring-base-300 ring-offset-1 ring-offset-base-100">
+                  <img :src="avatarUrl" alt="Avatar utilisateur" class="object-cover" />
+                </div>
+              </div>
+              <UserCircle v-else class="h-6 w-6" />
             </router-link>
           </div>
 
@@ -42,12 +47,12 @@
               class="absolute right-0 top-12 z-30 w-[min(20rem,calc(100vw-1rem))] md:w-96 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
             >
               <div class="flex items-center justify-between gap-2">
-                <h3 class="font-semibold">Notifications</h3>
-                <span class="badge">{{ unreadCount }} non lue(s)</span>
+                <h3 class="font-semibold">Missives</h3>
+                <span class="badge">{{ unreadCount }} non lues</span>
               </div>
 
               <div v-if="notificationsPreview.length === 0" class="alert alert-warning alert-soft text-sm mt-3">
-                <span>Aucune notification.</span>
+                <span>Aucune missive pour l instant.</span>
               </div>
 
               <div v-else class="mt-3 space-y-2 max-h-72 overflow-y-auto">
@@ -57,8 +62,8 @@
                   class="w-full rounded-box border border-base-300 bg-base-200 p-3 text-left transition hover:bg-base-300"
                   @click="markPreviewAsRead(notification.id)"
                 >
-                  <p class="truncate text-sm font-medium">{{ notification.title }}</p>
-                  <p class="mt-1 truncate text-xs opacity-70">{{ notification.message }}</p>
+                  <p class="truncate text-sm font-medium">{{ getNotificationDisplayTitle(notification.title) }}</p>
+                  <p class="mt-1 truncate text-xs opacity-70">{{ getNotificationDisplayMessage(notification.message) }}</p>
                   <p class="mt-2 text-xs" :class="notification.isRead ? 'text-success' : 'text-warning'">
                     {{ notification.isRead ? 'Lue' : 'Non lue' }}
                   </p>
@@ -70,7 +75,7 @@
                 class="btn btn-sm mt-3 w-full"
                 @click="notificationsOpen = false"
               >
-                Voir toutes les notifications
+                Consulter toutes les missives
               </router-link>
             </div>
           </div>
@@ -83,7 +88,7 @@
             <Users class="w-6 h-6" />
           </router-link>
 
-          <button @click="logout" class="btn btn-ghost btn-sm btn-square tooltip tooltip-left text-error" data-tip="Se déconnecter">
+          <button @click="logout" class="btn btn-ghost btn-sm btn-square tooltip tooltip-bottom text-error" data-tip="Se déconnecter">
             <LogOut class="w-6 h-6" />
           </button>
 
@@ -138,7 +143,7 @@
       <button
         v-if="!isAuthenticated"
         @click="openSignUp"
-        class="btn btn-sm btn-outline"
+        class="btn btn-sm btn-outline btn-accent"
         data-tip="S'inscrire"
         aria-label="S'inscrire"
       >
@@ -163,13 +168,14 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Scroll, Users, LogIn, LogOut, Bell, UserCircle, Menu } from '@lucide/vue'
-import type { RealtimeChannel } from '@supabase/supabase-js'
 import ThemeToggle from './ThemeToggle.vue'
 import { useAuthModalStore } from '../../stores/authModal'
 import { useAuthStore } from '../../stores/auth'
-import { supabase } from '../../db/supabase'
+import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import {
   countUnreadNotifications,
+  getNotificationDisplayMessage,
+  getNotificationDisplayTitle,
   listNotificationsForUser,
   markNotificationRead,
   type NotificationItem
@@ -182,10 +188,13 @@ const notificationsPreview = ref<NotificationItem[]>([])
 const notificationsOpen = ref(false)
 const unreadCount = ref(0)
 const notificationsMenuRef = ref<HTMLElement | null>(null)
-let notificationsChannel: RealtimeChannel | null = null
+const { subscribe, unsubscribe } = useRealtimeChannels(() => {
+  void loadNotificationsPreview()
+}, { debounceMs: 300 })
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const displayName = computed(() => authStore.displayName)
+const avatarUrl = computed(() => authStore.avatarUrl)
 
 async function logout(): Promise<void> {
   await authStore.signOut()
@@ -215,26 +224,9 @@ async function loadNotificationsPreview(): Promise<void> {
 }
 
 function subscribeNotificationsRealtime(userId: string): void {
-  if (notificationsChannel) {
-    void supabase.removeChannel(notificationsChannel)
-    notificationsChannel = null
-  }
-
-  notificationsChannel = supabase
-    .channel(`navbar-notifications-${userId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'notifications',
-        filter: `receiver_user_id=eq.${userId}`
-      },
-      () => {
-        void loadNotificationsPreview()
-      }
-    )
-    .subscribe()
+  subscribe(`navbar-notifications-${userId}`, [
+    { table: 'notifications', filter: `receiver_user_id=eq.${userId}` }
+  ])
 }
 
 function toggleNotifications(): void {
@@ -278,10 +270,7 @@ watch(
     if (!userId) {
       notificationsPreview.value = []
       unreadCount.value = 0
-      if (notificationsChannel) {
-        void supabase.removeChannel(notificationsChannel)
-        notificationsChannel = null
-      }
+      unsubscribe()
       return
     }
 
@@ -300,9 +289,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleOutsideClick)
-  if (notificationsChannel) {
-    void supabase.removeChannel(notificationsChannel)
-    notificationsChannel = null
-  }
+  unsubscribe()
 })
 </script>

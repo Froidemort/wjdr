@@ -1,15 +1,14 @@
-import { ref, onBeforeUnmount } from 'vue'
-import { type RealtimeChannel } from '@supabase/supabase-js'
-import { supabase } from '../../db/supabase'
+import { ref } from 'vue'
+import { useRealtimeChannels } from './useRealtimeChannels'
 import {
 	listNotificationsForUserPaginated,
 	type NotificationItem
 } from '../../repositories/notificationsRepository'
 
 interface UseNotificationsLoadOptions {
-	userId: string | undefined
+	userId: () => string | undefined
 	pageSize: number
-	page: number
+	page: () => number
 }
 
 export function useNotificationsLoad(options: UseNotificationsLoadOptions) {
@@ -17,10 +16,13 @@ export function useNotificationsLoad(options: UseNotificationsLoadOptions) {
 	const totalNotifications = ref(0)
 	const loading = ref(false)
 	const error = ref<string | null>(null)
-	let channel: RealtimeChannel | null = null
+	const { subscribe, unsubscribe } = useRealtimeChannels(() => {
+		void load()
+	}, { debounceMs: 300 })
 
 	async function load(): Promise<void> {
-		if (!options.userId) {
+		const userId = options.userId()
+		if (!userId) {
 			notifications.value = []
 			totalNotifications.value = 0
 			return
@@ -29,7 +31,7 @@ export function useNotificationsLoad(options: UseNotificationsLoadOptions) {
 		loading.value = true
 		error.value = null
 		try {
-			const result = await listNotificationsForUserPaginated(options.userId, options.page, options.pageSize)
+			const result = await listNotificationsForUserPaginated(userId, options.page(), options.pageSize)
 			notifications.value = result.items
 			totalNotifications.value = result.total
 		} catch (err) {
@@ -39,29 +41,11 @@ export function useNotificationsLoad(options: UseNotificationsLoadOptions) {
 		}
 	}
 
-	function subscribe(userId: string, onUpdate: () => void): void {
-		if (channel) {
-			void supabase.removeChannel(channel)
-		}
-
-		channel = supabase
-			.channel(`notifications-${userId}`)
-			.on(
-				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'notifications' },
-				onUpdate
-			)
-			.subscribe()
+	function subscribeToNotifications(userId: string): void {
+		subscribe(`notifications-${userId}`, [
+			{ table: 'notifications', filter: `receiver_user_id=eq.${userId}` }
+		])
 	}
-
-	function unsubscribe(): void {
-		if (channel) {
-			void supabase.removeChannel(channel)
-			channel = null
-		}
-	}
-
-	onBeforeUnmount(unsubscribe)
 
 	return {
 		notifications,
@@ -69,7 +53,7 @@ export function useNotificationsLoad(options: UseNotificationsLoadOptions) {
 		loading,
 		error,
 		load,
-		subscribe,
+		subscribe: subscribeToNotifications,
 		unsubscribe
 	}
 }
