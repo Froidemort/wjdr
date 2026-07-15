@@ -29,6 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const session = ref<Session | null>(null)
   const displayName = ref<string>('')
+  const avatarUrl = ref<string | null>(null)
   const loading = ref(false)
   const initialized = ref(false)
   const authError = ref<string | null>(null)
@@ -54,21 +55,23 @@ export const useAuthStore = defineStore('auth', () => {
     return currentUser.email ?? ''
   }
 
-  async function loadDisplayName(userId: string): Promise<void> {
+  async function loadIdentity(userId: string): Promise<void> {
     const { data, error } = await supabase
       .from('profiles')
-      .select('full_name, username')
+      .select('full_name, username, avatar_url')
       .eq('id', userId)
       .maybeSingle()
 
     if (error) {
       displayName.value = deriveFallbackDisplayName(user.value)
+      avatarUrl.value = null
       return
     }
 
     const fullName = data?.full_name?.trim() ?? ''
     const username = data?.username?.trim() ?? ''
     displayName.value = fullName || username || deriveFallbackDisplayName(user.value)
+    avatarUrl.value = data?.avatar_url ?? null
   }
 
   async function initAuth(): Promise<void> {
@@ -87,16 +90,17 @@ export const useAuthStore = defineStore('auth', () => {
       session.value = data.session
       user.value = data.session?.user ?? null
       if (user.value?.id) {
-        await loadDisplayName(user.value.id)
+        await loadIdentity(user.value.id)
       }
 
       supabase.auth.onAuthStateChange((_event, nextSession) => {
         session.value = nextSession
         user.value = nextSession?.user ?? null
         if (user.value?.id) {
-          void loadDisplayName(user.value.id)
+          void loadIdentity(user.value.id)
         } else {
           displayName.value = ''
+          avatarUrl.value = null
         }
       })
 
@@ -168,6 +172,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw error
       }
       displayName.value = ''
+      avatarUrl.value = null
     } catch (error) {
       authError.value = error instanceof Error ? error.message : 'Déconnexion impossible.'
       throw error
@@ -176,15 +181,27 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function refreshDisplayName(): Promise<void> {
+    if (!user.value?.id) {
+      displayName.value = ''
+      avatarUrl.value = null
+      return
+    }
+
+    await loadIdentity(user.value.id)
+  }
+
   return {
     user,
     session,
     displayName,
+    avatarUrl,
     loading,
     initialized,
     authError,
     isAuthenticated,
     initAuth,
+    refreshDisplayName,
     signIn,
     signUp,
     signOut

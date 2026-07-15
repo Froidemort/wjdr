@@ -2,7 +2,7 @@
 	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
 		<header class="flex items-center justify-between">
 			<h1 class="text-2xl font-semibold">Sessions</h1>
-			<button class="btn btn-sm" @click="openSessionCreate">Creer une session</button>
+			<button class="btn btn-sm btn-accent" @click="openSessionCreate">Creer une session</button>
 		</header>
 
 		<InputAction
@@ -21,8 +21,8 @@
 
 		<DataGrid
 			:items="sessionsList"
-			:loading="loading"
-			:error="errorMessage"
+			:loading="showBlockingLoading"
+			:error="showBlockingError"
 			empty-message="Aucune session disponible."
 			grid-class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
 			:page="page"
@@ -46,7 +46,7 @@
 								Lien
 							</button>
 						</div>
-						<router-link class="btn btn-sm" :to="`/sessions/${session.id}`">Ouvrir</router-link>
+						<router-link class="btn btn-sm btn-accent" :to="`/sessions/${session.id}`">Ouvrir</router-link>
 					</div>
 				</AppCard>
 			</template>
@@ -59,18 +59,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Link } from '@lucide/vue'
-import type { RealtimeChannel } from '@supabase/supabase-js'
 import AppCard from '../components/AppCard.vue'
 import DataGrid from '../components/DataGrid.vue'
 import InputAction from '../components/InputAction.vue'
 import PageFooter from '../components/PageFooter.vue'
 import { useAuthStore } from '../../stores/auth'
-import { supabase } from '../../db/supabase'
 import { listSessionsForUserPaginated } from '../../repositories/sessionsRepository'
 import { requestJoinByCode } from '../../repositories/notificationsRepository'
 import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
 import { usePagination } from '../composables/usePagination'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
+import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import type { SessionSummary } from '../../types/domain'
 
 const authStore = useAuthStore()
@@ -86,27 +85,38 @@ const joinCode = ref('')
 const joining = ref(false)
 const joinSuccess = ref<string | null>(null)
 const joinError = ref<string | null>(null)
-let sessionsChannel: RealtimeChannel | null = null
+const { subscribe, unsubscribe } = useRealtimeChannels(() => {
+	void loadSessions({ background: true })
+}, { debounceMs: 500 })
 
 const sessionsList = computed(() => sessions.value)
+const showBlockingLoading = computed(() => loading.value && sessions.value.length === 0)
+const showBlockingError = computed(() => (sessions.value.length === 0 ? errorMessage.value : null))
 
-async function loadSessions(): Promise<void> {
+async function loadSessions(options: { background?: boolean } = {}): Promise<void> {
 	if (!authStore.user?.id) {
 		sessions.value = []
 		totalItems.value = 0
 		return
 	}
 
-	loading.value = true
-	errorMessage.value = null
+	const isBackgroundRefresh = Boolean(options.background && sessions.value.length > 0)
+	if (!isBackgroundRefresh) {
+		loading.value = true
+		errorMessage.value = null
+	}
 	try {
 		const result = await listSessionsForUserPaginated(authStore.user.id, page.value, pageSize)
 		sessions.value = result.items
 		totalItems.value = result.total
 	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Impossible de charger les sessions.'
+		if (!isBackgroundRefresh || sessions.value.length === 0) {
+			errorMessage.value = error instanceof Error ? error.message : 'Impossible de charger les sessions.'
+		}
 	} finally {
-		loading.value = false
+		if (!isBackgroundRefresh) {
+			loading.value = false
+		}
 	}
 }
 
@@ -123,23 +133,10 @@ function goToNextPage(): void {
 }
 
 function subscribeRealtime(userId: string): void {
-	if (sessionsChannel) {
-		void supabase.removeChannel(sessionsChannel)
-	}
-
-	sessionsChannel = supabase
-		.channel(`sessions-list-${userId}`)
-		.on(
-			'postgres_changes',
-			{ event: '*', schema: 'public', table: 'sessions', filter: `mj_id=eq.${userId}` },
-			() => void loadSessions()
-		)
-		.on(
-			'postgres_changes',
-			{ event: '*', schema: 'public', table: 'users_session', filter: `user_id=eq.${userId}` },
-			() => void loadSessions()
-		)
-		.subscribe()
+	subscribe(`sessions-list-${userId}`, [
+		{ table: 'sessions', filter: `mj_id=eq.${userId}` },
+		{ table: 'users_session', filter: `user_id=eq.${userId}` }
+	])
 }
 
 function openSessionCreate(): void {
@@ -170,21 +167,16 @@ watch(
 	(userId) => {
 		resetPage()
 		if (!userId) {
-			if (sessionsChannel) {
-				void supabase.removeChannel(sessionsChannel)
-				sessionsChannel = null
-			}
+			unsubscribe()
 			return
 		}
+		void loadSessions()
 		subscribeRealtime(userId)
 	},
 	{ immediate: true }
 )
 
 onBeforeUnmount(() => {
-	if (sessionsChannel) {
-		void supabase.removeChannel(sessionsChannel)
-		sessionsChannel = null
-	}
+	unsubscribe()
 })
 </script>

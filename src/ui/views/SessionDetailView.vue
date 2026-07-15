@@ -9,7 +9,8 @@
 		<template v-else-if="session">
 			<AppCard :title="session.name">
 				<!-- En-tête : role + code de session avec copie -->
-				<div class="flex flex-wrap items-center gap-2 mb-3">
+				<div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+					<div class="flex flex-wrap items-center gap-2">
 					<span class="badge" :class="isMj ? 'badge-secondary' : 'badge-neutral'">{{ isMj ? 'MJ' : 'Joueur' }}</span>
 					<span v-if="session.isArchived" class="badge badge-warning">Archivée</span>
 					<div class="tooltip" :data-tip="copyFeedback || `Code : ${session.code}`">
@@ -18,6 +19,17 @@
 							{{ session.code }}
 						</button>
 					</div>
+					</div>
+					<button
+						v-if="isMj"
+						class="btn btn-sm"
+						:class="session.isArchived ? 'btn-success' : 'btn-warning'"
+						:disabled="archiveBusy"
+						@click="toggleSessionArchivedState"
+					>
+						<span v-if="archiveBusy" class="loading loading-spinner loading-xs" aria-hidden="true" />
+						{{ session.isArchived ? 'Désarchiver' : 'Archiver' }}
+					</button>
 				</div>
 
 				<!-- Description (collapse optionnel) -->
@@ -47,12 +59,39 @@
 					</div>
 
 					<div v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-						<AppCard v-for="character in characters" :key="character.id" :title="character.name" compact>
-							<div class="text-sm opacity-80">{{ character.race }}</div>
-							<div class="mt-2 flex flex-wrap gap-2">
-								<span class="badge">B {{ character.pvCurrent }}/{{ character.pvMax }}</span>
-								<span class="badge">Fortune {{ character.fortuneCurrent }}</span>
-								<span class="badge">Destin {{ character.destinyCurrent }}</span>
+						<AppCard
+							v-for="character in characters"
+							:key="character.id"
+							:title="character.name"
+							:avatar-url="character.ownerAvatarUrl"
+							avatar-alt="Avatar du joueur"
+							compact
+						>
+							<div class="flex items-center gap-2 text-sm opacity-80">
+								<span>{{ character.race }}</span>
+								<span>·</span>
+								<component
+									:is="character.gender === 'masculin' ? Mars : Venus"
+									class="h-4 w-4"
+								/>
+								<span>{{ character.gender === 'masculin' ? 'Masculin' : 'Feminin' }}</span>
+							</div>
+							<div class="mt-2 grid gap-1 text-sm">
+								<div class="flex items-center gap-2">
+									<Heart class="h-4 w-4 text-error" />
+									<span class="font-medium">Vie</span>
+									<span class="opacity-80">{{ character.pvCurrent }}/{{ character.pvMax }}</span>
+								</div>
+								<div class="flex items-center gap-2">
+									<Clover class="h-4 w-4 text-success" />
+									<span class="font-medium">Fortune</span>
+									<span class="opacity-80">{{ character.fortuneCurrent }}/{{ character.fortuneMax }}</span>
+								</div>
+								<div class="flex items-center gap-2">
+									<WandSparkles class="h-4 w-4 text-accent" />
+									<span class="font-medium">Destin</span>
+									<span class="opacity-80">{{ character.destinyCurrent }}</span>
+								</div>
 							</div>
 							<div class="card-actions mt-3 justify-end">
 								<router-link class="btn btn-sm btn-accent" :to="`/characters/${character.id}`">Voir la fiche</router-link>
@@ -97,7 +136,7 @@
 						</div>
 
 						<div class="flex items-center gap-2">
-							<button class="btn btn-sm" :class="selectedInvitees.size === 0 || inviting || session.isArchived ? 'btn-disabled' : 'btn-accent'" @click="inviteSelectedUsers">
+							<button class="btn btn-sm btn-accent" :disabled="selectedInvitees.size === 0 || inviting || session.isArchived" @click="inviteSelectedUsers">
 								<span v-if="inviting" class="loading loading-spinner loading-xs" aria-hidden="true" />
 								Inviter {{ selectedInvitees.size > 0 ? `(${selectedInvitees.size})` : '' }}
 							</button>
@@ -127,7 +166,7 @@
 								</ul>
 							</AppCard>
 
-							<AppCard title="Demandes de jointure" compact>
+							<AppCard title="Demandes de session" compact>
 								<div v-if="joinRequests.length === 0" class="text-sm opacity-70">Aucune demande en attente.</div>
 								<ul v-else class="list rounded-box bg-base-200">
 									<li v-for="request in joinRequests" :key="request.notificationId" class="list-row">
@@ -136,14 +175,14 @@
 							<div class="join">
 								<button
 									class="btn btn-xs join-item"
-									:class="joinRequestBusy ? 'btn-disabled' : ''"
+									:disabled="joinRequestBusy"
 									@click="acceptJoinRequest(request.notificationId, request.requesterId)"
 								>
 									Accepter
 								</button>
 								<button
 									class="btn btn-xs join-item"
-									:class="joinRequestBusy ? 'btn-disabled' : ''"
+									:disabled="joinRequestBusy"
 									@click="rejectJoinRequest(request.notificationId, request.requesterId)"
 								>
 									Refuser
@@ -195,15 +234,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronLeft, Copy } from '@lucide/vue'
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import { ChevronLeft, Clover, Copy, Heart, Mars, Venus, WandSparkles } from '@lucide/vue'
 import AppCard from '../components/AppCard.vue'
 import SearchInput from '../components/SearchInput.vue'
 import CharacterCreateModal from '../components/CharacterCreateModal.vue'
 import SessionAccessRequest from '../components/SessionAccessRequest.vue'
-import { supabase } from '../../db/supabase'
 import { useAuthStore } from '../../stores/auth'
-import { getSessionById } from '../../repositories/sessionsRepository'
+import { getSessionById, updateSessionArchivedState } from '../../repositories/sessionsRepository'
 import { listCharactersBySession } from '../../repositories/charactersRepository'
 import {
 	listPendingJoinRequestsForSession,
@@ -218,6 +255,7 @@ import {
 	type SessionInvitation
 } from '../../repositories/invitationsRepository'
 import { addUsersToSession, searchInvitableProfilesByMembership } from '../../repositories/usersSessionRepository'
+import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import type { CharacterSummary, Profile, SessionSummary } from '../../types/domain'
 
 const route = useRoute()
@@ -237,9 +275,9 @@ const copyFeedback = ref('')
 const sessionInfoOpen = ref(true)
 const joinRequestError = ref<string | null>(null)
 const joinRequestBusy = ref(false)
+const archiveBusy = ref(false)
 const joinRequests = ref<JoinRequestItem[]>([])
 const characterCreateModalRef = ref<InstanceType<typeof CharacterCreateModal> | null>(null)
-let sessionChannel: RealtimeChannel | null = null
 let sessionRefreshTimer: ReturnType<typeof setTimeout> | null = null
 let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -247,6 +285,9 @@ const sessionId = computed(() => String(route.params.id ?? ''))
 const isMj = computed(() => Boolean(session.value && authStore.user?.id === session.value.mjId))
 const hasOwnCharacter = computed(() => Boolean(authStore.user?.id && characters.value.some((character) => character.userId === authStore.user?.id)))
 const canCreateOwnCharacter = computed(() => Boolean(session.value && authStore.user?.id && !isMj.value && !session.value.isArchived && !hasOwnCharacter.value))
+const { subscribe, unsubscribe } = useRealtimeChannels(() => {
+	scheduleSessionRefresh()
+}, { debounceMs: 500 })
 
 async function loadSessionDetail(): Promise<void> {
 	if (!sessionId.value) {
@@ -397,6 +438,23 @@ async function rejectJoinRequest(notificationId: string, requesterId: string): P
 	}
 }
 
+async function toggleSessionArchivedState(): Promise<void> {
+	if (!session.value || !isMj.value || archiveBusy.value) {
+		return
+	}
+
+	archiveBusy.value = true
+	errorMessage.value = null
+	try {
+		await updateSessionArchivedState(session.value.id, !session.value.isArchived)
+		await loadSessionDetail()
+	} catch (error) {
+		errorMessage.value = error instanceof Error ? error.message : 'Modification de la session impossible.'
+	} finally {
+		archiveBusy.value = false
+	}
+}
+
 async function onCharacterCreated(characterId: string): Promise<void> {
 	await loadSessionDetail()
 	await router.push(`/characters/${characterId}`)
@@ -445,69 +503,32 @@ function scheduleSessionRefresh(): void {
 		clearTimeout(sessionRefreshTimer)
 	}
 
-	if (copyFeedbackTimer) {
-		clearTimeout(copyFeedbackTimer)
-	}
-
 	sessionRefreshTimer = setTimeout(() => {
 		void loadSessionDetail()
 	}, 150)
 }
 
 function subscribeRealtime(targetSessionId: string): void {
-	if (sessionChannel) {
-		void supabase.removeChannel(sessionChannel)
-		sessionChannel = null
+	const userId = authStore.user?.id
+	if (!userId) {
+		unsubscribe()
+		return
 	}
 
-	sessionChannel = supabase
-		.channel(`session-detail-${targetSessionId}`)
-		.on(
-			'postgres_changes',
-			{ event: '*', schema: 'public', table: 'sessions', filter: `id=eq.${targetSessionId}` },
-			() => {
-				scheduleSessionRefresh()
-			}
-		)
-		.on(
-			'postgres_changes',
-			{ event: '*', schema: 'public', table: 'users_session', filter: `session_id=eq.${targetSessionId}` },
-			() => {
-				scheduleSessionRefresh()
-			}
-		)
-		.on(
-			'postgres_changes',
-			{ event: '*', schema: 'public', table: 'characters', filter: `session_id=eq.${targetSessionId}` },
-			() => {
-				scheduleSessionRefresh()
-			}
-		)
-		.on(
-			'postgres_changes',
-			{
-				event: '*',
-				schema: 'public',
-				table: 'notifications'
-			},
-			() => {
-				if (isMj.value) {
-					void loadJoinRequests()
-					void loadInvitations()
-				}
-			}
-		)
-		.subscribe()
+	subscribe(`session-detail-${targetSessionId}-${userId}`, [
+		{ table: 'sessions', filter: `id=eq.${targetSessionId}` },
+		{ table: 'users_session', filter: `session_id=eq.${targetSessionId}` },
+		{ table: 'characters', filter: `session_id=eq.${targetSessionId}` },
+		{ table: 'notifications', filter: `receiver_user_id=eq.${userId}` },
+		{ table: 'notifications', filter: `sender_user_id=eq.${userId}` }
+	])
 }
 
 watch(
-	() => sessionId.value,
-	(value) => {
-		if (!value) {
-			if (sessionChannel) {
-				void supabase.removeChannel(sessionChannel)
-				sessionChannel = null
-			}
+	() => [sessionId.value, authStore.user?.id] as const,
+	([value, userId]) => {
+		if (!value || !userId) {
+			unsubscribe()
 			return
 		}
 
@@ -541,10 +562,11 @@ onBeforeUnmount(() => {
 		clearTimeout(sessionRefreshTimer)
 	}
 
-	if (sessionChannel) {
-		void supabase.removeChannel(sessionChannel)
-		sessionChannel = null
+	if (copyFeedbackTimer) {
+		clearTimeout(copyFeedbackTimer)
 	}
+
+	unsubscribe()
 })
 
 </script>

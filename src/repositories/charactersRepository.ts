@@ -46,6 +46,11 @@ interface CareerRow {
   name?: string
 }
 
+interface ProfileAvatarRow {
+  id: string
+  avatar_url?: string | null
+}
+
 interface StaticStatRow {
   code: string
   is_secondary?: boolean
@@ -81,7 +86,7 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 2): Promi
   throw lastError
 }
 
-function mapCharacter(row: CharacterRow, careerName: string | null = null): CharacterSummary {
+function mapCharacter(row: CharacterRow, careerName: string | null = null, ownerAvatarUrl: string | null = null): CharacterSummary {
   return {
     id: row.id,
     name: row.name,
@@ -100,7 +105,8 @@ function mapCharacter(row: CharacterRow, careerName: string | null = null): Char
     xpAvailable: row.xp_available,
     moneyGold: row.money_gold,
     moneySilver: row.money_silver,
-    moneyCopper: row.money_copper
+    moneyCopper: row.money_copper,
+    ownerAvatarUrl
   }
 }
 
@@ -124,6 +130,29 @@ async function resolveCareerNames(careerIds: string[]): Promise<Map<string, stri
     if (row.id && row.name) {
       byId.set(row.id, row.name)
     }
+  }
+
+  return byId
+}
+
+async function resolveOwnerAvatars(userIds: string[]): Promise<Map<string, string | null>> {
+  const uniqueIds = Array.from(new Set(userIds.filter(Boolean)))
+  if (uniqueIds.length === 0) {
+    return new Map()
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, avatar_url')
+    .in('id', uniqueIds)
+
+  if (error) {
+    throw error
+  }
+
+  const byId = new Map<string, string | null>()
+  for (const row of (data ?? []) as ProfileAvatarRow[]) {
+    byId.set(row.id, row.avatar_url ?? null)
   }
 
   return byId
@@ -233,7 +262,8 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
 
     const rows = (data ?? []) as CharacterRow[]
     const careerNames = await resolveCareerNames(rows.map((row) => row.career_id))
-    return rows.map((row) => mapCharacter(row, careerNames.get(row.career_id) ?? null))
+    const avatars = await resolveOwnerAvatars(rows.map((row) => row.user_id))
+    return rows.map((row) => mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null))
   })
 }
 
@@ -251,7 +281,8 @@ export async function listCharactersBySession(sessionId: string): Promise<Charac
 
     const rows = (data ?? []) as CharacterRow[]
     const careerNames = await resolveCareerNames(rows.map((row) => row.career_id))
-    return rows.map((row) => mapCharacter(row, careerNames.get(row.career_id) ?? null))
+    const avatars = await resolveOwnerAvatars(rows.map((row) => row.user_id))
+    return rows.map((row) => mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null))
   })
 }
 
@@ -299,7 +330,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
     )
 
     return {
-      ...mapCharacter(characterRow, careerNames.get(characterRow.career_id) ?? null),
+      ...mapCharacter(characterRow, careerNames.get(characterRow.career_id) ?? null, null),
       stats: ((statsResult.data ?? []) as CharacterStatRow[]).map((row) => ({
         ...mapCharacterStat(row),
         isSecondary: secondaryByCode.get(row.stat_code) ?? false

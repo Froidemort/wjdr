@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppCard from '../components/AppCard.vue'
 import { useAuthStore } from '../../stores/auth'
-import { invitationTitle } from '../../repositories/invitationsRepository'
 import {
 	deleteNotification,
+	extractNotificationSessionId,
+	getNotificationDisplayMessage,
+	getNotificationDisplayTitle,
 	markAllNotificationsRead,
 	markNotificationRead,
 	type NotificationItem
@@ -20,32 +22,15 @@ const pageSize = 12
 const { page, totalItems, totalPages, canGoPrevious, canGoNext, nextPage, previousPage } = usePagination({ pageSize })
 const { busyIds, isBusy, setBusy, clearBusy, clearAllBusy } = useBusyOperations()
 const { notifications, totalNotifications, loading, error, load, subscribe, unsubscribe } = useNotificationsLoad({
-	userId: authStore.user?.id,
+	userId: () => authStore.user?.id,
 	pageSize,
-	page: page.value
+	page: () => page.value
 })
 
-const invitationTitleLabel = computed(() => invitationTitle())
 totalItems.value = totalNotifications.value
 
-function getDisplayTitle(rawTitle: string): string {
-	if (rawTitle.startsWith('INVITATION_SESSION_') || rawTitle === invitationTitleLabel.value) {
-		return 'Invitation a une session'
-	}
-	return rawTitle
-}
-
-function extractInvitationSessionId(notification: NotificationItem): string | null {
-	const fromLegacyTitle = notification.title.match(/^INVITATION_SESSION_([0-9a-f-]{36})$/i)
-	if (fromLegacyTitle?.[1]) return fromLegacyTitle[1]
-	const fromMarker = notification.message.match(/\[session:([0-9a-f-]{36})\]/i)
-	if (fromMarker?.[1]) return fromMarker[1]
-	const fromPath = notification.message.match(/\/sessions\/([0-9a-f-]{36})/i)
-	return fromPath?.[1] ?? null
-}
-
 async function openSessionFromNotification(notif: NotificationItem): Promise<void> {
-	const sessionId = extractInvitationSessionId(notif)
+	const sessionId = extractNotificationSessionId(notif)
 	if (sessionId) {
 		await router.push(`/sessions/${sessionId}`)
 	}
@@ -104,22 +89,26 @@ watch(
 			unsubscribe()
 			return
 		}
-		subscribe(userId, load)
+		subscribe(userId)
 		void load()
 	},
 	{ immediate: true }
 )
+
+watch(page, () => {
+	void load()
+})
 </script>
 
 <template>
 	<main class="mx-auto max-w-5xl p-4 sm:p-6 space-y-4">
 		<header class="flex items-center justify-between gap-3">
 			<div>
-				<h1 class="text-2xl font-semibold">Notifications</h1>
-				<p class="text-sm opacity-70">Invitations et messages système.</p>
+				<h1 class="text-2xl font-semibold">Missives</h1>
+				<p class="text-sm opacity-70">Courriers de votre table et nouvelles du Vieux Monde.</p>
 			</div>
-			<button class="btn btn-sm" :class="loading ? 'btn-disabled' : ''" @click="handleMarkAllRead">
-				Tout marquer lu
+			<button class="btn btn-sm btn-accent" :disabled="loading || busyIds.size > 0" @click="handleMarkAllRead">
+				Tout marquer comme lu
 			</button>
 		</header>
 
@@ -132,27 +121,27 @@ watch(
 		</div>
 
 		<div v-else-if="notifications.length === 0" class="alert alert-warning alert-soft">
-			<span>Aucune notification.</span>
+			<span>Aucune missive pour l instant.</span>
 		</div>
 
 		<div v-else class="space-y-3">
-			<AppCard v-for="notif in notifications" :key="notif.id" :title="getDisplayTitle(notif.title)">
-				<p class="text-sm whitespace-pre-line opacity-80">{{ notif.message }}</p>
+			<AppCard v-for="notif in notifications" :key="notif.id" :title="getNotificationDisplayTitle(notif.title)">
+				<p class="text-sm whitespace-pre-line opacity-80">{{ getNotificationDisplayMessage(notif.message) }}</p>
 				<div class="mt-3 flex items-center justify-between gap-2">
 					<div class="flex items-center gap-2">
 						<span class="badge" :class="notif.isRead ? 'badge-success' : 'badge-warning'">
 							{{ notif.isRead ? 'Lue' : 'Non lue' }}
 						</span>
 						<button
-							v-if="extractInvitationSessionId(notif)"
-							class="btn btn-sm"
+							v-if="extractNotificationSessionId(notif)"
+							class="btn btn-sm btn-accent"
 							@click="openSessionFromNotification(notif)"
 						>
 							Ouvrir la session
 						</button>
 						<button 
 							class="btn btn-sm btn-error btn-soft" 
-							:class="isBusy(notif.id) ? 'btn-disabled' : ''" 
+							:disabled="isBusy(notif.id)" 
 							@click="handleRemove(notif.id)"
 						>
 							Supprimer
@@ -160,8 +149,8 @@ watch(
 					</div>
 					<button 
 						v-if="!notif.isRead" 
-						class="btn btn-sm" 
-						:class="isBusy(notif.id) ? 'btn-disabled' : ''" 
+						class="btn btn-sm btn-accent" 
+						:disabled="isBusy(notif.id)" 
 						@click="handleMarkRead(notif.id)"
 					>
 						Marquer lu
@@ -172,10 +161,10 @@ watch(
 			<div class="flex items-center justify-between gap-2 rounded-box border border-base-300 bg-base-100 p-3">
 				<p class="text-sm opacity-70">Page {{ page }} / {{ totalPages }}</p>
 				<div class="join">
-					<button class="btn btn-sm join-item" :class="!canGoPrevious || loading ? 'btn-disabled' : ''" @click="goToPreviousPage">
+					<button class="btn btn-sm join-item" :disabled="!canGoPrevious || loading" @click="goToPreviousPage">
 						Precedent
 					</button>
-					<button class="btn btn-sm join-item" :class="!canGoNext || loading ? 'btn-disabled' : ''" @click="goToNextPage">
+					<button class="btn btn-sm join-item" :disabled="!canGoNext || loading" @click="goToNextPage">
 						Suivant
 					</button>
 				</div>

@@ -52,6 +52,8 @@ export interface PaginatedNotifications {
 const JOIN_REQUEST_TITLE = 'Demande de rejoindre une session'
 const JOIN_REQUEST_ACCEPTED_TITLE = 'Demande de session acceptee'
 const JOIN_REQUEST_REJECTED_TITLE = 'Demande de session refusee'
+const INVITATION_TITLE = 'Invitation a une session'
+const LEGACY_INVITATION_PREFIX = 'INVITATION_SESSION_'
 
 function joinRequestSessionMarker(sessionId: string): string {
   return `[join-request-session:${sessionId}]`
@@ -106,6 +108,59 @@ function mapNotification(row: NotificationRow): NotificationItem {
     isRead: row.is_read,
     createdAt: row.created_at
   }
+}
+
+export function getNotificationDisplayTitle(rawTitle: string): string {
+  if (rawTitle.startsWith(LEGACY_INVITATION_PREFIX) || rawTitle === INVITATION_TITLE) {
+    return 'Convocation a la table'
+  }
+
+  if (rawTitle === JOIN_REQUEST_TITLE) {
+    return 'Demande d audience'
+  }
+
+  if (rawTitle === JOIN_REQUEST_ACCEPTED_TITLE) {
+    return 'Demande acceptee'
+  }
+
+  if (rawTitle === JOIN_REQUEST_REJECTED_TITLE) {
+    return 'Demande refusee'
+  }
+
+  return rawTitle
+}
+
+export function getNotificationDisplayMessage(rawMessage: string): string {
+  const cleaned = rawMessage
+    .replace(/\[session:[^\]]+\]/gi, '')
+    .replace(/\[join-request-session:[^\]]+\]/gi, '')
+    .replace(/https?:\/\/\S+/gi, '')
+    .replace(/\/sessions\/[0-9a-f-]{36}/gi, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{2,}/g, '\n')
+    .trim()
+
+  return cleaned || 'Un nouvel evenement requiert votre attention.'
+}
+
+export function extractNotificationSessionId(notification: Pick<NotificationItem, 'title' | 'message'>): string | null {
+  const fromLegacyTitle = notification.title.match(/^INVITATION_SESSION_([0-9a-f-]{36})$/i)
+  if (fromLegacyTitle?.[1]) {
+    return fromLegacyTitle[1]
+  }
+
+  const fromMarker = notification.message.match(/\[session:([0-9a-f-]{36})\]/i)
+  if (fromMarker?.[1]) {
+    return fromMarker[1]
+  }
+
+  const fromJoinMarker = notification.message.match(/\[join-request-session:([0-9a-f-]{36})\]/i)
+  if (fromJoinMarker?.[1]) {
+    return fromJoinMarker[1]
+  }
+
+  const fromPath = notification.message.match(/\/sessions\/([0-9a-f-]{36})/i)
+  return fromPath?.[1] ?? null
 }
 
 function mapJoinRequestProfile(row: ProfileRow): ProfileRow {
@@ -245,7 +300,6 @@ export async function requestJoinSession(sessionId: string, requesterId: string)
     .maybeSingle()
 
   const username = (profileData as { username?: string } | null)?.username ?? 'Inconnu'
-  const email = (profileData as { email?: string } | null)?.email ?? ''
 
   const { error } = await supabase
     .from('notifications')
@@ -253,7 +307,7 @@ export async function requestJoinSession(sessionId: string, requesterId: string)
       sender_user_id: requesterId,
       receiver_user_id: mjId,
       title: JOIN_REQUEST_TITLE,
-      message: `L'aventurier ${username} (${email}) frappe à la porte de votre session et sollicite votre bienveillance pour y prendre part !\n${marker}`
+      message: `L aventurier ${username} demande audience pour rejoindre votre table.\n${marker}`
     })
 
   if (error) {
@@ -352,7 +406,7 @@ export async function notifyJoinRequestAccepted(
       sender_user_id: mjId,
       receiver_user_id: requesterId,
       title: JOIN_REQUEST_ACCEPTED_TITLE,
-      message: `Bonne nouvelle, aventurier ! Le Maître du Jeu a accepté ta demande. Le Vieux Monde t'attend !\n[session:${sessionId}]`
+      message: `Le Maître du Jeu accepte votre entree a la table.\n[session:${sessionId}]`
     })
 
   if (error) {
@@ -371,7 +425,7 @@ export async function notifyJoinRequestRejected(
       sender_user_id: mjId,
       receiver_user_id: requesterId,
       title: JOIN_REQUEST_REJECTED_TITLE,
-      message: `Hélas, aventurier. Le Maître du Jeu n'a pas retenu ta candidature pour cette session. Que Sigmar guide tes pas vers d'autres aventures !`
+      message: `Le Maître du Jeu n a pas retenu votre demande pour cette table.`
     })
 
   if (error) {
