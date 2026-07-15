@@ -4,6 +4,7 @@ export interface Profile {
   id: string
   username: string
   email: string
+  avatarUrl?: string | null
 }
 
 export interface SessionSummary {
@@ -35,6 +36,7 @@ export interface CharacterSummary {
   moneyGold: number
   moneySilver: number
   moneyCopper: number
+  ownerAvatarUrl: string | null
 }
 
 export interface CharacterStatValue {
@@ -52,9 +54,11 @@ export interface CharacterDetail extends CharacterSummary {
 export interface CharacterSkill {
   skillId: string
   name: string
+  statCode: string
   specialization: string | null
   description: string | null
   masteryLevel: 1 | 2 | 3
+  isBasic: boolean
 }
 
 export interface CharacterTalent {
@@ -70,6 +74,9 @@ export interface CharacterWeapon {
   name: string
   description: string | null
   equipped: 'droite' | 'gauche' | 'd&g' | null
+  quality: string | null
+  encumbrance: number
+  damageFormula: string | null
 }
 
 export interface CharacterArmor {
@@ -79,6 +86,19 @@ export interface CharacterArmor {
   description: string | null
   isEquipped: boolean
   coveredLocations?: string[] | null
+  quality: string | null
+  encumbrance: number
+  armorPoints: number
+}
+
+export interface CharacterItem {
+  id: string
+  itemId: string
+  name: string
+  description: string | null
+  quality: string | null
+  encumbrance: number
+  quantity: number
 }
 
 export interface CatalogItem {
@@ -86,4 +106,8 @@ export interface CatalogItem {
   name: string
   specialization?: string | null
   description: string | null
+  quality?: string | null
+  encumbrance?: number | null
+  damageFormula?: string | null
+  armorPoints?: number | null
 }

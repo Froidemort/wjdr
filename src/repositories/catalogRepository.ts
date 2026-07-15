@@ -6,6 +6,10 @@ interface CatalogRow {
   name: string
   specialization?: string | null
   description?: string | null
+  quality?: string | null
+  encumbrance?: number | null
+  damage_formula?: string | null
+  armor_points?: number | null
 }
 
 function mapCatalogItem(row: CatalogRow): CatalogItem {
@@ -13,7 +17,11 @@ function mapCatalogItem(row: CatalogRow): CatalogItem {
     id: row.id,
     name: row.name,
     specialization: row.specialization ?? null,
-    description: row.description ?? null
+    description: row.description ?? null,
+    quality: row.quality ?? null,
+    encumbrance: row.encumbrance ?? null,
+    damageFormula: row.damage_formula ?? null,
+    armorPoints: row.armor_points ?? null
   }
 }
 
@@ -21,9 +29,9 @@ const CATALOG_SELECT_BY_TABLE: Record<'careers' | 'skills' | 'talents' | 'weapon
   careers: 'id, name',
   skills: 'id, name, specialization, description',
   talents: 'id, name, specialization, description',
-  weapons: 'id, name, description',
-  armors: 'id, name, description',
-  items: 'id, name, description'
+  weapons: 'id, name, description, quality, encumbrance, damage_formula',
+  armors: 'id, name, description, quality, encumbrance, armor_points',
+  items: 'id, name, description, quality, encumbrance'
 }
 
 export async function searchCatalog(table: 'careers' | 'skills' | 'talents' | 'weapons' | 'armors' | 'items', query: string): Promise<CatalogItem[]> {
@@ -40,7 +48,7 @@ export async function searchCatalog(table: 'careers' | 'skills' | 'talents' | 'w
   if (table === 'skills' || table === 'talents') {
     request = request.or(`name.ilike.%${trimmed}%,specialization.ilike.%${trimmed}%`)
   } else {
-    request = request.or(`name.ilike.%${trimmed}%`)
+    request = request.ilike('name', `%${trimmed}%`)
   }
 
   const { data, error } = await request.returns<CatalogRow[]>()
