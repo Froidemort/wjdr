@@ -93,9 +93,10 @@
 				</div>
 			</div>
 
-			<div class="collapse collapse-arrow border border-base-300 bg-base-100">
-				<input type="checkbox" :checked="true" />
-				<div class="collapse-title text-lg font-semibold">Caractéristiques</div>
+			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
+				<summary class="collapse-title">
+					<h2 class="text-lg">Caractéristiques</h2>
+				</summary>
 				<div class="collapse-content">
 					<div v-if="visibleStats.length === 0" class="text-sm opacity-70">Aucune caractéristique disponible.</div>
 					<div v-else class="mt-1 flex flex-wrap gap-3">
@@ -111,7 +112,7 @@
 						/>
 					</div>
 				</div>
-			</div>
+			</details>
 
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
 				<summary class="collapse-title">

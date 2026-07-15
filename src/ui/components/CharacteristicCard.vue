@@ -65,14 +65,14 @@ function onTotalAdvancedInput(event: Event): void {
 <template>
   <article class="card border w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]" :class="cardToneClass">
     <div class="card-body p-4 gap-3">
-      <div class="flex items-center justify-between">
-        <h4 class="text-lg font-black">{{ stat.statCode }}</h4>
+      <div class="flex flex-col items-center justify-center gap-1 text-center">
+        <h4 class="text-2xl font-black leading-none">{{ stat.statCode }}</h4>
         <span class="badge badge-ghost text-xs">{{ stat.isSecondary ? 'Secondaire' : 'Principale' }}</span>
       </div>
 
       <div class="rounded-box border border-base-300 p-3" :class="totalToneClass">
-        <div class="text-xs uppercase tracking-wide opacity-70">Total</div>
-        <div class="text-4xl font-black leading-none tabular-nums">{{ totalValue }}</div>
+        <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Total</div>
+        <div class="text-4xl font-black leading-none tabular-nums text-center">{{ totalValue }}</div>
       </div>
 
       <div class="rounded-box border border-base-300 p-3">
@@ -100,7 +100,7 @@ function onTotalAdvancedInput(event: Event): void {
       </div>
 
       <div class="rounded-box border border-base-300 p-3">
-        <div class="text-xs uppercase tracking-wide opacity-70">Base</div>
+        <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Base</div>
         <template v-if="editable">
           <input
             :value="stat.baseValue"
@@ -111,7 +111,7 @@ function onTotalAdvancedInput(event: Event): void {
             @input="onBaseInput"
           />
         </template>
-        <div v-else class="text-2xl font-bold tabular-nums">{{ stat.baseValue }}</div>
+        <div v-else class="mt-2 text-2xl font-bold tabular-nums text-center">{{ stat.baseValue }}</div>
       </div>
     </div>
   </article>

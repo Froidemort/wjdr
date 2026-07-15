@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Weight } from '@lucide/vue'
+import { Shield, Weight } from '@lucide/vue'
 
 const props = withDefaults(defineProps<{
   totalEncumbrance: number
@@ -46,7 +46,9 @@ const isEncumbranceOverLimit = computed(() => props.totalEncumbrance > props.max
       </div>
 
       <div class="rounded-lg border border-base-300 bg-base-200 p-3">
-        <p class="mb-2 text-sm font-semibold text-center">Armure par localisation</p>
+        <div class="mb-2 flex justify-center">
+          <Shield class="h-4 w-4 text-accent" aria-hidden="true" />
+        </div>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div class="rounded-md border border-base-300 bg-base-100 p-3 text-center">
             <p class="text-xs opacity-70">Tête</p>
