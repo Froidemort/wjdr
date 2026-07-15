@@ -74,6 +74,8 @@
 						@update:gold="onQuickValueChange('moneyGold', $event)"
 						@update:silver="onQuickValueChange('moneySilver', $event)"
 						@update:copper="onQuickValueChange('moneyCopper', $event)"
+						@commit="onMoneyCommit"
+						@subtract="onMoneySubtract"
 					/>
 					<CharacterDerivedStatsCard
 						:total-encumbrance="totalEncumbrance"
@@ -604,6 +606,7 @@ const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const character = ref<CharacterDetail | null>(null)
 const characterId = computed(() => String(route.params.id ?? ''))
+const isMoneyEditing = ref(false)
 let deferredRealtimeReloadTimer: ReturnType<typeof setTimeout> | null = null
 let backgroundRefreshInterval: ReturnType<typeof setInterval> | null = null
 
@@ -767,7 +770,7 @@ const armorByLocation = computed(() => {
 	return totals
 })
 
-const { status, triggerSave } = useLiveSave(async (payload: typeof editable.value) => {
+const { status, triggerSave, triggerSaveNow } = useLiveSave(async (payload: typeof editable.value) => {
 	if (!character.value) {
 		return
 	}
@@ -881,7 +884,7 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
 			return
 		}
 
-		editable.value = {
+		const nextEditable = {
 			pvMax: data.pvMax,
 			pvCurrent: data.pvCurrent,
 			fortuneMax: data.fortuneMax,
@@ -893,6 +896,14 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
 			moneySilver: data.moneySilver,
 			moneyCopper: data.moneyCopper
 		}
+
+		if (isBackgroundRefresh && isMoneyEditing.value) {
+			nextEditable.moneyGold = editable.value.moneyGold
+			nextEditable.moneySilver = editable.value.moneySilver
+			nextEditable.moneyCopper = editable.value.moneyCopper
+		}
+
+		editable.value = nextEditable
 
 		await loadCharacterLinks(data.id)
 	} catch (error) {
@@ -908,6 +919,10 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
 
 function onQuickValueChange(field: keyof typeof editable.value, value: number): void {
 	const newValue = Math.max(0, value)
+	const isMoneyField = field === 'moneyGold' || field === 'moneySilver' || field === 'moneyCopper'
+	if (isMoneyField) {
+		isMoneyEditing.value = true
+	}
 	
 	// Constraint: current <= max for resource types
 	if (field === 'pvCurrent' && editable.value.pvMax !== undefined) {
@@ -917,8 +932,44 @@ function onQuickValueChange(field: keyof typeof editable.value, value: number): 
 	} else {
 		editable.value[field] = newValue as never
 	}
-	
-	saveQuickFields()
+
+	if (!isMoneyField) {
+		saveQuickFields()
+	}
+}
+
+async function onMoneyCommit(): Promise<void> {
+	if (!canEditQuickSection.value) {
+		return
+	}
+
+	await saveQuickFields({ immediate: true })
+	isMoneyEditing.value = false
+}
+
+function onMoneySubtract(value: { silver: number; copper: number }): void {
+	if (!canEditQuickSection.value) {
+		return
+	}
+
+	const currentCopper =
+		Math.max(0, Math.floor(editable.value.moneyGold)) * 240 +
+		Math.max(0, Math.floor(editable.value.moneySilver)) * 20 +
+		Math.max(0, Math.floor(editable.value.moneyCopper))
+
+	const subtractCopper =
+		Math.max(0, Math.floor(value.silver)) * 20 +
+		Math.max(0, Math.floor(value.copper))
+
+	const remainingCopper = Math.max(0, currentCopper - subtractCopper)
+	const normalized = coerceMoney(0, 0, remainingCopper)
+
+	editable.value.moneyGold = normalized.gold
+	editable.value.moneySilver = normalized.silver
+	editable.value.moneyCopper = normalized.copper
+	isMoneyEditing.value = false
+
+	void saveQuickFields({ immediate: true })
 }
 
 function onStatTick(statCode: string, step: number): void {
@@ -1275,7 +1326,7 @@ watch(catalogQuery, async (value) => {
 	}
 })
 
-function saveQuickFields(): void {
+async function saveQuickFields(options: { immediate?: boolean } = {}): Promise<void> {
 	if (!canEditQuickSection.value) {
 		return
 	}
@@ -1301,6 +1352,11 @@ function saveQuickFields(): void {
 	editable.value.moneyGold = coercedMoney.gold
 	editable.value.moneySilver = coercedMoney.silver
 	editable.value.moneyCopper = coercedMoney.copper
+
+	if (options.immediate) {
+		await triggerSaveNow({ ...editable.value })
+		return
+	}
 
 	triggerSave({ ...editable.value })
 }

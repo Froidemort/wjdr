@@ -11,6 +11,26 @@ export function useLiveSave<T>(
   let debounceTimeoutId: ReturnType<typeof setTimeout> | null = null
   let visibilityTimeoutId: ReturnType<typeof setTimeout> | null = null
 
+  async function executeSave(data: T): Promise<void> {
+    status.value = 'saving'
+
+    try {
+      await saveFunction(data)
+      status.value = 'idle'
+
+      visibilityTimeoutId = setTimeout(() => {
+        status.value = 'idle'
+      }, 500)
+    } catch (error) {
+      console.error('Failed to save data, reason:', error)
+      status.value = 'error'
+
+      visibilityTimeoutId = setTimeout(() => {
+        status.value = 'idle'
+      }, 500)
+    }
+  }
+
   function triggerSave(data: T): void {
     // 1. Passage en attente (l'utilisateur tape ou modifie)
     status.value = 'pending'
@@ -25,31 +45,26 @@ export function useLiveSave<T>(
 
     // 2. Lancement de l'anti-rebond (debounce)
     debounceTimeoutId = setTimeout(async () => {
-      status.value = 'saving'
-      
-      try {
-        // Exécution de la promesse Supabase
-        await saveFunction(data)
-        status.value = 'idle'
-        
-        // Auto-hide success state after 500ms
-        visibilityTimeoutId = setTimeout(() => {
-          status.value = 'idle'
-        }, 500)
-      } catch (error) {
-        console.error("Failed to save data, reason:", error)
-        status.value = 'error'
-        
-        // Auto-hide error state after 500ms
-        visibilityTimeoutId = setTimeout(() => {
-          status.value = 'idle'
-        }, 500)
-      }
+      await executeSave(data)
     }, delay)
+  }
+
+  async function triggerSaveNow(data: T): Promise<void> {
+    if (debounceTimeoutId) {
+      clearTimeout(debounceTimeoutId)
+      debounceTimeoutId = null
+    }
+    if (visibilityTimeoutId) {
+      clearTimeout(visibilityTimeoutId)
+      visibilityTimeoutId = null
+    }
+
+    await executeSave(data)
   }
 
   return {
     status,
-    triggerSave
+    triggerSave,
+    triggerSaveNow
   }
 }
