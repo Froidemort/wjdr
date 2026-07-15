@@ -27,6 +27,16 @@ const iconComponent = computed(() => {
   return WandSparkles
 })
 
+const iconClass = computed(() => {
+  if (props.icon === 'heart') {
+    return 'h-6 w-6 text-error'
+  }
+  if (props.icon === 'clover') {
+    return 'h-6 w-6 text-success'
+  }
+  return 'h-6 w-6 text-accent'
+})
+
 function onCurrentInput(event: Event): void {
   const target = event.target as HTMLInputElement
   emit('update:current', Math.max(0, Number(target.value || 0)))
@@ -43,7 +53,7 @@ function onMaxInput(event: Event): void {
     <div class="card-body p-4 gap-4">
       <div class="flex items-center justify-between">
         <div class="tooltip" :data-tip="label">
-          <component :is="iconComponent" class="h-6 w-6" />
+          <component :is="iconComponent" :class="iconClass" />
         </div>
         <div class="flex items-center gap-2 font-semibold tabular-nums">
           <template v-if="editable">

@@ -24,10 +24,10 @@
 		<div v-if="showPagination && totalPages > 1" class="flex items-center justify-between gap-2 rounded-box border border-base-300 bg-base-100 p-3">
 			<p class="text-sm opacity-70">Page {{ page }} / {{ totalPages }}</p>
 			<div class="join">
-				<button class="btn btn-sm join-item" :class="!canGoPrevious || loading ? 'btn-disabled' : ''" @click="$emit('prev-page')">
+				<button class="btn btn-sm join-item" :disabled="!canGoPrevious || loading" @click="$emit('prev-page')">
 					Précédent
 				</button>
-				<button class="btn btn-sm join-item" :class="!canGoNext || loading ? 'btn-disabled' : ''" @click="$emit('next-page')">
+				<button class="btn btn-sm join-item" :disabled="!canGoNext || loading" @click="$emit('next-page')">
 					Suivant
 				</button>
 			</div>

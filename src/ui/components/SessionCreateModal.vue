@@ -39,7 +39,7 @@ function mapCreateSessionError(error: unknown): string {
     const message = error.message.toLowerCase()
 
     if (maybeStatus === 403 || message.includes('row-level security') || message.includes('permission denied')) {
-      return 'Creation refusee (403). Causes possibles: session expirée, profil utilisateur absent dans la table profiles, ou politique RLS a ajuster pour sessions/users_session.'
+      return 'Le grimoire reste scelle pour l instant. Verifiez vos droits puis reessayez.'
     }
 
     if (
@@ -48,13 +48,13 @@ function mapCreateSessionError(error: unknown): string {
       message.includes('timeout') ||
       message.includes('net_timeout')
     ) {
-      return 'Creation impossible: probleme reseau vers Supabase (timeout). Verifie la connexion, le pare-feu/proxy, et les blocages navigateur (extensions, anti-tracking).'
+      return 'Les vents d Azyr brouillent le reseau. Reessayez dans un instant.'
     }
 
     return error.message
   }
 
-  return 'Creation de session impossible.'
+  return 'La creation de la table a echoue.'
 }
 
 watch(() => modalStore.isOpen, (shouldOpen) => {
@@ -96,7 +96,7 @@ async function onSubmit(): Promise<void> {
     }
 
     if (!sessionId) {
-      throw new Error('Impossible de generer un code session unique.')
+      throw new Error('Impossible de forger un sceau de session valide.')
     }
 
     modalStore.closeModal()
@@ -132,7 +132,7 @@ async function onSubmit(): Promise<void> {
           <span>{{ errorMessage }}</span>
         </div>
 
-        <button type="submit" class="btn w-full" :class="loading ? 'btn-disabled' : ''">
+        <button type="submit" class="btn btn-accent w-full" :disabled="loading">
           <span v-if="loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
           <span>Valider</span>
         </button>

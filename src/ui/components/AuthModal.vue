@@ -70,7 +70,7 @@ async function onSubmit(): Promise<void> {
 
         <div v-if="authModalStore.mode === 'login'" class="form-control">
           <label class="label"><span class="label-text">Email ou username</span></label>
-          <input v-model="identifier" type="text" class="input w-full" required />
+          <input v-model="identifier" type="email" class="input w-full" required />
         </div>
 
         <div v-if="authModalStore.mode === 'signup'" class="form-control">
@@ -87,7 +87,7 @@ async function onSubmit(): Promise<void> {
           <span>{{ localError }}</span>
         </div>
 
-        <button type="submit" class="btn w-full mt-2" :class="authStore.loading ? 'btn-disabled' : ''">
+        <button type="submit" class="btn btn-accent w-full mt-2" :disabled="authStore.loading">
           <span v-if="authStore.loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
           <span>{{ authModalStore.mode === 'login' ? 'Se connecter' : 'Créer le compte' }}</span>
         </button>

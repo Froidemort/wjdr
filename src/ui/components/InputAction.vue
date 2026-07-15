@@ -10,8 +10,8 @@
 				@input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
 			/>
 			<button 
-				class="btn btn-sm"
-				:class="disabled ? 'btn-disabled' : ''"
+				class="btn btn-sm btn-accent"
+				:disabled="Boolean(disabled || loading)"
 				@click="$emit('submit')"
 			>
 				<span v-if="loading" class="loading loading-spinner loading-xs" aria-hidden="true" />
