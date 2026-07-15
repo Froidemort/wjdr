@@ -1,229 +1,106 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>
-          <ion-icon :icon="peopleCircleOutline" />
-          Warhammer Character Sheet
-        </ion-title>
-        <ion-buttons slot="end">
-          <ion-button data-testid="theme-toggle-button" fill="outline" @click="onToggleTheme">
-            Theme: <span data-testid="theme-current-value">{{ themePreference }}</span>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
+		<header class="flex items-center justify-between">
+			<h1 class="text-2xl font-semibold">Mes personnages</h1>
+		</header>
 
-    <ion-list inset>
-      <ion-list-header>Personnages</ion-list-header>
-      <ion-item
-        v-for="character in characters"
-        :key="character.id"
-        :data-testid="`character-row-${character.id}`"
-        button
-        @click="openCharacter(character.id)"
-      >
-        <ion-label>
-          <h2>
-            <span class="list-name-with-race">
-              <span :data-testid="`character-race-icon-${character.id}`">{{ getCharacterRaceIcon(character.race) }}</span>
-              <span>{{ character.name }}</span>
-            </span>
-          </h2>
-          <p>
-            <span :data-testid="`character-race-value-${character.id}`">{{ getCharacterRaceLabel(character.race) }}</span> |
-            PV {{ character.wounds.current }}/{{ character.wounds.max }} |
-            Fortune {{ character.fortune.current }}/{{ character.fortune.max }} |
-            Destin {{ character.fate.current }}/{{ character.fate.max }}
-          </p>
-        </ion-label>
-        <ion-button
-          slot="end"
-          :data-testid="`delete-character-${character.id}`"
-          color="danger"
-          fill="clear"
-          @click.stop="onDeleteCharacter(character.id)"
-        >
-          Supprimer
-        </ion-button>
-      </ion-item>
-      <ion-item v-if="characters.length === 0">
-        <ion-label>Aucun personnage. Cree le premier.</ion-label>
-      </ion-item>
-    </ion-list>
+		<DataGrid
+			:items="charactersList"
+			:loading="loading"
+			:error="errorMessage"
+			empty-message="Aucun personnage disponible."
+			grid-class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+		>
+			<template #default="{ items }">
+				<AppCard
+					v-for="character in items"
+					:key="character.id"
+					:title="character.name"
+					:avatar-url="character.ownerAvatarUrl"
+					avatar-alt="Avatar du joueur"
+				>
+					<div class="flex items-center gap-2">
+						<p class="text-sm opacity-80">{{ character.race }}</p>
+						<component 
+							:is="character.gender === 'masculin' ? Mars : Venus" 
+							class="h-4 w-4 opacity-75"
+						/>
+						<p class="text-sm opacity-80">{{ character.gender === 'masculin' ? 'Masculin' : 'Feminin' }}</p>
+						<p class="text-sm opacity-80">· Carrière {{ character.careerName || character.careerId }}</p>
+					</div>
 
-    <ion-content class="ion-padding">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Nouveau personnage</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-item>
-            <ion-input
-              data-testid="character-name-input"
-              v-model="newName"
-              label="Nom"
-              label-placement="stacked"
-              placeholder="Ex: Konrad l'Audacieux"
-            />
-          </ion-item>
-          <ion-button
-            data-testid="create-character-button"
-            expand="block"
-            class="ion-margin-top"
-            @click="onCreateCharacter"
-          >
-            Créer
-          </ion-button>
-          <input
-            ref="importInput"
-            data-testid="import-json-input"
-            accept="application/json,.json"
-            hidden
-            type="file"
-            @change="onImportFile"
-          />
-          <ion-button
-            data-testid="import-json-button"
-            expand="block"
-            fill="outline"
-            class="ion-margin-top"
-            @click="openImportDialog"
-          >
-            Importer JSON
-          </ion-button>
-          <ion-note
-            v-if="importError"
-            color="danger"
-            class="ion-padding-top"
-            data-testid="import-json-error"
-          >
-            {{ importError }}
-          </ion-note>
-        </ion-card-content>
-      </ion-card>
-    </ion-content>
-  </ion-page>
+					<div class="mt-3 grid gap-2 text-sm">
+						<div class="flex items-center gap-2">
+							<Heart class="h-4 w-4 text-error" />
+							<span class="font-medium">Vie</span>
+							<span class="opacity-80">{{ character.pvCurrent }}/{{ character.pvMax }}</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<Clover class="h-4 w-4 text-success" />
+							<span class="font-medium">Fortune</span>
+							<span class="opacity-80">{{ character.fortuneCurrent }}/{{ character.fortuneMax }}</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<WandSparkles class="h-4 w-4 text-accent" />
+							<span class="font-medium">Destin</span>
+							<span class="opacity-80">{{ character.destinyCurrent }}</span>
+						</div>
+					</div>
+
+					<div class="card-actions mt-4 justify-end">
+						<router-link class="btn btn-sm btn-accent" :to="`/characters/${character.id}`">Ouvrir</router-link>
+					</div>
+				</AppCard>
+			</template>
+		</DataGrid>
+
+		<PageFooter back-to="/" back-label="Menu principal" />
+	</main>
 </template>
 
 <script setup lang="ts">
-import {
-  IonButton,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
-  IonNote,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-  onIonViewWillEnter,
-} from "@ionic/vue";
-import { peopleCircleOutline } from "ionicons/icons";
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { getRaceIcon, getRaceLabel, type Character, type RaceKey } from "../../domain/character";
-import {
-  applyThemePreference,
-  readThemePreference,
-  toggleThemePreference,
-  writeThemePreference,
-  type ThemePreference,
-} from "../theme/themePreference";
-import {
-  createAndSaveCharacter,
-  deleteCharacter,
-  importCharacterFromJson,
-  listCharacters,
-} from "../../repositories/characterRepository";
+import { computed, watch } from 'vue'
+import { Clover, Heart, Mars, Venus, WandSparkles } from '@lucide/vue'
+import AppCard from '../components/AppCard.vue'
+import DataGrid from '../components/DataGrid.vue'
+import PageFooter from '../components/PageFooter.vue'
+import { useAuthStore } from '../../stores/auth'
+import { useLoadingState } from '../composables/useLoadingState'
+import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import { listCharactersForUser } from '../../repositories/charactersRepository'
+import type { CharacterSummary } from '../../types/domain'
 
-const router = useRouter();
+const authStore = useAuthStore()
+const { data: characters, loading, error: errorMessage, execute } = useLoadingState<CharacterSummary[]>({ fallbackValue: [] })
+const { subscribe, unsubscribe } = useRealtimeChannels(() => {
+	void loadCharacters()
+}, { debounceMs: 400 })
 
-const newName = ref("");
-const characters = ref<Character[]>([]);
-const importError = ref("");
-const importInput = ref<HTMLInputElement>();
-const themePreference = ref<ThemePreference>(readThemePreference());
+const charactersList = computed(() => characters.value ?? [])
 
-const refreshCharacters = async (): Promise<void> => {
-  characters.value = await listCharacters();
-};
+async function loadCharacters(): Promise<void> {
+	if (!authStore.user?.id) {
+		characters.value = []
+		return
+	}
 
-onIonViewWillEnter(() => {
-  themePreference.value = readThemePreference();
-  applyThemePreference(themePreference.value);
-  void refreshCharacters();
-});
-
-const onCreateCharacter = async (): Promise<void> => {
-  const trimmed = newName.value.trim();
-  if (!trimmed) {
-    return;
-  }
-
-  const character = await createAndSaveCharacter(trimmed);
-  newName.value = "";
-  await router.push(`/character/${character.id}`);
-};
-
-const openImportDialog = (): void => {
-  importError.value = "";
-  importInput.value?.click();
-};
-
-const onImportFile = async (event: Event): Promise<void> => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-
-  if (!file) {
-    return;
-  }
-
-  try {
-    const json = await file.text();
-    const character = await importCharacterFromJson(json);
-    target.value = "";
-    await refreshCharacters();
-    await router.push(`/character/${character.id}`);
-  } catch {
-    importError.value = "Import JSON invalide.";
-    target.value = "";
-  }
-};
-
-const openCharacter = (id: string): void => {
-  void router.push(`/character/${id}`);
-};
-
-const onDeleteCharacter = async (id: string): Promise<void> => {
-  await deleteCharacter(id);
-  await refreshCharacters();
-};
-
-const onToggleTheme = (): void => {
-  const next = toggleThemePreference(themePreference.value);
-  themePreference.value = next;
-  writeThemePreference(next);
-  applyThemePreference(next);
-};
-
-const getCharacterRaceLabel = (race: RaceKey): string => getRaceLabel(race);
-const getCharacterRaceIcon = (race: RaceKey): string => getRaceIcon(race);
-</script>
-
-<style scoped>
-.list-name-with-race {
-  align-items: center;
-  display: inline-flex;
-  gap: 0.5rem;
+	await execute(() => listCharactersForUser(authStore.user!.id))
 }
-</style>
+
+watch(
+	() => authStore.user?.id,
+	(userId) => {
+		if (!userId) {
+			characters.value = []
+			unsubscribe()
+			return
+		}
+
+		void loadCharacters()
+		subscribe(`characters-list-${userId}`, [
+			{ table: 'characters', filter: `user_id=eq.${userId}` }
+		])
+	},
+	{ immediate: true }
+)
+</script>
