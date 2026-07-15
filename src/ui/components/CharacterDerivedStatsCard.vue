@@ -31,8 +31,8 @@ const isEncumbranceOverLimit = computed(() => props.totalEncumbrance > props.max
           <div class="flex justify-center">
             <Weight class="h-4 w-4 text-accent" aria-hidden="true" />
           </div>
-          <p class="text-2xl font-black leading-none text-center" :class="isEncumbranceOverLimit ? 'text-error' : 'text-accent'">
-            {{ totalEncumbrance }}/{{ maxEncumbrance }}
+          <p class="translate-y-2 text-2xl font-black leading-none text-center whitespace-nowrap" :class="isEncumbranceOverLimit ? 'text-error' : 'text-accent'">
+            {{ totalEncumbrance }} / {{ maxEncumbrance }}
           </p>
         </div>
         <div class="rounded-lg border border-base-300 bg-base-200 p-3 text-center">
