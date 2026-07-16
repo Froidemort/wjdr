@@ -1634,11 +1634,10 @@ async function confirmItemCreate(): Promise<void> {
 		const createdItem = await createCatalogItem({
 			name: trimmedName,
 			description: newItemForm.value.description || null,
-			quality: newItemForm.value.quality,
 			encumbrance: normalizedEncumbrance
 		})
 
-		await addCharacterItems(character.value.id, [createdItem.id], normalizedQuantity)
+		await addCharacterItems(character.value.id, [createdItem.id], normalizedQuantity, newItemForm.value.quality)
 		await loadCharacterLinks(character.value.id)
 		closeCatalogModal()
 	} catch (error) {
@@ -1732,9 +1731,6 @@ function formatCatalogOptionLabel(option: CatalogItem): string {
 
 	if (catalogSection.value === 'weapons') {
 		const details: string[] = []
-		if (option.quality) {
-			details.push(option.quality)
-		}
 		if (typeof option.encumbrance === 'number') {
 			details.push(`enc. ${option.encumbrance}`)
 		}
@@ -1746,9 +1742,6 @@ function formatCatalogOptionLabel(option: CatalogItem): string {
 
 	if (catalogSection.value === 'armors') {
 		const details: string[] = []
-		if (option.quality) {
-			details.push(option.quality)
-		}
 		if (typeof option.encumbrance === 'number') {
 			details.push(`enc. ${option.encumbrance}`)
 		}
@@ -1760,9 +1753,6 @@ function formatCatalogOptionLabel(option: CatalogItem): string {
 
 	if (catalogSection.value === 'items') {
 		const details: string[] = []
-		if (option.quality) {
-			details.push(option.quality)
-		}
 		if (typeof option.encumbrance === 'number') {
 			details.push(`enc. ${option.encumbrance}`)
 		}

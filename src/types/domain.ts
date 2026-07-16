@@ -83,6 +83,8 @@ export interface CharacterDetail extends CharacterSummary {
   stats: CharacterStatValue[]
 }
 
+export type InventoryQuality = 'médiocre' | 'normal' | 'bonne' | 'exceptionelle'
+
 export interface CharacterSkill {
   skillId: string
   name: string
@@ -106,7 +108,7 @@ export interface CharacterWeapon {
   name: string
   description: string | null
   equipped: 'droite' | 'gauche' | 'd&g' | null
-  quality: string | null
+  quality: InventoryQuality
   encumbrance: number
   damageFormula: string | null
 }
@@ -118,7 +120,7 @@ export interface CharacterArmor {
   description: string | null
   isEquipped: boolean
   coveredLocations?: string[] | null
-  quality: string | null
+  quality: InventoryQuality
   encumbrance: number
   armorPoints: number
 }
@@ -128,7 +130,7 @@ export interface CharacterItem {
   itemId: string
   name: string
   description: string | null
-  quality: string | null
+  quality: InventoryQuality
   encumbrance: number
   quantity: number
 }
@@ -138,7 +140,6 @@ export interface CatalogItem {
   name: string
   specialization?: string | null
   description: string | null
-  quality?: string | null
   encumbrance?: number | null
   damageFormula?: string | null
   armorPoints?: number | null

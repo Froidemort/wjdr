@@ -4,7 +4,6 @@ import type { CatalogItem } from '../types/domain'
 export interface CreateCatalogItemInput {
   name: string
   description: string | null
-  quality: 'médiocre' | 'normal' | 'bonne' | 'exceptionelle'
   encumbrance: number
 }
 
@@ -13,7 +12,6 @@ interface CatalogRow {
   name: string
   specialization?: string | null
   description?: string | null
-  quality?: string | null
   encumbrance?: number | null
   damage_formula?: string | null
   armor_points?: number | null
@@ -25,7 +23,6 @@ function mapCatalogItem(row: CatalogRow): CatalogItem {
     name: row.name,
     specialization: row.specialization ?? null,
     description: row.description ?? null,
-    quality: row.quality ?? null,
     encumbrance: row.encumbrance ?? null,
     damageFormula: row.damage_formula ?? null,
     armorPoints: row.armor_points ?? null
@@ -36,9 +33,9 @@ const CATALOG_SELECT_BY_TABLE: Record<'careers' | 'skills' | 'talents' | 'weapon
   careers: 'id, name',
   skills: 'id, name, specialization, description',
   talents: 'id, name, specialization, description',
-  weapons: 'id, name, description, quality, encumbrance, damage_formula',
-  armors: 'id, name, description, quality, encumbrance, armor_points',
-  items: 'id, name, description, quality, encumbrance'
+  weapons: 'id, name, description, encumbrance, damage_formula',
+  armors: 'id, name, description, encumbrance, armor_points',
+  items: 'id, name, description, encumbrance'
 }
 
 export async function searchCatalog(table: 'careers' | 'skills' | 'talents' | 'weapons' | 'armors' | 'items', query: string): Promise<CatalogItem[]> {
@@ -71,14 +68,13 @@ export async function createCatalogItem(input: CreateCatalogItemInput): Promise<
   const payload = {
     name: input.name.trim(),
     description: input.description?.trim() || null,
-    quality: input.quality,
     encumbrance: Math.max(0, Math.floor(input.encumbrance))
   }
 
   const { data, error } = await supabase
     .from('items')
     .insert(payload)
-    .select('id, name, description, quality, encumbrance')
+    .select('id, name, description, encumbrance')
     .single<CatalogRow>()
 
   if (error) {

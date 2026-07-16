@@ -6,9 +6,14 @@
 					<h3 class="font-semibold">Avatar</h3>
 					<div class="flex flex-col md:flex-row md:items-end gap-4">
 						<div class="flex-shrink-0">
-							<div v-if="previewUrl || persistedAvatarUrl" class="avatar">
+							<div v-if="(previewUrl || persistedAvatarUrl) && !avatarLoadFailed" class="avatar">
 								<div class="bg-base-300 text-base-content rounded-full w-20 h-20 overflow-hidden flex items-center justify-center">
-									<img :src="previewUrl || persistedAvatarUrl || ''" alt="Avatar utilisateur" class="w-full h-full object-cover" />
+									<img
+										:src="previewUrl || persistedAvatarUrl || ''"
+										alt="Avatar utilisateur"
+										class="w-full h-full object-cover"
+										@error="onAvatarLoadError"
+									/>
 								</div>
 							</div>
 							<div v-else class="avatar placeholder">
@@ -186,6 +191,14 @@ const uploadingAvatar = ref(false)
 const avatarError = ref('')
 const previewUrl = ref<string | null>(null)
 const persistedAvatarUrl = ref<string | null>(null)
+const avatarLoadFailed = ref(false)
+
+function onAvatarLoadError(): void {
+	avatarLoadFailed.value = true
+	if (!avatarError.value) {
+		avatarError.value = 'Avatar indisponible. Verifiez le bucket Supabase avatars.'
+	}
+}
 
 async function loadProfile(): Promise<void> {
 	if (!authStore.user?.id) {
@@ -197,6 +210,7 @@ async function loadProfile(): Promise<void> {
 	email.value = profile.email
 	newEmail.value = profile.email
 	persistedAvatarUrl.value = profile.avatarUrl
+	avatarLoadFailed.value = false
 }
 
 async function saveUsername(): Promise<void> {
@@ -320,6 +334,7 @@ async function onAvatarChange(event: Event): Promise<void> {
 	}
 
 	avatarError.value = ''
+	avatarLoadFailed.value = false
 	uploadingAvatar.value = true
 
 	try {
