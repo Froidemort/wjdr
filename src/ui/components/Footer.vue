@@ -30,7 +30,7 @@
 
   <nav class="flex items-center gap-4" aria-label="Liens externes">
     <a 
-      href="https://github.com" 
+      href="https://github.com/Froidemort/wjdr" 
       target="_blank" 
       rel="noopener noreferrer" 
       class="btn btn-ghost btn-sm btn-circle"
@@ -51,5 +51,5 @@
 </template>
 
 <script setup lang="ts">
-const appVersion = '0.0.5'
+const appVersion = '0.0.6'
 </script>
