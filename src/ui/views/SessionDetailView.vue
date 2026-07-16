@@ -59,44 +59,14 @@
 					</div>
 
 					<div v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-						<AppCard
+						<CharacterSummaryCard
 							v-for="character in characters"
 							:key="character.id"
-							:title="character.name"
-							:avatar-url="character.ownerAvatarUrl"
-							avatar-alt="Avatar du joueur"
+							:character="character"
+							action-label="Voir la fiche"
 							compact
 						>
-							<div class="flex items-center gap-2 text-sm opacity-80">
-								<span>{{ character.race }}</span>
-								<span>·</span>
-								<component
-									:is="character.gender === 'masculin' ? Mars : Venus"
-									class="h-4 w-4"
-								/>
-								<span>{{ character.gender === 'masculin' ? 'Masculin' : 'Feminin' }}</span>
-							</div>
-							<div class="mt-2 grid gap-1 text-sm">
-								<div class="flex items-center gap-2">
-									<Heart class="h-4 w-4 text-error" />
-									<span class="font-medium">Vie</span>
-									<span class="opacity-80">{{ character.pvCurrent }}/{{ character.pvMax }}</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<Clover class="h-4 w-4 text-success" />
-									<span class="font-medium">Fortune</span>
-									<span class="opacity-80">{{ character.fortuneCurrent }}/{{ character.fortuneMax }}</span>
-								</div>
-								<div class="flex items-center gap-2">
-									<WandSparkles class="h-4 w-4 text-accent" />
-									<span class="font-medium">Destin</span>
-									<span class="opacity-80">{{ character.destinyCurrent }}</span>
-								</div>
-							</div>
-							<div class="card-actions mt-3 justify-end">
-								<router-link class="btn btn-sm btn-accent" :to="`/characters/${character.id}`">Voir la fiche</router-link>
-							</div>
-						</AppCard>
+						</CharacterSummaryCard>
 					</div>
 				</div>
 			</AppCard>
@@ -239,8 +209,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronLeft, Clover, Copy, Heart, Mars, Venus, WandSparkles } from '@lucide/vue'
+import { ChevronLeft, Copy } from '@lucide/vue'
 import AppCard from '../components/AppCard.vue'
+import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
 import SearchInput from '../components/SearchInput.vue'
 import CharacterCreateModal from '../components/CharacterCreateModal.vue'
 import SessionAccessRequest from '../components/SessionAccessRequest.vue'

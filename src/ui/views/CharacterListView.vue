@@ -12,45 +12,13 @@
 			grid-class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
 		>
 			<template #default="{ items }">
-				<AppCard
+				<CharacterSummaryCard
 					v-for="character in items"
 					:key="character.id"
-					:title="character.name"
-					:avatar-url="character.ownerAvatarUrl"
-					avatar-alt="Avatar du joueur"
+					:character="character"
+					action-label="Ouvrir"
 				>
-					<div class="flex items-center gap-2">
-						<p class="text-sm opacity-80">{{ character.race }}</p>
-						<component 
-							:is="character.gender === 'masculin' ? Mars : Venus" 
-							class="h-4 w-4 opacity-75"
-						/>
-						<p class="text-sm opacity-80">{{ character.gender === 'masculin' ? 'Masculin' : 'Feminin' }}</p>
-						<p class="text-sm opacity-80">· Carrière {{ character.careerName || character.careerId }}</p>
-					</div>
-
-					<div class="mt-3 grid gap-2 text-sm">
-						<div class="flex items-center gap-2">
-							<Heart class="h-4 w-4 text-error" />
-							<span class="font-medium">Vie</span>
-							<span class="opacity-80">{{ character.pvCurrent }}/{{ character.pvMax }}</span>
-						</div>
-						<div class="flex items-center gap-2">
-							<Clover class="h-4 w-4 text-success" />
-							<span class="font-medium">Fortune</span>
-							<span class="opacity-80">{{ character.fortuneCurrent }}/{{ character.fortuneMax }}</span>
-						</div>
-						<div class="flex items-center gap-2">
-							<WandSparkles class="h-4 w-4 text-accent" />
-							<span class="font-medium">Destin</span>
-							<span class="opacity-80">{{ character.destinyCurrent }}</span>
-						</div>
-					</div>
-
-					<div class="card-actions mt-4 justify-end">
-						<router-link class="btn btn-sm btn-accent" :to="`/characters/${character.id}`">Ouvrir</router-link>
-					</div>
-				</AppCard>
+				</CharacterSummaryCard>
 			</template>
 		</DataGrid>
 
@@ -60,8 +28,7 @@
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { Clover, Heart, Mars, Venus, WandSparkles } from '@lucide/vue'
-import AppCard from '../components/AppCard.vue'
+import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
 import DataGrid from '../components/DataGrid.vue'
 import PageFooter from '../components/PageFooter.vue'
 import { useAuthStore } from '../../stores/auth'
