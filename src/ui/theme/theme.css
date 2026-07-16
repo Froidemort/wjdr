@@ -6,6 +6,13 @@
   --font-warhammer: "IM Fell English", serif;
 }
 
+html,
+body,
+#app {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* ============================================================================
    1. THÈME SOMBRE : GRIMORIUM DARK (Magie, Chaos & Ruines)
    ============================================================================ */
@@ -52,6 +59,15 @@
   --depth: 1;
 }
 
+html[data-theme="grimorium-dark"] {
+  --money-gold-bg: color-mix(in oklab, var(--color-accent) 24%, var(--color-base-200));
+  --money-gold-text: color-mix(in oklab, var(--color-accent-content) 55%, var(--color-base-content));
+  --money-silver-bg: color-mix(in oklab, var(--color-info) 10%, var(--color-base-200));
+  --money-silver-text: color-mix(in oklab, var(--color-base-content) 88%, var(--color-info-content));
+  --money-copper-bg: color-mix(in oklab, var(--color-secondary) 8%, var(--color-base-200));
+  --money-copper-text: color-mix(in oklab, var(--color-base-content) 82%, var(--color-secondary-content));
+}
+
 /* ============================================================================
    2. THÈME CLAIR : GRIMORIUM PARCHMENT (Feuille de personnage & Manuel)
    ============================================================================ */
@@ -95,6 +111,15 @@
   --radius-box: 0.125rem;
   --border: 1px;
   --depth: 1;
+}
+
+html[data-theme="grimorium-light"] {
+  --money-gold-bg: color-mix(in oklab, var(--color-accent) 24%, var(--color-base-100));
+  --money-gold-text: color-mix(in oklab, var(--color-base-content) 92%, var(--color-accent-content));
+  --money-silver-bg: color-mix(in oklab, var(--color-info) 8%, var(--color-base-100));
+  --money-silver-text: color-mix(in oklab, var(--color-base-content) 86%, var(--color-info-content));
+  --money-copper-bg: color-mix(in oklab, var(--color-secondary) 10%, var(--color-base-100));
+  --money-copper-text: color-mix(in oklab, var(--color-base-content) 84%, var(--color-secondary-content));
 }
 
 /* ============================================================================
@@ -276,4 +301,38 @@ input[type="radio"]:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
   background-color: var(--color-base-200);
+}
+
+.money-slot {
+  color: var(--money-slot-text, var(--color-base-content));
+  background: var(--money-slot-bg, var(--color-base-200));
+}
+
+.money-slot-gold {
+  --money-slot-bg: var(--money-gold-bg);
+  --money-slot-text: var(--money-gold-text);
+}
+
+.money-slot-silver {
+  --money-slot-bg: var(--money-silver-bg);
+  --money-slot-text: var(--money-silver-text);
+}
+
+.money-slot-copper {
+  --money-slot-bg: var(--money-copper-bg);
+  --money-slot-text: var(--money-copper-text);
+}
+
+@media (max-width: 640px) {
+  .modal {
+    align-items: flex-start;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+    padding-bottom: 0.5rem;
+  }
+
+  .modal-box {
+    margin-top: 0;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 1rem);
+    overflow-y: auto;
+  }
 }

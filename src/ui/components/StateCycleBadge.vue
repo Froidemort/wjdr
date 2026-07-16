@@ -42,11 +42,11 @@ function cycleState(): void {
 <template>
   <button
     type="button"
-    class="badge badge-sm"
+    class="badge badge-lg cursor-pointer px-3 font-warhammer tracking-wide transition-colors duration-500"
     :class="currentOption?.badgeClass ?? 'badge-outline'"
     :disabled="disabled"
     @click="cycleState"
   >
-    {{ currentOption?.label ?? 'N/A' }}
+    <span>{{ currentOption?.label ?? 'N/A' }}</span>
   </button>
 </template>

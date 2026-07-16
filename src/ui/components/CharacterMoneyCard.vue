@@ -91,15 +91,15 @@ function confirmSubtract(): void {
       </div>
 
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-3 tabular-nums">
-        <div class="rounded-box border border-base-300 bg-amber-100 p-2 text-center text-amber-900">
+        <div class="money-slot money-slot-gold rounded-box border border-base-300 p-2 text-center">
           <template v-if="editable">
             <input
               :value="gold"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-amber-300 bg-amber-50 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Couronnes d or"
-              @input="onGoldInput"
+              @change="onGoldInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
@@ -109,15 +109,15 @@ function confirmSubtract(): void {
           <div class="text-xs font-semibold opacity-80">CO</div>
         </div>
 
-        <div class="rounded-box border border-base-300 bg-slate-100 p-2 text-center text-slate-700">
+        <div class="money-slot money-slot-silver rounded-box border border-base-300 p-2 text-center">
           <template v-if="editable">
             <input
               :value="silver"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-slate-300 bg-slate-50 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Pistoles d argent"
-              @input="onSilverInput"
+              @change="onSilverInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
@@ -127,15 +127,15 @@ function confirmSubtract(): void {
           <div class="text-xs font-semibold opacity-80">PA</div>
         </div>
 
-        <div class="rounded-box border border-base-300 bg-orange-100 p-2 text-center text-orange-800">
+        <div class="money-slot money-slot-copper rounded-box border border-base-300 p-2 text-center">
           <template v-if="editable">
             <input
               :value="copper"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-orange-300 bg-orange-50 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Sous de cuivre"
-              @input="onCopperInput"
+              @change="onCopperInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
@@ -148,7 +148,7 @@ function confirmSubtract(): void {
     </div>
   </article>
 
-  <dialog ref="subtractDialogRef" class="modal modal-middle" @close="onSubtractDialogClosed">
+  <dialog ref="subtractDialogRef" class="modal modal-top sm:modal-middle" @close="onSubtractDialogClosed">
     <div class="modal-box border border-base-300 p-5 max-w-md">
       <h3 class="text-lg font-semibold text-center">Soustraire de l'argent</h3>
 

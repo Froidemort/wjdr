@@ -20,26 +20,27 @@ function onCurrentInput(event: Event): void {
 
 <template>
   <article class="card border border-base-300 bg-base-100 shadow-sm">
-    <div class="card-body gap-4 p-4 items-center">
+    <div class="card-body p-4">
       <div class="flex items-center justify-between">
         <div class="tooltip" data-tip="Points de folie">
-          <Hospital class="h-6 w-6 text-violet-400" aria-hidden="true" />
+          <Hospital class="h-6 w-6 text-warning" aria-hidden="true" />
         </div>
-      </div>
-
+        <div class="flex items-center gap-2 font-semibold tabular-nums">
         <template v-if="editable">
           <input
             :value="current"
             type="number"
             min="0"
-            class="input input-sm text-align-center h-12 w-1/4 border-violet-500/30 bg-base-100/20 text-center text-2xl font-black text-violet-300 [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            class="input input-sm h-10 w-20 text-center text-xl font-bold text-warning [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             aria-label="Points de folie"
-            @input="onCurrentInput"
+            @change="onCurrentInput"
           />
         </template>
         <template v-else>
-          <div class="text-5xl font-black leading-none text-violet-300">{{ current }}</div>
+          <span class="text-4xl font-black leading-none text-warning">{{ current }}</span>
         </template>
+        </div>
+      </div>
     </div>
   </article>
 </template>

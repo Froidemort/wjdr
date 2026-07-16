@@ -107,7 +107,7 @@ watch(page, () => {
 				<h1 class="text-2xl font-semibold">Missives</h1>
 				<p class="text-sm opacity-70">Courriers de votre table et nouvelles du Vieux Monde.</p>
 			</div>
-			<button class="btn btn-sm btn-accent" :disabled="loading || busyIds.size > 0" @click="handleMarkAllRead">
+			<button class="btn btn-sm" :disabled="loading || busyIds.size > 0" @click="handleMarkAllRead">
 				Tout marquer comme lu
 			</button>
 		</header>
@@ -125,36 +125,41 @@ watch(page, () => {
 		</div>
 
 		<div v-else class="space-y-3">
-			<AppCard v-for="notif in notifications" :key="notif.id" :title="getNotificationDisplayTitle(notif.title)">
-				<p class="text-sm whitespace-pre-line opacity-80">{{ getNotificationDisplayMessage(notif.message) }}</p>
-				<div class="mt-3 flex items-center justify-between gap-2">
+			<AppCard v-for="notif in notifications" :key="notif.id">
+				<div class="flex items-start justify-between gap-2">
+					<h3 class="text-lg font-semibold leading-tight">{{ getNotificationDisplayTitle(notif.title) }}</h3>
 					<div class="flex items-center gap-2">
-						<span class="badge" :class="notif.isRead ? 'badge-success' : 'badge-warning'">
+						<span class="badge badge-sm" :class="notif.isRead ? 'badge-neutral badge-soft' : 'badge-warning'">
 							{{ notif.isRead ? 'Lue' : 'Non lue' }}
 						</span>
 						<button
+							v-if="!notif.isRead"
+							class="btn btn-ghost btn-xs"
+							:disabled="isBusy(notif.id)"
+							@click="handleMarkRead(notif.id)"
+						>
+							Marquer lu
+						</button>
+					</div>
+				</div>
+				<p class="text-sm whitespace-pre-line opacity-80">{{ getNotificationDisplayMessage(notif.message) }}</p>
+				<div class="mt-3 flex items-center justify-between gap-2">
+					<div class="flex items-center gap-2">
+						<button
 							v-if="extractNotificationSessionId(notif)"
-							class="btn btn-sm btn-accent"
+							class="btn btn-sm"
 							@click="openSessionFromNotification(notif)"
 						>
 							Ouvrir la session
 						</button>
 						<button 
-							class="btn btn-sm btn-error btn-soft" 
+							class="btn btn-sm btn-ghost" 
 							:disabled="isBusy(notif.id)" 
 							@click="handleRemove(notif.id)"
 						>
 							Supprimer
 						</button>
 					</div>
-					<button 
-						v-if="!notif.isRead" 
-						class="btn btn-sm btn-accent" 
-						:disabled="isBusy(notif.id)" 
-						@click="handleMarkRead(notif.id)"
-					>
-						Marquer lu
-					</button>
 				</div>
 			</AppCard>
 

@@ -100,23 +100,28 @@
 				</div>
 			</div>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
+			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
-					<div class="flex items-center justify-between gap-2">
-						<h2 class="text-lg">Caractéristiques</h2>
+					<h2 class="text-lg">Caractéristiques</h2>
+				</summary>
+				<div class="collapse-content">
+					<div class="mb-3 flex flex-wrap items-center justify-center gap-3 border-b border-base-300 pb-3">
+						<StateCycleBadge
+							:value="characteristicsViewMode"
+							:options="CHARACTERISTICS_VIEW_OPTIONS"
+							@change="onCharacteristicsViewModeChange"
+						/>
 						<button
 							v-if="canEditQuickSection"
 							type="button"
-							class="btn btn-xs"
+							class="btn btn-sm min-w-24"
 							@click.stop.prevent="openStatsImportModal"
 						>
-							Importer
+							<span>Importer</span>
 						</button>
 					</div>
-				</summary>
-				<div class="collapse-content">
 					<div v-if="visibleStats.length === 0" class="text-sm opacity-70">Aucune caractéristique disponible.</div>
-					<div v-else class="mt-1 flex flex-wrap gap-3">
+					<div v-else-if="characteristicsViewMode === 'normal'" class="mt-1 flex flex-wrap gap-3">
 						<CharacteristicCard
 							v-for="stat in visibleStats"
 							:key="stat.statCode"
@@ -128,10 +133,30 @@
 							@update-total-advanced="onStatTotalAdvancedChange($event.statCode, $event.totalAdvanced)"
 						/>
 					</div>
+					<div v-else class="mt-1 space-y-2 overflow-x-hidden">
+						<div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+							<div v-for="stat in primaryStatsRows[0]" :key="`compact-${stat.statCode}`" class="rounded-box border border-base-300 bg-base-200 px-2 py-1 text-center">
+								<div class="text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</div>
+								<div class="text-lg font-black tabular-nums">{{ stat.baseValue + stat.currentAdvanced }}</div>
+							</div>
+						</div>
+						<div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+							<div v-for="stat in primaryStatsRows[1]" :key="`compact-${stat.statCode}`" class="rounded-box border border-base-300 bg-base-200 px-2 py-1 text-center">
+								<div class="text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</div>
+								<div class="text-lg font-black tabular-nums">{{ stat.baseValue + stat.currentAdvanced }}</div>
+							</div>
+						</div>
+						<div class="grid grid-cols-3 gap-2">
+							<div v-for="stat in secondaryStats" :key="`compact-${stat.statCode}`" class="rounded-box border border-base-300 bg-base-100 px-2 py-1 text-center">
+								<div class="text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</div>
+								<div class="text-lg font-black tabular-nums">{{ stat.baseValue + stat.currentAdvanced }}</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</details>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
+			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
 					<div class="flex items-center justify-between gap-2">
 						<h2 class="text-lg">Compétences</h2>
@@ -148,7 +173,7 @@
 								<div class="flex items-start justify-between gap-2">
 									<div class="flex items-start gap-2">
 										<h4 class="font-semibold">{{ formatNamedWithSpecialization(skill.name, skill.specialization) }}</h4>
-										<span class="badge badge-accent badge-sm self-start">{{ skill.statCode }}</span>
+										<span class="badge badge-warning badge-sm self-start">{{ skill.statCode }}</span>
 										<div
 											v-if="!skill.isBasic"
 											class="tooltip self-start"
@@ -162,7 +187,7 @@
 												fill-rule="evenodd"
 												clip-rule="evenodd"
 												viewBox="0 0 512 512"
-												class="h-5 w-5 fill-current text-accent"
+												class="h-5 w-5 fill-current text-warning"
 											>
 												<path fill-rule="nonzero" d="M255.998 0c70.69 0 134.694 28.657 181.017 74.981C483.342 121.308 512 185.309 512 255.998c0 70.69-28.655 134.694-74.985 181.017C390.692 483.345 326.688 512 255.998 512c-70.689 0-134.69-28.658-181.017-74.985C28.657 390.692 0 326.688 0 255.998c0-70.689 28.657-134.687 74.981-181.017C121.311 28.657 185.309 0 255.998 0zm-31.652 349.762h-63.307l48.606-187.522h92.713l48.606 187.522h-63.311l-6.898-29.703h-49.507l-6.902 29.703zm30.003-129.915l-12.301 52.507h27.603l-12.001-52.507h-3.301zm155.474-117.674C370.461 62.812 316.071 38.46 255.998 38.46c-60.072 0-114.46 24.352-153.825 63.713-39.361 39.365-63.713 93.753-63.713 153.825 0 60.073 24.352 114.463 63.713 153.825 39.365 39.365 93.753 63.716 153.825 63.716 60.073 0 114.463-24.351 153.825-63.716 39.365-39.362 63.716-93.752 63.716-153.825 0-60.072-24.351-114.46-63.716-153.825z" />
 											</svg>
@@ -211,7 +236,7 @@
 				</div>
 			</details>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
+			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
 					<div class="flex items-center justify-between gap-2">
 						<h2 class="text-lg">Talents</h2>
@@ -247,7 +272,7 @@
 				</div>
 			</details>
 
-			<dialog ref="descriptionDialogRef" class="modal modal-middle" @close="closeDescriptionModal">
+			<dialog ref="descriptionDialogRef" class="modal modal-top sm:modal-middle" @close="closeDescriptionModal">
 				<div class="modal-box border border-base-300 p-6 max-w-lg">
 					<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closeDescriptionModal">✕</button>
 					<h3 class="text-lg font-semibold">{{ descriptionTitle || 'Description' }}</h3>
@@ -258,7 +283,7 @@
 				</form>
 			</dialog>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
+			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
 					<div class="flex items-center justify-between gap-2">
 						<h2 class="text-lg">Armes</h2>
@@ -310,7 +335,7 @@
 				</div>
 			</details>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
+			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
 					<div class="flex items-center justify-between gap-2">
 						<h2 class="text-lg">Armures</h2>
@@ -363,7 +388,7 @@
 				</div>
 			</details>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
+			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
 					<div class="flex items-center justify-between gap-2">
 						<h2 class="text-lg">Équipements</h2>
@@ -407,25 +432,25 @@
 									/>
 									<span v-else class="badge badge-sm" :class="qualityBadgeClass(item.quality)">{{ item.quality || 'normal' }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ item.encumbrance }}</span>
-									<div v-if="canEditQuickSection" class="join">
+									<div v-if="canEditQuickSection" class="join items-stretch">
 										<button
-											class="btn btn-xs join-item"
+											class="btn btn-sm h-10 min-h-10 min-w-10 join-item px-3 text-base font-semibold leading-none"
 											:disabled="item.quantity <= 1"
 											aria-label="Réduire la quantité"
 											@click="onChangeItemQuantity(item, -1)"
 										>
 											-
 										</button>
-										<span class="join-item inline-flex min-w-10 items-center justify-center bg-neutral px-2 text-xs font-bold tracking-wide text-neutral-content">x{{ item.quantity }}</span>
+										<span class="join-item inline-flex h-10 min-h-10 min-w-12 items-center justify-center bg-secondary px-3 text-sm font-bold tracking-wide text-secondary-content border-none">x{{ item.quantity }}</span>
 										<button
-											class="btn btn-xs join-item"
+											class="btn btn-sm h-10 min-h-10 min-w-10 join-item px-3 text-base font-semibold leading-none"
 											aria-label="Augmenter la quantité"
 											@click="onChangeItemQuantity(item, 1)"
 										>
 											+
 										</button>
 									</div>
-									<span v-else class="badge badge-sm badge-neutral font-bold tracking-wide">x{{ item.quantity }}</span>
+									<span v-else class="badge badge-sm badge-secondary font-bold tracking-wide text-secondary-content">x{{ item.quantity }}</span>
 								</div>
 							</div>
 						</article>
@@ -433,7 +458,7 @@
 				</div>
 			</details>
 
-			<dialog ref="statsImportDialogRef" class="modal modal-middle" @close="closeStatsImportModal">
+			<dialog ref="statsImportDialogRef" class="modal modal-top sm:modal-middle" @close="closeStatsImportModal">
 				<div class="modal-box border border-base-300 p-4 sm:p-6 max-w-3xl">
 					<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closeStatsImportModal">✕</button>
 					<h3 class="text-lg font-semibold">Import rapide des avancées de carrière</h3>
@@ -477,7 +502,7 @@
 			</dialog>
 		</template>
 
-		<dialog ref="careerDialogRef" class="modal modal-middle" @close="closeCareerModal">
+		<dialog ref="careerDialogRef" class="modal modal-top sm:modal-middle" @close="closeCareerModal">
 			<div class="modal-box border border-base-300 p-6">
 				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closeCareerModal">✕</button>
 				<h3 class="mb-4 text-center text-xl font-semibold">Changer de carrière</h3>
@@ -520,7 +545,7 @@
 			</form>
 		</dialog>
 
-		<dialog ref="catalogDialogRef" class="modal modal-middle" @close="closeCatalogModal">
+		<dialog ref="catalogDialogRef" class="modal modal-top sm:modal-middle" @close="closeCatalogModal">
 			<div class="modal-box border border-base-300 p-6 max-w-2xl">
 				<button class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4" @click="closeCatalogModal">✕</button>
 				<h3 class="mb-6 text-center text-2xl font-bold text-primary">Ajouter des {{ modalSectionLabel }}</h3>
@@ -621,7 +646,7 @@
 										:class="[
 											'transition-colors border-l-4',
 											selectedCatalogIds.includes(option.id)
-												? 'bg-base-200 border-l-neutral'
+												? 'bg-base-300 border-l-warning'
 												: 'border-l-transparent hover:bg-base-200'
 										]"
 									>
@@ -637,7 +662,7 @@
 													<span class="font-medium break-words leading-tight">{{ formatCatalogOptionLabel(option) }}</span>
 													<span
 														v-if="selectedCatalogIds.includes(option.id)"
-														class="badge badge-neutral badge-sm"
+														class="badge badge-warning badge-sm"
 													>
 														Sélectionné
 													</span>
@@ -799,6 +824,11 @@ const ARMOR_EQUIPPED_OPTIONS = [
 	{ value: true, label: 'Équipée', badgeClass: 'badge-success' }
 ] as const
 
+const CHARACTERISTICS_VIEW_OPTIONS = [
+	{ value: 'normal', label: 'Détaillé', badgeClass: 'badge-outline' },
+	{ value: 'compact', label: 'Compact', badgeClass: 'badge-warning' }
+] as const
+
 const route = useRoute()
 const authStore = useAuthStore()
 const { coerceMoney } = useMoneyCoercion()
@@ -871,6 +901,7 @@ const editable = ref({
 })
 
 const canEditQuickSection = computed(() => Boolean(character.value && authStore.user?.id === character.value.userId))
+const characteristicsViewMode = ref<'normal' | 'compact'>('normal')
 const modalSectionLabel = computed(() => CATALOG_LABELS[catalogSection.value])
 
 function sortByName<T extends { name: string }>(entries: T[]): T[] {
@@ -910,6 +941,13 @@ const visibleStats = computed(() => {
 		return leftIndex - rightIndex
 	})
 })
+
+const primaryStats = computed(() => visibleStats.value.filter((stat) => !stat.isSecondary).slice(0, 8))
+const secondaryStats = computed(() => visibleStats.value.filter((stat) => stat.isSecondary))
+const primaryStatsRows = computed(() => [
+	primaryStats.value.slice(0, 4),
+	primaryStats.value.slice(4, 8)
+])
 
 const forceValue = computed(() => {
 	if (!character.value) {
@@ -1262,6 +1300,12 @@ function onStatTotalAdvancedChange(statCode: string, totalAdvanced: number): voi
 	const nextTotalAdvanced = Math.max(0, totalAdvanced)
 	target.totalAdvanced = nextTotalAdvanced
 	triggerStatSave({ statCode, totalAdvanced: nextTotalAdvanced })
+}
+
+function onCharacteristicsViewModeChange(value: string | boolean | null): void {
+	if (value === 'normal' || value === 'compact') {
+		characteristicsViewMode.value = value
+	}
 }
 
 function openStatsImportModal(): void {

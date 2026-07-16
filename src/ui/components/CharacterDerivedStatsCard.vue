@@ -28,10 +28,11 @@ const isEncumbranceOverLimit = computed(() => props.totalEncumbrance > props.max
     <div class="card-body p-4 gap-3">
       <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         <div class="rounded-lg border border-base-300 bg-base-200 p-3 text-center sm:col-span-2 xl:col-span-1">
-          <div class="flex justify-center">
-            <Weight class="h-4 w-4 text-accent" aria-hidden="true" />
+          <div class="flex items-center justify-center gap-2">
+            <Weight class="h-5 w-5 text-accent" aria-hidden="true" />
+            <span class="text-sm font-semibold uppercase tracking-wide opacity-80">Encombrement</span>
           </div>
-          <p class="translate-y-1 text-xl font-black leading-none text-center break-words sm:translate-y-2 sm:text-2xl sm:whitespace-nowrap" :class="isEncumbranceOverLimit ? 'text-error' : 'text-accent'">
+          <p class="mt-2 text-2xl font-black leading-none text-center break-words sm:text-3xl sm:whitespace-nowrap" :class="isEncumbranceOverLimit ? 'text-error' : 'text-accent'">
             {{ totalEncumbrance }} / {{ maxEncumbrance }}
           </p>
         </div>

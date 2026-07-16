@@ -63,7 +63,7 @@ function onMaxInput(event: Event): void {
               min="0"
               class="input input-sm h-10 w-20 text-center text-xl font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Valeur courante"
-              @input="onCurrentInput"
+              @change="onCurrentInput"
             />
             <span class="text-lg opacity-60">/</span>
             <input
@@ -72,7 +72,7 @@ function onMaxInput(event: Event): void {
               min="0"
               class="input input-sm h-10 w-20 text-center text-xl font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Valeur maximale"
-              @input="onMaxInput"
+              @change="onMaxInput"
             />
           </template>
           <template v-else>

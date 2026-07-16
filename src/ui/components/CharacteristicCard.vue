@@ -88,14 +88,14 @@ function onTotalAdvancedInput(event: Event): void {
                 min="0"
                 class="input input-sm h-10 w-20 text-center text-2xl font-bold tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 aria-label="Valeur maximale d'avancement"
-                @input="onTotalAdvancedInput"
+                @change="onTotalAdvancedInput"
               />
             </template>
             <span v-else>{{ stat.totalAdvanced }}</span>
           </div>
-          <div v-if="editable" class="join">
-            <button class="btn btn-sm join-item" aria-label="Diminuer l'avancement" @click="onTickDown">-{{ tickStep }}</button>
-            <button class="btn btn-sm join-item" aria-label="Augmenter l'avancement" @click="onTickUp">+{{ tickStep }}</button>
+          <div v-if="editable" class="join items-stretch">
+            <button class="btn btn-sm h-10 min-h-10 min-w-14 join-item px-2 text-sm font-semibold" aria-label="Diminuer l'avancement" @click="onTickDown">-{{ tickStep }}</button>
+            <button class="btn btn-sm h-10 min-h-10 min-w-14 join-item px-2 text-sm font-semibold" aria-label="Augmenter l'avancement" @click="onTickUp">+{{ tickStep }}</button>
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@ function onTotalAdvancedInput(event: Event): void {
             min="0"
             class="input input-sm mt-2 h-10 w-full text-center text-2xl font-bold tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             aria-label="Valeur de base"
-            @input="onBaseInput"
+            @change="onBaseInput"
           />
         </template>
         <div v-else class="mt-2 text-2xl font-bold tabular-nums text-center">{{ stat.baseValue }}</div>
