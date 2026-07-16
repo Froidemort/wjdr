@@ -101,43 +101,51 @@
           </div>
         </div>
         <!-- Mobile Menu (visible only on mobile) -->
-        <details class="dropdown dropdown-end sm:hidden">
-          <summary class="btn btn-ghost btn-sm btn-square" aria-label="Menu">
-            <Menu class="h-6 w-6" />
-          </summary>
-          <ul class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-            <li>
-              <router-link to="/profile" class="flex items-center gap-2">
-                <UserCircle class="h-5 w-5 text-primary" />
-                <span>Profil</span>
-              </router-link>
-            </li>
-            <li>
-              <button @click="handleMobileNotificationsClick" class="flex items-center gap-2">
-                <Bell class="h-5 w-5 text-primary" />
-                <span>Notifications {{ unreadCount > 0 ? `(${unreadCount})` : '' }}</span>
-              </button>
-            </li>
-            <li>
-              <router-link to="/sessions" class="flex items-center gap-2">
-                <Scroll class="h-5 w-5 text-primary" />
-                <span>Mes sessions</span>
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/characters" class="flex items-center gap-2">
-                <Users class="h-5 w-5 text-primary" />
-                <span>Mes personnages</span>
-              </router-link>
-            </li>
-            <li>
-              <button @click="logout" class="flex items-center gap-2 text-error">
-                <LogOut class="h-5 w-5" />
-                <span>Se déconnecter</span>
-              </button>
-            </li>
-          </ul>
-        </details>
+        <button
+          class="btn btn-ghost btn-sm btn-square sm:hidden"
+          aria-label="Menu"
+          popovertarget="mobile-nav-menu"
+          style="anchor-name:--mobile-nav-anchor"
+        >
+          <Menu class="h-6 w-6" />
+        </button>
+        <ul
+          id="mobile-nav-menu"
+          popover
+          class="dropdown dropdown-end menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+          style="position-anchor:--mobile-nav-anchor"
+        >
+          <li>
+            <router-link to="/profile" class="flex items-center gap-2">
+              <UserCircle class="h-5 w-5 text-primary" />
+              <span>Profil</span>
+            </router-link>
+          </li>
+          <li>
+            <button @click="handleMobileNotificationsClick" class="flex items-center gap-2">
+              <Bell class="h-5 w-5 text-primary" />
+              <span>Notifications {{ unreadCount > 0 ? `(${unreadCount})` : '' }}</span>
+            </button>
+          </li>
+          <li>
+            <router-link to="/sessions" class="flex items-center gap-2">
+              <Scroll class="h-5 w-5 text-primary" />
+              <span>Mes sessions</span>
+            </router-link>
+          </li>
+          <li>
+            <router-link to="/characters" class="flex items-center gap-2">
+              <Users class="h-5 w-5 text-primary" />
+              <span>Mes personnages</span>
+            </router-link>
+          </li>
+          <li>
+            <button @click="logout" class="flex items-center gap-2 text-error">
+              <LogOut class="h-5 w-5" />
+              <span>Se déconnecter</span>
+            </button>
+          </li>
+        </ul>
       </template>
 
       <button

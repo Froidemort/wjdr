@@ -20,6 +20,7 @@ const tickStep = computed(() => (props.stat.isSecondary ? 1 : 5))
 const totalValue = computed(() => Math.max(0, props.stat.baseValue + props.stat.currentAdvanced))
 const cardToneClass = computed(() => (props.stat.isSecondary ? 'bg-base-100 border-base-300' : 'bg-base-200 border-base-300'))
 const totalToneClass = computed(() => (props.stat.isSecondary ? 'bg-base-200' : 'bg-base-300'))
+const totalValueClass = computed(() => (props.stat.isSecondary ? 'text-secondary' : 'text-primary'))
 
 function onTickUp(): void {
   if (!props.editable) {
@@ -72,7 +73,7 @@ function onTotalAdvancedInput(event: Event): void {
 
       <div class="rounded-box border border-base-300 p-3" :class="totalToneClass">
         <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Total</div>
-        <div class="text-4xl font-black leading-none tabular-nums text-center">{{ totalValue }}</div>
+        <div class="text-4xl font-black leading-none tabular-nums text-center" :class="totalValueClass">{{ totalValue }}</div>
       </div>
 
       <div class="rounded-box border border-base-300 p-3">
