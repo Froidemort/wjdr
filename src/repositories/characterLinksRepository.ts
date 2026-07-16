@@ -394,21 +394,35 @@ export async function listCharacterItems(characterId: string): Promise<Character
   })
 }
 
-export async function addCharacterItems(characterId: string, itemIds: string[]): Promise<void> {
+export async function addCharacterItems(characterId: string, itemIds: string[], quantity: number = 1): Promise<void> {
   const filteredItemIds = itemIds.filter(Boolean)
   if (filteredItemIds.length === 0) {
     return
   }
 
+  const initialQuantity = Math.max(1, Math.floor(quantity))
   const rows = filteredItemIds.map((itemId) => ({
     character_id: characterId,
     item_id: itemId,
-    quantity: 1
+    quantity: initialQuantity
   }))
 
   const { error } = await supabase
     .from('character_items')
     .insert(rows)
+
+  if (error) {
+    throw error
+  }
+}
+
+export async function updateCharacterItemQuantity(linkId: string, quantity: number): Promise<void> {
+  const normalizedQuantity = Math.max(1, Math.floor(quantity))
+
+  const { error } = await supabase
+    .from('character_items')
+    .update({ quantity: normalizedQuantity })
+    .eq('id', linkId)
 
   if (error) {
     throw error

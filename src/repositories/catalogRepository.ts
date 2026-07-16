@@ -1,6 +1,13 @@
 import { supabase } from '../db/supabase'
 import type { CatalogItem } from '../types/domain'
 
+export interface CreateCatalogItemInput {
+  name: string
+  description: string | null
+  quality: 'médiocre' | 'normal' | 'bonne' | 'exceptionelle'
+  encumbrance: number
+}
+
 interface CatalogRow {
   id: string
   name: string
@@ -58,4 +65,25 @@ export async function searchCatalog(table: 'careers' | 'skills' | 'talents' | 'w
   }
 
   return ((data ?? []) as CatalogRow[]).map(mapCatalogItem)
+}
+
+export async function createCatalogItem(input: CreateCatalogItemInput): Promise<CatalogItem> {
+  const payload = {
+    name: input.name.trim(),
+    description: input.description?.trim() || null,
+    quality: input.quality,
+    encumbrance: Math.max(0, Math.floor(input.encumbrance))
+  }
+
+  const { data, error } = await supabase
+    .from('items')
+    .insert(payload)
+    .select('id, name, description, quality, encumbrance')
+    .single<CatalogRow>()
+
+  if (error) {
+    throw error
+  }
+
+  return mapCatalogItem(data)
 }

@@ -1128,6 +1128,23 @@ create policy "Admin can modify weapon_attributes." on weapon_attributes
 create policy "Everyone can read weapon_attributes." on weapon_attributes
   for select using (true);
 
+alter table items
+  enable row level security;
+create policy "Users can create items." on items
+  for insert
+  to authenticated
+  with check (auth.uid() is not null);
+create policy "Admin can update items." on items
+  for update
+  using (auth.role() = 'service_role');
+create policy "Admin can delete items." on items
+  for delete
+  using (auth.role() = 'service_role');
+create policy "Users can read items." on items
+  for select
+  to authenticated
+  using (auth.uid() is not null);
+
 -- RLS pour les sessions :
 -- N'importe quel utilisateur enregistré peut créer une session.
 -- Le propriétaire d'une session peut la modifier ou l'archiver (c'est le fameux mj_id).
@@ -1295,9 +1312,9 @@ create policy "Users can create character_items." on character_items
 create policy "Users can update own character_items." on character_items
   for update
   to authenticated using ( exists (select 1 from characters where characters.id = character_items.character_id and characters.user_id = auth.uid()));
-create policy "Users can delete own character_items." on character_items
+create policy "Admin can delete character_items." on character_items
   for delete
-  to authenticated using ( exists (select 1 from characters where characters.id = character_items.character_id and characters.user_id = auth.uid()));
+  to authenticated using (auth.role() = 'service_role');
 create policy "Users can read character_items." on character_items
   for select
   to authenticated

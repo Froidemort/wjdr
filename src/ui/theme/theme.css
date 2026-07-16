@@ -180,6 +180,23 @@ textarea:focus-visible {
     0 0 0 2px color-mix(in oklab, var(--color-primary) 16%, transparent);
 }
 
+/* Avoid double focus ring/border for inputs nested inside daisyUI field containers */
+.input > input,
+label.input > input {
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.input > input:focus,
+.input > input:focus-visible,
+label.input > input:focus,
+label.input > input:focus-visible {
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
 /* Réduire les borders des inputs dans les modales */
 .modal-box input:not(:focus):not(:focus-visible),
 .modal-box select:not(:focus):not(:focus-visible),

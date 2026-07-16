@@ -97,7 +97,17 @@
 
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100" open>
 				<summary class="collapse-title">
-					<h2 class="text-lg">Caractéristiques</h2>
+					<div class="flex items-center justify-between gap-2">
+						<h2 class="text-lg">Caractéristiques</h2>
+						<button
+							v-if="canEditQuickSection"
+							type="button"
+							class="btn btn-xs"
+							@click.stop.prevent="openStatsImportModal"
+						>
+							Importer
+						</button>
+					</div>
 				</summary>
 				<div class="collapse-content">
 					<div v-if="visibleStats.length === 0" class="text-sm opacity-70">Aucune caractéristique disponible.</div>
@@ -352,21 +362,96 @@
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ item.name }}</h4>
-									<button v-if="canEditQuickSection" class="btn btn-ghost btn-xs" @click="onDeleteItem(item.id)">
-										<Trash2 class="h-4 w-4" />
-									</button>
+									<div class="flex items-center gap-1">
+										<button
+											v-if="item.description"
+											class="btn btn-ghost btn-xs"
+											aria-label="Afficher la description de l'équipement"
+											@click="openDescriptionModal(item.name, item.description)"
+										>
+											<Info class="h-4 w-4" />
+										</button>
+										<button
+											v-if="canEditQuickSection"
+											class="btn btn-ghost btn-xs text-error"
+											aria-label="Retirer l'équipement de l'inventaire"
+											@click="onDeleteItem(item.id)"
+										>
+											<Trash2 class="h-4 w-4" />
+										</button>
+									</div>
 								</div>
-								<p v-if="item.description" class="text-sm opacity-70">{{ item.description }}</p>
 								<div class="flex gap-1 flex-wrap">
 									<span class="badge badge-sm" :class="qualityBadgeClass(item.quality)">{{ item.quality || 'normal' }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ item.encumbrance }}</span>
-									<span class="badge badge-sm badge-neutral">x{{ item.quantity }}</span>
+									<div v-if="canEditQuickSection" class="join">
+										<button
+											class="btn btn-xs join-item"
+											:disabled="item.quantity <= 1"
+											aria-label="Réduire la quantité"
+											@click="onChangeItemQuantity(item, -1)"
+										>
+											-
+										</button>
+										<span class="join-item inline-flex min-w-10 items-center justify-center bg-neutral px-2 text-xs font-bold tracking-wide text-neutral-content">x{{ item.quantity }}</span>
+										<button
+											class="btn btn-xs join-item"
+											aria-label="Augmenter la quantité"
+											@click="onChangeItemQuantity(item, 1)"
+										>
+											+
+										</button>
+									</div>
+									<span v-else class="badge badge-sm badge-neutral font-bold tracking-wide">x{{ item.quantity }}</span>
 								</div>
 							</div>
 						</article>
 					</div>
 				</div>
 			</details>
+
+			<dialog ref="statsImportDialogRef" class="modal modal-middle" @close="closeStatsImportModal">
+				<div class="modal-box border border-base-300 p-4 sm:p-6 max-w-3xl">
+					<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closeStatsImportModal">✕</button>
+					<h3 class="text-lg font-semibold">Import rapide des avancées de carrière</h3>
+					<p class="mt-1 text-xs opacity-70">Renseigne les valeurs d'avancée totale (0-99). Laisse vide pour ignorer une caractéristique.</p>
+
+					<div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+						<label
+							v-for="stat in allStatsSorted"
+							:key="`import-${stat.statCode}`"
+							class="fieldset rounded-box border border-base-300 p-2"
+						>
+							<span class="fieldset-legend text-xs">{{ stat.statCode.toUpperCase() }}</span>
+							<input
+								:value="statsImportValues[stat.statCode]"
+								type="text"
+								inputmode="numeric"
+								pattern="^[0-9]{0,2}$"
+								maxlength="2"
+								class="input input-xs w-full text-center tabular-nums"
+								:aria-label="`Avancée totale ${stat.statCode}`"
+								@input="onStatsImportInput(stat.statCode, $event)"
+							/>
+						</label>
+					</div>
+
+					<div v-if="statsImportError" role="alert" class="alert alert-error alert-soft mt-4">
+						<span>{{ statsImportError }}</span>
+					</div>
+
+					<div class="mt-4 flex items-center justify-end gap-2 border-t border-base-300 pt-3">
+						<button type="button" class="btn btn-sm btn-ghost" @click="closeStatsImportModal">Annuler</button>
+						<button type="button" class="btn btn-sm" :disabled="statsImportSaving" @click="confirmStatsImport">
+							<span v-if="statsImportSaving" class="loading loading-spinner loading-xs" aria-hidden="true" />
+							Appliquer
+						</button>
+					</div>
+				</div>
+				<form method="dialog" class="modal-backdrop">
+					<button>Fermer</button>
+				</form>
+			</dialog>
 		</template>
 
 		<dialog ref="careerDialogRef" class="modal modal-middle" @close="closeCareerModal">
@@ -417,75 +502,153 @@
 				<button class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4" @click="closeCatalogModal">✕</button>
 				<h3 class="mb-6 text-center text-2xl font-bold text-primary">Ajouter des {{ modalSectionLabel }}</h3>
 
+				<div v-if="catalogSection === 'items'" class="mb-4 flex justify-center">
+					<div class="join">
+						<button
+							type="button"
+							class="btn btn-sm join-item"
+							:class="itemCatalogMode === 'search' ? 'btn-active' : ''"
+							@click="itemCatalogMode = 'search'"
+						>
+							Recherche
+						</button>
+						<button
+							type="button"
+							class="btn btn-sm join-item"
+							:class="itemCatalogMode === 'create' ? 'btn-active' : ''"
+							@click="itemCatalogMode = 'create'"
+						>
+							Création
+						</button>
+					</div>
+				</div>
+
 				<div class="space-y-5">
-					<!-- Search Input -->
-					<div>
-						<SearchInput 
-							v-model="catalogQuery" 
-							:placeholder="`Chercher des ${modalSectionLabel}`" 
-							class="w-full" 
-						/>
-					</div>
+					<template v-if="catalogSection === 'items' && itemCatalogMode === 'create'">
+						<div class="grid gap-3">
+							<label class="fieldset">
+								<span class="fieldset-legend">Nom</span>
+								<input
+									v-model="newItemForm.name"
+									type="text"
+									class="input"
+									maxlength="100"
+									placeholder="Nom de l'équipement"
+								/>
+							</label>
 
-					<!-- Catalog Options List -->
-					<div class="rounded-lg border border-base-300 bg-base-100 overflow-hidden">
-						<div class="max-h-80 overflow-y-auto">
-							<ul v-if="catalogOptions.length > 0" class="menu menu-compact">
-								<li
-									v-for="option in catalogOptions"
-									:key="option.id"
-									:class="[
-										'transition-colors border-l-4',
-										selectedCatalogIds.includes(option.id)
-											? 'bg-base-200 border-l-neutral'
-											: 'border-l-transparent hover:bg-base-200'
-									]"
-								>
-									<label class="label cursor-pointer justify-start gap-3 px-4 py-3 rounded-none">
-										<input
-											type="checkbox"
-											class="checkbox checkbox-sm"
-											:checked="selectedCatalogIds.includes(option.id)"
-											@change="toggleCatalogSelection(option.id)"
-										/>
-										<div class="flex-1 min-w-0">
-											<div class="flex flex-wrap items-center gap-2 min-w-0">
-												<span class="font-medium break-words leading-tight">{{ formatCatalogOptionLabel(option) }}</span>
-												<span
-													v-if="selectedCatalogIds.includes(option.id)"
-													class="badge badge-neutral badge-sm"
-												>
-													Sélectionné
-												</span>
+							<label class="fieldset">
+								<span class="fieldset-legend">Description</span>
+								<textarea
+									v-model="newItemForm.description"
+									class="textarea min-h-24"
+									maxlength="3000"
+									placeholder="Description (optionnelle)"
+								></textarea>
+							</label>
+
+							<div class="grid gap-3 sm:grid-cols-2">
+								<label class="fieldset">
+									<span class="fieldset-legend">Qualité</span>
+									<select v-model="newItemForm.quality" class="select">
+										<option v-for="quality in ITEM_QUALITY_OPTIONS" :key="quality" :value="quality">{{ quality }}</option>
+									</select>
+								</label>
+
+								<label class="fieldset">
+									<span class="fieldset-legend">Encombrement</span>
+									<input
+										v-model.number="newItemForm.encumbrance"
+										type="number"
+										min="0"
+										class="input"
+									/>
+								</label>
+							</div>
+
+							<label class="fieldset">
+								<span class="fieldset-legend">Quantité</span>
+								<input
+									v-model.number="newItemForm.quantity"
+									type="number"
+									min="1"
+									class="input"
+								/>
+							</label>
+						</div>
+					</template>
+
+					<template v-else>
+						<!-- Search Input -->
+						<div>
+							<SearchInput 
+								v-model="catalogQuery" 
+								:placeholder="`Chercher des ${modalSectionLabel}`" 
+								class="w-full" 
+							/>
+						</div>
+
+						<!-- Catalog Options List -->
+						<div class="rounded-lg border border-base-300 bg-base-100 overflow-hidden">
+							<div class="max-h-80 overflow-y-auto">
+								<ul v-if="catalogOptions.length > 0" class="menu menu-compact">
+									<li
+										v-for="option in catalogOptions"
+										:key="option.id"
+										:class="[
+											'transition-colors border-l-4',
+											selectedCatalogIds.includes(option.id)
+												? 'bg-base-200 border-l-neutral'
+												: 'border-l-transparent hover:bg-base-200'
+										]"
+									>
+										<label class="label cursor-pointer justify-start gap-3 px-4 py-3 rounded-none">
+											<input
+												type="checkbox"
+												class="checkbox checkbox-sm"
+												:checked="selectedCatalogIds.includes(option.id)"
+												@change="toggleCatalogSelection(option.id)"
+											/>
+											<div class="flex-1 min-w-0">
+												<div class="flex flex-wrap items-center gap-2 min-w-0">
+													<span class="font-medium break-words leading-tight">{{ formatCatalogOptionLabel(option) }}</span>
+													<span
+														v-if="selectedCatalogIds.includes(option.id)"
+														class="badge badge-neutral badge-sm"
+													>
+														Sélectionné
+													</span>
+												</div>
+												<p v-if="option.specialization" class="text-xs opacity-60">{{ option.specialization }}</p>
 											</div>
-											<p v-if="option.specialization" class="text-xs opacity-60">{{ option.specialization }}</p>
-										</div>
-									</label>
-								</li>
-							</ul>
-							<p v-else class="text-center text-sm opacity-70 py-8">Aucun élément trouvé.</p>
+										</label>
+									</li>
+								</ul>
+								<p v-else class="text-center text-sm opacity-70 py-8">Aucun élément trouvé.</p>
+							</div>
 						</div>
-					</div>
 
-					<!-- Selection Summary -->
-					<div v-if="selectedCatalogIds.length > 0" class="rounded-lg border border-base-300 bg-base-200 p-4">
-						<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-							<p class="text-sm font-semibold">{{ selectedCatalogIds.length }} sélectionné(s)</p>
-							<p class="text-xs opacity-70">Clique sur un badge pour le retirer.</p>
+						<!-- Selection Summary -->
+						<div v-if="selectedCatalogIds.length > 0" class="rounded-lg border border-base-300 bg-base-200 p-4">
+							<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+								<p class="text-sm font-semibold">{{ selectedCatalogIds.length }} sélectionné(s)</p>
+								<p class="text-xs opacity-70">Clique sur un badge pour le retirer.</p>
+							</div>
+							<div class="flex flex-wrap gap-2">
+								<button
+									v-for="selectedId in selectedCatalogIds"
+									:key="selectedId"
+									type="button"
+									class="btn btn-xs btn-outline btn-neutral h-auto min-h-0 max-w-full justify-start gap-2 px-3 py-2 normal-case whitespace-normal text-left"
+									:aria-label="`Retirer ${selectedCatalogLabels[selectedId] || selectedId} de la sélection`"
+									@click="removeCatalogSelection(selectedId)"
+								>
+									<span class="break-words">{{ selectedCatalogLabels[selectedId] || selectedId }}</span>
+									<span aria-hidden="true" class="text-xs opacity-70">✕</span>
+								</button>
+							</div>
 						</div>
-						<div class="flex flex-wrap gap-2">
-							<button
-								v-for="selectedId in selectedCatalogIds"
-								:key="selectedId"
-								type="button"
-								class="btn btn-xs btn-outline btn-neutral h-auto min-h-0 max-w-full justify-start gap-2 px-3 py-2 normal-case whitespace-normal text-left"
-								:aria-label="`Retirer ${selectedCatalogLabels[selectedId] || selectedId} de la sélection`"
-								@click="removeCatalogSelection(selectedId)"
-							>
-								<span class="break-words">{{ selectedCatalogLabels[selectedId] || selectedId }}</span>
-								<span aria-hidden="true" class="text-xs opacity-70">✕</span>
-							</button>
-						</div>
+					</template>
 					</div>
 
 					<!-- Error Message -->
@@ -496,8 +659,18 @@
 					<!-- Action Buttons -->
 					<div class="flex items-center justify-end gap-3 pt-4 border-t border-base-300">
 						<button class="btn btn-sm btn-ghost" @click="closeCatalogModal">Annuler</button>
-						<button 
-							class="btn btn-sm btn-primary" 
+						<button
+							v-if="catalogSection === 'items' && itemCatalogMode === 'create'"
+							class="btn btn-sm btn-primary"
+							:disabled="creatingItem"
+							@click="confirmItemCreate"
+						>
+							<span v-if="creatingItem" class="loading loading-spinner loading-xs" aria-hidden="true" />
+							Créer et ajouter
+						</button>
+						<button
+							v-else
+							class="btn btn-sm btn-primary"
 							:disabled="addingCatalog || selectedCatalogIds.length === 0"
 							@click="confirmCatalogAdd"
 						>
@@ -506,7 +679,6 @@
 						</button>
 					</div>
 				</div>
-			</div>
 
 			<form method="dialog" class="modal-backdrop">
 				<button>Fermer</button>
@@ -542,7 +714,7 @@ import SearchInput from '../components/SearchInput.vue'
 import { useLiveSave } from '../composables/useLiveSave'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
-import { searchCatalog } from '../../repositories/catalogRepository'
+import { createCatalogItem, searchCatalog } from '../../repositories/catalogRepository'
 import {
 	addCharacterItems,
 	addCharacterArmors,
@@ -555,6 +727,7 @@ import {
 	listCharacterTalents,
 	listCharacterWeapons,
 	updateCharacterArmorEquipped,
+	updateCharacterItemQuantity,
 	updateCharacterWeaponEquipped,
 	removeCharacterItem,
 	removeCharacterArmor,
@@ -620,6 +793,7 @@ const changingCareer = ref(false)
 
 const catalogDialogRef = ref<HTMLDialogElement | null>(null)
 const descriptionDialogRef = ref<HTMLDialogElement | null>(null)
+const statsImportDialogRef = ref<HTMLDialogElement | null>(null)
 const catalogSection = ref<CatalogSection>('skills')
 const catalogQuery = ref('')
 const catalogOptions = ref<CatalogItem[]>([])
@@ -627,8 +801,21 @@ const selectedCatalogIds = ref<string[]>([])
 const selectedCatalogLabels = ref<Record<string, string>>({})
 const catalogError = ref<string | null>(null)
 const addingCatalog = ref(false)
+const itemCatalogMode = ref<'search' | 'create'>('search')
+const creatingItem = ref(false)
+const ITEM_QUALITY_OPTIONS = ['médiocre', 'normal', 'bonne', 'exceptionelle'] as const
+const newItemForm = ref({
+	name: '',
+	description: '',
+	quality: 'normal' as (typeof ITEM_QUALITY_OPTIONS)[number],
+	encumbrance: 0,
+	quantity: 1
+})
 const descriptionTitle = ref<string | null>(null)
 const descriptionContent = ref<string | null>(null)
+const statsImportValues = ref<Record<string, string>>({})
+const statsImportError = ref<string | null>(null)
+const statsImportSaving = ref(false)
 
 const characterSkills = ref<CharacterSkill[]>([])
 const characterTalents = ref<CharacterTalent[]>([])
@@ -789,7 +976,7 @@ const { status, triggerSave, triggerSaveNow } = useLiveSave(async (payload: type
 	})
 }, 500)
 
-const { status: statSaveStatus, triggerSave: triggerStatSave } = useLiveSave(async (payload: { statCode: string; currentAdvanced?: number; baseValue?: number; totalAdvanced?: number }) => {
+const { status: statSaveStatus, triggerSave: triggerStatSave, triggerSaveNow: triggerStatSaveNow } = useLiveSave(async (payload: { statCode: string; currentAdvanced?: number; baseValue?: number; totalAdvanced?: number }) => {
 	if (!character.value) {
 		return
 	}
@@ -826,6 +1013,31 @@ const globalStateLabel = computed(() => {
 	}
 
 	return ''
+})
+
+const allStatsSorted = computed(() => {
+	if (!character.value) {
+		return []
+	}
+
+	return [...character.value.stats].sort((left, right) => {
+		const leftCode = left.statCode.trim().toUpperCase()
+		const rightCode = right.statCode.trim().toUpperCase()
+		const leftIndex = CHARACTERISTICS_INDEX.get(leftCode)
+		const rightIndex = CHARACTERISTICS_INDEX.get(rightCode)
+
+		if (leftIndex === undefined && rightIndex === undefined) {
+			return leftCode.localeCompare(rightCode)
+		}
+		if (leftIndex === undefined) {
+			return 1
+		}
+		if (rightIndex === undefined) {
+			return -1
+		}
+
+		return leftIndex - rightIndex
+	})
 })
 
 function requestExternalCharacterRefresh(): void {
@@ -1017,6 +1229,72 @@ function onStatTotalAdvancedChange(statCode: string, totalAdvanced: number): voi
 	triggerStatSave({ statCode, totalAdvanced: nextTotalAdvanced })
 }
 
+function openStatsImportModal(): void {
+	if (!character.value) {
+		return
+	}
+
+	statsImportError.value = null
+	statsImportSaving.value = false
+	statsImportValues.value = Object.fromEntries(character.value.stats.map((stat) => [stat.statCode, '']))
+	statsImportDialogRef.value?.showModal()
+}
+
+function closeStatsImportModal(): void {
+	if (statsImportDialogRef.value?.open) {
+		statsImportDialogRef.value.close()
+	}
+	statsImportError.value = null
+	statsImportSaving.value = false
+	statsImportValues.value = {}
+}
+
+function onStatsImportInput(statCode: string, event: Event): void {
+	const target = event.target as HTMLInputElement
+	const normalized = target.value.replace(/\D/g, '').slice(0, 2)
+	statsImportValues.value = {
+		...statsImportValues.value,
+		[statCode]: normalized
+	}
+	target.value = normalized
+}
+
+async function confirmStatsImport(): Promise<void> {
+	if (!character.value || !canEditQuickSection.value || statsImportSaving.value) {
+		return
+	}
+
+	const updates = Object.entries(statsImportValues.value)
+		.map(([statCode, rawValue]) => ({ statCode, rawValue: rawValue.trim() }))
+		.filter(({ rawValue }) => rawValue.length > 0)
+
+	if (updates.length === 0) {
+		closeStatsImportModal()
+		return
+	}
+
+	statsImportSaving.value = true
+	statsImportError.value = null
+	try {
+		for (const update of updates) {
+			const parsedValue = Math.max(0, Math.min(99, Number(update.rawValue)))
+			await triggerStatSaveNow({ statCode: update.statCode, totalAdvanced: parsedValue })
+
+			const localStat = character.value.stats.find((stat) => stat.statCode === update.statCode)
+			if (localStat) {
+				localStat.totalAdvanced = parsedValue
+			}
+		}
+
+		await loadCharacter({ background: true })
+		closeStatsImportModal()
+	} catch (error) {
+		statsImportError.value = error instanceof Error ? error.message : 'Import impossible.'
+	} finally {
+		statsImportSaving.value = false
+	}
+}
+
 async function onChangeSkillMastery(skillId: string, level: 1 | 2 | 3): Promise<void> {
 	if (!character.value || !canEditQuickSection.value) {
 		return
@@ -1139,6 +1417,16 @@ async function onArmorStateChange(armor: CharacterArmor, value: string | boolean
 	}
 }
 
+function resetNewItemForm(): void {
+	newItemForm.value = {
+		name: '',
+		description: '',
+		quality: 'normal',
+		encumbrance: 0,
+		quantity: 1
+	}
+}
+
 async function onDeleteItem(linkId: string): Promise<void> {
 	if (!canEditQuickSection.value || !character.value) {
 		return
@@ -1149,6 +1437,24 @@ async function onDeleteItem(linkId: string): Promise<void> {
 		await loadCharacterLinks(character.value.id)
 	} catch (error) {
 		errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+	}
+}
+
+async function onChangeItemQuantity(item: CharacterItem, delta: number): Promise<void> {
+	if (!canEditQuickSection.value || !character.value) {
+		return
+	}
+
+	const nextQuantity = Math.max(1, item.quantity + delta)
+	if (nextQuantity === item.quantity) {
+		return
+	}
+
+	try {
+		await updateCharacterItemQuantity(item.id, nextQuantity)
+		item.quantity = nextQuantity
+	} catch (error) {
+		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
 	}
 }
 
@@ -1210,6 +1516,9 @@ function openCatalogModal(section: CatalogSection): void {
 	selectedCatalogIds.value = []
 	selectedCatalogLabels.value = {}
 	catalogError.value = null
+	itemCatalogMode.value = 'search'
+	creatingItem.value = false
+	resetNewItemForm()
 	if (!catalogDialogRef.value) {
 		return
 	}
@@ -1238,6 +1547,9 @@ function closeCatalogModal(): void {
 	selectedCatalogIds.value = []
 	selectedCatalogLabels.value = {}
 	catalogError.value = null
+	itemCatalogMode.value = 'search'
+	creatingItem.value = false
+	resetNewItemForm()
 }
 
 function toggleCatalogSelection(id: string): void {
@@ -1298,6 +1610,44 @@ async function confirmCatalogAdd(): Promise<void> {
 	}
 }
 
+async function confirmItemCreate(): Promise<void> {
+	if (!character.value || !canEditQuickSection.value || creatingItem.value) {
+		return
+	}
+
+	const trimmedName = newItemForm.value.name.trim()
+	if (!trimmedName) {
+		catalogError.value = 'Le nom est obligatoire.'
+		return
+	}
+
+	const normalizedEncumbrance = Number.isFinite(newItemForm.value.encumbrance)
+		? Math.max(0, Math.floor(newItemForm.value.encumbrance))
+		: 0
+	const normalizedQuantity = Number.isFinite(newItemForm.value.quantity)
+		? Math.max(1, Math.floor(newItemForm.value.quantity))
+		: 1
+
+	creatingItem.value = true
+	catalogError.value = null
+	try {
+		const createdItem = await createCatalogItem({
+			name: trimmedName,
+			description: newItemForm.value.description || null,
+			quality: newItemForm.value.quality,
+			encumbrance: normalizedEncumbrance
+		})
+
+		await addCharacterItems(character.value.id, [createdItem.id], normalizedQuantity)
+		await loadCharacterLinks(character.value.id)
+		closeCatalogModal()
+	} catch (error) {
+		catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
+	} finally {
+		creatingItem.value = false
+	}
+}
+
 watch(careerQuery, async (value) => {
 	const trimmed = value.trim()
 	if (!trimmed) {
@@ -1313,6 +1663,11 @@ watch(careerQuery, async (value) => {
 })
 
 watch(catalogQuery, async (value) => {
+	if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
+		catalogOptions.value = []
+		return
+	}
+
 	const trimmed = value.trim()
 	if (!trimmed) {
 		catalogOptions.value = []

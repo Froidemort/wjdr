@@ -70,12 +70,12 @@ async function onSubmit(): Promise<void> {
 
         <div v-if="authModalStore.mode === 'login'" class="form-control">
           <label class="label"><span class="label-text">Email ou username</span></label>
-          <input v-model="identifier" type="email" class="input w-full" required />
+          <input v-model="identifier" type="text" class="input w-full" required />
         </div>
 
         <div v-if="authModalStore.mode === 'signup'" class="form-control">
           <label class="label"><span class="label-text">Email</span></label>
-          <input v-model="email" type="email" class="input w-full" required />
+          <input v-model="email" type="text" class="input w-full" required />
         </div>
         
         <div class="form-control">

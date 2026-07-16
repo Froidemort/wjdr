@@ -35,7 +35,7 @@
 				<!-- Description (collapse optionnel) -->
 				<div class="collapse collapse-arrow border border-base-300 bg-base-200">
 					<input v-model="sessionInfoOpen" type="checkbox" />
-					<div class="collapse-title font-semibold">Informations de session</div>
+					<div class="collapse-title font-semibold">Description</div>
 					<div class="collapse-content">
 						<p class="text-sm opacity-80">{{ session.description || 'Aucune description.' }}</p>
 					</div>
