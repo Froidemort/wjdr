@@ -101,6 +101,11 @@
 				</div>
 			</AppCard>
 
+			<SessionNotesPanel
+				:session-id="session.id"
+				:is-mj="isMj"
+			/>
+
 			<section v-if="isMj" class="space-y-3">
 				<h2 class="text-xl font-semibold">Gestion de session</h2>
 				
@@ -239,6 +244,7 @@ import AppCard from '../components/AppCard.vue'
 import SearchInput from '../components/SearchInput.vue'
 import CharacterCreateModal from '../components/CharacterCreateModal.vue'
 import SessionAccessRequest from '../components/SessionAccessRequest.vue'
+import SessionNotesPanel from '../components/SessionNotesPanel.vue'
 import { useAuthStore } from '../../stores/auth'
 import { getSessionById, updateSessionArchivedState } from '../../repositories/sessionsRepository'
 import { listCharactersBySession } from '../../repositories/charactersRepository'
@@ -256,6 +262,7 @@ import {
 } from '../../repositories/invitationsRepository'
 import { addUsersToSession, searchInvitableProfilesByMembership } from '../../repositories/usersSessionRepository'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import { useSmartRefresh } from '../composables/useSmartRefresh'
 import type { CharacterSummary, Profile, SessionSummary } from '../../types/domain'
 
 const route = useRoute()
@@ -289,15 +296,18 @@ const { subscribe, unsubscribe } = useRealtimeChannels(() => {
 	scheduleSessionRefresh()
 }, { debounceMs: 500 })
 
-async function loadSessionDetail(): Promise<void> {
+async function loadSessionDetail(options: { background?: boolean } = {}): Promise<void> {
 	if (!sessionId.value) {
 		errorMessage.value = 'Session invalide.'
 		return
 	}
 
-	loading.value = true
-	errorMessage.value = null
-	joinRequestError.value = null
+	const isBackgroundRefresh = Boolean(options.background && session.value)
+	if (!isBackgroundRefresh) {
+		loading.value = true
+		errorMessage.value = null
+		joinRequestError.value = null
+	}
 	try {
 		const [sessionData, characterData] = await Promise.all([
 			getSessionById(sessionId.value),
@@ -327,9 +337,13 @@ async function loadSessionDetail(): Promise<void> {
 			joinRequests.value = []
 		}
 	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Impossible de charger la session.'
+		if (!isBackgroundRefresh) {
+			errorMessage.value = error instanceof Error ? error.message : 'Impossible de charger la session.'
+		}
 	} finally {
-		loading.value = false
+		if (!isBackgroundRefresh) {
+			loading.value = false
+		}
 	}
 }
 
@@ -497,6 +511,17 @@ async function copySessionLink(): Promise<void> {
 }
 
 onMounted(loadSessionDetail)
+
+useSmartRefresh(() => {
+	if (!sessionId.value || !authStore.user?.id) {
+		return
+	}
+
+	void loadSessionDetail({ background: true })
+}, {
+	enabled: true,
+	minIntervalMs: 1500
+})
 
 function scheduleSessionRefresh(): void {
 	if (sessionRefreshTimer) {

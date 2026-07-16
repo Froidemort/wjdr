@@ -70,6 +70,7 @@ import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
 import { usePagination } from '../composables/usePagination'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import { useSmartRefresh } from '../composables/useSmartRefresh'
 import type { SessionSummary } from '../../types/domain'
 
 const authStore = useAuthStore()
@@ -161,6 +162,17 @@ async function joinWithCode(): Promise<void> {
 }
 
 onMounted(loadSessions)
+
+useSmartRefresh(() => {
+	if (!authStore.user?.id) {
+		return
+	}
+
+	void loadSessions({ background: true })
+}, {
+	enabled: true,
+	minIntervalMs: 1500
+})
 
 watch(
 	() => authStore.user?.id,

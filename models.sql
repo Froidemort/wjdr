@@ -249,6 +249,56 @@ CREATE TABLE notifications (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
+create table session_notes (
+  id uuid default gen_random_uuid() primary key,
+  session_id uuid not null references sessions(id) on delete cascade,
+  author_user_id uuid references profiles(id) on delete set null,
+
+  title varchar(200) not null,
+
+  -- Colonnes par type de contenu (une seule table)
+  content_text text,
+  content_character_note text,
+  content_image_path text, -- reserve pour M2
+
+  is_visible boolean not null default false,
+  is_archived boolean not null default false,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  -- Au moins un contenu
+  constraint session_notes_has_content check (
+    coalesce(length(trim(content_text)), 0) > 0
+    or coalesce(length(trim(content_character_note)), 0) > 0
+    or coalesce(length(trim(content_image_path)), 0) > 0
+  )
+);
+
+create index session_notes_session_created_idx
+  on session_notes(session_id, created_at desc);
+
+grant select, insert, update, delete on public.session_notes to authenticated;
+
+-- Realtime Supabase pour les notes de session.
+-- REPLICA IDENTITY FULL permet de recevoir les anciennes valeurs sur UPDATE/DELETE.
+alter table public.session_notes replica identity full;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'session_notes'
+  ) then
+    alter publication supabase_realtime add table public.session_notes;
+  end if;
+end
+$$;
+
+
 -- Ajout des règles, données, compétences et des talents présents dans les règles de Warhammer 2ème édition.
 
 -- Statistique s de base et secondaires, ne peuvent être modifiées par personne, sauf eventuellement l'administrateur.

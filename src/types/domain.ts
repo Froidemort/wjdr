@@ -17,6 +17,38 @@ export interface SessionSummary {
   createdAt: string | null
 }
 
+export interface SessionNote {
+  id: string
+  sessionId: string
+  authorUserId: string | null
+  title: string
+  contentText: string | null
+  contentCharacterNote: string | null
+  contentImagePath: string | null
+  isVisible: boolean
+  isArchived: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateSessionNoteInput {
+  sessionId: string
+  title: string
+  contentText?: string | null
+  contentCharacterNote?: string | null
+  contentImagePath?: string | null
+  isVisible?: boolean
+}
+
+export interface UpdateSessionNoteInput {
+  title?: string
+  contentText?: string | null
+  contentCharacterNote?: string | null
+  contentImagePath?: string | null
+  isVisible?: boolean
+  isArchived?: boolean
+}
+
 export interface CharacterSummary {
   id: string
   name: string
