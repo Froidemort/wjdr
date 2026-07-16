@@ -26,3 +26,7 @@ playwright-report
 *.sw?
 .vercel
 bdd.db
+
+# Secrets
+.env
+.env.develop
