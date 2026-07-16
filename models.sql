@@ -49,7 +49,6 @@ CREATE TABLE items (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
-    quality VARCHAR(20) NOT NULL CHECK (quality IN ('médiocre', 'normal', 'bonne', 'exceptionelle')) DEFAULT 'normal',
     encumbrance INT NOT NULL CHECK (encumbrance >= 0)
 );
 
@@ -65,10 +64,9 @@ CREATE TABLE weapons (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    quality VARCHAR(20) NOT NULL CHECK (quality IN ('médiocre', 'normal', 'bonne', 'exceptionelle')) DEFAULT 'normal',
     encumbrance INT NOT NULL CHECK (encumbrance >= 0),
     damage_formula VARCHAR(20) NOT NULL,
-    UNIQUE (name, quality)
+    UNIQUE (name)
 );
 
 -- Table de liaison Armes <-> Attributs (N à N)
@@ -83,14 +81,13 @@ CREATE TABLE armors (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    quality VARCHAR(20) NOT NULL CHECK (quality IN ('médiocre', 'normal', 'bonne', 'exceptionelle')) DEFAULT 'normal',
     encumbrance INT NOT NULL CHECK (encumbrance >= 0),
     armor_points INT NOT NULL,
     covered_locations TEXT[] NOT NULL CHECK (
         cardinality(covered_locations) > 0
         AND covered_locations <@ ARRAY['tête', 'corps', 'bras', 'jambes']::TEXT[]
     ),
-    UNIQUE (name, quality)
+  UNIQUE (name)
 );
 
 
@@ -220,6 +217,7 @@ CREATE TABLE character_weapons (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     character_id UUID REFERENCES characters(id) ON DELETE CASCADE,
     weapon_id UUID REFERENCES weapons(id) ON DELETE RESTRICT,
+    quality VARCHAR(20) NOT NULL DEFAULT 'normal' CHECK (quality IN ('médiocre', 'normal', 'bonne', 'exceptionelle')),
     -- une arme peut être équipée à la main droite, gauche ou les deux (d&g). 
     -- Si c'est NULL, c'est que c'est dans l'inventaire
     equiped VARCHAR(6) CHECK (equiped IN ('droite', 'gauche', 'd&g'))
@@ -229,6 +227,7 @@ CREATE TABLE character_armors (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     character_id UUID REFERENCES characters(id) ON DELETE CASCADE,
     armor_id UUID REFERENCES armors(id) ON DELETE RESTRICT,
+    quality VARCHAR(20) NOT NULL DEFAULT 'normal' CHECK (quality IN ('médiocre', 'normal', 'bonne', 'exceptionelle')),
     is_equipped BOOLEAN DEFAULT FALSE NOT NULL
 );
 
@@ -236,6 +235,7 @@ CREATE TABLE character_items (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     character_id UUID REFERENCES characters(id) ON DELETE CASCADE,
     item_id UUID REFERENCES items(id) ON DELETE RESTRICT,
+    quality VARCHAR(20) NOT NULL DEFAULT 'normal' CHECK (quality IN ('médiocre', 'normal', 'bonne', 'exceptionelle')),
     quantity INT DEFAULT 1 NOT NULL CHECK (quantity > 0)
 );
 
@@ -919,95 +919,79 @@ INSERT INTO careers (name) VALUES
 -- Ajout des équipements, armes et armures classiques de Warhammer.
 
 -- Armes
-DO $$
-DECLARE
-  item_quality TEXT;
-BEGIN
-  FOREACH item_quality IN ARRAY ARRAY['médiocre', 'normal', 'bonne', 'exceptionelle']
-  LOOP
-    INSERT INTO weapons (name, quality, encumbrance, damage_formula)
-    SELECT base.name, item_quality, base.encumbrance, base.damage_formula
-    FROM (
-      VALUES
-        ('Épée à deux mains', 200, 'BF'),
-        ('Marteau à deux mains', 200, 'BF'),
-        ('Hâche à deux mains', 200, 'BF'),
-        ('Pic de guerre à deux mains', 200, 'BF'),
-        ('Épée à une main', 50, 'BF'),
-        ('Marteau à une main', 50, 'BF'),
-        ('Hâche à une main', 50, 'BF'),
-        ('Pic de guerre à une main', 50, 'BF'),
-        ('Bâton', 50, 'BF-2'),
-        ('Bouclier', 50, 'BF-2'),
-        ('Brise-lame', 40, 'BF-3'),
-        ('Dague', 10, 'BF-3'),
-        ('Demi-lance', 75, 'BF'),
-        ('Fléau d''armes', 95, 'BF+1'),
-        ('Fleuret', 40, 'BF-2'),
-        ('Gantelet/coup-de-poing', 1, 'BF-3'),
-        ('Hallebarde', 175, 'BF'),
-        ('Lance de cavalerie', 100, 'BF+1'),
-        ('Lance', 50, 'BF'),
-        ('Main gauche', 15, 'BF-3'),
-        ('Morgenstern', 60, 'BF'),
-        ('Rapière', 40, 'BF-1'),
-        ('Rondache', 10, 'BF-4'),
-        ('Arbalète à répétition', 150, '2'),
-        ('Arbalète de poing', 25, '2'),
-        ('Arbalète', 120, '4'),
-        ('Arc court', 75, '3'),
-        ('Arc elfique', 75, '3'),
-        ('Arc long', 90, '3'),
-        ('Arc', 40, '3'),
-        ('Arquebuse à répétition', 30, '4'),
-        ('Arquebuse', 30, '4'),
-        ('Bolas', 20, '1'),
-        ('Dague/étoile de jet', 10, 'BF-3'),
-        ('Filet', 60, 'Aucun'),
-        ('Fouet', 40, 'BF-1'),
-        ('Fronde', 10, '3'),
-        ('Fustibale', 50, '4'),
-        ('Hache/marteau de jet', 40, 'BF-2'),
-        ('Javelot', 30, 'BF-1'),
-        ('Lasso', 10, 'Aucun'),
-        ('Long fusil d''Hochland', 70, '4'),
-        ('Pistolet à répétition', 25, '4'),
-        ('Pistolet', 25, '4'),
-        ('Tromblon', 50, '3')
-    ) AS base(name, encumbrance, damage_formula)
-    ON CONFLICT DO NOTHING;
-  END LOOP;
-END $$;
+INSERT INTO weapons (name, encumbrance, damage_formula)
+SELECT base.name, base.encumbrance, base.damage_formula
+FROM (
+  VALUES
+    ('Épée à deux mains', 200, 'BF'),
+    ('Marteau à deux mains', 200, 'BF'),
+    ('Hâche à deux mains', 200, 'BF'),
+    ('Pic de guerre à deux mains', 200, 'BF'),
+    ('Épée à une main', 50, 'BF'),
+    ('Marteau à une main', 50, 'BF'),
+    ('Hâche à une main', 50, 'BF'),
+    ('Pic de guerre à une main', 50, 'BF'),
+    ('Bâton', 50, 'BF-2'),
+    ('Bouclier', 50, 'BF-2'),
+    ('Brise-lame', 40, 'BF-3'),
+    ('Dague', 10, 'BF-3'),
+    ('Demi-lance', 75, 'BF'),
+    ('Fléau d''armes', 95, 'BF+1'),
+    ('Fleuret', 40, 'BF-2'),
+    ('Gantelet/coup-de-poing', 1, 'BF-3'),
+    ('Hallebarde', 175, 'BF'),
+    ('Lance de cavalerie', 100, 'BF+1'),
+    ('Lance', 50, 'BF'),
+    ('Main gauche', 15, 'BF-3'),
+    ('Morgenstern', 60, 'BF'),
+    ('Rapière', 40, 'BF-1'),
+    ('Rondache', 10, 'BF-4'),
+    ('Arbalète à répétition', 150, '2'),
+    ('Arbalète de poing', 25, '2'),
+    ('Arbalète', 120, '4'),
+    ('Arc court', 75, '3'),
+    ('Arc elfique', 75, '3'),
+    ('Arc long', 90, '3'),
+    ('Arc', 40, '3'),
+    ('Arquebuse à répétition', 30, '4'),
+    ('Arquebuse', 30, '4'),
+    ('Bolas', 20, '1'),
+    ('Dague/étoile de jet', 10, 'BF-3'),
+    ('Filet', 60, 'Aucun'),
+    ('Fouet', 40, 'BF-1'),
+    ('Fronde', 10, '3'),
+    ('Fustibale', 50, '4'),
+    ('Hache/marteau de jet', 40, 'BF-2'),
+    ('Javelot', 30, 'BF-1'),
+    ('Lasso', 10, 'Aucun'),
+    ('Long fusil d''Hochland', 70, '4'),
+    ('Pistolet à répétition', 25, '4'),
+    ('Pistolet', 25, '4'),
+    ('Tromblon', 50, '3')
+) AS base(name, encumbrance, damage_formula)
+ON CONFLICT DO NOTHING;
 
 -- Armures
-DO $$
-DECLARE
-  item_quality TEXT;
-BEGIN
-  FOREACH item_quality IN ARRAY ARRAY['médiocre', 'normal', 'bonne', 'exceptionelle']
-  LOOP
-    INSERT INTO armors (name, quality, encumbrance, armor_points, covered_locations)
-    SELECT base.name, item_quality, base.encumbrance, base.armor_points, base.covered_locations
-    FROM (
-      VALUES
-        ('Calotte de cuir', 10, 1, ARRAY['tête']::TEXT[]),
-        ('Gilet de cuir', 40, 1, ARRAY['corps']::TEXT[]),
-        ('Jambières de cuir', 20, 1, ARRAY['jambes']::TEXT[]),
-        ('Veste de cuir', 50, 1, ARRAY['corps', 'bras']::TEXT[]),
-        ('Cagoule de mailles', 30, 2, ARRAY['tête']::TEXT[]),
-        ('Chemise de mailles', 80, 2, ARRAY['corps', 'bras']::TEXT[]),
-        ('Gilet de mailles', 60, 2, ARRAY['corps']::TEXT[]),
-        ('Jambières de mailles', 40, 2, ARRAY['jambes']::TEXT[]),
-        ('Manteau de mailles à manches', 100, 2, ARRAY['corps', 'bras', 'jambes']::TEXT[]),
-        ('Manteau de mailles', 80, 2, ARRAY['corps', 'jambes']::TEXT[]),
-        ('Brassards d''acier', 30, 2, ARRAY['bras']::TEXT[]),
-        ('Casque', 40, 2, ARRAY['tête']::TEXT[]),
-        ('Jambières d''acier', 40, 2, ARRAY['jambes']::TEXT[]),
-        ('Plastron', 75, 2, ARRAY['corps']::TEXT[])
-    ) AS base(name, encumbrance, armor_points, covered_locations)
-    ON CONFLICT DO NOTHING;
-  END LOOP;
-END $$;
+INSERT INTO armors (name, encumbrance, armor_points, covered_locations)
+SELECT base.name, base.encumbrance, base.armor_points, base.covered_locations
+FROM (
+  VALUES
+    ('Calotte de cuir', 10, 1, ARRAY['tête']::TEXT[]),
+    ('Gilet de cuir', 40, 1, ARRAY['corps']::TEXT[]),
+    ('Jambières de cuir', 20, 1, ARRAY['jambes']::TEXT[]),
+    ('Veste de cuir', 50, 1, ARRAY['corps', 'bras']::TEXT[]),
+    ('Cagoule de mailles', 30, 2, ARRAY['tête']::TEXT[]),
+    ('Chemise de mailles', 80, 2, ARRAY['corps', 'bras']::TEXT[]),
+    ('Gilet de mailles', 60, 2, ARRAY['corps']::TEXT[]),
+    ('Jambières de mailles', 40, 2, ARRAY['jambes']::TEXT[]),
+    ('Manteau de mailles à manches', 100, 2, ARRAY['corps', 'bras', 'jambes']::TEXT[]),
+    ('Manteau de mailles', 80, 2, ARRAY['corps', 'jambes']::TEXT[]),
+    ('Brassards d''acier', 30, 2, ARRAY['bras']::TEXT[]),
+    ('Casque', 40, 2, ARRAY['tête']::TEXT[]),
+    ('Jambières d''acier', 40, 2, ARRAY['jambes']::TEXT[]),
+    ('Plastron', 75, 2, ARRAY['corps']::TEXT[])
+) AS base(name, encumbrance, armor_points, covered_locations)
+ON CONFLICT DO NOTHING;
 
 
 
