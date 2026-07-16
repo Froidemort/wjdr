@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Clover, Heart, Mars, Venus, WandSparkles } from '@lucide/vue'
+import { Clover, Heart, Hospital, Mars, Venus, WandSparkles } from '@lucide/vue'
 import type { CharacterSummary } from '../../types/domain'
 
 const props = withDefaults(defineProps<{
@@ -40,6 +40,11 @@ const resolvedDestinyTotal = computed(() => props.destinyTotal ?? props.characte
       <WandSparkles class="h-4 w-4 text-accent" />
       <span class="font-medium">Destin</span>
       <span class="opacity-80">{{ character.destinyCurrent }}/{{ resolvedDestinyTotal }}</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <Hospital class="h-4 w-4 text-secondary" />
+      <span class="font-medium">Folie</span>
+      <span class="opacity-80">{{ character.insanityPoints }}</span>
     </div>
   </div>
 </template>

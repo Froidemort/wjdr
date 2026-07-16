@@ -66,6 +66,11 @@
 						@update:current="onQuickValueChange('xpAvailable', $event)"
 						@update:max="onQuickValueChange('xpTotal', $event)"
 					/>
+					<CharacterInsanityCard
+						:current="editable.insanityPoints"
+						:editable="canEditQuickSection"
+						@update:current="onQuickValueChange('insanityPoints', $event)"
+					/>
 					<CharacterMoneyCard
 						:gold="editable.moneyGold"
 						:silver="editable.moneySilver"
@@ -283,7 +288,13 @@
 								</div>
 								<p v-if="weapon.description" class="text-sm opacity-70">{{ weapon.description }}</p>
 								<div class="flex gap-1 flex-wrap">
-									<span class="badge badge-sm" :class="qualityBadgeClass(weapon.quality)">{{ weapon.quality || 'normal' }}</span>
+									<StateCycleBadge
+										v-if="canEditQuickSection"
+										:value="weapon.quality"
+										:options="ITEM_QUALITY_STATE_OPTIONS"
+										@change="onWeaponQualityChange(weapon, $event)"
+									/>
+									<span v-else class="badge badge-sm" :class="qualityBadgeClass(weapon.quality)">{{ weapon.quality || 'normal' }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ weapon.encumbrance }}</span>
 									<span v-if="weapon.damageFormula" class="badge badge-sm badge-outline gap-1"><Sword class="h-3 w-3" /> {{ weapon.damageFormula }}</span>
 									<StateCycleBadge
@@ -329,7 +340,13 @@
 								</div>
 								<p v-if="armor.description" class="text-sm opacity-70">{{ armor.description }}</p>
 								<div class="flex gap-1 flex-wrap">
-									<span class="badge badge-sm" :class="qualityBadgeClass(armor.quality)">{{ armor.quality || 'normal' }}</span>
+									<StateCycleBadge
+										v-if="canEditQuickSection"
+										:value="armor.quality"
+										:options="ITEM_QUALITY_STATE_OPTIONS"
+										@change="onArmorQualityChange(armor, $event)"
+									/>
+									<span v-else class="badge badge-sm" :class="qualityBadgeClass(armor.quality)">{{ armor.quality || 'normal' }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ armor.encumbrance }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Shield class="h-3 w-3" /> {{ armor.armorPoints }}</span>
 									<StateCycleBadge
@@ -382,7 +399,13 @@
 									</div>
 								</div>
 								<div class="flex gap-1 flex-wrap">
-									<span class="badge badge-sm" :class="qualityBadgeClass(item.quality)">{{ item.quality || 'normal' }}</span>
+									<StateCycleBadge
+										v-if="canEditQuickSection"
+										:value="item.quality"
+										:options="ITEM_QUALITY_STATE_OPTIONS"
+										@change="onItemQualityChange(item, $event)"
+									/>
+									<span v-else class="badge badge-sm" :class="qualityBadgeClass(item.quality)">{{ item.quality || 'normal' }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ item.encumbrance }}</span>
 									<div v-if="canEditQuickSection" class="join">
 										<button
@@ -705,6 +728,7 @@ import { useRoute } from 'vue-router'
 import { ChevronLeft, CircleX, Info, LoaderCircle, Mars, Pencil, Plus, Shield, Sword, Trash2, UserCog, Venus, Weight } from '@lucide/vue'
 import AppCard from '../components/AppCard.vue'
 import CharacterDerivedStatsCard from '../components/CharacterDerivedStatsCard.vue'
+import CharacterInsanityCard from '../components/CharacterInsanityCard.vue'
 import CharacterMoneyCard from '../components/CharacterMoneyCard.vue'
 import CharacteristicCard from '../components/CharacteristicCard.vue'
 import CharacterResourceCard from '../components/CharacterResourceCard.vue'
@@ -729,12 +753,15 @@ import {
 	updateCharacterArmorEquipped,
 	updateCharacterItemQuantity,
 	updateCharacterWeaponEquipped,
+	updateCharacterWeaponQuality,
+	updateCharacterArmorQuality,
 	removeCharacterItem,
 	removeCharacterArmor,
 	removeCharacterSkill,
 	removeCharacterTalent,
 	removeCharacterWeapon,
-	updateCharacterSkillMastery
+	updateCharacterSkillMastery,
+	updateCharacterItemQuality
 } from '../../repositories/characterLinksRepository'
 import { useAuthStore } from '../../stores/auth'
 import { getCharacterById, updateCharacterCareer, updateCharacterCore, updateCharacterStatValues } from '../../repositories/charactersRepository'
@@ -804,6 +831,11 @@ const addingCatalog = ref(false)
 const itemCatalogMode = ref<'search' | 'create'>('search')
 const creatingItem = ref(false)
 const ITEM_QUALITY_OPTIONS = ['médiocre', 'normal', 'bonne', 'exceptionelle'] as const
+const ITEM_QUALITY_STATE_OPTIONS = ITEM_QUALITY_OPTIONS.map((quality) => ({
+	value: quality,
+	label: quality,
+	badgeClass: qualityBadgeClass(quality)
+}))
 const newItemForm = ref({
 	name: '',
 	description: '',
@@ -832,6 +864,7 @@ const editable = ref({
 	destinyCurrent: 0,
 	xpTotal: 0,
 	xpAvailable: 0,
+	insanityPoints: 0,
 	moneyGold: 0,
 	moneySilver: 0,
 	moneyCopper: 0
@@ -970,6 +1003,7 @@ const { status, triggerSave, triggerSaveNow } = useLiveSave(async (payload: type
 		destiny_current: payload.destinyCurrent,
 		xp_total: payload.xpTotal,
 		xp_available: Math.min(payload.xpAvailable, payload.xpTotal),
+		insanity_points: Math.max(0, payload.insanityPoints),
 		money_gold: payload.moneyGold,
 		money_silver: payload.moneySilver,
 		money_copper: payload.moneyCopper
@@ -1104,6 +1138,7 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
 			destinyCurrent: data.destinyCurrent,
 			xpTotal: data.xpTotal,
 			xpAvailable: data.xpAvailable,
+			insanityPoints: data.insanityPoints,
 			moneyGold: data.moneyGold,
 			moneySilver: data.moneySilver,
 			moneyCopper: data.moneyCopper
@@ -1377,6 +1412,27 @@ async function onWeaponStateChange(weapon: CharacterWeapon, value: string | bool
 	}
 }
 
+async function onWeaponQualityChange(weapon: CharacterWeapon, quality: string | boolean | null): Promise<void> {
+	if (!canEditQuickSection.value || !character.value) {
+		return
+	}
+
+	if (quality !== 'médiocre' && quality !== 'normal' && quality !== 'bonne' && quality !== 'exceptionelle') {
+		return
+	}
+
+	if (quality === weapon.quality) {
+		return
+	}
+
+	try {
+		await updateCharacterWeaponQuality(weapon.id, quality)
+		await loadCharacterLinks(character.value.id)
+	} catch (error) {
+		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+	}
+}
+
 async function onDeleteArmor(linkId: string): Promise<void> {
 	if (!canEditQuickSection.value || !character.value) {
 		return
@@ -1412,6 +1468,27 @@ async function onArmorStateChange(armor: CharacterArmor, value: string | boolean
 	try {
 		await updateCharacterArmorEquipped(armor.id, nextEquipped)
 		armor.isEquipped = nextEquipped
+	} catch (error) {
+		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+	}
+}
+
+async function onArmorQualityChange(armor: CharacterArmor, quality: string | boolean | null): Promise<void> {
+	if (!canEditQuickSection.value || !character.value) {
+		return
+	}
+
+	if (quality !== 'médiocre' && quality !== 'normal' && quality !== 'bonne' && quality !== 'exceptionelle') {
+		return
+	}
+
+	if (quality === armor.quality) {
+		return
+	}
+
+	try {
+		await updateCharacterArmorQuality(armor.id, quality)
+		await loadCharacterLinks(character.value.id)
 	} catch (error) {
 		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
 	}
@@ -1453,6 +1530,27 @@ async function onChangeItemQuantity(item: CharacterItem, delta: number): Promise
 	try {
 		await updateCharacterItemQuantity(item.id, nextQuantity)
 		item.quantity = nextQuantity
+	} catch (error) {
+		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+	}
+}
+
+async function onItemQualityChange(item: CharacterItem, quality: string | boolean | null): Promise<void> {
+	if (!canEditQuickSection.value || !character.value) {
+		return
+	}
+
+	if (quality !== 'médiocre' && quality !== 'normal' && quality !== 'bonne' && quality !== 'exceptionelle') {
+		return
+	}
+
+	if (quality === item.quality) {
+		return
+	}
+
+	try {
+		await updateCharacterItemQuality(item.id, quality)
+		item.quality = quality
 	} catch (error) {
 		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
 	}

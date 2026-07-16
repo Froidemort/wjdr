@@ -316,6 +316,17 @@ export async function updateCharacterWeaponEquipped(linkId: string, equipped: 'd
   }
 }
 
+export async function updateCharacterWeaponQuality(linkId: string, quality: InventoryQuality): Promise<void> {
+  const { error } = await supabase
+    .from('character_weapons')
+    .update({ quality })
+    .eq('id', linkId)
+
+  if (error) {
+    throw error
+  }
+}
+
 export async function listCharacterArmors(characterId: string): Promise<CharacterArmor[]> {
   const { data, error } = await supabase
     .from('character_armors')
@@ -388,6 +399,17 @@ export async function updateCharacterArmorEquipped(linkId: string, isEquipped: b
   }
 }
 
+export async function updateCharacterArmorQuality(linkId: string, quality: InventoryQuality): Promise<void> {
+  const { error } = await supabase
+    .from('character_armors')
+    .update({ quality })
+    .eq('id', linkId)
+
+  if (error) {
+    throw error
+  }
+}
+
 export async function listCharacterItems(characterId: string): Promise<CharacterItem[]> {
   const { data, error } = await supabase
     .from('character_items')
@@ -442,6 +464,17 @@ export async function updateCharacterItemQuantity(linkId: string, quantity: numb
   const { error } = await supabase
     .from('character_items')
     .update({ quantity: normalizedQuantity })
+    .eq('id', linkId)
+
+  if (error) {
+    throw error
+  }
+}
+
+export async function updateCharacterItemQuality(linkId: string, quality: InventoryQuality): Promise<void> {
+  const { error } = await supabase
+    .from('character_items')
+    .update({ quality })
     .eq('id', linkId)
 
   if (error) {

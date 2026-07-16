@@ -65,6 +65,7 @@ export interface CharacterSummary {
   destinyCurrent: number
   xpTotal: number
   xpAvailable: number
+  insanityPoints: number
   moneyGold: number
   moneySilver: number
   moneyCopper: number

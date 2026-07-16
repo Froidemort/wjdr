@@ -29,6 +29,7 @@ interface CharacterRow {
   destiny_current: number
   xp_total: number
   xp_available: number
+  insanity_points: number
   money_gold: number
   money_silver: number
   money_copper: number
@@ -103,6 +104,7 @@ function mapCharacter(row: CharacterRow, careerName: string | null = null, owner
     destinyCurrent: row.destiny_current,
     xpTotal: row.xp_total,
     xpAvailable: row.xp_available,
+    insanityPoints: row.insanity_points,
     moneyGold: row.money_gold,
     moneySilver: row.money_silver,
     moneyCopper: row.money_copper,
@@ -252,7 +254,7 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
   return withRetry(async () => {
     const { data, error } = await supabase
       .from('characters')
-      .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, money_gold, money_silver, money_copper')
+      .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper')
       .eq('user_id', userId)
       .order('name', { ascending: true })
 
@@ -271,7 +273,7 @@ export async function listCharactersBySession(sessionId: string): Promise<Charac
   return withRetry(async () => {
     const { data, error } = await supabase
       .from('characters')
-      .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, money_gold, money_silver, money_copper')
+      .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper')
       .eq('session_id', sessionId)
       .order('name', { ascending: true })
 
@@ -291,7 +293,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
     const [characterResult, statsResult, staticStatsResult] = await Promise.all([
       supabase
         .from('characters')
-        .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, money_gold, money_silver, money_copper')
+        .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper')
         .eq('id', characterId)
         .maybeSingle(),
       supabase
@@ -347,6 +349,7 @@ export async function updateCharacterCore(characterId: string, payload: Partial<
   destiny_current: number
   xp_total: number
   xp_available: number
+  insanity_points: number
   money_gold: number
   money_silver: number
   money_copper: number
@@ -465,6 +468,7 @@ export async function createCharacterForSession(payload: CreateCharacterPayload)
       fortune_current: 2,
       xp_total: 0,
       xp_available: 0,
+      insanity_points: 0,
       money_gold: 0,
       money_silver: 0,
       money_copper: 0
