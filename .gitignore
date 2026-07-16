@@ -25,3 +25,4 @@ playwright-report
 *.sln
 *.sw?
 .vercel
+bdd.db
