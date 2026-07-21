@@ -51,5 +51,5 @@
 </template>
 
 <script setup lang="ts">
-const appVersion = '0.0.6'
+const appVersion = '0.0.7'
 </script>
