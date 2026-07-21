@@ -49,7 +49,7 @@
             <div
               v-if="notificationsOpen"
               :id="notificationsPanelId"
-              class="absolute right-0 top-12 z-30 w-80 max-w-full md:w-96 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
+              class="absolute right-0 top-12 z-30 w-80 max-w-[calc(100vw-1rem)] md:w-96 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
               role="menu"
               aria-label="Apercu des notifications"
             >

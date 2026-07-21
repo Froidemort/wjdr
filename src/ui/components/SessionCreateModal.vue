@@ -123,26 +123,34 @@ async function onSubmit(): Promise<void> {
 
 <template>
   <dialog ref="dialogRef" class="modal modal-middle" aria-labelledby="session-create-title" @close="modalStore.closeModal()">
-    <div class="modal-box border border-base-300 p-6">
-      <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="modalStore.closeModal()">✕</button>
-      <h3 id="session-create-title" class="mb-4 text-center text-2xl font-semibold">Creer une session</h3>
+    <div class="modal-box w-11/12 max-w-xl border border-base-300 p-4 sm:p-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
+      <button class="btn btn-sm btn-circle btn-outline absolute right-2 top-2" @click="modalStore.closeModal()" aria-label="Fermer la modale">✕</button>
+      <h3 id="session-create-title" class="mb-1 pr-8 text-center text-2xl font-semibold">Créer une session</h3>
+      <p class="mb-5 text-center text-sm opacity-70">Renseignez les informations de votre table avant de lancer l'aventure.</p>
 
       <form class="space-y-4" @submit.prevent="onSubmit">
-        <label class="form-control">
-          <span class="label-text">Nom de la session</span>
-          <input v-model="name" type="text" class="input" required maxlength="100" />
-        </label>
+        <div class="form-control">
+          <label class="label" for="session-name">
+            <span class="label-text">Nom de la session</span>
+          </label>
+          <input id="session-name" v-model="name" type="text" class="input w-full" required maxlength="100" />
+        </div>
 
-        <label class="form-control">
-          <span class="label-text">Description</span>
-          <textarea v-model="description" class="textarea" rows="3" maxlength="500" />
-        </label>
+        <div class="form-control">
+          <label class="label" for="session-description">
+            <span class="label-text">Description</span>
+          </label>
+          <textarea id="session-description" v-model="description" class="textarea w-full min-h-28" rows="4" maxlength="500" />
+          <label class="label">
+            <span class="label-text-alt opacity-70">500 caractères maximum</span>
+          </label>
+        </div>
 
         <div v-if="errorMessage" role="alert" class="alert alert-error alert-soft text-sm">
           <span>{{ errorMessage }}</span>
         </div>
 
-        <button type="submit" class="btn btn-accent w-full" :disabled="loading">
+        <button type="submit" class="btn btn-accent w-full mt-1" :disabled="loading">
           <span v-if="loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
           <span>Valider</span>
         </button>
