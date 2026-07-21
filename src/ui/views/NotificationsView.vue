@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppCard from '../components/AppCard.vue'
 import { useAuthStore } from '../../stores/auth'
@@ -80,12 +80,11 @@ function goToNextPage(): void {
 	void load()
 }
 
-onMounted(load)
-
 watch(
 	() => authStore.user?.id,
 	(userId) => {
 		if (!userId) {
+			notifications.value = []
 			unsubscribe()
 			return
 		}

@@ -207,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ChevronLeft, Copy } from '@lucide/vue'
 import AppCard from '../components/AppCard.vue'
@@ -481,8 +481,6 @@ async function copySessionLink(): Promise<void> {
 	}, 2500)
 }
 
-onMounted(loadSessionDetail)
-
 useSmartRefresh(() => {
 	if (!sessionId.value || !authStore.user?.id) {
 		return
@@ -524,10 +522,15 @@ watch(
 	() => [sessionId.value, authStore.user?.id] as const,
 	([value, userId]) => {
 		if (!value || !userId) {
+			session.value = null
+			characters.value = []
+			invitations.value = []
+			joinRequests.value = []
 			unsubscribe()
 			return
 		}
 
+		void loadSessionDetail()
 		subscribeRealtime(value)
 	},
 	{ immediate: true }

@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Link } from '@lucide/vue'
 import AppCard from '../components/AppCard.vue'
 import DataGrid from '../components/DataGrid.vue'
@@ -160,8 +160,6 @@ async function joinWithCode(): Promise<void> {
 		joining.value = false
 	}
 }
-
-onMounted(loadSessions)
 
 useSmartRefresh(() => {
 	if (!authStore.user?.id) {
