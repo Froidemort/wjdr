@@ -64,7 +64,7 @@ function onTotalAdvancedInput(event: Event): void {
 </script>
 
 <template>
-  <article class="card border w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]" :class="cardToneClass">
+  <article class="card border w-full" :class="cardToneClass">
     <div class="card-body p-4 gap-3">
       <div class="flex flex-col items-center justify-center gap-1 text-center">
         <h4 class="text-2xl font-black leading-none">{{ stat.statCode }}</h4>

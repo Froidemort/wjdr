@@ -21,28 +21,42 @@ const props = withDefaults(defineProps<{
 })
 
 const isEncumbranceOverLimit = computed(() => props.totalEncumbrance > props.maxEncumbrance)
+const encumbranceProgressMax = computed(() => Math.max(props.maxEncumbrance, 1))
+const encumbranceProgressValue = computed(() => Math.min(props.totalEncumbrance, encumbranceProgressMax.value))
 </script>
 
 <template>
   <article class="card border border-base-300 bg-base-100">
     <div class="card-body p-4 gap-3">
-      <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-        <div class="rounded-lg border border-base-300 bg-base-200 p-3 text-center sm:col-span-2 xl:col-span-1">
-          <div class="flex items-center justify-center gap-2">
+      <div class="space-y-2">
+        <div class="rounded-lg border border-base-300 bg-base-200 p-3 text-center">
+          <div class="mb-2 flex justify-center">
             <Weight class="h-5 w-5 text-accent" aria-hidden="true" />
-            <span class="text-sm font-semibold uppercase tracking-wide opacity-80">Encombrement</span>
           </div>
-          <p class="mt-2 text-2xl font-black leading-none text-center break-words sm:text-3xl sm:whitespace-nowrap" :class="isEncumbranceOverLimit ? 'text-error' : 'text-accent'">
-            {{ totalEncumbrance }} / {{ maxEncumbrance }}
-          </p>
+          <div class="relative">
+            <progress
+              class="progress progress-accent h-10 w-full bg-base-100"
+              :value="encumbranceProgressValue"
+              :max="encumbranceProgressMax"
+            />
+            <span
+              class="pointer-events-none absolute inset-0 flex items-center justify-center text-lg font-black text-secondary sm:text-xl"
+              :class="isEncumbranceOverLimit ? 'opacity-90' : ''"
+            >
+              {{ totalEncumbrance }} / {{ maxEncumbrance }}
+            </span>
+          </div>
         </div>
-        <div class="rounded-lg border border-base-300 bg-base-200 p-3 text-center">
-          <div class="text-sm font-bold uppercase text-accent">BF</div>
-          <p class="text-3xl font-black leading-none text-accent text-center">{{ bonusForce }}</p>
-        </div>
-        <div class="rounded-lg border border-base-300 bg-base-200 p-3 text-center">
-          <div class="text-sm font-bold uppercase text-accent">BE</div>
-          <p class="text-3xl font-black leading-none text-accent text-center">{{ bonusEndurance }}</p>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="rounded-lg border border-base-300 bg-base-200 p-3 text-center">
+            <div class="text-sm font-bold uppercase text-accent">BF</div>
+            <p class="text-3xl font-black leading-none text-accent text-center">{{ bonusForce }}</p>
+          </div>
+          <div class="rounded-lg border border-base-300 bg-base-200 p-3 text-center">
+            <div class="text-sm font-bold uppercase text-accent">BE</div>
+            <p class="text-3xl font-black leading-none text-accent text-center">{{ bonusEndurance }}</p>
+          </div>
         </div>
       </div>
 

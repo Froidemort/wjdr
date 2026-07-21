@@ -93,7 +93,7 @@
 			</AppCard>
 
 			<div v-if="globalState !== 'ok'" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
-				<div :class="['alert py-3 px-4 min-h-0 shadow-lg gap-2 border-0 text-white', globalState === 'error' ? 'bg-error' : 'bg-warning']" role="status" aria-live="polite">
+				<div :class="['alert py-3 px-4 min-h-0 shadow-lg gap-2 border-0', globalState === 'error' ? 'bg-error text-error-content' : 'bg-warning text-warning-content']" role="status" aria-live="polite">
 					<LoaderCircle v-if="globalState === 'loading'" class="h-5 w-5 flex-shrink-0 animate-spin" />
 					<CircleX v-else class="h-5 w-5 flex-shrink-0" />
 					<span class="text-sm sm:text-base font-medium">{{ globalStateLabel }}</span>
@@ -114,14 +114,15 @@
 						<button
 							v-if="canEditQuickSection"
 							type="button"
-							class="btn btn-sm min-w-24"
+							class="btn btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9"
+							aria-label="Importer les caractéristiques de carrière"
 							@click.stop.prevent="openStatsImportModal"
 						>
-							<span>Importer</span>
+							<Import class="h-4 w-4" />
 						</button>
 					</div>
 					<div v-if="visibleStats.length === 0" class="text-sm opacity-70">Aucune caractéristique disponible.</div>
-					<div v-else-if="characteristicsViewMode === 'normal'" class="mt-1 flex flex-wrap gap-3">
+					<div v-else-if="characteristicsViewMode === 'normal'" class="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 						<CharacteristicCard
 							v-for="stat in visibleStats"
 							:key="stat.statCode"
@@ -168,7 +169,7 @@
 				<div class="collapse-content">
 					<div v-if="sortedCharacterSkills.length === 0" class="text-sm opacity-70">Aucune compétence.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="skill in sortedCharacterSkills" :key="skill.skillId" class="card border border-base-300 bg-base-100">
+						<article v-for="skill in sortedCharacterSkills" :key="skill.skillId" v-memo="[skill.masteryLevel, canEditQuickSection]" class="card border border-base-300 bg-base-100">
 							<div class="card-body p-3 gap-3">
 								<div class="flex items-start justify-between gap-2">
 									<div class="flex items-start gap-2">
@@ -248,7 +249,7 @@
 				<div class="collapse-content">
 					<div v-if="sortedCharacterTalents.length === 0" class="text-sm opacity-70">Aucun talent.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="talent in sortedCharacterTalents" :key="talent.talentId" class="card border border-base-300 bg-base-100">
+						<article v-for="talent in sortedCharacterTalents" :key="talent.talentId" v-memo="[talent.talentId, canEditQuickSection]" class="card border border-base-300 bg-base-100">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold">{{ formatNamedWithSpecialization(talent.name, talent.specialization) }}</h4>
@@ -295,7 +296,7 @@
 				<div class="collapse-content">
 					<div v-if="sortedCharacterWeapons.length === 0" class="text-sm opacity-70">Aucune arme.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="weapon in sortedCharacterWeapons" :key="weapon.id" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
+						<article v-for="weapon in sortedCharacterWeapons" :key="weapon.id" v-memo="[weapon.equipped, weapon.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ weapon.name }}</h4>
@@ -347,7 +348,7 @@
 				<div class="collapse-content">
 					<div v-if="sortedCharacterArmors.length === 0" class="text-sm opacity-70">Aucune armure.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="armor in sortedCharacterArmors" :key="armor.id" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
+						<article v-for="armor in sortedCharacterArmors" :key="armor.id" v-memo="[armor.isEquipped, armor.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ armor.name }}</h4>
@@ -400,7 +401,7 @@
 				<div class="collapse-content">
 					<div v-if="sortedCharacterItems.length === 0" class="text-sm opacity-70">Aucun équipement.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="item in sortedCharacterItems" :key="item.id" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
+						<article v-for="item in sortedCharacterItems" :key="item.id" v-memo="[item.quantity, item.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ item.name }}</h4>
@@ -750,7 +751,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronLeft, CircleX, Info, LoaderCircle, Mars, Pencil, Plus, Shield, Sword, Trash2, UserCog, Venus, Weight } from '@lucide/vue'
+import { ChevronLeft, CircleX, Import, Info, LoaderCircle, Mars, Pencil, Plus, Shield, Sword, Trash2, UserCog, Venus, Weight } from '@lucide/vue'
 import AppCard from '../components/AppCard.vue'
 import CharacterDerivedStatsCard from '../components/CharacterDerivedStatsCard.vue'
 import CharacterInsanityCard from '../components/CharacterInsanityCard.vue'
