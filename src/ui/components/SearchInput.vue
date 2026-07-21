@@ -3,6 +3,7 @@ const model = defineModel<string>({ default: '' })
 
 defineProps<{
   placeholder: string
+  ariaLabel?: string
 }>()
 
 function onInput(event: Event): void {
@@ -17,6 +18,6 @@ function onInput(event: Event): void {
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
     </svg>
-    <input :value="model" type="search" class="grow" :placeholder="placeholder" @input="onInput" />
+    <input :value="model" type="search" class="grow" :placeholder="placeholder" :aria-label="ariaLabel ?? placeholder" @input="onInput" />
   </label>
 </template>

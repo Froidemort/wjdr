@@ -26,10 +26,14 @@
 
           <div ref="notificationsMenuRef" class="relative">
             <button
-              class="btn btn-ghost btn-sm btn-square tooltip tooltip-bottom text-primary"
+              ref="notificationsButtonRef"
+              class="btn btn-ghost btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom text-primary"
               data-tip="Notifications"
               @click="toggleNotifications"
               aria-label="Notifications"
+              aria-haspopup="menu"
+              :aria-expanded="notificationsOpen ? 'true' : 'false'"
+              :aria-controls="notificationsPanelId"
             >
               <div class="indicator">
                 <Bell class="h-6 w-6" />
@@ -44,14 +48,26 @@
 
             <div
               v-if="notificationsOpen"
-              class="absolute right-0 top-12 z-30 w-[min(20rem,calc(100vw-1rem))] md:w-96 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
+              :id="notificationsPanelId"
+              class="absolute right-0 top-12 z-30 w-80 max-w-full md:w-96 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
+              role="menu"
+              aria-label="Apercu des notifications"
             >
               <div class="flex items-center justify-between gap-2">
                 <h3 class="font-semibold">Missives</h3>
                 <span class="badge">{{ unreadCount }} non lues</span>
               </div>
 
-              <div v-if="notificationsPreview.length === 0" class="alert alert-warning alert-soft text-sm mt-3">
+              <div v-if="notificationsLoading" class="alert alert-info alert-soft text-sm mt-3" role="status" aria-live="polite">
+                <span class="loading loading-spinner loading-xs" aria-hidden="true" />
+                <span>Chargement des missives...</span>
+              </div>
+
+              <div v-else-if="notificationsError" class="alert alert-error alert-soft text-sm mt-3" role="alert">
+                <span>{{ notificationsError }}</span>
+              </div>
+
+              <div v-else-if="notificationsPreview.length === 0" class="alert alert-warning alert-soft text-sm mt-3">
                 <span>Aucune missive pour l instant.</span>
               </div>
 
@@ -80,15 +96,15 @@
             </div>
           </div>
 
-          <router-link to="/sessions" class="btn btn-ghost btn-sm btn-square tooltip tooltip-bottom text-primary" data-tip="Mes sessions">
+          <router-link to="/sessions" class="btn btn-ghost btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom text-primary" data-tip="Mes sessions">
             <Scroll class="w-6 h-6" />
           </router-link>
 
-          <router-link to="/characters" class="btn btn-ghost btn-sm btn-square tooltip tooltip-bottom text-primary" data-tip="Mes personnages">
+          <router-link to="/characters" class="btn btn-ghost btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom text-primary" data-tip="Mes personnages">
             <Users class="w-6 h-6" />
           </router-link>
 
-          <button @click="logout" class="btn btn-ghost btn-sm btn-square tooltip tooltip-bottom text-error" data-tip="Se déconnecter">
+          <button @click="logout" class="btn btn-ghost btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom text-error" data-tip="Se déconnecter">
             <LogOut class="w-6 h-6" />
           </button>
 
@@ -102,7 +118,7 @@
         </div>
         <!-- Mobile Menu (visible only on mobile) -->
         <button
-          class="btn btn-ghost btn-sm btn-square sm:hidden"
+          class="btn btn-ghost btn-square min-h-11 min-w-11 sm:hidden"
           aria-label="Menu"
           popovertarget="mobile-nav-menu"
           style="anchor-name:--mobile-nav-anchor"
@@ -112,7 +128,7 @@
         <ul
           id="mobile-nav-menu"
           popover
-          class="dropdown dropdown-end menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+          class="dropdown dropdown-end menu bg-base-100 rounded-box z-20 w-52 p-2 shadow"
           style="position-anchor:--mobile-nav-anchor"
         >
           <li>
@@ -195,7 +211,11 @@ const router = useRouter()
 const notificationsPreview = ref<NotificationItem[]>([])
 const notificationsOpen = ref(false)
 const unreadCount = ref(0)
+const notificationsLoading = ref(false)
+const notificationsError = ref<string | null>(null)
 const notificationsMenuRef = ref<HTMLElement | null>(null)
+const notificationsButtonRef = ref<HTMLButtonElement | null>(null)
+const notificationsPanelId = 'navbar-notifications-panel'
 const { subscribe, unsubscribe } = useRealtimeChannels(() => {
   void loadNotificationsPreview()
 }, { debounceMs: 300 })
@@ -219,16 +239,25 @@ async function loadNotificationsPreview(): Promise<void> {
   if (!userId) {
     notificationsPreview.value = []
     unreadCount.value = 0
+    notificationsError.value = null
     return
   }
 
-  const [list, unread] = await Promise.all([
-    listNotificationsForUser(userId),
-    countUnreadNotifications(userId)
-  ])
+  notificationsLoading.value = true
+  notificationsError.value = null
+  try {
+    const [list, unread] = await Promise.all([
+      listNotificationsForUser(userId),
+      countUnreadNotifications(userId)
+    ])
 
-  notificationsPreview.value = list.slice(0, 5)
-  unreadCount.value = unread
+    notificationsPreview.value = list.slice(0, 5)
+    unreadCount.value = unread
+  } catch (error) {
+    notificationsError.value = error instanceof Error ? error.message : 'Impossible de charger les missives.'
+  } finally {
+    notificationsLoading.value = false
+  }
 }
 
 function subscribeNotificationsRealtime(userId: string): void {
@@ -244,6 +273,11 @@ function toggleNotifications(): void {
   }
 }
 
+function closeNotifications(): void {
+  notificationsOpen.value = false
+  notificationsButtonRef.value?.focus()
+}
+
 function handleOutsideClick(event: MouseEvent): void {
   if (!notificationsOpen.value) {
     return
@@ -256,6 +290,12 @@ function handleOutsideClick(event: MouseEvent): void {
 
   if (!notificationsMenuRef.value.contains(target)) {
     notificationsOpen.value = false
+  }
+}
+
+function handleEscapeKey(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && notificationsOpen.value) {
+    closeNotifications()
   }
 }
 
@@ -290,6 +330,7 @@ watch(
 
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick)
+  document.addEventListener('keydown', handleEscapeKey)
   if (authStore.user?.id) {
     void loadNotificationsPreview()
   }
@@ -297,6 +338,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleOutsideClick)
+  document.removeEventListener('keydown', handleEscapeKey)
   unsubscribe()
 })
 </script>

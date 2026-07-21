@@ -10,6 +10,7 @@ const modalStore = useSessionCreateModalStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const dialogRef = ref<HTMLDialogElement | null>(null)
+const lastFocusedElement = ref<HTMLElement | null>(null)
 const name = ref('')
 const description = ref('')
 const loading = ref(false)
@@ -63,9 +64,11 @@ watch(() => modalStore.isOpen, (shouldOpen) => {
   }
 
   if (shouldOpen) {
+    lastFocusedElement.value = document.activeElement as HTMLElement | null
     dialogRef.value.showModal()
   } else {
     dialogRef.value.close()
+    lastFocusedElement.value?.focus()
   }
 })
 
@@ -112,10 +115,10 @@ async function onSubmit(): Promise<void> {
 </script>
 
 <template>
-  <dialog ref="dialogRef" class="modal modal-middle" @close="modalStore.closeModal()">
+  <dialog ref="dialogRef" class="modal modal-middle" aria-labelledby="session-create-title" @close="modalStore.closeModal()">
     <div class="modal-box border border-base-300 p-6">
       <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="modalStore.closeModal()">✕</button>
-      <h3 class="mb-4 text-center text-2xl font-semibold">Creer une session</h3>
+      <h3 id="session-create-title" class="mb-4 text-center text-2xl font-semibold">Creer une session</h3>
 
       <form class="space-y-4" @submit.prevent="onSubmit">
         <label class="form-control">

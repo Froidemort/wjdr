@@ -6,6 +6,7 @@ import { useAuthStore } from '../../stores/auth'
 const authModalStore = useAuthModalStore()
 const authStore = useAuthStore()
 const dialogRef = ref<HTMLDialogElement | null>(null)
+const lastFocusedElement = ref<HTMLElement | null>(null)
 const identifier = ref('')
 const email = ref('')
 const username = ref('')
@@ -15,9 +16,11 @@ const localError = ref<string | null>(null)
 watch(() => authModalStore.isOpen, (shouldOpen) => {
   if (dialogRef.value) {
     if (shouldOpen) {
+      lastFocusedElement.value = document.activeElement as HTMLElement | null
       dialogRef.value.showModal()
     } else {
       dialogRef.value.close()
+      lastFocusedElement.value?.focus()
     }
   }
 })
@@ -49,6 +52,7 @@ async function onSubmit(): Promise<void> {
   <dialog 
     ref="dialogRef" 
     class="modal modal-middle"
+    aria-labelledby="auth-modal-title"
     @close="authModalStore.closeModal()"
   >
     <div class="modal-box border border-base-300 p-6">
@@ -58,7 +62,7 @@ async function onSubmit(): Promise<void> {
         class="btn btn-sm btn-circle btn-outline absolute right-2 top-2"
       >✕</button>
 
-      <h3 class="mb-4 text-center text-2xl font-semibold">
+      <h3 id="auth-modal-title" class="mb-4 text-center text-2xl font-semibold">
         {{ authModalStore.mode === 'login' ? 'Connexion' : 'Inscription' }}
       </h3>
 

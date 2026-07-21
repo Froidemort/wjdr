@@ -45,6 +45,8 @@ function cycleState(): void {
     class="badge badge-lg cursor-pointer px-3 font-warhammer tracking-wide transition-colors duration-500"
     :class="currentOption?.badgeClass ?? 'badge-outline'"
     :disabled="disabled"
+    :aria-label="`Etat actuel: ${currentOption?.label ?? 'N/A'}. Activer pour changer.`"
+    :aria-disabled="disabled ? 'true' : 'false'"
     @click="cycleState"
   >
     <span>{{ currentOption?.label ?? 'N/A' }}</span>

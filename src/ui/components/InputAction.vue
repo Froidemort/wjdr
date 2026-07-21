@@ -1,23 +1,25 @@
 <template>
 	<AppCard :title="title" :compact="compact">
-		<div class="flex flex-col gap-3 sm:flex-row">
+		<form class="flex flex-col gap-3 sm:flex-row" @submit.prevent="$emit('submit')">
 			<input 
 				:value="modelValue"
 				type="text" 
 				:maxlength="maxLength"
 				:class="['input', inputClass]"
 				:placeholder="placeholder"
+				:disabled="Boolean(disabled || loading)"
 				@input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
 			/>
 			<button 
+				type="submit"
 				class="btn btn-sm btn-accent"
 				:disabled="Boolean(disabled || loading)"
-				@click="$emit('submit')"
+				:aria-busy="loading ? 'true' : 'false'"
 			>
 				<span v-if="loading" class="loading loading-spinner loading-xs" aria-hidden="true" />
 				{{ buttonLabel }}
 			</button>
-		</div>
+		</form>
 
 		<div v-if="successMessage" role="status" class="alert alert-success alert-soft text-sm mt-3">
 			<span>{{ successMessage }}</span>

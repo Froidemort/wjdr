@@ -1,9 +1,14 @@
 <template>
   <div id="app" class="min-h-screen flex flex-col">
-    <NavBar />
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 btn btn-sm">
+      Aller au contenu principal
+    </a>
+    <header>
+      <NavBar />
+    </header>
     <AuthModal />
     <SessionCreateModal />
-    <main class="flex-1">
+    <main id="main-content" class="flex-1" tabindex="-1">
       <router-view />
     </main>
     <Footer />
