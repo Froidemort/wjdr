@@ -4,11 +4,13 @@
 
 @theme {
   --font-warhammer: "IM Fell English", serif;
+  --default-font-family: "IM Fell English", serif;
 }
 
 html,
 body,
 #app {
+  font-family: var(--font-warhammer);
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -167,6 +169,31 @@ p, .font-warhammer {
   font-family: var(--font-warhammer);
   letter-spacing: 0.02em;
   font-weight: 500;
+}
+
+button,
+.btn,
+input,
+textarea,
+select,
+.input,
+.textarea,
+.select,
+summary,
+label,
+.label-text,
+.badge,
+.tab,
+.menu,
+.menu-title,
+.dropdown,
+.link,
+.alert,
+.card-title,
+.stat-title,
+.stat-value,
+.stat-desc {
+  font-family: var(--font-warhammer);
 }
 
 /* Petite subtilité pour casser l'aspect trop lisse de l'UI moderne */

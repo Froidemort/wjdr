@@ -97,14 +97,14 @@ function confirmSubtract(): void {
               :value="gold"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Couronnes d or"
               @change="onGoldInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
           <template v-else>
-            <div class="text-3xl font-black leading-none">{{ gold }}</div>
+            <div class="text-3xl font-black leading-none font-warhammer">{{ gold }}</div>
           </template>
           <div class="text-xs font-semibold opacity-80">CO</div>
         </div>
@@ -115,14 +115,14 @@ function confirmSubtract(): void {
               :value="silver"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Pistoles d argent"
               @change="onSilverInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
           <template v-else>
-            <div class="text-3xl font-black leading-none">{{ silver }}</div>
+            <div class="text-3xl font-black leading-none font-warhammer">{{ silver }}</div>
           </template>
           <div class="text-xs font-semibold opacity-80">PA</div>
         </div>
@@ -133,14 +133,14 @@ function confirmSubtract(): void {
               :value="copper"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Sous de cuivre"
               @change="onCopperInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
           <template v-else>
-            <div class="text-3xl font-black leading-none">{{ copper }}</div>
+            <div class="text-3xl font-black leading-none font-warhammer">{{ copper }}</div>
           </template>
           <div class="text-xs font-semibold opacity-80">S</div>
         </div>
