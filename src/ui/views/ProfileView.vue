@@ -26,7 +26,7 @@
 							<label class="form-control w-full">
 								<div class="label">
 									<span class="label-text">Changer votre avatar</span>
-									<span class="label-text-alt">Max 5MB, PNG/JPG</span>
+									<span class="label-text-alt">Max 1MB, 300x300px (JPG)</span>
 								</div>
 								<input
 									type="file"
@@ -38,6 +38,9 @@
 							</label>
 							<div v-if="avatarError" class="alert alert-error alert-sm mt-2">
 								<span>{{ avatarError }}</span>
+							</div>
+							<div v-if="avatarSuccess" class="alert alert-success alert-sm mt-2">
+								<span>{{ avatarSuccess }}</span>
 							</div>
 							<div v-if="uploadingAvatar" class="mt-2 flex items-center gap-2">
 								<span class="loading loading-spinner loading-sm" />
@@ -155,6 +158,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ChevronLeft, UserCircle } from '@lucide/vue'
+import imageCompression from 'browser-image-compression'
 import AppCard from '../components/AppCard.vue'
 import { useAuthStore } from '../../stores/auth'
 import {
@@ -189,9 +193,19 @@ const passwordSuccess = ref('')
 
 const uploadingAvatar = ref(false)
 const avatarError = ref('')
+const avatarSuccess = ref('')
 const previewUrl = ref<string | null>(null)
 const persistedAvatarUrl = ref<string | null>(null)
 const avatarLoadFailed = ref(false)
+
+const AVATAR_MAX_SIZE_BYTES = 1 * 1024 * 1024
+
+const avatarCompressionOptions = {
+	maxSizeMB: 1.0,
+	maxWidthOrHeight: 300,
+	useWebWorker: true,
+	fileType: 'image/jpeg'
+} as const
 
 function onAvatarLoadError(): void {
 	avatarLoadFailed.value = true
@@ -323,17 +337,13 @@ async function onAvatarChange(event: Event): Promise<void> {
 		return
 	}
 
-	if (file.size > 5 * 1024 * 1024) {
-		avatarError.value = 'Le fichier depasse 5MB'
-		return
-	}
-
 	if (!['image/png', 'image/jpeg'].includes(file.type)) {
 		avatarError.value = 'Seuls PNG et JPG sont acceptes'
 		return
 	}
 
 	avatarError.value = ''
+	avatarSuccess.value = ''
 	avatarLoadFailed.value = false
 	uploadingAvatar.value = true
 
@@ -342,13 +352,25 @@ async function onAvatarChange(event: Event): Promise<void> {
 			throw new Error('Utilisateur non connecte.')
 		}
 
-		previewUrl.value = URL.createObjectURL(file)
-		const uploadedAvatarUrl = await uploadProfileAvatar(authStore.user.id, file)
+		const compressedFile = await imageCompression(file, avatarCompressionOptions)
+
+		if (compressedFile.size > AVATAR_MAX_SIZE_BYTES) {
+			throw new Error('Impossible de compresser l image sous 1MB. Essayez une image plus legere.')
+		}
+
+		if (previewUrl.value) {
+			URL.revokeObjectURL(previewUrl.value)
+		}
+
+		previewUrl.value = URL.createObjectURL(compressedFile)
+		const uploadedAvatarUrl = await uploadProfileAvatar(authStore.user.id, compressedFile)
 		persistedAvatarUrl.value = uploadedAvatarUrl
 		await authStore.refreshDisplayName()
+		avatarSuccess.value = 'Avatar mis a jour avec succes.'
+		target.value = ''
 		uploadingAvatar.value = false
 	} catch (err) {
-		avatarError.value = err instanceof Error ? err.message : 'Erreur upload'
+		avatarError.value = err instanceof Error ? err.message : 'Erreur lors de la mise a jour de l avatar.'
 		if (!persistedAvatarUrl.value) {
 			previewUrl.value = null
 		}
