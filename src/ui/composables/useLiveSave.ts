@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { type Ref, ref } from 'vue'
 
 // Définition des états stricts de notre machine d'état de sauvegarde
 export type SaveStatus = 'idle' | 'pending' | 'saving' | 'error'

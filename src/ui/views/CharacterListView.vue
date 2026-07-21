@@ -28,14 +28,14 @@
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
+import { listCharactersForUser } from '../../repositories/charactersRepository'
+import { useAuthStore } from '../../stores/auth'
+import type { CharacterSummary } from '../../types/domain'
 import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
 import DataGrid from '../components/DataGrid.vue'
 import PageFooter from '../components/PageFooter.vue'
-import { useAuthStore } from '../../stores/auth'
 import { useLoadingState } from '../composables/useLoadingState'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
-import { listCharactersForUser } from '../../repositories/charactersRepository'
-import type { CharacterSummary } from '../../types/domain'
 
 const authStore = useAuthStore()
 const {

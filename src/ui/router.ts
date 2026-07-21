@@ -1,15 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
-
-import HomeView from './views/HomeView.vue'
-import CharacterDetailView from './views/CharacterDetailView.vue'
-import CharacterListView from './views/CharacterListView.vue'
-import SessionListView from './views/SessionListView.vue'
-import SessionDetailView from './views/SessionDetailView.vue'
-import NotificationsView from './views/NotificationsView.vue'
-import ProfileView from './views/ProfileView.vue'
-
 import { useAuthStore } from '../stores/auth'
 import { useAuthModalStore } from '../stores/authModal'
+import CharacterDetailView from './views/CharacterDetailView.vue'
+import CharacterListView from './views/CharacterListView.vue'
+import HomeView from './views/HomeView.vue'
+import NotificationsView from './views/NotificationsView.vue'
+import ProfileView from './views/ProfileView.vue'
+import SessionDetailView from './views/SessionDetailView.vue'
+import SessionListView from './views/SessionListView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

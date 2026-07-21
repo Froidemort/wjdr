@@ -57,7 +57,7 @@ async function assertSessionWritable(sessionId: string): Promise<void> {
     throw new Error('Session introuvable.')
   }
 
-  if (Boolean(data.is_archived)) {
+  if (data.is_archived) {
     throw new Error('Session archivee: action interdite.')
   }
 }

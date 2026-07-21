@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import { useRouter } from 'vue-router'
-import AppCard from '../components/AppCard.vue'
-import { useAuthStore } from '../../stores/auth'
 import {
   deleteNotification,
   extractNotificationSessionId,
@@ -12,9 +10,11 @@ import {
   markNotificationRead,
   type NotificationItem,
 } from '../../repositories/notificationsRepository'
-import { usePagination } from '../composables/usePagination'
+import { useAuthStore } from '../../stores/auth'
+import AppCard from '../components/AppCard.vue'
 import { useBusyOperations } from '../composables/useBusyOperations'
 import { useNotificationsLoad } from '../composables/useNotificationsLoad'
+import { usePagination } from '../composables/usePagination'
 
 const authStore = useAuthStore()
 const router = useRouter()

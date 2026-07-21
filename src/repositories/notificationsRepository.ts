@@ -1,5 +1,5 @@
 import { supabase } from '../db/supabase'
-import { isValidUUID, isValidSessionCode, validateInput } from '../utils/validation'
+import { isValidSessionCode, isValidUUID, validateInput } from '../utils/validation'
 
 export interface NotificationItem {
   id: string

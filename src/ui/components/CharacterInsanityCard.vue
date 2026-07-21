@@ -11,9 +11,7 @@ const props = withDefaults(
   }
 )
 
-const emit = defineEmits<{
-  (event: 'update:current', value: number): void
-}>()
+const emit = defineEmits<(event: 'update:current', value: number) => void>()
 
 function onCurrentInput(event: Event): void {
   const target = event.target as HTMLInputElement

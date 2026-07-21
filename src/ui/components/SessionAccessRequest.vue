@@ -32,10 +32,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { ChevronLeft } from '@lucide/vue'
-import AppCard from './AppCard.vue'
+import { ref } from 'vue'
 import { requestJoinSession } from '../../repositories/notificationsRepository'
+import AppCard from './AppCard.vue'
 
 const props = defineProps<{ sessionId: string; userId: string }>()
 

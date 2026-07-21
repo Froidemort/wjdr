@@ -1,11 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import AppCard from './AppCard.vue'
-import DataGrid from './DataGrid.vue'
-import { useBusyOperations } from '../composables/useBusyOperations'
-import { useRealtimeChannels } from '../composables/useRealtimeChannels'
-import { useSmartRefresh } from '../composables/useSmartRefresh'
-import type { SessionNote } from '../../types/domain'
 import {
   buildSessionNotesChannelName,
   buildSessionNotesRealtimeSubscriptions,
@@ -16,6 +10,12 @@ import {
   toggleSessionNoteVisibility,
   updateSessionNote,
 } from '../../repositories/sessionNotesRepository'
+import type { SessionNote } from '../../types/domain'
+import { useBusyOperations } from '../composables/useBusyOperations'
+import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import { useSmartRefresh } from '../composables/useSmartRefresh'
+import AppCard from './AppCard.vue'
+import DataGrid from './DataGrid.vue'
 
 interface SessionNoteDraft {
   title: string

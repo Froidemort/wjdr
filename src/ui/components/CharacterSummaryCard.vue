@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { CharacterSummary } from '../../types/domain'
 import AppCard from './AppCard.vue'
 import CharacterSummaryStats from './CharacterSummaryStats.vue'
-import type { CharacterSummary } from '../../types/domain'
 
 withDefaults(
   defineProps<{

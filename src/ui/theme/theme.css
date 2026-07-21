@@ -37,7 +37,7 @@ body,
   --color-secondary: oklch(28.0% 0.03 20.0);        /* Brun d'acier corrodé et de cuir */
   --color-secondary-content: oklch(85.0% 0.02 70.0);
   
-  --color-accent: oklch(76.24% 0.145 84.32);        /* Or Vieilli / Artefacts & Magie */
+  --color-accent: oklch(73% 0.1389 90.43);        /* Or Vieilli / Artefacts & Magie */
   --color-accent-content: oklch(25.0% 0.06 80.0);
   
   --color-neutral: oklch(10.0% 0.005 0.0);          /* Noir pur pour les ombres et contrastes lourds */

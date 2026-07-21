@@ -20,9 +20,7 @@ const props = withDefaults(
   }
 )
 
-const emit = defineEmits<{
-  (event: 'change', value: BadgeStateValue): void
-}>()
+const emit = defineEmits<(event: 'change', value: BadgeStateValue) => void>()
 
 const currentIndex = computed(() => {
   const index = props.options.findIndex((option) => option.value === props.value)

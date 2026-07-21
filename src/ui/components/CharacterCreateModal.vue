@@ -48,9 +48,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  createCharacterForSession,
-  type CharacterRace,
   type CharacterGender,
+  type CharacterRace,
+  createCharacterForSession,
 } from '../../repositories/charactersRepository'
 
 const props = defineProps<{ sessionId: string; userId: string }>()

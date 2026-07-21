@@ -1,5 +1,5 @@
-import { onBeforeUnmount } from 'vue'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { onBeforeUnmount } from 'vue'
 import { supabase } from '../../db/supabase'
 
 type RealtimeEvent = '*' | 'INSERT' | 'UPDATE' | 'DELETE'

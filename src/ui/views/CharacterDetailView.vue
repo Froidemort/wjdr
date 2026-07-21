@@ -749,8 +749,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import {
   ChevronLeft,
   CircleX,
@@ -767,50 +765,40 @@ import {
   Venus,
   Weight,
 } from '@lucide/vue'
-import AppCard from '../components/AppCard.vue'
-import CharacterDerivedStatsCard from '../components/CharacterDerivedStatsCard.vue'
-import CharacterInsanityCard from '../components/CharacterInsanityCard.vue'
-import CharacterMoneyCard from '../components/CharacterMoneyCard.vue'
-import CharacteristicCard from '../components/CharacteristicCard.vue'
-import CharacterResourceCard from '../components/CharacterResourceCard.vue'
-import StateCycleBadge from '../components/StateCycleBadge.vue'
-import CharacterXpCard from '../components/CharacterXpCard.vue'
-import SearchInput from '../components/SearchInput.vue'
-import { useLiveSave } from '../composables/useLiveSave'
-import { useMoneyCoercion } from '../composables/useMoneyCoercion'
-import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { createCatalogItem, searchCatalog } from '../../repositories/catalogRepository'
 import {
-  addCharacterItems,
   addCharacterArmors,
+  addCharacterItems,
   addCharacterSkills,
   addCharacterTalents,
   addCharacterWeapons,
-  listCharacterItems,
   listCharacterArmors,
+  listCharacterItems,
   listCharacterSkills,
   listCharacterTalents,
   listCharacterWeapons,
-  updateCharacterArmorEquipped,
-  updateCharacterItemQuantity,
-  updateCharacterWeaponEquipped,
-  updateCharacterWeaponQuality,
-  updateCharacterArmorQuality,
-  removeCharacterItem,
   removeCharacterArmor,
+  removeCharacterItem,
   removeCharacterSkill,
   removeCharacterTalent,
   removeCharacterWeapon,
-  updateCharacterSkillMastery,
+  updateCharacterArmorEquipped,
+  updateCharacterArmorQuality,
   updateCharacterItemQuality,
+  updateCharacterItemQuantity,
+  updateCharacterSkillMastery,
+  updateCharacterWeaponEquipped,
+  updateCharacterWeaponQuality,
 } from '../../repositories/characterLinksRepository'
-import { useAuthStore } from '../../stores/auth'
 import {
   getCharacterById,
   updateCharacterCareer,
   updateCharacterCore,
   updateCharacterStatValues,
 } from '../../repositories/charactersRepository'
+import { useAuthStore } from '../../stores/auth'
 import type {
   CatalogItem,
   CharacterArmor,
@@ -820,6 +808,18 @@ import type {
   CharacterTalent,
   CharacterWeapon,
 } from '../../types/domain'
+import AppCard from '../components/AppCard.vue'
+import CharacterDerivedStatsCard from '../components/CharacterDerivedStatsCard.vue'
+import CharacterInsanityCard from '../components/CharacterInsanityCard.vue'
+import CharacteristicCard from '../components/CharacteristicCard.vue'
+import CharacterMoneyCard from '../components/CharacterMoneyCard.vue'
+import CharacterResourceCard from '../components/CharacterResourceCard.vue'
+import CharacterXpCard from '../components/CharacterXpCard.vue'
+import SearchInput from '../components/SearchInput.vue'
+import StateCycleBadge from '../components/StateCycleBadge.vue'
+import { useLiveSave } from '../composables/useLiveSave'
+import { useMoneyCoercion } from '../composables/useMoneyCoercion'
+import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
 

@@ -57,21 +57,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Link } from '@lucide/vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { requestJoinByCode } from '../../repositories/notificationsRepository'
+import { listSessionsForUserPaginated } from '../../repositories/sessionsRepository'
+import { useAuthStore } from '../../stores/auth'
+import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
+import type { SessionSummary } from '../../types/domain'
 import AppCard from '../components/AppCard.vue'
 import DataGrid from '../components/DataGrid.vue'
 import InputAction from '../components/InputAction.vue'
 import PageFooter from '../components/PageFooter.vue'
-import { useAuthStore } from '../../stores/auth'
-import { listSessionsForUserPaginated } from '../../repositories/sessionsRepository'
-import { requestJoinByCode } from '../../repositories/notificationsRepository'
-import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
-import { usePagination } from '../composables/usePagination'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
+import { usePagination } from '../composables/usePagination'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import { useSmartRefresh } from '../composables/useSmartRefresh'
-import type { SessionSummary } from '../../types/domain'
 
 const authStore = useAuthStore()
 const sessionCreateModalStore = useSessionCreateModalStore()

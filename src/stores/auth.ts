@@ -1,6 +1,6 @@
-import { computed, ref } from 'vue'
-import { defineStore } from 'pinia'
 import type { Session, User } from '@supabase/supabase-js'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 import { supabase } from '../db/supabase'
 
 type AuthIdentifier = {

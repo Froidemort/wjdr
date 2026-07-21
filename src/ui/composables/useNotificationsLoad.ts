@@ -1,9 +1,9 @@
 import { ref } from 'vue'
-import { useRealtimeChannels } from './useRealtimeChannels'
 import {
   listNotificationsForUserPaginated,
   type NotificationItem,
 } from '../../repositories/notificationsRepository'
+import { useRealtimeChannels } from './useRealtimeChannels'
 
 interface UseNotificationsLoadOptions {
   userId: () => string | undefined

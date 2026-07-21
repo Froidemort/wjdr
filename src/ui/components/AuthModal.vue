@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useAuthModalStore } from '../../stores/authModal'
 import { useAuthStore } from '../../stores/auth'
+import { useAuthModalStore } from '../../stores/authModal'
 
 const authModalStore = useAuthModalStore()
 const authStore = useAuthStore()

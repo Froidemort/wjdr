@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { Clover, Heart, Hospital, Mars, Venus, WandSparkles } from '@lucide/vue'
+import { computed } from 'vue'
 import type { CharacterSummary } from '../../types/domain'
 
 const props = withDefaults(

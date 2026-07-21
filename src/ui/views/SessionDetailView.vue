@@ -207,37 +207,37 @@
 </template>
 
 <script setup lang="ts">
+import { ChevronLeft, Copy } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronLeft, Copy } from '@lucide/vue'
-import AppCard from '../components/AppCard.vue'
-import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
-import SearchInput from '../components/SearchInput.vue'
-import CharacterCreateModal from '../components/CharacterCreateModal.vue'
-import SessionAccessRequest from '../components/SessionAccessRequest.vue'
-import SessionNotesPanel from '../components/SessionNotesPanel.vue'
-import { useAuthStore } from '../../stores/auth'
-import { getSessionById, updateSessionArchivedState } from '../../repositories/sessionsRepository'
 import { listCharactersBySession } from '../../repositories/charactersRepository'
-import {
-  listPendingJoinRequestsForSession,
-  markNotificationRead,
-  notifyJoinRequestAccepted,
-  notifyJoinRequestRejected,
-  type JoinRequestItem,
-} from '../../repositories/notificationsRepository'
 import {
   createSessionInvitations,
   listSessionInvitations,
   type SessionInvitation,
 } from '../../repositories/invitationsRepository'
 import {
+  type JoinRequestItem,
+  listPendingJoinRequestsForSession,
+  markNotificationRead,
+  notifyJoinRequestAccepted,
+  notifyJoinRequestRejected,
+} from '../../repositories/notificationsRepository'
+import { getSessionById, updateSessionArchivedState } from '../../repositories/sessionsRepository'
+import {
   addUsersToSession,
   searchInvitableProfilesByMembership,
 } from '../../repositories/usersSessionRepository'
+import { useAuthStore } from '../../stores/auth'
+import type { CharacterSummary, Profile, SessionSummary } from '../../types/domain'
+import AppCard from '../components/AppCard.vue'
+import type CharacterCreateModal from '../components/CharacterCreateModal.vue'
+import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
+import SearchInput from '../components/SearchInput.vue'
+import SessionAccessRequest from '../components/SessionAccessRequest.vue'
+import SessionNotesPanel from '../components/SessionNotesPanel.vue'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import { useSmartRefresh } from '../composables/useSmartRefresh'
-import type { CharacterSummary, Profile, SessionSummary } from '../../types/domain'
 
 const route = useRoute()
 const router = useRouter()

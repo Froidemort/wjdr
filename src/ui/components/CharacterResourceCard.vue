@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Clover, Heart, WandSparkles } from '@lucide/vue'
 import { computed } from 'vue'
-import { Heart, Clover, WandSparkles } from '@lucide/vue'
 
 const props = withDefaults(
   defineProps<{

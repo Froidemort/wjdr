@@ -21,8 +21,8 @@
 </template>
 
 <script setup lang="ts">
+import { Moon, Sun } from '@lucide/vue'
 import { computed } from 'vue'
-import { Sun, Moon } from '@lucide/vue'
 import { useThemeStore } from '../../stores/theme'
 
 const themeStore = useThemeStore()

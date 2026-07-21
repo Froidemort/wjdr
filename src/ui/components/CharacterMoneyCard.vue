@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { BanknoteArrowDown, Coins } from '@lucide/vue'
+import { ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{
