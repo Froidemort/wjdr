@@ -3,14 +3,17 @@ import { computed } from 'vue'
 import { Clover, Heart, Hospital, Mars, Venus, WandSparkles } from '@lucide/vue'
 import type { CharacterSummary } from '../../types/domain'
 
-const props = withDefaults(defineProps<{
-  character: CharacterSummary
-  compact?: boolean
-  destinyTotal?: number
-}>(), {
-  compact: false,
-  destinyTotal: undefined
-})
+const props = withDefaults(
+  defineProps<{
+    character: CharacterSummary
+    compact?: boolean
+    destinyTotal?: number
+  }>(),
+  {
+    compact: false,
+    destinyTotal: undefined,
+  }
+)
 
 const resolvedDestinyTotal = computed(() => props.destinyTotal ?? props.character.destinyCurrent)
 </script>

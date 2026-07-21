@@ -28,9 +28,9 @@ import { useThemeStore } from '../../stores/theme'
 const themeStore = useThemeStore()
 
 const isDark = computed({
-	get: () => themeStore.theme === 'grimorium-dark',
-	set: (enabled: boolean) => {
-		themeStore.setTheme(enabled ? 'grimorium-dark' : 'grimorium-light')
-	}
+  get: () => themeStore.theme === 'grimorium-dark',
+  set: (enabled: boolean) => {
+    themeStore.setTheme(enabled ? 'grimorium-dark' : 'grimorium-light')
+  },
 })
 </script>

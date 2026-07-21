@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { fromMock } = vi.hoisted(() => ({
-  fromMock: vi.fn()
+  fromMock: vi.fn(),
 }))
 
 vi.mock('../../src/db/supabase', () => ({
   supabase: {
-    from: fromMock
-  }
+    from: fromMock,
+  },
 }))
 
 import { searchCatalog } from '../../src/repositories/catalogRepository'
@@ -20,22 +20,24 @@ type QueryBuilder = {
   returns: ReturnType<typeof vi.fn>
 }
 
-function createBuilder(data: Array<{
-  id: string
-  name: string
-  description?: string | null
-  specialization?: string | null
-  quality?: string | null
-  encumbrance?: number | null
-  damage_formula?: string | null
-  armor_points?: number | null
-}>): QueryBuilder {
+function createBuilder(
+  data: Array<{
+    id: string
+    name: string
+    description?: string | null
+    specialization?: string | null
+    quality?: string | null
+    encumbrance?: number | null
+    damage_formula?: string | null
+    armor_points?: number | null
+  }>
+): QueryBuilder {
   const builder: QueryBuilder = {
     select: vi.fn(),
     limit: vi.fn(),
     or: vi.fn(),
     ilike: vi.fn(),
-    returns: vi.fn()
+    returns: vi.fn(),
   }
 
   builder.select.mockReturnValue(builder)
@@ -67,8 +69,8 @@ describe('searchCatalog', () => {
         description: 'Lame',
         quality: 'bonne',
         encumbrance: 1,
-        damage_formula: 'BF+1'
-      }
+        damage_formula: 'BF+1',
+      },
     ])
     fromMock.mockReturnValue(builder)
 
@@ -86,13 +88,15 @@ describe('searchCatalog', () => {
         quality: 'bonne',
         encumbrance: 1,
         damageFormula: 'BF+1',
-        armorPoints: null
-      }
+        armorPoints: null,
+      },
     ])
   })
 
   it('uses OR name/specialization for skills and talents', async () => {
-    const builder = createBuilder([{ id: 's1', name: 'Athletisme', specialization: 'Escalade', description: null }])
+    const builder = createBuilder([
+      { id: 's1', name: 'Athletisme', specialization: 'Escalade', description: null },
+    ])
     fromMock.mockReturnValue(builder)
 
     await searchCatalog('skills', 'ath')
@@ -110,8 +114,8 @@ describe('searchCatalog', () => {
         description: 'Protection legere',
         quality: 'normal',
         encumbrance: 2,
-        armor_points: 1
-      }
+        armor_points: 1,
+      },
     ])
     fromMock.mockReturnValue(builder)
 
@@ -128,8 +132,8 @@ describe('searchCatalog', () => {
         quality: 'normal',
         encumbrance: 2,
         damageFormula: null,
-        armorPoints: 1
-      }
+        armorPoints: 1,
+      },
     ])
   })
 })

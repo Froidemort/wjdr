@@ -2,12 +2,15 @@
 import { computed } from 'vue'
 import type { CharacterStatValue } from '../../types/domain'
 
-const props = withDefaults(defineProps<{
-  stat: CharacterStatValue
-  editable?: boolean
-}>(), {
-  editable: false
-})
+const props = withDefaults(
+  defineProps<{
+    stat: CharacterStatValue
+    editable?: boolean
+  }>(),
+  {
+    editable: false,
+  }
+)
 
 const emit = defineEmits<{
   (event: 'tick-up', value: { statCode: string; step: number }): void
@@ -18,7 +21,9 @@ const emit = defineEmits<{
 
 const tickStep = computed(() => (props.stat.isSecondary ? 1 : 5))
 const totalValue = computed(() => Math.max(0, props.stat.baseValue + props.stat.currentAdvanced))
-const cardToneClass = computed(() => (props.stat.isSecondary ? 'bg-base-100 border-base-300' : 'bg-base-200 border-base-300'))
+const cardToneClass = computed(() =>
+  props.stat.isSecondary ? 'bg-base-100 border-base-300' : 'bg-base-200 border-base-300'
+)
 const totalToneClass = computed(() => (props.stat.isSecondary ? 'bg-base-200' : 'bg-base-300'))
 const totalValueClass = computed(() => (props.stat.isSecondary ? 'text-secondary' : 'text-primary'))
 
@@ -46,7 +51,7 @@ function onBaseInput(event: Event): void {
   const target = event.target as HTMLInputElement
   emit('update-base', {
     statCode: props.stat.statCode,
-    baseValue: Math.max(0, Number(target.value || 0))
+    baseValue: Math.max(0, Number(target.value || 0)),
   })
 }
 
@@ -58,7 +63,7 @@ function onTotalAdvancedInput(event: Event): void {
   const target = event.target as HTMLInputElement
   emit('update-total-advanced', {
     statCode: props.stat.statCode,
-    totalAdvanced: Math.max(0, Number(target.value || 0))
+    totalAdvanced: Math.max(0, Number(target.value || 0)),
   })
 }
 </script>

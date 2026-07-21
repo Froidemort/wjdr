@@ -14,9 +14,9 @@
 
 <script setup lang="ts">
 defineProps<{
-	title: string
-	modifier?: 'arrow' | 'plus' | ''
-	defaultOpen?: boolean
+  title: string
+  modifier?: 'arrow' | 'plus' | ''
+  defaultOpen?: boolean
 }>()
 </script>
 

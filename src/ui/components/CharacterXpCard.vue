@@ -1,11 +1,14 @@
 <script setup lang="ts">
-const props = withDefaults(defineProps<{
-  current: number
-  max: number
-  editable?: boolean
-}>(), {
-  editable: false
-})
+const props = withDefaults(
+  defineProps<{
+    current: number
+    max: number
+    editable?: boolean
+  }>(),
+  {
+    editable: false,
+  }
+)
 
 const emit = defineEmits<{
   (event: 'update:current', value: number): void

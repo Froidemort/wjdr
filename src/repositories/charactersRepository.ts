@@ -87,7 +87,11 @@ async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 2): Promi
   throw lastError
 }
 
-function mapCharacter(row: CharacterRow, careerName: string | null = null, ownerAvatarUrl: string | null = null): CharacterSummary {
+function mapCharacter(
+  row: CharacterRow,
+  careerName: string | null = null,
+  ownerAvatarUrl: string | null = null
+): CharacterSummary {
   return {
     id: row.id,
     name: row.name,
@@ -108,7 +112,7 @@ function mapCharacter(row: CharacterRow, careerName: string | null = null, owner
     moneyGold: row.money_gold,
     moneySilver: row.money_silver,
     moneyCopper: row.money_copper,
-    ownerAvatarUrl
+    ownerAvatarUrl,
   }
 }
 
@@ -118,10 +122,7 @@ async function resolveCareerNames(careerIds: string[]): Promise<Map<string, stri
     return new Map()
   }
 
-  const { data, error } = await supabase
-    .from('careers')
-    .select('id, name')
-    .in('id', uniqueIds)
+  const { data, error } = await supabase.from('careers').select('id, name').in('id', uniqueIds)
 
   if (error) {
     throw error
@@ -166,7 +167,7 @@ function mapCharacterStat(row: CharacterStatRow): CharacterStatValue {
     baseValue: row.base_value,
     currentAdvanced: row.current_advanced,
     totalAdvanced: row.total_advanced,
-    isSecondary: false
+    isSecondary: false,
   }
 }
 
@@ -234,16 +235,14 @@ async function createInitialStats(characterId: string): Promise<void> {
     stat_code: stat.code,
     base_value: 0,
     current_advanced: 0,
-    total_advanced: 0
+    total_advanced: 0,
   }))
 
   if (rows.length === 0) {
     return
   }
 
-  const { error: insertError } = await supabase
-    .from('character_stat_values')
-    .insert(rows)
+  const { error: insertError } = await supabase.from('character_stat_values').insert(rows)
 
   if (insertError) {
     throw insertError
@@ -254,7 +253,9 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
   return withRetry(async () => {
     const { data, error } = await supabase
       .from('characters')
-      .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper')
+      .select(
+        'id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+      )
       .eq('user_id', userId)
       .order('name', { ascending: true })
 
@@ -265,7 +266,9 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
     const rows = (data ?? []) as CharacterRow[]
     const careerNames = await resolveCareerNames(rows.map((row) => row.career_id))
     const avatars = await resolveOwnerAvatars(rows.map((row) => row.user_id))
-    return rows.map((row) => mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null))
+    return rows.map((row) =>
+      mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null)
+    )
   })
 }
 
@@ -273,7 +276,9 @@ export async function listCharactersBySession(sessionId: string): Promise<Charac
   return withRetry(async () => {
     const { data, error } = await supabase
       .from('characters')
-      .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper')
+      .select(
+        'id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+      )
       .eq('session_id', sessionId)
       .order('name', { ascending: true })
 
@@ -284,7 +289,9 @@ export async function listCharactersBySession(sessionId: string): Promise<Charac
     const rows = (data ?? []) as CharacterRow[]
     const careerNames = await resolveCareerNames(rows.map((row) => row.career_id))
     const avatars = await resolveOwnerAvatars(rows.map((row) => row.user_id))
-    return rows.map((row) => mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null))
+    return rows.map((row) =>
+      mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null)
+    )
   })
 }
 
@@ -293,7 +300,9 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
     const [characterResult, statsResult, staticStatsResult] = await Promise.all([
       supabase
         .from('characters')
-        .select('id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper')
+        .select(
+          'id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+        )
         .eq('id', characterId)
         .maybeSingle(),
       supabase
@@ -306,7 +315,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
         .from('static_stats')
         .select('code, is_secondary')
         .limit(32)
-        .order('code', { ascending: true })
+        .order('code', { ascending: true }),
     ])
 
     if (characterResult.error) {
@@ -328,38 +337,41 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
     const characterRow = characterResult.data as CharacterRow
     const careerNames = await resolveCareerNames([characterRow.career_id])
     const secondaryByCode = new Map<string, boolean>(
-      ((staticStatsResult.data ?? []) as StaticStatRow[]).map((row) => [row.code, Boolean(row.is_secondary)])
+      ((staticStatsResult.data ?? []) as StaticStatRow[]).map((row) => [
+        row.code,
+        Boolean(row.is_secondary),
+      ])
     )
 
     return {
       ...mapCharacter(characterRow, careerNames.get(characterRow.career_id) ?? null, null),
       stats: ((statsResult.data ?? []) as CharacterStatRow[]).map((row) => ({
         ...mapCharacterStat(row),
-        isSecondary: secondaryByCode.get(row.stat_code) ?? false
-      }))
+        isSecondary: secondaryByCode.get(row.stat_code) ?? false,
+      })),
     }
   })
 }
 
-export async function updateCharacterCore(characterId: string, payload: Partial<{
-  pv_max: number
-  pv_current: number
-  fortune_max: number
-  fortune_current: number
-  destiny_current: number
-  xp_total: number
-  xp_available: number
-  insanity_points: number
-  money_gold: number
-  money_silver: number
-  money_copper: number
-}>): Promise<void> {
+export async function updateCharacterCore(
+  characterId: string,
+  payload: Partial<{
+    pv_max: number
+    pv_current: number
+    fortune_max: number
+    fortune_current: number
+    destiny_current: number
+    xp_total: number
+    xp_available: number
+    insanity_points: number
+    money_gold: number
+    money_silver: number
+    money_copper: number
+  }>
+): Promise<void> {
   await assertCharacterSessionWritable(characterId)
 
-  const { error } = await supabase
-    .from('characters')
-    .update(payload)
-    .eq('id', characterId)
+  const { error } = await supabase.from('characters').update(payload).eq('id', characterId)
 
   if (error) {
     throw error
@@ -384,7 +396,11 @@ export async function updateCharacterCareer(characterId: string, careerId: strin
   }
 }
 
-export async function updateCharacterStatCurrentAdvanced(characterId: string, statCode: string, currentAdvanced: number): Promise<void> {
+export async function updateCharacterStatCurrentAdvanced(
+  characterId: string,
+  statCode: string,
+  currentAdvanced: number
+): Promise<void> {
   await updateCharacterStatValues(characterId, statCode, { current_advanced: currentAdvanced })
 }
 
@@ -404,7 +420,8 @@ export async function updateCharacterStatValues(
 
   await assertCharacterSessionWritable(characterId)
 
-  const updatePayload: { base_value?: number; current_advanced?: number; total_advanced?: number } = {}
+  const updatePayload: { base_value?: number; current_advanced?: number; total_advanced?: number } =
+    {}
   if (typeof payload.base_value === 'number') {
     updatePayload.base_value = Math.max(0, payload.base_value)
   }
@@ -471,7 +488,7 @@ export async function createCharacterForSession(payload: CreateCharacterPayload)
       insanity_points: 0,
       money_gold: 0,
       money_silver: 0,
-      money_copper: 0
+      money_copper: 0,
     })
     .select('id')
     .single()

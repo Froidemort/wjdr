@@ -2,27 +2,32 @@
 import { computed } from 'vue'
 import { Shield, Weight } from '@lucide/vue'
 
-const props = withDefaults(defineProps<{
-  totalEncumbrance: number
-  maxEncumbrance: number
-  bonusForce: number
-  bonusEndurance: number
-  armorByLocation: {
-    tete: number
-    corps: number
-    bras: number
-    jambes: number
+const props = withDefaults(
+  defineProps<{
+    totalEncumbrance: number
+    maxEncumbrance: number
+    bonusForce: number
+    bonusEndurance: number
+    armorByLocation: {
+      tete: number
+      corps: number
+      bras: number
+      jambes: number
+    }
+  }>(),
+  {
+    totalEncumbrance: 0,
+    maxEncumbrance: 0,
+    bonusForce: 0,
+    bonusEndurance: 0,
   }
-}>(), {
-  totalEncumbrance: 0,
-  maxEncumbrance: 0,
-  bonusForce: 0,
-  bonusEndurance: 0
-})
+)
 
 const isEncumbranceOverLimit = computed(() => props.totalEncumbrance > props.maxEncumbrance)
 const encumbranceProgressMax = computed(() => Math.max(props.maxEncumbrance, 1))
-const encumbranceProgressValue = computed(() => Math.min(props.totalEncumbrance, encumbranceProgressMax.value))
+const encumbranceProgressValue = computed(() =>
+  Math.min(props.totalEncumbrance, encumbranceProgressMax.value)
+)
 </script>
 
 <template>

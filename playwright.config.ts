@@ -8,7 +8,7 @@ export default defineConfig({
   testIgnore: ['tests/e2e/deploy-smoke.spec.ts'],
   timeout: 45_000,
   expect: {
-    timeout: 10_000
+    timeout: 10_000,
   },
   fullyParallel: false,
   retries: 0,
@@ -16,7 +16,7 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: deployedBaseUrl ?? localBaseUrl,
-    trace: 'retain-on-failure'
+    trace: 'retain-on-failure',
   },
   webServer: deployedBaseUrl
     ? undefined
@@ -24,12 +24,12 @@ export default defineConfig({
         command: 'npm run dev -- --host 127.0.0.1 --port 4173',
         port: 4173,
         reuseExistingServer: true,
-        timeout: 120_000
+        timeout: 120_000,
       },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
-    }
-  ]
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 })

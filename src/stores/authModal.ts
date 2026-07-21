@@ -20,6 +20,6 @@ export const useAuthModalStore = defineStore('authModal', () => {
     isOpen,
     mode,
     openModal,
-    closeModal
+    closeModal,
   }
 })

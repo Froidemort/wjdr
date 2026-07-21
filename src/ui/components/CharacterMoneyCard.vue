@@ -2,14 +2,17 @@
 import { ref } from 'vue'
 import { BanknoteArrowDown, Coins } from '@lucide/vue'
 
-const props = withDefaults(defineProps<{
-  gold: number
-  silver: number
-  copper: number
-  editable?: boolean
-}>(), {
-  editable: false
-})
+const props = withDefaults(
+  defineProps<{
+    gold: number
+    silver: number
+    copper: number
+    editable?: boolean
+  }>(),
+  {
+    editable: false,
+  }
+)
 
 const emit = defineEmits<{
   (event: 'update:gold', value: number): void
@@ -65,7 +68,7 @@ function onSubtractDialogClosed(): void {
 function confirmSubtract(): void {
   emit('subtract', {
     silver: Math.max(0, Math.floor(subtractSilver.value)),
-    copper: Math.max(0, Math.floor(subtractCopper.value))
+    copper: Math.max(0, Math.floor(subtractCopper.value)),
   })
 
   closeSubtractDialog()

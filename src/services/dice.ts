@@ -47,7 +47,9 @@ export function rollPercentile(random: () => number = Math.random): number {
 
 export function resolvePercentileCheck(input: PercentileCheckInput): PercentileCheckResult {
   const roll = normalizePercentileRoll(input.roll ?? rollPercentile())
-  const effectiveTarget = clampPercentileTarget(input.baseTarget + (input.difficulty ?? 0) + (input.modifier ?? 0))
+  const effectiveTarget = clampPercentileTarget(
+    input.baseTarget + (input.difficulty ?? 0) + (input.modifier ?? 0)
+  )
   const margin = effectiveTarget - roll
 
   return {
@@ -57,7 +59,7 @@ export function resolvePercentileCheck(input: PercentileCheckInput): PercentileC
     success: roll <= effectiveTarget,
     margin,
     tensMargin: Math.trunc(Math.abs(margin) / 10),
-    isDouble: roll >= 11 && roll < 100 && roll % 11 === 0
+    isDouble: roll >= 11 && roll < 100 && roll % 11 === 0,
   }
 }
 

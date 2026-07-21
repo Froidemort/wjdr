@@ -751,7 +751,22 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ChevronLeft, CircleX, Import, Info, LoaderCircle, Mars, Pencil, Plus, Shield, Sword, Trash2, UserCog, Venus, Weight } from '@lucide/vue'
+import {
+  ChevronLeft,
+  CircleX,
+  Import,
+  Info,
+  LoaderCircle,
+  Mars,
+  Pencil,
+  Plus,
+  Shield,
+  Sword,
+  Trash2,
+  UserCog,
+  Venus,
+  Weight,
+} from '@lucide/vue'
 import AppCard from '../components/AppCard.vue'
 import CharacterDerivedStatsCard from '../components/CharacterDerivedStatsCard.vue'
 import CharacterInsanityCard from '../components/CharacterInsanityCard.vue'
@@ -766,68 +781,87 @@ import { useMoneyCoercion } from '../composables/useMoneyCoercion'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import { createCatalogItem, searchCatalog } from '../../repositories/catalogRepository'
 import {
-	addCharacterItems,
-	addCharacterArmors,
-	addCharacterSkills,
-	addCharacterTalents,
-	addCharacterWeapons,
-	listCharacterItems,
-	listCharacterArmors,
-	listCharacterSkills,
-	listCharacterTalents,
-	listCharacterWeapons,
-	updateCharacterArmorEquipped,
-	updateCharacterItemQuantity,
-	updateCharacterWeaponEquipped,
-	updateCharacterWeaponQuality,
-	updateCharacterArmorQuality,
-	removeCharacterItem,
-	removeCharacterArmor,
-	removeCharacterSkill,
-	removeCharacterTalent,
-	removeCharacterWeapon,
-	updateCharacterSkillMastery,
-	updateCharacterItemQuality
+  addCharacterItems,
+  addCharacterArmors,
+  addCharacterSkills,
+  addCharacterTalents,
+  addCharacterWeapons,
+  listCharacterItems,
+  listCharacterArmors,
+  listCharacterSkills,
+  listCharacterTalents,
+  listCharacterWeapons,
+  updateCharacterArmorEquipped,
+  updateCharacterItemQuantity,
+  updateCharacterWeaponEquipped,
+  updateCharacterWeaponQuality,
+  updateCharacterArmorQuality,
+  removeCharacterItem,
+  removeCharacterArmor,
+  removeCharacterSkill,
+  removeCharacterTalent,
+  removeCharacterWeapon,
+  updateCharacterSkillMastery,
+  updateCharacterItemQuality,
 } from '../../repositories/characterLinksRepository'
 import { useAuthStore } from '../../stores/auth'
-import { getCharacterById, updateCharacterCareer, updateCharacterCore, updateCharacterStatValues } from '../../repositories/charactersRepository'
+import {
+  getCharacterById,
+  updateCharacterCareer,
+  updateCharacterCore,
+  updateCharacterStatValues,
+} from '../../repositories/charactersRepository'
 import type {
-	CatalogItem,
-	CharacterArmor,
-	CharacterDetail,
-	CharacterItem,
-	CharacterSkill,
-	CharacterTalent,
-	CharacterWeapon
+  CatalogItem,
+  CharacterArmor,
+  CharacterDetail,
+  CharacterItem,
+  CharacterSkill,
+  CharacterTalent,
+  CharacterWeapon,
 } from '../../types/domain'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
 
-const CHARACTERISTICS_ORDER = ['CC', 'CT', 'F', 'E', 'AG', 'INT', 'FM', 'SOC', 'A', 'M', 'MAG'] as const
-const CHARACTERISTICS_INDEX = new Map<string, number>(CHARACTERISTICS_ORDER.map((code, index) => [code, index]))
+const CHARACTERISTICS_ORDER = [
+  'CC',
+  'CT',
+  'F',
+  'E',
+  'AG',
+  'INT',
+  'FM',
+  'SOC',
+  'A',
+  'M',
+  'MAG',
+] as const
+const CHARACTERISTICS_INDEX = new Map<string, number>(
+  CHARACTERISTICS_ORDER.map((code, index) => [code, index])
+)
 const CATALOG_LABELS: Record<CatalogSection, string> = {
-	skills: 'compétences',
-	talents: 'talents',
-	weapons: 'armes',
-	armors: 'armures',
-	items: 'équipements'
+  skills: 'compétences',
+  talents: 'talents',
+  weapons: 'armes',
+  armors: 'armures',
+  items: 'équipements',
 }
 
 const WEAPON_EQUIPPED_OPTIONS = [
-	{ value: null, label: 'Inventaire', badgeClass: 'badge-outline' },
-	{ value: 'droite', label: 'Droite', badgeClass: 'badge-primary' },
-	{ value: 'gauche', label: 'Gauche', badgeClass: 'badge-primary' },
-	{ value: 'd&g', label: 'Deux mains', badgeClass: 'badge-primary' }
+  { value: null, label: 'Inventaire', badgeClass: 'badge-outline' },
+  { value: 'droite', label: 'Droite', badgeClass: 'badge-primary' },
+  { value: 'gauche', label: 'Gauche', badgeClass: 'badge-primary' },
+  { value: 'd&g', label: 'Deux mains', badgeClass: 'badge-primary' },
 ] as const
 
 const ARMOR_EQUIPPED_OPTIONS = [
-	{ value: false, label: 'Inventaire', badgeClass: 'badge-outline' },
-	{ value: true, label: 'Équipée', badgeClass: 'badge-success' }
+  { value: false, label: 'Inventaire', badgeClass: 'badge-outline' },
+  { value: true, label: 'Équipée', badgeClass: 'badge-success' },
 ] as const
 
 const CHARACTERISTICS_VIEW_OPTIONS = [
-	{ value: 'normal', label: 'Détaillé', badgeClass: 'badge-outline' },
-	{ value: 'compact', label: 'Compact', badgeClass: 'badge-warning' }
+  { value: 'normal', label: 'Détaillé', badgeClass: 'badge-outline' },
+  { value: 'compact', label: 'Compact', badgeClass: 'badge-warning' },
 ] as const
 
 const route = useRoute()
@@ -863,16 +897,16 @@ const itemCatalogMode = ref<'search' | 'create'>('search')
 const creatingItem = ref(false)
 const ITEM_QUALITY_OPTIONS = ['médiocre', 'normal', 'bonne', 'exceptionelle'] as const
 const ITEM_QUALITY_STATE_OPTIONS = ITEM_QUALITY_OPTIONS.map((quality) => ({
-	value: quality,
-	label: quality,
-	badgeClass: qualityBadgeClass(quality)
+  value: quality,
+  label: quality,
+  badgeClass: qualityBadgeClass(quality),
 }))
 const newItemForm = ref({
-	name: '',
-	description: '',
-	quality: 'normal' as (typeof ITEM_QUALITY_OPTIONS)[number],
-	encumbrance: 0,
-	quantity: 1
+  name: '',
+  description: '',
+  quality: 'normal' as (typeof ITEM_QUALITY_OPTIONS)[number],
+  encumbrance: 0,
+  quantity: 1,
 })
 const descriptionTitle = ref<string | null>(null)
 const descriptionContent = ref<string | null>(null)
@@ -887,26 +921,30 @@ const characterArmors = ref<CharacterArmor[]>([])
 const characterItems = ref<CharacterItem[]>([])
 
 const editable = ref({
-	pvMax: 0,
-	pvCurrent: 0,
-	fortuneMax: 0,
-	fortuneCurrent: 0,
+  pvMax: 0,
+  pvCurrent: 0,
+  fortuneMax: 0,
+  fortuneCurrent: 0,
 
-	destinyCurrent: 0,
-	xpTotal: 0,
-	xpAvailable: 0,
-	insanityPoints: 0,
-	moneyGold: 0,
-	moneySilver: 0,
-	moneyCopper: 0
+  destinyCurrent: 0,
+  xpTotal: 0,
+  xpAvailable: 0,
+  insanityPoints: 0,
+  moneyGold: 0,
+  moneySilver: 0,
+  moneyCopper: 0,
 })
 
-const canEditQuickSection = computed(() => Boolean(character.value && authStore.user?.id === character.value.userId))
+const canEditQuickSection = computed(() =>
+  Boolean(character.value && authStore.user?.id === character.value.userId)
+)
 const characteristicsViewMode = ref<'normal' | 'compact'>('normal')
 const modalSectionLabel = computed(() => CATALOG_LABELS[catalogSection.value])
 
 function sortByName<T extends { name: string }>(entries: T[]): T[] {
-	return [...entries].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' }))
+  return [...entries].sort((left, right) =>
+    left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })
+  )
 }
 
 const sortedCharacterSkills = computed(() => sortByName(characterSkills.value))
@@ -916,1055 +954,1135 @@ const sortedCharacterArmors = computed(() => sortByName(characterArmors.value))
 const sortedCharacterItems = computed(() => sortByName(characterItems.value))
 
 const visibleStats = computed(() => {
-	if (!character.value) {
-		return []
-	}
+  if (!character.value) {
+    return []
+  }
 
-	return character.value.stats.filter((stat) => {
-		const normalized = stat.statCode.trim().toUpperCase()
-		return normalized !== 'B' && normalized !== 'PD'
-	}).sort((left, right) => {
-		const leftCode = left.statCode.trim().toUpperCase()
-		const rightCode = right.statCode.trim().toUpperCase()
-		const leftIndex = CHARACTERISTICS_INDEX.get(leftCode)
-		const rightIndex = CHARACTERISTICS_INDEX.get(rightCode)
+  return character.value.stats
+    .filter((stat) => {
+      const normalized = stat.statCode.trim().toUpperCase()
+      return normalized !== 'B' && normalized !== 'PD'
+    })
+    .sort((left, right) => {
+      const leftCode = left.statCode.trim().toUpperCase()
+      const rightCode = right.statCode.trim().toUpperCase()
+      const leftIndex = CHARACTERISTICS_INDEX.get(leftCode)
+      const rightIndex = CHARACTERISTICS_INDEX.get(rightCode)
 
-		if (leftIndex === undefined && rightIndex === undefined) {
-			return leftCode.localeCompare(rightCode)
-		}
-		if (leftIndex === undefined) {
-			return 1
-		}
-		if (rightIndex === undefined) {
-			return -1
-		}
+      if (leftIndex === undefined && rightIndex === undefined) {
+        return leftCode.localeCompare(rightCode)
+      }
+      if (leftIndex === undefined) {
+        return 1
+      }
+      if (rightIndex === undefined) {
+        return -1
+      }
 
-		return leftIndex - rightIndex
-	})
+      return leftIndex - rightIndex
+    })
 })
 
-const primaryStats = computed(() => visibleStats.value.filter((stat) => !stat.isSecondary).slice(0, 8))
+const primaryStats = computed(() =>
+  visibleStats.value.filter((stat) => !stat.isSecondary).slice(0, 8)
+)
 const secondaryStats = computed(() => visibleStats.value.filter((stat) => stat.isSecondary))
 const primaryStatsRows = computed(() => [
-	primaryStats.value.slice(0, 4),
-	primaryStats.value.slice(4, 8)
+  primaryStats.value.slice(0, 4),
+  primaryStats.value.slice(4, 8),
 ])
 
 const forceValue = computed(() => {
-	if (!character.value) {
-		return 0
-	}
+  if (!character.value) {
+    return 0
+  }
 
-	const forceStat = character.value.stats.find((stat) => stat.statCode.trim().toUpperCase() === 'F')
-	if (!forceStat) {
-		return 0
-	}
+  const forceStat = character.value.stats.find((stat) => stat.statCode.trim().toUpperCase() === 'F')
+  if (!forceStat) {
+    return 0
+  }
 
-	return Math.max(0, forceStat.baseValue + forceStat.currentAdvanced)
+  return Math.max(0, forceStat.baseValue + forceStat.currentAdvanced)
 })
 
 const enduranceValue = computed(() => {
-	if (!character.value) {
-		return 0
-	}
+  if (!character.value) {
+    return 0
+  }
 
-	const enduranceStat = character.value.stats.find((stat) => stat.statCode.trim().toUpperCase() === 'E')
-	if (!enduranceStat) {
-		return 0
-	}
+  const enduranceStat = character.value.stats.find(
+    (stat) => stat.statCode.trim().toUpperCase() === 'E'
+  )
+  if (!enduranceStat) {
+    return 0
+  }
 
-	return Math.max(0, enduranceStat.baseValue + enduranceStat.currentAdvanced)
+  return Math.max(0, enduranceStat.baseValue + enduranceStat.currentAdvanced)
 })
 
 const bonusForce = computed(() => Math.floor(forceValue.value / 10))
 const bonusEndurance = computed(() => Math.floor(enduranceValue.value / 10))
 
 const maxEncumbrance = computed(() => {
-	if (!character.value) {
-		return 0
-	}
+  if (!character.value) {
+    return 0
+  }
 
-	const multiplier = character.value.race.trim().toLowerCase() === 'nain' ? 30 : 20
-	return forceValue.value * multiplier
+  const multiplier = character.value.race.trim().toLowerCase() === 'nain' ? 30 : 20
+  return forceValue.value * multiplier
 })
 
 const totalEncumbrance = computed(() => {
-	const weaponsEncumbrance = characterWeapons.value.reduce((total, weapon) => total + (weapon.encumbrance ?? 0), 0)
-	const armorsEncumbrance = characterArmors.value.reduce((total, armor) => total + (armor.encumbrance ?? 0), 0)
-	const itemsEncumbrance = characterItems.value.reduce((total, item) => total + ((item.encumbrance ?? 0) * Math.max(1, item.quantity)), 0)
+  const weaponsEncumbrance = characterWeapons.value.reduce(
+    (total, weapon) => total + (weapon.encumbrance ?? 0),
+    0
+  )
+  const armorsEncumbrance = characterArmors.value.reduce(
+    (total, armor) => total + (armor.encumbrance ?? 0),
+    0
+  )
+  const itemsEncumbrance = characterItems.value.reduce(
+    (total, item) => total + (item.encumbrance ?? 0) * Math.max(1, item.quantity),
+    0
+  )
 
-	return weaponsEncumbrance + armorsEncumbrance + itemsEncumbrance
+  return weaponsEncumbrance + armorsEncumbrance + itemsEncumbrance
 })
 
 const armorByLocation = computed(() => {
-	const totals = {
-		tete: 0,
-		corps: 0,
-		bras: 0,
-		jambes: 0
-	}
+  const totals = {
+    tete: 0,
+    corps: 0,
+    bras: 0,
+    jambes: 0,
+  }
 
-	for (const armor of characterArmors.value) {
-		if (!armor.isEquipped || !armor.coveredLocations?.length) {
-			continue
-		}
+  for (const armor of characterArmors.value) {
+    if (!armor.isEquipped || !armor.coveredLocations?.length) {
+      continue
+    }
 
-		for (const location of armor.coveredLocations) {
-			const normalized = location.trim().toLowerCase()
-			if (normalized === 'tête' || normalized === 'tete') {
-				totals.tete += armor.armorPoints
-			}
-			if (normalized === 'corps') {
-				totals.corps += armor.armorPoints
-			}
-			if (normalized === 'bras') {
-				totals.bras += armor.armorPoints
-			}
-			if (normalized === 'jambes') {
-				totals.jambes += armor.armorPoints
-			}
-		}
-	}
+    for (const location of armor.coveredLocations) {
+      const normalized = location.trim().toLowerCase()
+      if (normalized === 'tête' || normalized === 'tete') {
+        totals.tete += armor.armorPoints
+      }
+      if (normalized === 'corps') {
+        totals.corps += armor.armorPoints
+      }
+      if (normalized === 'bras') {
+        totals.bras += armor.armorPoints
+      }
+      if (normalized === 'jambes') {
+        totals.jambes += armor.armorPoints
+      }
+    }
+  }
 
-	return totals
+  return totals
 })
 
-const { status, triggerSave, triggerSaveNow } = useLiveSave(async (payload: typeof editable.value) => {
-	if (!character.value) {
-		return
-	}
+const { status, triggerSave, triggerSaveNow } = useLiveSave(
+  async (payload: typeof editable.value) => {
+    if (!character.value) {
+      return
+    }
 
-	await updateCharacterCore(character.value.id, {
-		pv_max: payload.pvMax,
-		pv_current: payload.pvCurrent,
-		fortune_max: payload.fortuneMax,
-		fortune_current: payload.fortuneCurrent,
-		destiny_current: payload.destinyCurrent,
-		xp_total: payload.xpTotal,
-		xp_available: Math.min(payload.xpAvailable, payload.xpTotal),
-		insanity_points: Math.max(0, payload.insanityPoints),
-		money_gold: payload.moneyGold,
-		money_silver: payload.moneySilver,
-		money_copper: payload.moneyCopper
-	})
-}, 500)
+    await updateCharacterCore(character.value.id, {
+      pv_max: payload.pvMax,
+      pv_current: payload.pvCurrent,
+      fortune_max: payload.fortuneMax,
+      fortune_current: payload.fortuneCurrent,
+      destiny_current: payload.destinyCurrent,
+      xp_total: payload.xpTotal,
+      xp_available: Math.min(payload.xpAvailable, payload.xpTotal),
+      insanity_points: Math.max(0, payload.insanityPoints),
+      money_gold: payload.moneyGold,
+      money_silver: payload.moneySilver,
+      money_copper: payload.moneyCopper,
+    })
+  },
+  500
+)
 
-const { status: statSaveStatus, triggerSave: triggerStatSave, triggerSaveNow: triggerStatSaveNow } = useLiveSave(async (payload: { statCode: string; currentAdvanced?: number; baseValue?: number; totalAdvanced?: number }) => {
-	if (!character.value) {
-		return
-	}
+const {
+  status: statSaveStatus,
+  triggerSave: triggerStatSave,
+  triggerSaveNow: triggerStatSaveNow,
+} = useLiveSave(
+  async (payload: {
+    statCode: string
+    currentAdvanced?: number
+    baseValue?: number
+    totalAdvanced?: number
+  }) => {
+    if (!character.value) {
+      return
+    }
 
-	await updateCharacterStatValues(character.value.id, payload.statCode, {
-		current_advanced: payload.currentAdvanced,
-		base_value: payload.baseValue,
-		total_advanced: payload.totalAdvanced
-	})
-}, 350)
+    await updateCharacterStatValues(character.value.id, payload.statCode, {
+      current_advanced: payload.currentAdvanced,
+      base_value: payload.baseValue,
+      total_advanced: payload.totalAdvanced,
+    })
+  },
+  350
+)
 
 const globalState = computed<'ok' | 'loading' | 'error'>(() => {
-	if (status.value === 'error' || statSaveStatus.value === 'error') {
-		return 'error'
-	}
-	if (
-		status.value === 'saving' ||
-		status.value === 'pending' ||
-		statSaveStatus.value === 'saving' ||
-		statSaveStatus.value === 'pending'
-	) {
-		return 'loading'
-	}
+  if (status.value === 'error' || statSaveStatus.value === 'error') {
+    return 'error'
+  }
+  if (
+    status.value === 'saving' ||
+    status.value === 'pending' ||
+    statSaveStatus.value === 'saving' ||
+    statSaveStatus.value === 'pending'
+  ) {
+    return 'loading'
+  }
 
-	return 'ok'
+  return 'ok'
 })
 
 const globalStateLabel = computed(() => {
-	if (globalState.value === 'error') {
-		return 'Erreur de sauvegarde'
-	}
-	if (globalState.value === 'loading') {
-		return 'Mise à jour...'
-	}
+  if (globalState.value === 'error') {
+    return 'Erreur de sauvegarde'
+  }
+  if (globalState.value === 'loading') {
+    return 'Mise à jour...'
+  }
 
-	return ''
+  return ''
 })
 
 const allStatsSorted = computed(() => {
-	if (!character.value) {
-		return []
-	}
+  if (!character.value) {
+    return []
+  }
 
-	return [...character.value.stats].sort((left, right) => {
-		const leftCode = left.statCode.trim().toUpperCase()
-		const rightCode = right.statCode.trim().toUpperCase()
-		const leftIndex = CHARACTERISTICS_INDEX.get(leftCode)
-		const rightIndex = CHARACTERISTICS_INDEX.get(rightCode)
+  return [...character.value.stats].sort((left, right) => {
+    const leftCode = left.statCode.trim().toUpperCase()
+    const rightCode = right.statCode.trim().toUpperCase()
+    const leftIndex = CHARACTERISTICS_INDEX.get(leftCode)
+    const rightIndex = CHARACTERISTICS_INDEX.get(rightCode)
 
-		if (leftIndex === undefined && rightIndex === undefined) {
-			return leftCode.localeCompare(rightCode)
-		}
-		if (leftIndex === undefined) {
-			return 1
-		}
-		if (rightIndex === undefined) {
-			return -1
-		}
+    if (leftIndex === undefined && rightIndex === undefined) {
+      return leftCode.localeCompare(rightCode)
+    }
+    if (leftIndex === undefined) {
+      return 1
+    }
+    if (rightIndex === undefined) {
+      return -1
+    }
 
-		return leftIndex - rightIndex
-	})
+    return leftIndex - rightIndex
+  })
 })
 
 function requestExternalCharacterRefresh(): void {
-	if (status.value === 'pending' || status.value === 'saving' || statSaveStatus.value === 'pending' || statSaveStatus.value === 'saving') {
-		if (deferredRealtimeReloadTimer) {
-			clearTimeout(deferredRealtimeReloadTimer)
-		}
+  if (
+    status.value === 'pending' ||
+    status.value === 'saving' ||
+    statSaveStatus.value === 'pending' ||
+    statSaveStatus.value === 'saving'
+  ) {
+    if (deferredRealtimeReloadTimer) {
+      clearTimeout(deferredRealtimeReloadTimer)
+    }
 
-		deferredRealtimeReloadTimer = setTimeout(() => {
-			void loadCharacter({ background: true })
-		}, 700)
-		return
-	}
+    deferredRealtimeReloadTimer = setTimeout(() => {
+      void loadCharacter({ background: true })
+    }, 700)
+    return
+  }
 
-	void loadCharacter({ background: true })
+  void loadCharacter({ background: true })
 }
 
-const { subscribe: subscribeRealtime, unsubscribe: unsubscribeRealtime } = useRealtimeChannels(() => {
-	requestExternalCharacterRefresh()
-}, { debounceMs: 450 })
+const { subscribe: subscribeRealtime, unsubscribe: unsubscribeRealtime } = useRealtimeChannels(
+  () => {
+    requestExternalCharacterRefresh()
+  },
+  { debounceMs: 450 }
+)
 
 async function loadCharacterLinks(characterId: string): Promise<void> {
-	const [skills, talents, weapons, armors, items] = await Promise.all([
-		listCharacterSkills(characterId),
-		listCharacterTalents(characterId),
-		listCharacterWeapons(characterId),
-		listCharacterArmors(characterId),
-		listCharacterItems(characterId)
-	])
+  const [skills, talents, weapons, armors, items] = await Promise.all([
+    listCharacterSkills(characterId),
+    listCharacterTalents(characterId),
+    listCharacterWeapons(characterId),
+    listCharacterArmors(characterId),
+    listCharacterItems(characterId),
+  ])
 
-	characterSkills.value = skills
-	characterTalents.value = talents
-	characterWeapons.value = weapons
-	characterArmors.value = armors
-	characterItems.value = items
+  characterSkills.value = skills
+  characterTalents.value = talents
+  characterWeapons.value = weapons
+  characterArmors.value = armors
+  characterItems.value = items
 }
 
 async function loadCharacter(options: { background?: boolean } = {}): Promise<void> {
-	const characterId = String(route.params.id ?? '')
-	if (!characterId) {
-		errorMessage.value = 'Personnage invalide.'
-		return
-	}
+  const characterId = String(route.params.id ?? '')
+  if (!characterId) {
+    errorMessage.value = 'Personnage invalide.'
+    return
+  }
 
-	const isBackgroundRefresh = Boolean(options.background && character.value)
-	if (!isBackgroundRefresh) {
-		loading.value = true
-		errorMessage.value = null
-	}
-	try {
-		const data = await getCharacterById(characterId)
-		character.value = data
+  const isBackgroundRefresh = Boolean(options.background && character.value)
+  if (!isBackgroundRefresh) {
+    loading.value = true
+    errorMessage.value = null
+  }
+  try {
+    const data = await getCharacterById(characterId)
+    character.value = data
 
-		if (!data) {
-			errorMessage.value = 'Personnage introuvable.'
-			return
-		}
+    if (!data) {
+      errorMessage.value = 'Personnage introuvable.'
+      return
+    }
 
-		const nextEditable = {
-			pvMax: data.pvMax,
-			pvCurrent: data.pvCurrent,
-			fortuneMax: data.fortuneMax,
-			fortuneCurrent: data.fortuneCurrent,
-			destinyCurrent: data.destinyCurrent,
-			xpTotal: data.xpTotal,
-			xpAvailable: data.xpAvailable,
-			insanityPoints: data.insanityPoints,
-			moneyGold: data.moneyGold,
-			moneySilver: data.moneySilver,
-			moneyCopper: data.moneyCopper
-		}
+    const nextEditable = {
+      pvMax: data.pvMax,
+      pvCurrent: data.pvCurrent,
+      fortuneMax: data.fortuneMax,
+      fortuneCurrent: data.fortuneCurrent,
+      destinyCurrent: data.destinyCurrent,
+      xpTotal: data.xpTotal,
+      xpAvailable: data.xpAvailable,
+      insanityPoints: data.insanityPoints,
+      moneyGold: data.moneyGold,
+      moneySilver: data.moneySilver,
+      moneyCopper: data.moneyCopper,
+    }
 
-		if (isBackgroundRefresh && isMoneyEditing.value) {
-			nextEditable.moneyGold = editable.value.moneyGold
-			nextEditable.moneySilver = editable.value.moneySilver
-			nextEditable.moneyCopper = editable.value.moneyCopper
-		}
+    if (isBackgroundRefresh && isMoneyEditing.value) {
+      nextEditable.moneyGold = editable.value.moneyGold
+      nextEditable.moneySilver = editable.value.moneySilver
+      nextEditable.moneyCopper = editable.value.moneyCopper
+    }
 
-		editable.value = nextEditable
+    editable.value = nextEditable
 
-		await loadCharacterLinks(data.id)
-	} catch (error) {
-		if (!isBackgroundRefresh || !character.value) {
-			errorMessage.value = error instanceof Error ? error.message : 'Impossible de charger le personnage.'
-		}
-	} finally {
-		if (!isBackgroundRefresh) {
-			loading.value = false
-		}
-	}
+    await loadCharacterLinks(data.id)
+  } catch (error) {
+    if (!isBackgroundRefresh || !character.value) {
+      errorMessage.value =
+        error instanceof Error ? error.message : 'Impossible de charger le personnage.'
+    }
+  } finally {
+    if (!isBackgroundRefresh) {
+      loading.value = false
+    }
+  }
 }
 
 function onQuickValueChange(field: keyof typeof editable.value, value: number): void {
-	const newValue = Math.max(0, value)
-	const isMoneyField = field === 'moneyGold' || field === 'moneySilver' || field === 'moneyCopper'
-	if (isMoneyField) {
-		isMoneyEditing.value = true
-	}
-	
-	// Constraint: current <= max for resource types
-	if (field === 'pvCurrent' && editable.value.pvMax !== undefined) {
-		editable.value[field] = Math.min(newValue, editable.value.pvMax) as never
-	} else if (field === 'fortuneCurrent' && editable.value.fortuneMax !== undefined) {
-		editable.value[field] = Math.min(newValue, editable.value.fortuneMax) as never
-	} else {
-		editable.value[field] = newValue as never
-	}
+  const newValue = Math.max(0, value)
+  const isMoneyField = field === 'moneyGold' || field === 'moneySilver' || field === 'moneyCopper'
+  if (isMoneyField) {
+    isMoneyEditing.value = true
+  }
 
-	if (!isMoneyField) {
-		saveQuickFields()
-	}
+  // Constraint: current <= max for resource types
+  if (field === 'pvCurrent' && editable.value.pvMax !== undefined) {
+    editable.value[field] = Math.min(newValue, editable.value.pvMax) as never
+  } else if (field === 'fortuneCurrent' && editable.value.fortuneMax !== undefined) {
+    editable.value[field] = Math.min(newValue, editable.value.fortuneMax) as never
+  } else {
+    editable.value[field] = newValue as never
+  }
+
+  if (!isMoneyField) {
+    saveQuickFields()
+  }
 }
 
 async function onMoneyCommit(): Promise<void> {
-	if (!canEditQuickSection.value) {
-		return
-	}
+  if (!canEditQuickSection.value) {
+    return
+  }
 
-	await saveQuickFields({ immediate: true })
-	isMoneyEditing.value = false
+  await saveQuickFields({ immediate: true })
+  isMoneyEditing.value = false
 }
 
 function onMoneySubtract(value: { silver: number; copper: number }): void {
-	if (!canEditQuickSection.value) {
-		return
-	}
+  if (!canEditQuickSection.value) {
+    return
+  }
 
-	const currentCopper =
-		Math.max(0, Math.floor(editable.value.moneyGold)) * 240 +
-		Math.max(0, Math.floor(editable.value.moneySilver)) * 20 +
-		Math.max(0, Math.floor(editable.value.moneyCopper))
+  const currentCopper =
+    Math.max(0, Math.floor(editable.value.moneyGold)) * 240 +
+    Math.max(0, Math.floor(editable.value.moneySilver)) * 20 +
+    Math.max(0, Math.floor(editable.value.moneyCopper))
 
-	const subtractCopper =
-		Math.max(0, Math.floor(value.silver)) * 20 +
-		Math.max(0, Math.floor(value.copper))
+  const subtractCopper =
+    Math.max(0, Math.floor(value.silver)) * 20 + Math.max(0, Math.floor(value.copper))
 
-	const remainingCopper = Math.max(0, currentCopper - subtractCopper)
-	const normalized = coerceMoney(0, 0, remainingCopper)
+  const remainingCopper = Math.max(0, currentCopper - subtractCopper)
+  const normalized = coerceMoney(0, 0, remainingCopper)
 
-	editable.value.moneyGold = normalized.gold
-	editable.value.moneySilver = normalized.silver
-	editable.value.moneyCopper = normalized.copper
-	isMoneyEditing.value = false
+  editable.value.moneyGold = normalized.gold
+  editable.value.moneySilver = normalized.silver
+  editable.value.moneyCopper = normalized.copper
+  isMoneyEditing.value = false
 
-	void saveQuickFields({ immediate: true })
+  void saveQuickFields({ immediate: true })
 }
 
 function onStatTick(statCode: string, step: number): void {
-	if (!character.value || !canEditQuickSection.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value) {
+    return
+  }
 
-	const target = character.value.stats.find((stat) => stat.statCode === statCode)
-	if (!target) {
-		return
-	}
+  const target = character.value.stats.find((stat) => stat.statCode === statCode)
+  if (!target) {
+    return
+  }
 
-	const nextAdvanced = Math.max(0, target.currentAdvanced + step)
-	target.currentAdvanced = nextAdvanced
-	triggerStatSave({ statCode, currentAdvanced: nextAdvanced })
+  const nextAdvanced = Math.max(0, target.currentAdvanced + step)
+  target.currentAdvanced = nextAdvanced
+  triggerStatSave({ statCode, currentAdvanced: nextAdvanced })
 }
 
 function onStatBaseChange(statCode: string, baseValue: number): void {
-	if (!character.value || !canEditQuickSection.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value) {
+    return
+  }
 
-	const target = character.value.stats.find((stat) => stat.statCode === statCode)
-	if (!target) {
-		return
-	}
+  const target = character.value.stats.find((stat) => stat.statCode === statCode)
+  if (!target) {
+    return
+  }
 
-	const nextBase = Math.max(0, baseValue)
-	target.baseValue = nextBase
-	triggerStatSave({ statCode, baseValue: nextBase })
+  const nextBase = Math.max(0, baseValue)
+  target.baseValue = nextBase
+  triggerStatSave({ statCode, baseValue: nextBase })
 }
 
 function onStatTotalAdvancedChange(statCode: string, totalAdvanced: number): void {
-	if (!character.value || !canEditQuickSection.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value) {
+    return
+  }
 
-	const target = character.value.stats.find((stat) => stat.statCode === statCode)
-	if (!target) {
-		return
-	}
+  const target = character.value.stats.find((stat) => stat.statCode === statCode)
+  if (!target) {
+    return
+  }
 
-	const nextTotalAdvanced = Math.max(0, totalAdvanced)
-	target.totalAdvanced = nextTotalAdvanced
-	triggerStatSave({ statCode, totalAdvanced: nextTotalAdvanced })
+  const nextTotalAdvanced = Math.max(0, totalAdvanced)
+  target.totalAdvanced = nextTotalAdvanced
+  triggerStatSave({ statCode, totalAdvanced: nextTotalAdvanced })
 }
 
 function onCharacteristicsViewModeChange(value: string | boolean | null): void {
-	if (value === 'normal' || value === 'compact') {
-		characteristicsViewMode.value = value
-	}
+  if (value === 'normal' || value === 'compact') {
+    characteristicsViewMode.value = value
+  }
 }
 
 function openStatsImportModal(): void {
-	if (!character.value) {
-		return
-	}
+  if (!character.value) {
+    return
+  }
 
-	statsImportError.value = null
-	statsImportSaving.value = false
-	statsImportValues.value = Object.fromEntries(character.value.stats.map((stat) => [stat.statCode, '']))
-	statsImportDialogRef.value?.showModal()
+  statsImportError.value = null
+  statsImportSaving.value = false
+  statsImportValues.value = Object.fromEntries(
+    character.value.stats.map((stat) => [stat.statCode, ''])
+  )
+  statsImportDialogRef.value?.showModal()
 }
 
 function closeStatsImportModal(): void {
-	if (statsImportDialogRef.value?.open) {
-		statsImportDialogRef.value.close()
-	}
-	statsImportError.value = null
-	statsImportSaving.value = false
-	statsImportValues.value = {}
+  if (statsImportDialogRef.value?.open) {
+    statsImportDialogRef.value.close()
+  }
+  statsImportError.value = null
+  statsImportSaving.value = false
+  statsImportValues.value = {}
 }
 
 function onStatsImportInput(statCode: string, event: Event): void {
-	const target = event.target as HTMLInputElement
-	const normalized = target.value.replace(/\D/g, '').slice(0, 2)
-	statsImportValues.value = {
-		...statsImportValues.value,
-		[statCode]: normalized
-	}
-	target.value = normalized
+  const target = event.target as HTMLInputElement
+  const normalized = target.value.replace(/\D/g, '').slice(0, 2)
+  statsImportValues.value = {
+    ...statsImportValues.value,
+    [statCode]: normalized,
+  }
+  target.value = normalized
 }
 
 async function confirmStatsImport(): Promise<void> {
-	if (!character.value || !canEditQuickSection.value || statsImportSaving.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value || statsImportSaving.value) {
+    return
+  }
 
-	const updates = Object.entries(statsImportValues.value)
-		.map(([statCode, rawValue]) => ({ statCode, rawValue: rawValue.trim() }))
-		.filter(({ rawValue }) => rawValue.length > 0)
+  const updates = Object.entries(statsImportValues.value)
+    .map(([statCode, rawValue]) => ({ statCode, rawValue: rawValue.trim() }))
+    .filter(({ rawValue }) => rawValue.length > 0)
 
-	if (updates.length === 0) {
-		closeStatsImportModal()
-		return
-	}
+  if (updates.length === 0) {
+    closeStatsImportModal()
+    return
+  }
 
-	statsImportSaving.value = true
-	statsImportError.value = null
-	try {
-		for (const update of updates) {
-			const parsedValue = Math.max(0, Math.min(99, Number(update.rawValue)))
-			await triggerStatSaveNow({ statCode: update.statCode, totalAdvanced: parsedValue })
+  statsImportSaving.value = true
+  statsImportError.value = null
+  try {
+    for (const update of updates) {
+      const parsedValue = Math.max(0, Math.min(99, Number(update.rawValue)))
+      await triggerStatSaveNow({ statCode: update.statCode, totalAdvanced: parsedValue })
 
-			const localStat = character.value.stats.find((stat) => stat.statCode === update.statCode)
-			if (localStat) {
-				localStat.totalAdvanced = parsedValue
-			}
-		}
+      const localStat = character.value.stats.find((stat) => stat.statCode === update.statCode)
+      if (localStat) {
+        localStat.totalAdvanced = parsedValue
+      }
+    }
 
-		await loadCharacter({ background: true })
-		closeStatsImportModal()
-	} catch (error) {
-		statsImportError.value = error instanceof Error ? error.message : 'Import impossible.'
-	} finally {
-		statsImportSaving.value = false
-	}
+    await loadCharacter({ background: true })
+    closeStatsImportModal()
+  } catch (error) {
+    statsImportError.value = error instanceof Error ? error.message : 'Import impossible.'
+  } finally {
+    statsImportSaving.value = false
+  }
 }
 
 async function onChangeSkillMastery(skillId: string, level: 1 | 2 | 3): Promise<void> {
-	if (!character.value || !canEditQuickSection.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value) {
+    return
+  }
 
-	try {
-		await updateCharacterSkillMastery(character.value.id, skillId, level)
-		const target = characterSkills.value.find((skill) => skill.skillId === skillId)
-		if (target) {
-			target.masteryLevel = level
-		}
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Modification du niveau de maitrise impossible.'
-	}
+  try {
+    await updateCharacterSkillMastery(character.value.id, skillId, level)
+    const target = characterSkills.value.find((skill) => skill.skillId === skillId)
+    if (target) {
+      target.masteryLevel = level
+    }
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Modification du niveau de maitrise impossible.'
+  }
 }
 
 async function onDeleteSkill(skillId: string): Promise<void> {
-	if (!character.value || !canEditQuickSection.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value) {
+    return
+  }
 
-	try {
-		await removeCharacterSkill(character.value.id, skillId)
-		await loadCharacterLinks(character.value.id)
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
-	}
+  try {
+    await removeCharacterSkill(character.value.id, skillId)
+    await loadCharacterLinks(character.value.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  }
 }
 
 async function onDeleteTalent(talentId: string): Promise<void> {
-	if (!character.value || !canEditQuickSection.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value) {
+    return
+  }
 
-	try {
-		await removeCharacterTalent(character.value.id, talentId)
-		await loadCharacterLinks(character.value.id)
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
-	}
+  try {
+    await removeCharacterTalent(character.value.id, talentId)
+    await loadCharacterLinks(character.value.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  }
 }
 
 async function onDeleteWeapon(linkId: string): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	try {
-		await removeCharacterWeapon(linkId)
-		await loadCharacterLinks(character.value.id)
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
-	}
+  try {
+    await removeCharacterWeapon(linkId)
+    await loadCharacterLinks(character.value.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  }
 }
 
-function canEquipWeaponCheck(_weapon: CharacterWeapon, _targetEquipped: 'droite' | 'gauche' | 'd&g' | null): boolean {
-	// Placeholder for future weapon rules validation.
-	return true
+function canEquipWeaponCheck(
+  _weapon: CharacterWeapon,
+  _targetEquipped: 'droite' | 'gauche' | 'd&g' | null
+): boolean {
+  // Placeholder for future weapon rules validation.
+  return true
 }
 
-async function onWeaponStateChange(weapon: CharacterWeapon, value: string | boolean | null): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+async function onWeaponStateChange(
+  weapon: CharacterWeapon,
+  value: string | boolean | null
+): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	if (value !== null && value !== 'droite' && value !== 'gauche' && value !== 'd&g') {
-		return
-	}
+  if (value !== null && value !== 'droite' && value !== 'gauche' && value !== 'd&g') {
+    return
+  }
 
-	const nextEquipped: 'droite' | 'gauche' | 'd&g' | null = value
-	if (!canEquipWeaponCheck(weapon, nextEquipped)) {
-		return
-	}
+  const nextEquipped: 'droite' | 'gauche' | 'd&g' | null = value
+  if (!canEquipWeaponCheck(weapon, nextEquipped)) {
+    return
+  }
 
-	try {
-		await updateCharacterWeaponEquipped(weapon.id, nextEquipped)
-		weapon.equipped = nextEquipped
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-	}
+  try {
+    await updateCharacterWeaponEquipped(weapon.id, nextEquipped)
+    weapon.equipped = nextEquipped
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  }
 }
 
-async function onWeaponQualityChange(weapon: CharacterWeapon, quality: string | boolean | null): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+async function onWeaponQualityChange(
+  weapon: CharacterWeapon,
+  quality: string | boolean | null
+): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	if (quality !== 'médiocre' && quality !== 'normal' && quality !== 'bonne' && quality !== 'exceptionelle') {
-		return
-	}
+  if (
+    quality !== 'médiocre' &&
+    quality !== 'normal' &&
+    quality !== 'bonne' &&
+    quality !== 'exceptionelle'
+  ) {
+    return
+  }
 
-	if (quality === weapon.quality) {
-		return
-	}
+  if (quality === weapon.quality) {
+    return
+  }
 
-	try {
-		await updateCharacterWeaponQuality(weapon.id, quality)
-		await loadCharacterLinks(character.value.id)
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-	}
+  try {
+    await updateCharacterWeaponQuality(weapon.id, quality)
+    await loadCharacterLinks(character.value.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  }
 }
 
 async function onDeleteArmor(linkId: string): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	try {
-		await removeCharacterArmor(linkId)
-		await loadCharacterLinks(character.value.id)
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
-	}
+  try {
+    await removeCharacterArmor(linkId)
+    await loadCharacterLinks(character.value.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  }
 }
 
 function canEquipArmorCheck(_armor: CharacterArmor, _targetEquipped: boolean): boolean {
-	// Placeholder for future armor rules validation.
-	return true
+  // Placeholder for future armor rules validation.
+  return true
 }
 
-async function onArmorStateChange(armor: CharacterArmor, value: string | boolean | null): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+async function onArmorStateChange(
+  armor: CharacterArmor,
+  value: string | boolean | null
+): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	if (typeof value !== 'boolean') {
-		return
-	}
+  if (typeof value !== 'boolean') {
+    return
+  }
 
-	const nextEquipped = value
-	if (!canEquipArmorCheck(armor, nextEquipped)) {
-		return
-	}
+  const nextEquipped = value
+  if (!canEquipArmorCheck(armor, nextEquipped)) {
+    return
+  }
 
-	try {
-		await updateCharacterArmorEquipped(armor.id, nextEquipped)
-		armor.isEquipped = nextEquipped
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-	}
+  try {
+    await updateCharacterArmorEquipped(armor.id, nextEquipped)
+    armor.isEquipped = nextEquipped
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  }
 }
 
-async function onArmorQualityChange(armor: CharacterArmor, quality: string | boolean | null): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+async function onArmorQualityChange(
+  armor: CharacterArmor,
+  quality: string | boolean | null
+): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	if (quality !== 'médiocre' && quality !== 'normal' && quality !== 'bonne' && quality !== 'exceptionelle') {
-		return
-	}
+  if (
+    quality !== 'médiocre' &&
+    quality !== 'normal' &&
+    quality !== 'bonne' &&
+    quality !== 'exceptionelle'
+  ) {
+    return
+  }
 
-	if (quality === armor.quality) {
-		return
-	}
+  if (quality === armor.quality) {
+    return
+  }
 
-	try {
-		await updateCharacterArmorQuality(armor.id, quality)
-		await loadCharacterLinks(character.value.id)
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-	}
+  try {
+    await updateCharacterArmorQuality(armor.id, quality)
+    await loadCharacterLinks(character.value.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  }
 }
 
 function resetNewItemForm(): void {
-	newItemForm.value = {
-		name: '',
-		description: '',
-		quality: 'normal',
-		encumbrance: 0,
-		quantity: 1
-	}
+  newItemForm.value = {
+    name: '',
+    description: '',
+    quality: 'normal',
+    encumbrance: 0,
+    quantity: 1,
+  }
 }
 
 async function onDeleteItem(linkId: string): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	try {
-		await removeCharacterItem(linkId)
-		await loadCharacterLinks(character.value.id)
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
-	}
+  try {
+    await removeCharacterItem(linkId)
+    await loadCharacterLinks(character.value.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  }
 }
 
 async function onChangeItemQuantity(item: CharacterItem, delta: number): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	const nextQuantity = Math.max(1, item.quantity + delta)
-	if (nextQuantity === item.quantity) {
-		return
-	}
+  const nextQuantity = Math.max(1, item.quantity + delta)
+  if (nextQuantity === item.quantity) {
+    return
+  }
 
-	try {
-		await updateCharacterItemQuantity(item.id, nextQuantity)
-		item.quantity = nextQuantity
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-	}
+  try {
+    await updateCharacterItemQuantity(item.id, nextQuantity)
+    item.quantity = nextQuantity
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  }
 }
 
-async function onItemQualityChange(item: CharacterItem, quality: string | boolean | null): Promise<void> {
-	if (!canEditQuickSection.value || !character.value) {
-		return
-	}
+async function onItemQualityChange(
+  item: CharacterItem,
+  quality: string | boolean | null
+): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
 
-	if (quality !== 'médiocre' && quality !== 'normal' && quality !== 'bonne' && quality !== 'exceptionelle') {
-		return
-	}
+  if (
+    quality !== 'médiocre' &&
+    quality !== 'normal' &&
+    quality !== 'bonne' &&
+    quality !== 'exceptionelle'
+  ) {
+    return
+  }
 
-	if (quality === item.quality) {
-		return
-	}
+  if (quality === item.quality) {
+    return
+  }
 
-	try {
-		await updateCharacterItemQuality(item.id, quality)
-		item.quality = quality
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-	}
+  try {
+    await updateCharacterItemQuality(item.id, quality)
+    item.quality = quality
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  }
 }
 
 function openCareerModal(): void {
-	careerError.value = null
-	selectedCareerId.value = null
-	selectedCareerName.value = null
-	careerQuery.value = ''
-	careerOptions.value = []
-	if (!careerDialogRef.value) {
-		return
-	}
+  careerError.value = null
+  selectedCareerId.value = null
+  selectedCareerName.value = null
+  careerQuery.value = ''
+  careerOptions.value = []
+  if (!careerDialogRef.value) {
+    return
+  }
 
-	careerDialogRef.value.showModal()
+  careerDialogRef.value.showModal()
 }
 
 function closeCareerModal(): void {
-	if (careerDialogRef.value?.open) {
-		careerDialogRef.value.close()
-	}
-	selectedCareerId.value = null
-	selectedCareerName.value = null
-	careerError.value = null
+  if (careerDialogRef.value?.open) {
+    careerDialogRef.value.close()
+  }
+  selectedCareerId.value = null
+  selectedCareerName.value = null
+  careerError.value = null
 }
 
 function selectCareer(id: string, name: string): void {
-	selectedCareerId.value = id
-	selectedCareerName.value = name
-	careerError.value = null
+  selectedCareerId.value = id
+  selectedCareerName.value = name
+  careerError.value = null
 }
 
 async function confirmCareerChange(): Promise<void> {
-	if (!character.value || !canEditQuickSection.value || changingCareer.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value || changingCareer.value) {
+    return
+  }
 
-	if (!selectedCareerId.value) {
-		careerError.value = 'Veuillez sélectionner une carrière.'
-		return
-	}
+  if (!selectedCareerId.value) {
+    careerError.value = 'Veuillez sélectionner une carrière.'
+    return
+  }
 
-	changingCareer.value = true
-	careerError.value = null
-	try {
-		await updateCharacterCareer(character.value.id, selectedCareerId.value)
-		await loadCharacter()
-		closeCareerModal()
-	} catch (error) {
-		careerError.value = error instanceof Error ? error.message : 'Modification de carrière impossible.'
-	} finally {
-		changingCareer.value = false
-	}
+  changingCareer.value = true
+  careerError.value = null
+  try {
+    await updateCharacterCareer(character.value.id, selectedCareerId.value)
+    await loadCharacter()
+    closeCareerModal()
+  } catch (error) {
+    careerError.value =
+      error instanceof Error ? error.message : 'Modification de carrière impossible.'
+  } finally {
+    changingCareer.value = false
+  }
 }
 
 function openCatalogModal(section: CatalogSection): void {
-	catalogSection.value = section
-	catalogQuery.value = ''
-	catalogOptions.value = []
-	selectedCatalogIds.value = []
-	selectedCatalogLabels.value = {}
-	catalogError.value = null
-	itemCatalogMode.value = 'search'
-	creatingItem.value = false
-	resetNewItemForm()
-	if (!catalogDialogRef.value) {
-		return
-	}
+  catalogSection.value = section
+  catalogQuery.value = ''
+  catalogOptions.value = []
+  selectedCatalogIds.value = []
+  selectedCatalogLabels.value = {}
+  catalogError.value = null
+  itemCatalogMode.value = 'search'
+  creatingItem.value = false
+  resetNewItemForm()
+  if (!catalogDialogRef.value) {
+    return
+  }
 
-	catalogDialogRef.value.showModal()
+  catalogDialogRef.value.showModal()
 }
 
 function openDescriptionModal(title: string, description: string | null): void {
-	descriptionTitle.value = title
-	descriptionContent.value = description?.trim() ?? null
-	descriptionDialogRef.value?.showModal()
+  descriptionTitle.value = title
+  descriptionContent.value = description?.trim() ?? null
+  descriptionDialogRef.value?.showModal()
 }
 
 function closeDescriptionModal(): void {
-	if (descriptionDialogRef.value?.open) {
-		descriptionDialogRef.value.close()
-	}
-	descriptionTitle.value = null
-	descriptionContent.value = null
+  if (descriptionDialogRef.value?.open) {
+    descriptionDialogRef.value.close()
+  }
+  descriptionTitle.value = null
+  descriptionContent.value = null
 }
 
 function closeCatalogModal(): void {
-	if (catalogDialogRef.value?.open) {
-		catalogDialogRef.value.close()
-	}
-	selectedCatalogIds.value = []
-	selectedCatalogLabels.value = {}
-	catalogError.value = null
-	itemCatalogMode.value = 'search'
-	creatingItem.value = false
-	resetNewItemForm()
+  if (catalogDialogRef.value?.open) {
+    catalogDialogRef.value.close()
+  }
+  selectedCatalogIds.value = []
+  selectedCatalogLabels.value = {}
+  catalogError.value = null
+  itemCatalogMode.value = 'search'
+  creatingItem.value = false
+  resetNewItemForm()
 }
 
 function toggleCatalogSelection(id: string): void {
-	if (selectedCatalogIds.value.includes(id)) {
-		removeCatalogSelection(id)
-		return
-	}
+  if (selectedCatalogIds.value.includes(id)) {
+    removeCatalogSelection(id)
+    return
+  }
 
-	const option = catalogOptions.value.find((candidate) => candidate.id === id)
-	if (option) {
-		selectedCatalogLabels.value = {
-			...selectedCatalogLabels.value,
-			[id]: formatCatalogOptionLabel(option)
-		}
-	}
+  const option = catalogOptions.value.find((candidate) => candidate.id === id)
+  if (option) {
+    selectedCatalogLabels.value = {
+      ...selectedCatalogLabels.value,
+      [id]: formatCatalogOptionLabel(option),
+    }
+  }
 
-	selectedCatalogIds.value = [...selectedCatalogIds.value, id]
+  selectedCatalogIds.value = [...selectedCatalogIds.value, id]
 }
 
 function removeCatalogSelection(id: string): void {
-	selectedCatalogIds.value = selectedCatalogIds.value.filter((selectedId) => selectedId !== id)
-	const nextLabels = { ...selectedCatalogLabels.value }
-	delete nextLabels[id]
-	selectedCatalogLabels.value = nextLabels
+  selectedCatalogIds.value = selectedCatalogIds.value.filter((selectedId) => selectedId !== id)
+  const nextLabels = { ...selectedCatalogLabels.value }
+  delete nextLabels[id]
+  selectedCatalogLabels.value = nextLabels
 }
 
 async function confirmCatalogAdd(): Promise<void> {
-	if (!character.value || !canEditQuickSection.value || addingCatalog.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value || addingCatalog.value) {
+    return
+  }
 
-	if (selectedCatalogIds.value.length === 0) {
-		catalogError.value = 'Veuillez sélectionner au moins un élément.'
-		return
-	}
+  if (selectedCatalogIds.value.length === 0) {
+    catalogError.value = 'Veuillez sélectionner au moins un élément.'
+    return
+  }
 
-	addingCatalog.value = true
-	catalogError.value = null
-	try {
-		if (catalogSection.value === 'skills') {
-			await addCharacterSkills(character.value.id, selectedCatalogIds.value)
-		} else if (catalogSection.value === 'talents') {
-			await addCharacterTalents(character.value.id, selectedCatalogIds.value)
-		} else if (catalogSection.value === 'weapons') {
-			await addCharacterWeapons(character.value.id, selectedCatalogIds.value)
-		} else if (catalogSection.value === 'items') {
-			await addCharacterItems(character.value.id, selectedCatalogIds.value)
-		} else {
-			await addCharacterArmors(character.value.id, selectedCatalogIds.value)
-		}
+  addingCatalog.value = true
+  catalogError.value = null
+  try {
+    if (catalogSection.value === 'skills') {
+      await addCharacterSkills(character.value.id, selectedCatalogIds.value)
+    } else if (catalogSection.value === 'talents') {
+      await addCharacterTalents(character.value.id, selectedCatalogIds.value)
+    } else if (catalogSection.value === 'weapons') {
+      await addCharacterWeapons(character.value.id, selectedCatalogIds.value)
+    } else if (catalogSection.value === 'items') {
+      await addCharacterItems(character.value.id, selectedCatalogIds.value)
+    } else {
+      await addCharacterArmors(character.value.id, selectedCatalogIds.value)
+    }
 
-		await loadCharacterLinks(character.value.id)
-		closeCatalogModal()
-	} catch (error) {
-		catalogError.value = error instanceof Error ? error.message : 'Ajout impossible.'
-	} finally {
-		addingCatalog.value = false
-	}
+    await loadCharacterLinks(character.value.id)
+    closeCatalogModal()
+  } catch (error) {
+    catalogError.value = error instanceof Error ? error.message : 'Ajout impossible.'
+  } finally {
+    addingCatalog.value = false
+  }
 }
 
 async function confirmItemCreate(): Promise<void> {
-	if (!character.value || !canEditQuickSection.value || creatingItem.value) {
-		return
-	}
+  if (!character.value || !canEditQuickSection.value || creatingItem.value) {
+    return
+  }
 
-	const trimmedName = newItemForm.value.name.trim()
-	if (!trimmedName) {
-		catalogError.value = 'Le nom est obligatoire.'
-		return
-	}
+  const trimmedName = newItemForm.value.name.trim()
+  if (!trimmedName) {
+    catalogError.value = 'Le nom est obligatoire.'
+    return
+  }
 
-	const normalizedEncumbrance = Number.isFinite(newItemForm.value.encumbrance)
-		? Math.max(0, Math.floor(newItemForm.value.encumbrance))
-		: 0
-	const normalizedQuantity = Number.isFinite(newItemForm.value.quantity)
-		? Math.max(1, Math.floor(newItemForm.value.quantity))
-		: 1
+  const normalizedEncumbrance = Number.isFinite(newItemForm.value.encumbrance)
+    ? Math.max(0, Math.floor(newItemForm.value.encumbrance))
+    : 0
+  const normalizedQuantity = Number.isFinite(newItemForm.value.quantity)
+    ? Math.max(1, Math.floor(newItemForm.value.quantity))
+    : 1
 
-	creatingItem.value = true
-	catalogError.value = null
-	try {
-		const createdItem = await createCatalogItem({
-			name: trimmedName,
-			description: newItemForm.value.description || null,
-			encumbrance: normalizedEncumbrance
-		})
+  creatingItem.value = true
+  catalogError.value = null
+  try {
+    const createdItem = await createCatalogItem({
+      name: trimmedName,
+      description: newItemForm.value.description || null,
+      encumbrance: normalizedEncumbrance,
+    })
 
-		await addCharacterItems(character.value.id, [createdItem.id], normalizedQuantity, newItemForm.value.quality)
-		await loadCharacterLinks(character.value.id)
-		closeCatalogModal()
-	} catch (error) {
-		catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
-	} finally {
-		creatingItem.value = false
-	}
+    await addCharacterItems(
+      character.value.id,
+      [createdItem.id],
+      normalizedQuantity,
+      newItemForm.value.quality
+    )
+    await loadCharacterLinks(character.value.id)
+    closeCatalogModal()
+  } catch (error) {
+    catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
+  } finally {
+    creatingItem.value = false
+  }
 }
 
 watch(careerQuery, async (value) => {
-	const trimmed = value.trim()
-	if (!trimmed) {
-		careerOptions.value = []
-		return
-	}
+  const trimmed = value.trim()
+  if (!trimmed) {
+    careerOptions.value = []
+    return
+  }
 
-	try {
-		careerOptions.value = await searchCatalog('careers', trimmed)
-	} catch {
-		careerOptions.value = []
-	}
+  try {
+    careerOptions.value = await searchCatalog('careers', trimmed)
+  } catch {
+    careerOptions.value = []
+  }
 })
 
 watch(catalogQuery, async (value) => {
-	if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
-		catalogOptions.value = []
-		return
-	}
+  if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
+    catalogOptions.value = []
+    return
+  }
 
-	const trimmed = value.trim()
-	if (!trimmed) {
-		catalogOptions.value = []
-		return
-	}
+  const trimmed = value.trim()
+  if (!trimmed) {
+    catalogOptions.value = []
+    return
+  }
 
-	try {
-		catalogOptions.value = await searchCatalog(catalogSection.value, trimmed)
-	} catch {
-		catalogOptions.value = []
-	}
+  try {
+    catalogOptions.value = await searchCatalog(catalogSection.value, trimmed)
+  } catch {
+    catalogOptions.value = []
+  }
 })
 
 async function saveQuickFields(options: { immediate?: boolean } = {}): Promise<void> {
-	if (!canEditQuickSection.value) {
-		return
-	}
+  if (!canEditQuickSection.value) {
+    return
+  }
 
-	if (editable.value.pvCurrent > editable.value.pvMax) {
-		editable.value.pvCurrent = editable.value.pvMax
-	}
+  if (editable.value.pvCurrent > editable.value.pvMax) {
+    editable.value.pvCurrent = editable.value.pvMax
+  }
 
-	if (editable.value.fortuneCurrent > editable.value.fortuneMax) {
-		editable.value.fortuneCurrent = editable.value.fortuneMax
-	}
+  if (editable.value.fortuneCurrent > editable.value.fortuneMax) {
+    editable.value.fortuneCurrent = editable.value.fortuneMax
+  }
 
-	if (editable.value.xpAvailable > editable.value.xpTotal) {
-		editable.value.xpAvailable = editable.value.xpTotal
-	}
+  if (editable.value.xpAvailable > editable.value.xpTotal) {
+    editable.value.xpAvailable = editable.value.xpTotal
+  }
 
-	// Apply money coercion before save with lock mechanism
-	const coercedMoney = coerceMoney(
-		editable.value.moneyGold,
-		editable.value.moneySilver,
-		editable.value.moneyCopper
-	)
-	editable.value.moneyGold = coercedMoney.gold
-	editable.value.moneySilver = coercedMoney.silver
-	editable.value.moneyCopper = coercedMoney.copper
+  // Apply money coercion before save with lock mechanism
+  const coercedMoney = coerceMoney(
+    editable.value.moneyGold,
+    editable.value.moneySilver,
+    editable.value.moneyCopper
+  )
+  editable.value.moneyGold = coercedMoney.gold
+  editable.value.moneySilver = coercedMoney.silver
+  editable.value.moneyCopper = coercedMoney.copper
 
-	if (options.immediate) {
-		await triggerSaveNow({ ...editable.value })
-		return
-	}
+  if (options.immediate) {
+    await triggerSaveNow({ ...editable.value })
+    return
+  }
 
-	triggerSave({ ...editable.value })
+  triggerSave({ ...editable.value })
 }
 
 function formatNamedWithSpecialization(name: string, specialization: string | null): string {
-	const trimmedSpecialization = specialization?.trim()
-	if (!trimmedSpecialization) {
-		return name
-	}
+  const trimmedSpecialization = specialization?.trim()
+  if (!trimmedSpecialization) {
+    return name
+  }
 
-	return `${name} (${trimmedSpecialization})`
+  return `${name} (${trimmedSpecialization})`
 }
 
 function formatCatalogOptionLabel(option: CatalogItem): string {
-	if (catalogSection.value === 'skills' || catalogSection.value === 'talents') {
-		return formatNamedWithSpecialization(option.name, option.specialization ?? null)
-	}
+  if (catalogSection.value === 'skills' || catalogSection.value === 'talents') {
+    return formatNamedWithSpecialization(option.name, option.specialization ?? null)
+  }
 
-	if (catalogSection.value === 'weapons') {
-		const details: string[] = []
-		if (typeof option.encumbrance === 'number') {
-			details.push(`enc. ${option.encumbrance}`)
-		}
+  if (catalogSection.value === 'weapons') {
+    const details: string[] = []
+    if (typeof option.encumbrance === 'number') {
+      details.push(`enc. ${option.encumbrance}`)
+    }
 
-		const meta = details.length > 0 ? ` (${details.join(', ')})` : ''
-		const damage = option.damageFormula ? ` - ${option.damageFormula}` : ''
-		return `${option.name}${meta}${damage}`
-	}
+    const meta = details.length > 0 ? ` (${details.join(', ')})` : ''
+    const damage = option.damageFormula ? ` - ${option.damageFormula}` : ''
+    return `${option.name}${meta}${damage}`
+  }
 
-	if (catalogSection.value === 'armors') {
-		const details: string[] = []
-		if (typeof option.encumbrance === 'number') {
-			details.push(`enc. ${option.encumbrance}`)
-		}
+  if (catalogSection.value === 'armors') {
+    const details: string[] = []
+    if (typeof option.encumbrance === 'number') {
+      details.push(`enc. ${option.encumbrance}`)
+    }
 
-		const meta = details.length > 0 ? ` (${details.join(', ')})` : ''
-		const armorPoints = typeof option.armorPoints === 'number' ? ` - PA ${option.armorPoints}` : ''
-		return `${option.name}${meta}${armorPoints}`
-	}
+    const meta = details.length > 0 ? ` (${details.join(', ')})` : ''
+    const armorPoints = typeof option.armorPoints === 'number' ? ` - PA ${option.armorPoints}` : ''
+    return `${option.name}${meta}${armorPoints}`
+  }
 
-	if (catalogSection.value === 'items') {
-		const details: string[] = []
-		if (typeof option.encumbrance === 'number') {
-			details.push(`enc. ${option.encumbrance}`)
-		}
+  if (catalogSection.value === 'items') {
+    const details: string[] = []
+    if (typeof option.encumbrance === 'number') {
+      details.push(`enc. ${option.encumbrance}`)
+    }
 
-		return details.length > 0 ? `${option.name} (${details.join(', ')})` : option.name
-	}
+    return details.length > 0 ? `${option.name} (${details.join(', ')})` : option.name
+  }
 
-	return option.name
+  return option.name
 }
 
 function qualityBadgeClass(quality: string | null): string {
-	const normalized = quality?.trim().toLowerCase() ?? ''
-	if (normalized === 'médiocre') {
-		return 'badge-error'
-	}
-	if (normalized === 'bonne') {
-		return 'badge-info'
-	}
-	if (normalized === 'exceptionelle') {
-		return 'badge-secondary'
-	}
-	return 'badge-ghost'
+  const normalized = quality?.trim().toLowerCase() ?? ''
+  if (normalized === 'médiocre') {
+    return 'badge-error'
+  }
+  if (normalized === 'bonne') {
+    return 'badge-info'
+  }
+  if (normalized === 'exceptionelle') {
+    return 'badge-secondary'
+  }
+  return 'badge-ghost'
 }
 
 watch(
-	() => characterId.value,
-	(value) => {
-		if (!value) {
-			unsubscribeRealtime()
-			character.value = null
-			errorMessage.value = 'Personnage invalide.'
-			return
-		}
+  () => characterId.value,
+  (value) => {
+    if (!value) {
+      unsubscribeRealtime()
+      character.value = null
+      errorMessage.value = 'Personnage invalide.'
+      return
+    }
 
-		errorMessage.value = null
-		void loadCharacter()
-		subscribeRealtime(`character-detail-${value}`, [
-			{ table: 'characters', filter: `id=eq.${value}` },
-			{ table: 'character_stat_values', filter: `character_id=eq.${value}` },
-			{ table: 'character_skills', filter: `character_id=eq.${value}` },
-			{ table: 'character_talents', filter: `character_id=eq.${value}` },
-			{ table: 'character_weapons', filter: `character_id=eq.${value}` },
-			{ table: 'character_armors', filter: `character_id=eq.${value}` },
-			{ table: 'character_items', filter: `character_id=eq.${value}` }
-		])
-	},
-	{ immediate: true }
+    errorMessage.value = null
+    void loadCharacter()
+    subscribeRealtime(`character-detail-${value}`, [
+      { table: 'characters', filter: `id=eq.${value}` },
+      { table: 'character_stat_values', filter: `character_id=eq.${value}` },
+      { table: 'character_skills', filter: `character_id=eq.${value}` },
+      { table: 'character_talents', filter: `character_id=eq.${value}` },
+      { table: 'character_weapons', filter: `character_id=eq.${value}` },
+      { table: 'character_armors', filter: `character_id=eq.${value}` },
+      { table: 'character_items', filter: `character_id=eq.${value}` },
+    ])
+  },
+  { immediate: true }
 )
 
 onMounted(() => {
-	backgroundRefreshInterval = setInterval(() => {
-		if (!character.value || document.visibilityState !== 'visible') {
-			return
-		}
+  backgroundRefreshInterval = setInterval(() => {
+    if (!character.value || document.visibilityState !== 'visible') {
+      return
+    }
 
-		requestExternalCharacterRefresh()
-	}, 2000)
+    requestExternalCharacterRefresh()
+  }, 2000)
 })
 
 onBeforeUnmount(() => {
-	if (deferredRealtimeReloadTimer) {
-		clearTimeout(deferredRealtimeReloadTimer)
-		deferredRealtimeReloadTimer = null
-	}
+  if (deferredRealtimeReloadTimer) {
+    clearTimeout(deferredRealtimeReloadTimer)
+    deferredRealtimeReloadTimer = null
+  }
 
-	if (backgroundRefreshInterval) {
-		clearInterval(backgroundRefreshInterval)
-		backgroundRefreshInterval = null
-	}
+  if (backgroundRefreshInterval) {
+    clearInterval(backgroundRefreshInterval)
+    backgroundRefreshInterval = null
+  }
 })
 </script>
 

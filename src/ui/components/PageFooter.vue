@@ -17,7 +17,7 @@
 import { ChevronLeft } from '@lucide/vue'
 
 defineProps<{
-	backTo?: string
-	backLabel?: string
+  backTo?: string
+  backLabel?: string
 }>()
 </script>

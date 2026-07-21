@@ -11,11 +11,11 @@
 
 <script setup lang="ts">
 interface Stat {
-	label: string
-	value: string | number
+  label: string
+  value: string | number
 }
 
 defineProps<{
-	stats?: Stat[]
+  stats?: Stat[]
 }>()
 </script>

@@ -55,7 +55,7 @@ function mapSession(row: SessionRow): SessionSummary {
     description: row.description,
     isArchived: row.is_archived,
     mjId: row.mj_id,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   }
 }
 
@@ -64,8 +64,14 @@ function mapSessionWriteError(error: unknown): Error {
     const message = error.message.toLowerCase()
     const maybeStatus = (error as { status?: number }).status
 
-    if (maybeStatus === 403 || message.includes('row-level security') || message.includes('permission denied')) {
-      return new Error('Acces refuse (403): verifiez la session auth, l existence du profil et les politiques RLS sessions/users_session.')
+    if (
+      maybeStatus === 403 ||
+      message.includes('row-level security') ||
+      message.includes('permission denied')
+    ) {
+      return new Error(
+        'Acces refuse (403): verifiez la session auth, l existence du profil et les politiques RLS sessions/users_session.'
+      )
     }
 
     return error
@@ -82,7 +88,7 @@ export async function listSessionsForUser(userId: string): Promise<SessionSummar
         .select('id, name, code, description, is_archived, mj_id, created_at')
         .eq('mj_id', userId)
         .order('created_at', { ascending: false }),
-      listUserSessionIds(userId)
+      listUserSessionIds(userId),
     ])
 
     if (ownedResult.error) {
@@ -135,7 +141,7 @@ export async function listSessionsForUserPaginated(
 
   return {
     items: allItems.slice(from, to),
-    total: allItems.length
+    total: allItems.length,
   }
 }
 
@@ -151,7 +157,7 @@ export async function createSession(payload: {
       mj_id: payload.mjId,
       name: payload.name,
       description: payload.description,
-      code: payload.code
+      code: payload.code,
     })
     .select('id')
     .single()
@@ -161,13 +167,14 @@ export async function createSession(payload: {
   }
 
   const sessionId = data.id as string
-  const { error: membershipError } = await supabase
-    .from('users_session')
-    .upsert({
+  const { error: membershipError } = await supabase.from('users_session').upsert(
+    {
       session_id: sessionId,
       user_id: payload.mjId,
-      active: true
-    }, { onConflict: 'session_id,user_id' })
+      active: true,
+    },
+    { onConflict: 'session_id,user_id' }
+  )
 
   if (membershipError) {
     const mappedError = mapSessionWriteError(membershipError)
@@ -198,7 +205,10 @@ export async function getSessionById(sessionId: string): Promise<SessionSummary 
   })
 }
 
-export async function updateSessionArchivedState(sessionId: string, isArchived: boolean): Promise<void> {
+export async function updateSessionArchivedState(
+  sessionId: string,
+  isArchived: boolean
+): Promise<void> {
   const { error } = await supabase
     .from('sessions')
     .update({ is_archived: isArchived })

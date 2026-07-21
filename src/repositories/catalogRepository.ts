@@ -25,29 +25,32 @@ function mapCatalogItem(row: CatalogRow): CatalogItem {
     description: row.description ?? null,
     encumbrance: row.encumbrance ?? null,
     damageFormula: row.damage_formula ?? null,
-    armorPoints: row.armor_points ?? null
+    armorPoints: row.armor_points ?? null,
   }
 }
 
-const CATALOG_SELECT_BY_TABLE: Record<'careers' | 'skills' | 'talents' | 'weapons' | 'armors' | 'items', string> = {
+const CATALOG_SELECT_BY_TABLE: Record<
+  'careers' | 'skills' | 'talents' | 'weapons' | 'armors' | 'items',
+  string
+> = {
   careers: 'id, name',
   skills: 'id, name, specialization, description',
   talents: 'id, name, specialization, description',
   weapons: 'id, name, description, encumbrance, damage_formula',
   armors: 'id, name, description, encumbrance, armor_points',
-  items: 'id, name, description, encumbrance'
+  items: 'id, name, description, encumbrance',
 }
 
-export async function searchCatalog(table: 'careers' | 'skills' | 'talents' | 'weapons' | 'armors' | 'items', query: string): Promise<CatalogItem[]> {
+export async function searchCatalog(
+  table: 'careers' | 'skills' | 'talents' | 'weapons' | 'armors' | 'items',
+  query: string
+): Promise<CatalogItem[]> {
   const trimmed = query.trim()
   if (!trimmed) {
     return []
   }
 
-  let request = supabase
-    .from(table)
-    .select(CATALOG_SELECT_BY_TABLE[table])
-    .limit(20)
+  let request = supabase.from(table).select(CATALOG_SELECT_BY_TABLE[table]).limit(20)
 
   if (table === 'skills' || table === 'talents') {
     request = request.or(`name.ilike.%${trimmed}%,specialization.ilike.%${trimmed}%`)
@@ -68,7 +71,7 @@ export async function createCatalogItem(input: CreateCatalogItemInput): Promise<
   const payload = {
     name: input.name.trim(),
     description: input.description?.trim() || null,
-    encumbrance: Math.max(0, Math.floor(input.encumbrance))
+    encumbrance: Math.max(0, Math.floor(input.encumbrance)),
   }
 
   const { data, error } = await supabase

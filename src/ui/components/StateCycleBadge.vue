@@ -9,13 +9,16 @@ interface BadgeStateOption {
   badgeClass?: string
 }
 
-const props = withDefaults(defineProps<{
-  value: BadgeStateValue
-  options: readonly BadgeStateOption[]
-  disabled?: boolean
-}>(), {
-  disabled: false
-})
+const props = withDefaults(
+  defineProps<{
+    value: BadgeStateValue
+    options: readonly BadgeStateOption[]
+    disabled?: boolean
+  }>(),
+  {
+    disabled: false,
+  }
+)
 
 const emit = defineEmits<{
   (event: 'change', value: BadgeStateValue): void

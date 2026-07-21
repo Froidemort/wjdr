@@ -13,21 +13,27 @@ const username = ref('')
 const password = ref('')
 const localError = ref<string | null>(null)
 
-watch(() => authModalStore.isOpen, (shouldOpen) => {
-  if (dialogRef.value) {
-    if (shouldOpen) {
-      lastFocusedElement.value = document.activeElement as HTMLElement | null
-      dialogRef.value.showModal()
-    } else {
-      dialogRef.value.close()
-      lastFocusedElement.value?.focus()
+watch(
+  () => authModalStore.isOpen,
+  (shouldOpen) => {
+    if (dialogRef.value) {
+      if (shouldOpen) {
+        lastFocusedElement.value = document.activeElement as HTMLElement | null
+        dialogRef.value.showModal()
+      } else {
+        dialogRef.value.close()
+        lastFocusedElement.value?.focus()
+      }
     }
   }
-})
+)
 
-watch(() => authModalStore.mode, () => {
-  localError.value = null
-})
+watch(
+  () => authModalStore.mode,
+  () => {
+    localError.value = null
+  }
+)
 
 async function onSubmit(): Promise<void> {
   localError.value = null

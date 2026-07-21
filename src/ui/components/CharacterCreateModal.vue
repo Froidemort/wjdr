@@ -47,7 +47,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { createCharacterForSession, type CharacterRace, type CharacterGender } from '../../repositories/charactersRepository'
+import {
+  createCharacterForSession,
+  type CharacterRace,
+  type CharacterGender,
+} from '../../repositories/charactersRepository'
 
 const props = defineProps<{ sessionId: string; userId: string }>()
 const emit = defineEmits<{ created: [characterId: string] }>()
@@ -60,52 +64,53 @@ const race = ref<CharacterRace>('humain')
 const gender = ref<CharacterGender>('masculin')
 
 const raceOptions: Array<{ value: CharacterRace; label: string }> = [
-	{ value: 'humain', label: 'Humain' },
-	{ value: 'nain', label: 'Nain' },
-	{ value: 'elfe', label: 'Elfe' },
-	{ value: 'halfling', label: 'Halfling' }
+  { value: 'humain', label: 'Humain' },
+  { value: 'nain', label: 'Nain' },
+  { value: 'elfe', label: 'Elfe' },
+  { value: 'halfling', label: 'Halfling' },
 ]
 
 const genderOptions: Array<{ value: CharacterGender; label: string }> = [
-	{ value: 'masculin', label: 'Masculin' },
-	{ value: 'féminin', label: 'Féminin' }
+  { value: 'masculin', label: 'Masculin' },
+  { value: 'féminin', label: 'Féminin' },
 ]
 
 function open(): void {
-	errorMessage.value = null
-	dialogRef.value?.showModal()
+  errorMessage.value = null
+  dialogRef.value?.showModal()
 }
 
 function close(): void {
-	if (dialogRef.value?.open) dialogRef.value.close()
+  if (dialogRef.value?.open) dialogRef.value.close()
 }
 
 function onClose(): void {
-	name.value = ''
-	race.value = 'humain'
-	gender.value = 'masculin'
-	errorMessage.value = null
+  name.value = ''
+  race.value = 'humain'
+  gender.value = 'masculin'
+  errorMessage.value = null
 }
 
 async function submit(): Promise<void> {
-	if (loading.value) return
-	loading.value = true
-	errorMessage.value = null
-	try {
-		const characterId = await createCharacterForSession({
-			userId: props.userId,
-			sessionId: props.sessionId,
-			name: name.value,
-			race: race.value,
-			gender: gender.value
-		})
-		close()
-		emit('created', characterId)
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Création du personnage impossible.'
-	} finally {
-		loading.value = false
-	}
+  if (loading.value) return
+  loading.value = true
+  errorMessage.value = null
+  try {
+    const characterId = await createCharacterForSession({
+      userId: props.userId,
+      sessionId: props.sessionId,
+      name: name.value,
+      race: race.value,
+      gender: gender.value,
+    })
+    close()
+    emit('created', characterId)
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Création du personnage impossible.'
+  } finally {
+    loading.value = false
+  }
 }
 
 defineExpose({ open })

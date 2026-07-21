@@ -44,17 +44,18 @@ const successMessage = ref<string | null>(null)
 const errorMessage = ref<string | null>(null)
 
 async function sendRequest(): Promise<void> {
-	if (requesting.value || successMessage.value) return
-	requesting.value = true
-	successMessage.value = null
-	errorMessage.value = null
-	try {
-		await requestJoinSession(props.sessionId, props.userId)
-		successMessage.value = "Ta demande a été envoyée au Maître du Jeu ! Que Sigmar t'accorde sa faveur."
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Demande impossible.'
-	} finally {
-		requesting.value = false
-	}
+  if (requesting.value || successMessage.value) return
+  requesting.value = true
+  successMessage.value = null
+  errorMessage.value = null
+  try {
+    await requestJoinSession(props.sessionId, props.userId)
+    successMessage.value =
+      "Ta demande a été envoyée au Maître du Jeu ! Que Sigmar t'accorde sa faveur."
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Demande impossible.'
+  } finally {
+    requesting.value = false
+  }
 }
 </script>

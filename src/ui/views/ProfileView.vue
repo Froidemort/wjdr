@@ -162,12 +162,12 @@ import imageCompression from 'browser-image-compression'
 import AppCard from '../components/AppCard.vue'
 import { useAuthStore } from '../../stores/auth'
 import {
-	getProfileSettings,
-	reauthenticateWithPassword,
-	updateAccountPassword,
-	updateProfileEmail,
-	updateProfileUsername,
-	uploadProfileAvatar
+  getProfileSettings,
+  reauthenticateWithPassword,
+  updateAccountPassword,
+  updateProfileEmail,
+  updateProfileUsername,
+  uploadProfileAvatar,
 } from '../../repositories/profileRepository'
 
 const authStore = useAuthStore()
@@ -201,180 +201,184 @@ const avatarLoadFailed = ref(false)
 const AVATAR_MAX_SIZE_BYTES = 1 * 1024 * 1024
 
 const avatarCompressionOptions = {
-	maxSizeMB: 1.0,
-	maxWidthOrHeight: 300,
-	useWebWorker: true,
-	fileType: 'image/jpeg'
+  maxSizeMB: 1.0,
+  maxWidthOrHeight: 300,
+  useWebWorker: true,
+  fileType: 'image/jpeg',
 } as const
 
 function onAvatarLoadError(): void {
-	avatarLoadFailed.value = true
-	if (!avatarError.value) {
-		avatarError.value = 'Avatar indisponible. Verifiez le bucket Supabase avatars.'
-	}
+  avatarLoadFailed.value = true
+  if (!avatarError.value) {
+    avatarError.value = 'Avatar indisponible. Verifiez le bucket Supabase avatars.'
+  }
 }
 
 async function loadProfile(): Promise<void> {
-	if (!authStore.user?.id) {
-		return
-	}
+  if (!authStore.user?.id) {
+    return
+  }
 
-	const profile = await getProfileSettings(authStore.user.id)
-	username.value = profile.username
-	email.value = profile.email
-	newEmail.value = profile.email
-	persistedAvatarUrl.value = profile.avatarUrl
-	avatarLoadFailed.value = false
+  const profile = await getProfileSettings(authStore.user.id)
+  username.value = profile.username
+  email.value = profile.email
+  newEmail.value = profile.email
+  persistedAvatarUrl.value = profile.avatarUrl
+  avatarLoadFailed.value = false
 }
 
 async function saveUsername(): Promise<void> {
-	if (!authStore.user?.id || savingUsername.value) {
-		return
-	}
+  if (!authStore.user?.id || savingUsername.value) {
+    return
+  }
 
-	savingUsername.value = true
-	usernameError.value = ''
-	usernameSuccess.value = ''
-	try {
-		const nextUsername = await updateProfileUsername(authStore.user.id, username.value)
-		username.value = nextUsername
-		await authStore.refreshDisplayName()
-		usernameSuccess.value = 'Username mis a jour.'
-	} catch (error) {
-		usernameError.value = error instanceof Error ? error.message : 'Mise a jour du username impossible.'
-	} finally {
-		savingUsername.value = false
-	}
+  savingUsername.value = true
+  usernameError.value = ''
+  usernameSuccess.value = ''
+  try {
+    const nextUsername = await updateProfileUsername(authStore.user.id, username.value)
+    username.value = nextUsername
+    await authStore.refreshDisplayName()
+    usernameSuccess.value = 'Username mis a jour.'
+  } catch (error) {
+    usernameError.value =
+      error instanceof Error ? error.message : 'Mise a jour du username impossible.'
+  } finally {
+    savingUsername.value = false
+  }
 }
 
 async function changeEmail(): Promise<void> {
-	if (!authStore.user?.id || updatingEmail.value) {
-		return
-	}
+  if (!authStore.user?.id || updatingEmail.value) {
+    return
+  }
 
-	if (!newEmail.value.trim()) {
-		emailError.value = 'Veuillez saisir un nouvel email.'
-		return
-	}
+  if (!newEmail.value.trim()) {
+    emailError.value = 'Veuillez saisir un nouvel email.'
+    return
+  }
 
-	if (!emailCurrentPassword.value) {
-		emailError.value = 'Veuillez confirmer votre mot de passe actuel.'
-		return
-	}
+  if (!emailCurrentPassword.value) {
+    emailError.value = 'Veuillez confirmer votre mot de passe actuel.'
+    return
+  }
 
-	updatingEmail.value = true
-	emailError.value = ''
-	emailSuccess.value = ''
-	try {
-		await reauthenticateWithPassword(email.value, emailCurrentPassword.value)
-		const nextEmail = await updateProfileEmail(authStore.user.id, newEmail.value)
-		email.value = nextEmail
-		newEmail.value = nextEmail
-		emailCurrentPassword.value = ''
-		emailSuccess.value = 'Email mis a jour. Verifiez votre boite de reception.'
-	} catch (error) {
-		emailError.value = error instanceof Error ? error.message : 'Mise a jour de l email impossible.'
-	} finally {
-		updatingEmail.value = false
-	}
+  updatingEmail.value = true
+  emailError.value = ''
+  emailSuccess.value = ''
+  try {
+    await reauthenticateWithPassword(email.value, emailCurrentPassword.value)
+    const nextEmail = await updateProfileEmail(authStore.user.id, newEmail.value)
+    email.value = nextEmail
+    newEmail.value = nextEmail
+    emailCurrentPassword.value = ''
+    emailSuccess.value = 'Email mis a jour. Verifiez votre boite de reception.'
+  } catch (error) {
+    emailError.value = error instanceof Error ? error.message : 'Mise a jour de l email impossible.'
+  } finally {
+    updatingEmail.value = false
+  }
 }
 
 async function changePassword(): Promise<void> {
-	if (updatingPassword.value) {
-		return
-	}
+  if (updatingPassword.value) {
+    return
+  }
 
-	if (!email.value) {
-		passwordError.value = 'Email introuvable pour verifier votre session.'
-		return
-	}
+  if (!email.value) {
+    passwordError.value = 'Email introuvable pour verifier votre session.'
+    return
+  }
 
-	if (!passwordCurrent.value || !passwordNext.value || !passwordConfirm.value) {
-		passwordError.value = 'Veuillez completer tous les champs mot de passe.'
-		return
-	}
+  if (!passwordCurrent.value || !passwordNext.value || !passwordConfirm.value) {
+    passwordError.value = 'Veuillez completer tous les champs mot de passe.'
+    return
+  }
 
-	if (passwordNext.value !== passwordConfirm.value) {
-		passwordError.value = 'La confirmation du nouveau mot de passe ne correspond pas.'
-		return
-	}
+  if (passwordNext.value !== passwordConfirm.value) {
+    passwordError.value = 'La confirmation du nouveau mot de passe ne correspond pas.'
+    return
+  }
 
-	if (passwordNext.value.length < 8) {
-		passwordError.value = 'Le nouveau mot de passe doit contenir au moins 8 caracteres.'
-		return
-	}
+  if (passwordNext.value.length < 8) {
+    passwordError.value = 'Le nouveau mot de passe doit contenir au moins 8 caracteres.'
+    return
+  }
 
-	updatingPassword.value = true
-	passwordError.value = ''
-	passwordSuccess.value = ''
-	try {
-		await reauthenticateWithPassword(email.value, passwordCurrent.value)
-		await updateAccountPassword(passwordNext.value)
-		passwordCurrent.value = ''
-		passwordNext.value = ''
-		passwordConfirm.value = ''
-		passwordSuccess.value = 'Mot de passe modifie.'
-	} catch (error) {
-		passwordError.value = error instanceof Error ? error.message : 'Changement de mot de passe impossible.'
-	} finally {
-		updatingPassword.value = false
-	}
+  updatingPassword.value = true
+  passwordError.value = ''
+  passwordSuccess.value = ''
+  try {
+    await reauthenticateWithPassword(email.value, passwordCurrent.value)
+    await updateAccountPassword(passwordNext.value)
+    passwordCurrent.value = ''
+    passwordNext.value = ''
+    passwordConfirm.value = ''
+    passwordSuccess.value = 'Mot de passe modifie.'
+  } catch (error) {
+    passwordError.value =
+      error instanceof Error ? error.message : 'Changement de mot de passe impossible.'
+  } finally {
+    updatingPassword.value = false
+  }
 }
 
 onMounted(async () => {
-	try {
-		await loadProfile()
-	} catch (error) {
-		usernameError.value = error instanceof Error ? error.message : 'Chargement du profil impossible.'
-	}
+  try {
+    await loadProfile()
+  } catch (error) {
+    usernameError.value =
+      error instanceof Error ? error.message : 'Chargement du profil impossible.'
+  }
 })
 
 async function onAvatarChange(event: Event): Promise<void> {
-	const target = event.target as HTMLInputElement
-	const file = target.files?.[0]
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
 
-	if (!file) {
-		return
-	}
+  if (!file) {
+    return
+  }
 
-	if (!['image/png', 'image/jpeg'].includes(file.type)) {
-		avatarError.value = 'Seuls PNG et JPG sont acceptes'
-		return
-	}
+  if (!['image/png', 'image/jpeg'].includes(file.type)) {
+    avatarError.value = 'Seuls PNG et JPG sont acceptes'
+    return
+  }
 
-	avatarError.value = ''
-	avatarSuccess.value = ''
-	avatarLoadFailed.value = false
-	uploadingAvatar.value = true
+  avatarError.value = ''
+  avatarSuccess.value = ''
+  avatarLoadFailed.value = false
+  uploadingAvatar.value = true
 
-	try {
-		if (!authStore.user?.id) {
-			throw new Error('Utilisateur non connecte.')
-		}
+  try {
+    if (!authStore.user?.id) {
+      throw new Error('Utilisateur non connecte.')
+    }
 
-		const compressedFile = await imageCompression(file, avatarCompressionOptions)
+    const compressedFile = await imageCompression(file, avatarCompressionOptions)
 
-		if (compressedFile.size > AVATAR_MAX_SIZE_BYTES) {
-			throw new Error('Impossible de compresser l image sous 1MB. Essayez une image plus legere.')
-		}
+    if (compressedFile.size > AVATAR_MAX_SIZE_BYTES) {
+      throw new Error('Impossible de compresser l image sous 1MB. Essayez une image plus legere.')
+    }
 
-		if (previewUrl.value) {
-			URL.revokeObjectURL(previewUrl.value)
-		}
+    if (previewUrl.value) {
+      URL.revokeObjectURL(previewUrl.value)
+    }
 
-		previewUrl.value = URL.createObjectURL(compressedFile)
-		const uploadedAvatarUrl = await uploadProfileAvatar(authStore.user.id, compressedFile)
-		persistedAvatarUrl.value = uploadedAvatarUrl
-		await authStore.refreshDisplayName()
-		avatarSuccess.value = 'Avatar mis a jour avec succes.'
-		target.value = ''
-		uploadingAvatar.value = false
-	} catch (err) {
-		avatarError.value = err instanceof Error ? err.message : 'Erreur lors de la mise a jour de l avatar.'
-		if (!persistedAvatarUrl.value) {
-			previewUrl.value = null
-		}
-		uploadingAvatar.value = false
-	}
+    previewUrl.value = URL.createObjectURL(compressedFile)
+    const uploadedAvatarUrl = await uploadProfileAvatar(authStore.user.id, compressedFile)
+    persistedAvatarUrl.value = uploadedAvatarUrl
+    await authStore.refreshDisplayName()
+    avatarSuccess.value = 'Avatar mis a jour avec succes.'
+    target.value = ''
+    uploadingAvatar.value = false
+  } catch (err) {
+    avatarError.value =
+      err instanceof Error ? err.message : 'Erreur lors de la mise a jour de l avatar.'
+    if (!persistedAvatarUrl.value) {
+      previewUrl.value = null
+    }
+    uploadingAvatar.value = false
+  }
 }
 </script>

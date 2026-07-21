@@ -14,9 +14,9 @@ async function resolveIdentifier(input: string): Promise<AuthIdentifier> {
   }
 
   // On appelle la fonction stockée PostgreSQL sécurisée
-  const { data: email, error } = await supabase
-    .rpc('get_email_by_username', { search_username: identifier })
-
+  const { data: email, error } = await supabase.rpc('get_email_by_username', {
+    search_username: identifier,
+  })
 
   if (error || !email) {
     throw new Error('Identifiant introuvable : ' + (error?.message ?? 'Aucun e-mail associé'))
@@ -41,7 +41,9 @@ export const useAuthStore = defineStore('auth', () => {
       return ''
     }
 
-    const metadata = currentUser.user_metadata as { username?: unknown; full_name?: unknown } | undefined
+    const metadata = currentUser.user_metadata as
+      | { username?: unknown; full_name?: unknown }
+      | undefined
     const fullName = typeof metadata?.full_name === 'string' ? metadata.full_name.trim() : ''
     if (fullName) {
       return fullName
@@ -121,7 +123,7 @@ export const useAuthStore = defineStore('auth', () => {
       const resolved = await resolveIdentifier(identifier)
       const { error } = await supabase.auth.signInWithPassword({
         email: resolved.email,
-        password
+        password,
       })
 
       if (error) {
@@ -147,9 +149,9 @@ export const useAuthStore = defineStore('auth', () => {
         password,
         options: {
           data: {
-            username: normalizedUsername
-          }
-        }
+            username: normalizedUsername,
+          },
+        },
       })
 
       if (error) {
@@ -204,6 +206,6 @@ export const useAuthStore = defineStore('auth', () => {
     refreshDisplayName,
     signIn,
     signUp,
-    signOut
+    signOut,
   }
 })

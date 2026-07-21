@@ -32,7 +32,9 @@ export function buildSessionNotesChannelName(sessionId: string): string {
   return `session-notes-${sessionId}`
 }
 
-export function buildSessionNotesRealtimeSubscriptions(sessionId: string): SessionNotesRealtimeSubscription[] {
+export function buildSessionNotesRealtimeSubscriptions(
+  sessionId: string
+): SessionNotesRealtimeSubscription[] {
   return [{ table: 'session_notes', filter: `session_id=eq.${sessionId}` }]
 }
 
@@ -87,7 +89,7 @@ function mapSessionNote(row: SessionNoteRow): SessionNote {
     isVisible: row.is_visible,
     isArchived: row.is_archived,
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
   }
 }
 
@@ -96,7 +98,11 @@ function mapSessionNoteWriteError(error: unknown): Error {
     const message = error.message.toLowerCase()
     const maybeStatus = (error as { status?: number }).status
 
-    if (maybeStatus === 403 || message.includes('row-level security') || message.includes('permission denied')) {
+    if (
+      maybeStatus === 403 ||
+      message.includes('row-level security') ||
+      message.includes('permission denied')
+    ) {
       return new Error('Acces refuse pour les notes de session.')
     }
 
@@ -113,7 +119,9 @@ export async function listSessionNotesForSession(
   return withRetry(async () => {
     let query = supabase
       .from('session_notes')
-      .select('id, session_id, author_user_id, title, content_text, content_character_note, content_image_path, is_visible, is_archived, created_at, updated_at')
+      .select(
+        'id, session_id, author_user_id, title, content_text, content_character_note, content_image_path, is_visible, is_archived, created_at, updated_at'
+      )
       .eq('session_id', sessionId)
 
     if (options.visibleOnly) {
@@ -152,7 +160,7 @@ export async function createSessionNote(payload: CreateSessionNoteInput): Promis
       content_text: contentText,
       content_character_note: contentCharacterNote,
       content_image_path: contentImagePath,
-      is_visible: payload.isVisible ?? false
+      is_visible: payload.isVisible ?? false,
     })
     .select('id')
     .single()
@@ -164,7 +172,10 @@ export async function createSessionNote(payload: CreateSessionNoteInput): Promis
   return data.id as string
 }
 
-export async function updateSessionNote(noteId: string, patch: UpdateSessionNoteInput): Promise<void> {
+export async function updateSessionNote(
+  noteId: string,
+  patch: UpdateSessionNoteInput
+): Promise<void> {
   const updatePayload: Record<string, unknown> = {}
 
   if (typeof patch.title === 'string') {
@@ -203,7 +214,8 @@ export async function updateSessionNote(noteId: string, patch: UpdateSessionNote
     'content_image_path' in updatePayload
   ) {
     const contentText = (updatePayload.content_text as string | null | undefined) ?? null
-    const contentCharacterNote = (updatePayload.content_character_note as string | null | undefined) ?? null
+    const contentCharacterNote =
+      (updatePayload.content_character_note as string | null | undefined) ?? null
     const contentImagePath = (updatePayload.content_image_path as string | null | undefined) ?? null
 
     if (!contentText && !contentCharacterNote && !contentImagePath) {
@@ -211,29 +223,29 @@ export async function updateSessionNote(noteId: string, patch: UpdateSessionNote
     }
   }
 
-  const { error } = await supabase
-    .from('session_notes')
-    .update(updatePayload)
-    .eq('id', noteId)
+  const { error } = await supabase.from('session_notes').update(updatePayload).eq('id', noteId)
 
   if (error) {
     throw mapSessionNoteWriteError(error)
   }
 }
 
-export async function toggleSessionNoteVisibility(noteId: string, isVisible: boolean): Promise<void> {
+export async function toggleSessionNoteVisibility(
+  noteId: string,
+  isVisible: boolean
+): Promise<void> {
   await updateSessionNote(noteId, { isVisible })
 }
 
-export async function toggleSessionNoteArchivedState(noteId: string, isArchived: boolean): Promise<void> {
+export async function toggleSessionNoteArchivedState(
+  noteId: string,
+  isArchived: boolean
+): Promise<void> {
   await updateSessionNote(noteId, { isArchived })
 }
 
 export async function deleteSessionNote(noteId: string): Promise<void> {
-  const { error } = await supabase
-    .from('session_notes')
-    .delete()
-    .eq('id', noteId)
+  const { error } = await supabase.from('session_notes').delete().eq('id', noteId)
 
   if (error) {
     throw mapSessionNoteWriteError(error)

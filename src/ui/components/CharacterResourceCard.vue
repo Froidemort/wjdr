@@ -2,15 +2,18 @@
 import { computed } from 'vue'
 import { Heart, Clover, WandSparkles } from '@lucide/vue'
 
-const props = withDefaults(defineProps<{
-  label: string
-  current: number
-  max: number
-  icon: 'heart' | 'clover' | 'wand-sparkles'
-  editable?: boolean
-}>(), {
-  editable: false
-})
+const props = withDefaults(
+  defineProps<{
+    label: string
+    current: number
+    max: number
+    icon: 'heart' | 'clover' | 'wand-sparkles'
+    editable?: boolean
+  }>(),
+  {
+    editable: false,
+  }
+)
 
 const emit = defineEmits<{
   (event: 'update:current', value: number): void

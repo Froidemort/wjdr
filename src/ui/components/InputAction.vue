@@ -34,21 +34,21 @@
 import AppCard from './AppCard.vue'
 
 defineProps<{
-	modelValue: string
-	title: string
-	placeholder: string
-	buttonLabel: string
-	loading?: boolean
-	disabled?: boolean
-	successMessage?: string | null
-	errorMessage?: string | null
-	maxLength?: number
-	compact?: boolean
-	inputClass?: string
+  modelValue: string
+  title: string
+  placeholder: string
+  buttonLabel: string
+  loading?: boolean
+  disabled?: boolean
+  successMessage?: string | null
+  errorMessage?: string | null
+  maxLength?: number
+  compact?: boolean
+  inputClass?: string
 }>()
 
 defineEmits<{
-	'update:modelValue': [value: string]
-	'submit': []
+  'update:modelValue': [value: string]
+  submit: []
 }>()
 </script>

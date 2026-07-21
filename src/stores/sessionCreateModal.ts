@@ -15,6 +15,6 @@ export const useSessionCreateModalStore = defineStore('sessionCreateModal', () =
   return {
     isOpen,
     openModal,
-    closeModal
+    closeModal,
   }
 })

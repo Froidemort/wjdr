@@ -4,13 +4,13 @@ import { useRouter } from 'vue-router'
 import AppCard from '../components/AppCard.vue'
 import { useAuthStore } from '../../stores/auth'
 import {
-	deleteNotification,
-	extractNotificationSessionId,
-	getNotificationDisplayMessage,
-	getNotificationDisplayTitle,
-	markAllNotificationsRead,
-	markNotificationRead,
-	type NotificationItem
+  deleteNotification,
+  extractNotificationSessionId,
+  getNotificationDisplayMessage,
+  getNotificationDisplayTitle,
+  markAllNotificationsRead,
+  markNotificationRead,
+  type NotificationItem,
 } from '../../repositories/notificationsRepository'
 import { usePagination } from '../composables/usePagination'
 import { useBusyOperations } from '../composables/useBusyOperations'
@@ -19,83 +19,85 @@ import { useNotificationsLoad } from '../composables/useNotificationsLoad'
 const authStore = useAuthStore()
 const router = useRouter()
 const pageSize = 12
-const { page, totalItems, totalPages, canGoPrevious, canGoNext, nextPage, previousPage } = usePagination({ pageSize })
+const { page, totalItems, totalPages, canGoPrevious, canGoNext, nextPage, previousPage } =
+  usePagination({ pageSize })
 const { busyIds, isBusy, setBusy, clearBusy, clearAllBusy } = useBusyOperations()
-const { notifications, totalNotifications, loading, error, load, subscribe, unsubscribe } = useNotificationsLoad({
-	userId: () => authStore.user?.id,
-	pageSize,
-	page: () => page.value
-})
+const { notifications, totalNotifications, loading, error, load, subscribe, unsubscribe } =
+  useNotificationsLoad({
+    userId: () => authStore.user?.id,
+    pageSize,
+    page: () => page.value,
+  })
 
 totalItems.value = totalNotifications.value
 
 async function openSessionFromNotification(notif: NotificationItem): Promise<void> {
-	const sessionId = extractNotificationSessionId(notif)
-	if (sessionId) {
-		await router.push(`/sessions/${sessionId}`)
-	}
+  const sessionId = extractNotificationSessionId(notif)
+  if (sessionId) {
+    await router.push(`/sessions/${sessionId}`)
+  }
 }
 
 async function handleMarkRead(notifId: string): Promise<void> {
-	if (isBusy(notifId)) return
-	setBusy(notifId)
-	try {
-		await markNotificationRead(notifId)
-		await load()
-	} finally {
-		clearBusy(notifId)
-	}
+  if (isBusy(notifId)) return
+  setBusy(notifId)
+  try {
+    await markNotificationRead(notifId)
+    await load()
+  } finally {
+    clearBusy(notifId)
+  }
 }
 
 async function handleRemove(notifId: string): Promise<void> {
-	if (isBusy(notifId)) return
-	setBusy(notifId)
-	try {
-		await deleteNotification(notifId)
-		await load()
-	} finally {
-		clearBusy(notifId)
-	}
+  if (isBusy(notifId)) return
+  setBusy(notifId)
+  try {
+    await deleteNotification(notifId)
+    await load()
+  } finally {
+    clearBusy(notifId)
+  }
 }
 
 async function handleMarkAllRead(): Promise<void> {
-	if (!authStore.user?.id || busyIds.value.size > 0) return
-	try {
-		await markAllNotificationsRead(authStore.user.id)
-		await load()
-	} finally {
-		clearAllBusy()
-	}
+  if (!authStore.user?.id || busyIds.value.size > 0) return
+  try {
+    await markAllNotificationsRead(authStore.user.id)
+    await load()
+  } finally {
+    clearAllBusy()
+  }
 }
 
 function goToPreviousPage(): void {
-	if (!canGoPrevious.value || loading.value) return
-	previousPage()
-	void load()
+  if (!canGoPrevious.value || loading.value) return
+  previousPage()
+  void load()
 }
 
 function goToNextPage(): void {
-	if (!canGoNext.value || loading.value) return
-	nextPage()
-	void load()
+  if (!canGoNext.value || loading.value) return
+  nextPage()
+  void load()
 }
 
 watch(
-	() => authStore.user?.id,
-	(userId) => {
-		if (!userId) {
-			notifications.value = []
-			unsubscribe()
-			return
-		}
-		subscribe(userId)
-		void load()
-	},
-	{ immediate: true }
+  () => authStore.user?.id,
+  (userId) => {
+    if (!userId) {
+      notifications.value = []
+      unsubscribe()
+      return
+    }
+    subscribe(userId)
+    void load()
+  },
+  { immediate: true }
 )
 
 watch(page, () => {
-	void load()
+  void load()
 })
 </script>
 

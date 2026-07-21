@@ -44,7 +44,7 @@ export async function getProfileSettings(userId: string): Promise<ProfileSetting
   return {
     username: row.username,
     email: row.email,
-    avatarUrl: row.avatar_url
+    avatarUrl: row.avatar_url,
   }
 }
 
@@ -60,20 +60,16 @@ export async function uploadProfileAvatar(userId: string, file: File): Promise<s
   const safeFileName = sanitizeFileName(file.name)
   const path = `${userId}/${Date.now()}-${safeFileName || `avatar.${extension}`}`
 
-  const { error: uploadError } = await supabase.storage
-    .from('avatars')
-    .upload(path, file, {
-      upsert: false,
-      contentType: file.type
-    })
+  const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, {
+    upsert: false,
+    contentType: file.type,
+  })
 
   if (uploadError) {
     throw uploadError
   }
 
-  const { data: publicUrlData } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(path)
+  const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(path)
 
   const avatarUrl = publicUrlData.publicUrl
 
@@ -88,8 +84,8 @@ export async function uploadProfileAvatar(userId: string, file: File): Promise<s
 
   await supabase.auth.updateUser({
     data: {
-      avatar_url: avatarUrl
-    }
+      avatar_url: avatarUrl,
+    },
   })
 
   return avatarUrl
@@ -123,14 +119,17 @@ export async function updateProfileUsername(userId: string, rawUsername: string)
   // Keep auth metadata aligned for future token refreshes.
   await supabase.auth.updateUser({
     data: {
-      username
-    }
+      username,
+    },
   })
 
   return (data as { username: string }).username
 }
 
-export async function reauthenticateWithPassword(email: string, currentPassword: string): Promise<void> {
+export async function reauthenticateWithPassword(
+  email: string,
+  currentPassword: string
+): Promise<void> {
   const normalizedEmail = normalizeEmail(email)
   if (!normalizedEmail || !currentPassword) {
     throw new Error('Email ou mot de passe manquant pour la verification.')
@@ -138,7 +137,7 @@ export async function reauthenticateWithPassword(email: string, currentPassword:
 
   const { error } = await supabase.auth.signInWithPassword({
     email: normalizedEmail,
-    password: currentPassword
+    password: currentPassword,
   })
 
   if (error) {
@@ -157,10 +156,7 @@ export async function updateProfileEmail(userId: string, rawEmail: string): Prom
     throw authError
   }
 
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update({ email })
-    .eq('id', userId)
+  const { error: profileError } = await supabase.from('profiles').update({ email }).eq('id', userId)
 
   if (profileError) {
     if (profileError.code === '23505') {

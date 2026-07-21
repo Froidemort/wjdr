@@ -19,10 +19,10 @@
 import { watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import NavBar from './ui/components/NavBar.vue';
-import Footer from './ui/components/Footer.vue';
-import AuthModal from './ui/components/AuthModal.vue';
-import SessionCreateModal from './ui/components/SessionCreateModal.vue';
+import NavBar from './ui/components/NavBar.vue'
+import Footer from './ui/components/Footer.vue'
+import AuthModal from './ui/components/AuthModal.vue'
+import SessionCreateModal from './ui/components/SessionCreateModal.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()

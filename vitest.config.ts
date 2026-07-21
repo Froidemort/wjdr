@@ -5,6 +5,6 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./tests/setup/indexeddb.ts'],
-    include: ['tests/unit/**/*.test.ts']
-  }
+    include: ['tests/unit/**/*.test.ts'],
+  },
 })

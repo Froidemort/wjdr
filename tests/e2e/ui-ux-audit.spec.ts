@@ -61,11 +61,14 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
 
     await expect
       .poll(async () => loginTrigger.evaluate((element) => document.activeElement === element), {
-        timeout: 3000
+        timeout: 3000,
       })
       .toBe(true)
 
-    await page.screenshot({ path: screenshotPath('01-app-shell-and-modal-focus.png'), fullPage: true })
+    await page.screenshot({
+      path: screenshotPath('01-app-shell-and-modal-focus.png'),
+      fullPage: true,
+    })
   })
 
   test('2) Navbar reactive states, ARIA state and mobile touch targets', async ({ page }) => {
@@ -82,7 +85,7 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
       test.info().annotations.push({
         type: 'note',
         description:
-          'Notification center not rendered in anonymous state. Run the same test with an authenticated user to validate expanded/collapsed behavior.'
+          'Notification center not rendered in anonymous state. Run the same test with an authenticated user to validate expanded/collapsed behavior.',
       })
     }
 
@@ -96,18 +99,27 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
       test.info().annotations.push({
         type: 'note',
         description:
-          'No square navbar action button visible on current state. Mobile touch target validation should be rerun with an authenticated user.'
+          'No square navbar action button visible on current state. Mobile touch target validation should be rerun with an authenticated user.',
       })
     }
 
     for (let index = 0; index < buttonCount; index += 1) {
       const box = await actionButtons.nth(index).boundingBox()
       expect(box, `Missing boundingBox on navbar action button #${index + 1}`).not.toBeNull()
-      expect(box!.width, `Navbar action button #${index + 1} width should be >= 44px`).toBeGreaterThanOrEqual(44)
-      expect(box!.height, `Navbar action button #${index + 1} height should be >= 44px`).toBeGreaterThanOrEqual(44)
+      expect(
+        box!.width,
+        `Navbar action button #${index + 1} width should be >= 44px`
+      ).toBeGreaterThanOrEqual(44)
+      expect(
+        box!.height,
+        `Navbar action button #${index + 1} height should be >= 44px`
+      ).toBeGreaterThanOrEqual(44)
     }
 
-    await page.screenshot({ path: screenshotPath('02-navbar-mobile-touch-targets.png'), fullPage: true })
+    await page.screenshot({
+      path: screenshotPath('02-navbar-mobile-touch-targets.png'),
+      fullPage: true,
+    })
   })
 
   test('3) Forms: native submit event + disabled feedback during submit', async ({ page }) => {
@@ -121,8 +133,8 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
         contentType: 'application/json',
         body: JSON.stringify({
           error: 'invalid_grant',
-          error_description: 'Invalid login credentials'
-        })
+          error_description: 'Invalid login credentials',
+        }),
       })
     })
 
@@ -154,7 +166,10 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
     await expect(dialog.getByRole('alert')).toBeVisible({ timeout: 10000 })
     await expect(submitButton).toBeEnabled()
 
-    await page.screenshot({ path: screenshotPath('03-form-submit-feedback-auth-modal.png'), fullPage: true })
+    await page.screenshot({
+      path: screenshotPath('03-form-submit-feedback-auth-modal.png'),
+      fullPage: true,
+    })
   })
 
   test('4) Character detail visual tokens and responsive overflow audit', async ({ page }) => {
@@ -163,12 +178,14 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
     const toastAlert = page.locator('.toast .alert').first()
     if (await toastAlert.count()) {
       const className = (await toastAlert.getAttribute('class')) ?? ''
-      expect(className.includes('text-error-content') || className.includes('text-warning-content')).toBeTruthy()
+      expect(
+        className.includes('text-error-content') || className.includes('text-warning-content')
+      ).toBeTruthy()
     } else {
       test.info().annotations.push({
         type: 'note',
         description:
-          'Toast area not visible for the current route state. Validate toast semantic color classes while triggering a real save/error event in authenticated mode.'
+          'Toast area not visible for the current route state. Validate toast semantic color classes while triggering a real save/error event in authenticated mode.',
       })
     }
 
@@ -193,14 +210,22 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
     })
     expect(mobileOverflow).toBeTruthy()
 
-    await page.screenshot({ path: screenshotPath('04-character-detail-mobile-overflow-audit.png'), fullPage: true })
+    await page.screenshot({
+      path: screenshotPath('04-character-detail-mobile-overflow-audit.png'),
+      fullPage: true,
+    })
 
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.reload()
-    await page.screenshot({ path: screenshotPath('04-character-detail-desktop-overflow-audit.png'), fullPage: true })
+    await page.screenshot({
+      path: screenshotPath('04-character-detail-desktop-overflow-audit.png'),
+      fullPage: true,
+    })
   })
 
-  test('5) Network stability audit: detect duplicate fetches on list/detail mounts', async ({ page }) => {
+  test('5) Network stability audit: detect duplicate fetches on list/detail mounts', async ({
+    page,
+  }) => {
     const restCounts: RequestCounter = new Map()
 
     await page.route('**/rest/v1/**', async (route) => {
@@ -217,12 +242,15 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
       const repeatedListCalls = Array.from(restCounts.entries()).filter(([requestPath, count]) => {
         return requestPath.includes('/sessions') && count > 1
       })
-      expect(repeatedListCalls, `Duplicate list fetches detected: ${JSON.stringify(repeatedListCalls)}`).toEqual([])
+      expect(
+        repeatedListCalls,
+        `Duplicate list fetches detected: ${JSON.stringify(repeatedListCalls)}`
+      ).toEqual([])
     } else {
       test.info().annotations.push({
         type: 'note',
         description:
-          'Sessions list not reachable in current auth state; duplicate fetch assertion for list view skipped.'
+          'Sessions list not reachable in current auth state; duplicate fetch assertion for list view skipped.',
       })
     }
 
@@ -231,23 +259,34 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
 
     const sessionDetailPath = page.url()
     if (sessionDetailPath.includes('/sessions/dummy-audit-id')) {
-      const repeatedDetailCalls = Array.from(restCounts.entries()).filter(([requestPath, count]) => {
-        return requestPath.includes('/sessions') && count > 1
-      })
-      expect(repeatedDetailCalls, `Duplicate detail fetches detected: ${JSON.stringify(repeatedDetailCalls)}`).toEqual([])
+      const repeatedDetailCalls = Array.from(restCounts.entries()).filter(
+        ([requestPath, count]) => {
+          return requestPath.includes('/sessions') && count > 1
+        }
+      )
+      expect(
+        repeatedDetailCalls,
+        `Duplicate detail fetches detected: ${JSON.stringify(repeatedDetailCalls)}`
+      ).toEqual([])
     } else {
       test.info().annotations.push({
         type: 'note',
         description:
-          'Session detail not reachable in current auth state; duplicate fetch assertion for detail view skipped.'
+          'Session detail not reachable in current auth state; duplicate fetch assertion for detail view skipped.',
       })
     }
 
-    await page.screenshot({ path: screenshotPath('05-network-stability-route-state.png'), fullPage: true })
+    await page.screenshot({
+      path: screenshotPath('05-network-stability-route-state.png'),
+      fullPage: true,
+    })
   })
 
   test('6) Diagnostic screenshots index capture', async ({ page }) => {
     await page.goto('/')
-    await page.screenshot({ path: screenshotPath('06-home-diagnostic-fullpage.png'), fullPage: true })
+    await page.screenshot({
+      path: screenshotPath('06-home-diagnostic-fullpage.png'),
+      fullPage: true,
+    })
   })
 })

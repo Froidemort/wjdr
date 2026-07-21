@@ -38,36 +38,44 @@ import { listCharactersForUser } from '../../repositories/charactersRepository'
 import type { CharacterSummary } from '../../types/domain'
 
 const authStore = useAuthStore()
-const { data: characters, loading, error: errorMessage, execute } = useLoadingState<CharacterSummary[]>({ fallbackValue: [] })
-const { subscribe, unsubscribe } = useRealtimeChannels(() => {
-	void loadCharacters()
-}, { debounceMs: 400 })
+const {
+  data: characters,
+  loading,
+  error: errorMessage,
+  execute,
+} = useLoadingState<CharacterSummary[]>({ fallbackValue: [] })
+const { subscribe, unsubscribe } = useRealtimeChannels(
+  () => {
+    void loadCharacters()
+  },
+  { debounceMs: 400 }
+)
 
 const charactersList = computed(() => characters.value ?? [])
 
 async function loadCharacters(): Promise<void> {
-	if (!authStore.user?.id) {
-		characters.value = []
-		return
-	}
+  if (!authStore.user?.id) {
+    characters.value = []
+    return
+  }
 
-	await execute(() => listCharactersForUser(authStore.user!.id))
+  await execute(() => listCharactersForUser(authStore.user!.id))
 }
 
 watch(
-	() => authStore.user?.id,
-	(userId) => {
-		if (!userId) {
-			characters.value = []
-			unsubscribe()
-			return
-		}
+  () => authStore.user?.id,
+  (userId) => {
+    if (!userId) {
+      characters.value = []
+      unsubscribe()
+      return
+    }
 
-		void loadCharacters()
-		subscribe(`characters-list-${userId}`, [
-			{ table: 'characters', filter: `user_id=eq.${userId}` }
-		])
-	},
-	{ immediate: true }
+    void loadCharacters()
+    subscribe(`characters-list-${userId}`, [
+      { table: 'characters', filter: `user_id=eq.${userId}` },
+    ])
+  },
+  { immediate: true }
 )
 </script>

@@ -49,15 +49,14 @@ const authModalStore = useAuthModalStore()
 const sessionCreateModalStore = useSessionCreateModalStore()
 
 function openLogin(): void {
-	authModalStore.openModal('login')
+  authModalStore.openModal('login')
 }
 
 function openSignup(): void {
-	authModalStore.openModal('signup')
+  authModalStore.openModal('signup')
 }
 
 function openSessionCreate(): void {
-	sessionCreateModalStore.openModal()
+  sessionCreateModalStore.openModal()
 }
-
 </script>

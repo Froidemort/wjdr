@@ -3,17 +3,20 @@ import AppCard from './AppCard.vue'
 import CharacterSummaryStats from './CharacterSummaryStats.vue'
 import type { CharacterSummary } from '../../types/domain'
 
-withDefaults(defineProps<{
-  character: CharacterSummary
-  actionLabel: string
-  actionTo?: string
-  compact?: boolean
-  destinyTotal?: number
-}>(), {
-  actionTo: undefined,
-  compact: false,
-  destinyTotal: undefined
-})
+withDefaults(
+  defineProps<{
+    character: CharacterSummary
+    actionLabel: string
+    actionTo?: string
+    compact?: boolean
+    destinyTotal?: number
+  }>(),
+  {
+    actionTo: undefined,
+    compact: false,
+    destinyTotal: undefined,
+  }
+)
 </script>
 
 <template>

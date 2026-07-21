@@ -36,7 +36,7 @@ export function useMoneyCoercion() {
     return {
       gold: newGold,
       silver: newSilver,
-      copper: newCopper
+      copper: newCopper,
     }
   }
 
@@ -68,6 +68,6 @@ export function useMoneyCoercion() {
   return {
     coerceMoney,
     applyCoercion,
-    isMoneyLocked
+    isMoneyLocked,
   }
 }

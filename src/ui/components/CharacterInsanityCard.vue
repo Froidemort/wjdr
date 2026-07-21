@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { Hospital } from '@lucide/vue'
 
-const props = withDefaults(defineProps<{
-  current: number
-  editable?: boolean
-}>(), {
-  editable: false
-})
+const props = withDefaults(
+  defineProps<{
+    current: number
+    editable?: boolean
+  }>(),
+  {
+    editable: false,
+  }
+)
 
 const emit = defineEmits<{
   (event: 'update:current', value: number): void

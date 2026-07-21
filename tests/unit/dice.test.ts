@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { evaluateBonusExpression, resolvePercentileCheck, rollPercentile } from '../../src/services/dice'
+import {
+  evaluateBonusExpression,
+  resolvePercentileCheck,
+  rollPercentile,
+} from '../../src/services/dice'
 
 describe('dice service', () => {
   it('resolves a successful percentile check with modifiers', () => {
@@ -8,7 +12,7 @@ describe('dice service', () => {
       baseTarget: 42,
       difficulty: 10,
       modifier: 5,
-      roll: 37
+      roll: 37,
     })
 
     expect(result).toEqual({
@@ -18,7 +22,7 @@ describe('dice service', () => {
       success: true,
       margin: 20,
       tensMargin: 2,
-      isDouble: false
+      isDouble: false,
     })
   })
 
@@ -26,7 +30,7 @@ describe('dice service', () => {
     const result = resolvePercentileCheck({
       baseTarget: 48,
       difficulty: -10,
-      roll: 66
+      roll: 66,
     })
 
     expect(result).toEqual({
@@ -36,7 +40,7 @@ describe('dice service', () => {
       success: false,
       margin: -28,
       tensMargin: 2,
-      isDouble: true
+      isDouble: true,
     })
   })
 
@@ -44,7 +48,7 @@ describe('dice service', () => {
     const result = resolvePercentileCheck({
       baseTarget: 120,
       modifier: 15,
-      roll: 99
+      roll: 99,
     })
 
     expect(result.effectiveTarget).toBe(99)

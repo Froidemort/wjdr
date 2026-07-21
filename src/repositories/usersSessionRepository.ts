@@ -11,7 +11,7 @@ function mapProfile(row: ProfileRow): Profile {
   return {
     id: row.id,
     username: row.username,
-    email: row.email
+    email: row.email,
   }
 }
 
@@ -76,7 +76,7 @@ export async function addUsersToSession(sessionId: string, userIds: string[]): P
   const rows = uniqueIds.map((userId) => ({
     session_id: sessionId,
     user_id: userId,
-    active: true
+    active: true,
   }))
 
   const { error } = await supabase
@@ -104,11 +104,7 @@ export async function searchInvitableProfilesByMembership(
       .select('id, username, email')
       .or(`username.ilike.%${trimmed}%,email.ilike.%${trimmed}%`)
       .limit(20),
-    supabase
-      .from('users_session')
-      .select('user_id')
-      .eq('session_id', sessionId)
-      .eq('active', true)
+    supabase.from('users_session').select('user_id').eq('session_id', sessionId).eq('active', true),
   ])
 
   if (profilesResult.error) {
@@ -121,7 +117,7 @@ export async function searchInvitableProfilesByMembership(
 
   const blockedIds = new Set<string>([
     mjId,
-    ...((membersResult.data ?? []).map((row) => row.user_id as string))
+    ...(membersResult.data ?? []).map((row) => row.user_id as string),
   ])
 
   return ((profilesResult.data ?? []) as ProfileRow[])
@@ -129,7 +125,10 @@ export async function searchInvitableProfilesByMembership(
     .filter((profile) => !blockedIds.has(profile.id))
 }
 
-export async function joinSessionByCode(userId: string, code: string): Promise<{ sessionId: string } | null> {
+export async function joinSessionByCode(
+  userId: string,
+  code: string
+): Promise<{ sessionId: string } | null> {
   const normalized = code.trim().toUpperCase()
   if (!normalized) {
     return null
@@ -162,12 +161,7 @@ export async function canAccessSession(sessionId: string, userId: string): Promi
       .eq('user_id', userId)
       .eq('active', true)
       .maybeSingle(),
-    supabase
-      .from('sessions')
-      .select('id')
-      .eq('id', sessionId)
-      .eq('mj_id', userId)
-      .maybeSingle()
+    supabase.from('sessions').select('id').eq('id', sessionId).eq('mj_id', userId).maybeSingle(),
   ])
 
   if (membershipResult.error) {

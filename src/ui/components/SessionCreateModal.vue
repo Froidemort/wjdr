@@ -39,7 +39,11 @@ function mapCreateSessionError(error: unknown): string {
     const maybeStatus = (error as { status?: number }).status
     const message = error.message.toLowerCase()
 
-    if (maybeStatus === 403 || message.includes('row-level security') || message.includes('permission denied')) {
+    if (
+      maybeStatus === 403 ||
+      message.includes('row-level security') ||
+      message.includes('permission denied')
+    ) {
       return 'Le grimoire reste scelle pour l instant. Verifiez vos droits puis reessayez.'
     }
 
@@ -58,19 +62,22 @@ function mapCreateSessionError(error: unknown): string {
   return 'La creation de la table a echoue.'
 }
 
-watch(() => modalStore.isOpen, (shouldOpen) => {
-  if (!dialogRef.value) {
-    return
-  }
+watch(
+  () => modalStore.isOpen,
+  (shouldOpen) => {
+    if (!dialogRef.value) {
+      return
+    }
 
-  if (shouldOpen) {
-    lastFocusedElement.value = document.activeElement as HTMLElement | null
-    dialogRef.value.showModal()
-  } else {
-    dialogRef.value.close()
-    lastFocusedElement.value?.focus()
+    if (shouldOpen) {
+      lastFocusedElement.value = document.activeElement as HTMLElement | null
+      dialogRef.value.showModal()
+    } else {
+      dialogRef.value.close()
+      lastFocusedElement.value?.focus()
+    }
   }
-})
+)
 
 async function onSubmit(): Promise<void> {
   if (!authStore.user?.id || loading.value) {
@@ -87,7 +94,7 @@ async function onSubmit(): Promise<void> {
           mjId: authStore.user.id,
           name: name.value.trim(),
           description: description.value.trim(),
-          code: generateSessionCode()
+          code: generateSessionCode(),
         })
         break
       } catch (error) {

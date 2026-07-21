@@ -3,10 +3,7 @@ import { ref, type Ref } from 'vue'
 // Définition des états stricts de notre machine d'état de sauvegarde
 export type SaveStatus = 'idle' | 'pending' | 'saving' | 'error'
 
-export function useLiveSave<T>(
-  saveFunction: (data: T) => Promise<void>,
-  delay: number = 500
-) {
+export function useLiveSave<T>(saveFunction: (data: T) => Promise<void>, delay: number = 500) {
   const status: Ref<SaveStatus> = ref('idle')
   let debounceTimeoutId: ReturnType<typeof setTimeout> | null = null
   let visibilityTimeoutId: ReturnType<typeof setTimeout> | null = null
@@ -34,7 +31,7 @@ export function useLiveSave<T>(
   function triggerSave(data: T): void {
     // 1. Passage en attente (l'utilisateur tape ou modifie)
     status.value = 'pending'
-    
+
     // Nettoyage des timers précédents
     if (debounceTimeoutId) {
       clearTimeout(debounceTimeoutId)
@@ -65,6 +62,6 @@ export function useLiveSave<T>(
   return {
     status,
     triggerSave,
-    triggerSaveNow
+    triggerSaveNow,
   }
 }

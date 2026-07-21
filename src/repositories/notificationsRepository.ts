@@ -106,7 +106,7 @@ function mapNotification(row: NotificationRow): NotificationItem {
     title: row.title,
     message: row.message,
     isRead: row.is_read,
-    createdAt: row.created_at
+    createdAt: row.created_at,
   }
 }
 
@@ -143,7 +143,9 @@ export function getNotificationDisplayMessage(rawMessage: string): string {
   return cleaned || 'Un nouvel evenement requiert votre attention.'
 }
 
-export function extractNotificationSessionId(notification: Pick<NotificationItem, 'title' | 'message'>): string | null {
+export function extractNotificationSessionId(
+  notification: Pick<NotificationItem, 'title' | 'message'>
+): string | null {
   const fromLegacyTitle = notification.title.match(/^INVITATION_SESSION_([0-9a-f-]{36})$/i)
   if (fromLegacyTitle?.[1]) {
     return fromLegacyTitle[1]
@@ -167,7 +169,7 @@ function mapJoinRequestProfile(row: ProfileRow): ProfileRow {
   return {
     id: row.id,
     username: row.username,
-    email: row.email
+    email: row.email,
   }
 }
 
@@ -189,7 +191,9 @@ export async function listNotificationsForUserPaginated(
   return withRetry(async () => {
     const { data, count, error } = await supabase
       .from('notifications')
-      .select('id, sender_user_id, receiver_user_id, title, message, is_read, created_at', { count: 'exact' })
+      .select('id, sender_user_id, receiver_user_id, title, message, is_read, created_at', {
+        count: 'exact',
+      })
       .eq('receiver_user_id', userId)
       .order('created_at', { ascending: false })
       .range(from, to)
@@ -200,7 +204,7 @@ export async function listNotificationsForUserPaginated(
 
     return {
       items: ((data ?? []) as NotificationRow[]).map(mapNotification),
-      total: count ?? 0
+      total: count ?? 0,
     }
   })
 }
@@ -243,10 +247,7 @@ export async function countUnreadNotifications(userId: string): Promise<number> 
 }
 
 export async function deleteNotification(notificationId: string): Promise<void> {
-  const { error } = await supabase
-    .from('notifications')
-    .delete()
-    .eq('id', notificationId)
+  const { error } = await supabase.from('notifications').delete().eq('id', notificationId)
 
   if (error) {
     throw error
@@ -259,7 +260,7 @@ export async function requestJoinSession(sessionId: string, requesterId: string)
   validateInput(requesterId, isValidUUID, 'Requester ID invalide.')
 
   const { data: ownerId, error: ownerError } = await supabase.rpc('get_session_owner_for_request', {
-    target_session_id: sessionId
+    target_session_id: sessionId,
   })
 
   if (ownerError) {
@@ -288,7 +289,9 @@ export async function requestJoinSession(sessionId: string, requesterId: string)
     throw existingError
   }
 
-  const hasPendingRequest = (existingRows ?? []).some((row) => !(row as { is_read: boolean }).is_read)
+  const hasPendingRequest = (existingRows ?? []).some(
+    (row) => !(row as { is_read: boolean }).is_read
+  )
   if (hasPendingRequest) {
     return
   }
@@ -301,14 +304,12 @@ export async function requestJoinSession(sessionId: string, requesterId: string)
 
   const username = (profileData as { username?: string } | null)?.username ?? 'Inconnu'
 
-  const { error } = await supabase
-    .from('notifications')
-    .insert({
-      sender_user_id: requesterId,
-      receiver_user_id: mjId,
-      title: JOIN_REQUEST_TITLE,
-      message: `L aventurier ${username} demande audience pour rejoindre votre table.\n${marker}`
-    })
+  const { error } = await supabase.from('notifications').insert({
+    sender_user_id: requesterId,
+    receiver_user_id: mjId,
+    title: JOIN_REQUEST_TITLE,
+    message: `L aventurier ${username} demande audience pour rejoindre votre table.\n${marker}`,
+  })
 
   if (error) {
     throw error
@@ -318,7 +319,11 @@ export async function requestJoinSession(sessionId: string, requesterId: string)
 export async function requestJoinByCode(userId: string, code: string): Promise<void> {
   // Validate inputs
   validateInput(userId, isValidUUID, 'User ID invalide.')
-  validateInput(code.trim().toUpperCase(), isValidSessionCode, 'Code session invalide (format: 6 caracteres alphanumeriques).')
+  validateInput(
+    code.trim().toUpperCase(),
+    isValidSessionCode,
+    'Code session invalide (format: 6 caracteres alphanumeriques).'
+  )
 
   const normalized = code.trim().toUpperCase()
   if (!normalized) {
@@ -326,7 +331,7 @@ export async function requestJoinByCode(userId: string, code: string): Promise<v
   }
 
   const { data: sessionId, error } = await supabase.rpc('get_session_id_by_code', {
-    target_code: normalized
+    target_code: normalized,
   })
 
   if (error) {
@@ -340,7 +345,10 @@ export async function requestJoinByCode(userId: string, code: string): Promise<v
   await requestJoinSession(String(sessionId), userId)
 }
 
-export async function listPendingJoinRequestsForSession(sessionId: string, mjId: string): Promise<JoinRequestItem[]> {
+export async function listPendingJoinRequestsForSession(
+  sessionId: string,
+  mjId: string
+): Promise<JoinRequestItem[]> {
   const { data, error } = await supabase
     .from('notifications')
     .select('id, sender_user_id, receiver_user_id, message, is_read, created_at')
@@ -389,7 +397,7 @@ export async function listPendingJoinRequestsForSession(sessionId: string, mjId:
         requesterId,
         username: profile.username,
         email: profile.email,
-        createdAt: row.created_at
+        createdAt: row.created_at,
       }
     })
     .filter((row): row is JoinRequestItem => Boolean(row))
@@ -400,14 +408,12 @@ export async function notifyJoinRequestAccepted(
   requesterId: string,
   mjId: string
 ): Promise<void> {
-  const { error } = await supabase
-    .from('notifications')
-    .insert({
-      sender_user_id: mjId,
-      receiver_user_id: requesterId,
-      title: JOIN_REQUEST_ACCEPTED_TITLE,
-      message: `Le Maître du Jeu accepte votre entree a la table.\n[session:${sessionId}]`
-    })
+  const { error } = await supabase.from('notifications').insert({
+    sender_user_id: mjId,
+    receiver_user_id: requesterId,
+    title: JOIN_REQUEST_ACCEPTED_TITLE,
+    message: `Le Maître du Jeu accepte votre entree a la table.\n[session:${sessionId}]`,
+  })
 
   if (error) {
     throw error
@@ -419,14 +425,12 @@ export async function notifyJoinRequestRejected(
   requesterId: string,
   mjId: string
 ): Promise<void> {
-  const { error } = await supabase
-    .from('notifications')
-    .insert({
-      sender_user_id: mjId,
-      receiver_user_id: requesterId,
-      title: JOIN_REQUEST_REJECTED_TITLE,
-      message: `Le Maître du Jeu n a pas retenu votre demande pour cette table.`
-    })
+  const { error } = await supabase.from('notifications').insert({
+    sender_user_id: mjId,
+    receiver_user_id: requesterId,
+    title: JOIN_REQUEST_REJECTED_TITLE,
+    message: `Le Maître du Jeu n a pas retenu votre demande pour cette table.`,
+  })
 
   if (error) {
     throw error

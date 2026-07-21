@@ -14,7 +14,7 @@ import {
   listSessionNotesForSession,
   toggleSessionNoteArchivedState,
   toggleSessionNoteVisibility,
-  updateSessionNote
+  updateSessionNote,
 } from '../../repositories/sessionNotesRepository'
 
 interface SessionNoteDraft {
@@ -37,7 +37,7 @@ const createForm = reactive({
   title: '',
   contentText: '',
   contentCharacterNote: '',
-  isVisible: false
+  isVisible: false,
 })
 
 const editNoteId = ref<string | null>(null)
@@ -45,13 +45,16 @@ const editError = ref<string | null>(null)
 const editDraft = reactive<SessionNoteDraft>({
   title: '',
   contentText: '',
-  contentCharacterNote: ''
+  contentCharacterNote: '',
 })
 
 const { isBusy, setBusy, clearBusy } = useBusyOperations()
-const { subscribe } = useRealtimeChannels(() => {
-  void loadNotes(false)
-}, { debounceMs: 300 })
+const { subscribe } = useRealtimeChannels(
+  () => {
+    void loadNotes(false)
+  },
+  { debounceMs: 300 }
+)
 
 const visibleNotes = computed(() => notes.value.filter((note) => note.isVisible))
 const notesToDisplay = computed(() => (props.isMj ? notes.value : visibleNotes.value))
@@ -90,7 +93,7 @@ function formatDate(value: string): string {
 
   return new Intl.DateTimeFormat('fr-FR', {
     dateStyle: 'short',
-    timeStyle: 'short'
+    timeStyle: 'short',
   }).format(parsed)
 }
 
@@ -142,7 +145,8 @@ async function loadNotes(showLoading = true): Promise<void> {
   try {
     notes.value = await listSessionNotesForSession(props.sessionId, { visibleOnly: !props.isMj })
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Impossible de charger les notes de session.'
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Impossible de charger les notes de session.'
   } finally {
     if (showLoading) {
       loading.value = false
@@ -167,7 +171,7 @@ async function handleCreate(): Promise<void> {
       title: createForm.title,
       contentText: createForm.contentText,
       contentCharacterNote: createForm.contentCharacterNote,
-      isVisible: createForm.isVisible
+      isVisible: createForm.isVisible,
     })
     resetCreateForm()
     await loadNotes()
@@ -193,7 +197,7 @@ async function handleSaveEdit(noteId: string): Promise<void> {
     await updateSessionNote(noteId, {
       title: editDraft.title,
       contentText: editDraft.contentText,
-      contentCharacterNote: editDraft.contentCharacterNote
+      contentCharacterNote: editDraft.contentCharacterNote,
     })
     cancelEdit()
     await loadNotes()
@@ -210,7 +214,8 @@ async function handleToggleVisibility(note: SessionNote): Promise<void> {
     await toggleSessionNoteVisibility(note.id, !note.isVisible)
     await loadNotes()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Mise a jour de visibilite impossible.'
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Mise a jour de visibilite impossible.'
   } finally {
     clearBusy(`visibility-${note.id}`)
   }
@@ -222,7 +227,8 @@ async function handleToggleArchived(note: SessionNote): Promise<void> {
     await toggleSessionNoteArchivedState(note.id, !note.isArchived)
     await loadNotes()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Mise a jour du statut impossible.'
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Mise a jour du statut impossible.'
   } finally {
     clearBusy(`archive-${note.id}`)
   }
@@ -251,12 +257,15 @@ onMounted(() => {
   )
 })
 
-useSmartRefresh(() => {
-  void loadNotes(false)
-}, {
-  enabled: !props.isMj,
-  minIntervalMs: 1500
-})
+useSmartRefresh(
+  () => {
+    void loadNotes(false)
+  },
+  {
+    enabled: !props.isMj,
+    minIntervalMs: 1500,
+  }
+)
 </script>
 
 <template>

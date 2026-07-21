@@ -66,11 +66,14 @@ function mapProfile(row: ProfileRow): Profile {
   return {
     id: row.id,
     username: row.username,
-    email: row.email
+    email: row.email,
   }
 }
 
-export async function listSessionInvitations(sessionId: string, mjId: string): Promise<SessionInvitation[]> {
+export async function listSessionInvitations(
+  sessionId: string,
+  mjId: string
+): Promise<SessionInvitation[]> {
   const { data, error } = await supabase
     .from('notifications')
     .select('receiver_user_id, is_read, created_at, title, message')
@@ -81,7 +84,9 @@ export async function listSessionInvitations(sessionId: string, mjId: string): P
     throw error
   }
 
-  const rows = ((data ?? []) as NotificationRow[]).filter((row) => isInvitationForSession(row, sessionId))
+  const rows = ((data ?? []) as NotificationRow[]).filter((row) =>
+    isInvitationForSession(row, sessionId)
+  )
   const userIds = Array.from(new Set(rows.map((row) => row.receiver_user_id)))
   if (userIds.length === 0) {
     return []
@@ -113,7 +118,7 @@ export async function listSessionInvitations(sessionId: string, mjId: string): P
         username: profile.username,
         email: profile.email,
         invitedAt: row.created_at,
-        isRead: row.is_read
+        isRead: row.is_read,
       }
     })
     .filter((entry): entry is SessionInvitation => Boolean(entry))
@@ -138,7 +143,7 @@ export async function searchInvitableProfilesByNotification(
     supabase
       .from('notifications')
       .select('receiver_user_id, title, message, is_read, created_at')
-      .eq('sender_user_id', mjId)
+      .eq('sender_user_id', mjId),
   ])
 
   if (profilesResult.error) {
@@ -149,12 +154,13 @@ export async function searchInvitableProfilesByNotification(
     throw invitationsResult.error
   }
 
-  const invitationRows = ((invitationsResult.data ?? []) as NotificationRow[])
-    .filter((row) => isInvitationForSession(row, sessionId))
+  const invitationRows = ((invitationsResult.data ?? []) as NotificationRow[]).filter((row) =>
+    isInvitationForSession(row, sessionId)
+  )
 
   const blockedIds = new Set<string>([
     mjId,
-    ...(invitationRows.map((row) => row.receiver_user_id as string))
+    ...invitationRows.map((row) => row.receiver_user_id as string),
   ])
 
   return ((profilesResult.data ?? []) as ProfileRow[])
@@ -200,12 +206,10 @@ export async function createSessionInvitations(
     sender_user_id: mjId,
     receiver_user_id: receiverId,
     title: invitationTitle(),
-    message
+    message,
   }))
 
-  const { error } = await supabase
-    .from('notifications')
-    .insert(rows)
+  const { error } = await supabase.from('notifications').insert(rows)
 
   if (error) {
     throw error

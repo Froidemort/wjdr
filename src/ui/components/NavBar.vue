@@ -202,7 +202,7 @@ import {
   getNotificationDisplayTitle,
   listNotificationsForUser,
   markNotificationRead,
-  type NotificationItem
+  type NotificationItem,
 } from '../../repositories/notificationsRepository'
 
 const authModalStore = useAuthModalStore()
@@ -216,9 +216,12 @@ const notificationsError = ref<string | null>(null)
 const notificationsMenuRef = ref<HTMLElement | null>(null)
 const notificationsButtonRef = ref<HTMLButtonElement | null>(null)
 const notificationsPanelId = 'navbar-notifications-panel'
-const { subscribe, unsubscribe } = useRealtimeChannels(() => {
-  void loadNotificationsPreview()
-}, { debounceMs: 300 })
+const { subscribe, unsubscribe } = useRealtimeChannels(
+  () => {
+    void loadNotificationsPreview()
+  },
+  { debounceMs: 300 }
+)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const displayName = computed(() => authStore.displayName)
@@ -248,13 +251,14 @@ async function loadNotificationsPreview(): Promise<void> {
   try {
     const [list, unread] = await Promise.all([
       listNotificationsForUser(userId),
-      countUnreadNotifications(userId)
+      countUnreadNotifications(userId),
     ])
 
     notificationsPreview.value = list.slice(0, 5)
     unreadCount.value = unread
   } catch (error) {
-    notificationsError.value = error instanceof Error ? error.message : 'Impossible de charger les missives.'
+    notificationsError.value =
+      error instanceof Error ? error.message : 'Impossible de charger les missives.'
   } finally {
     notificationsLoading.value = false
   }
@@ -262,7 +266,7 @@ async function loadNotificationsPreview(): Promise<void> {
 
 function subscribeNotificationsRealtime(userId: string): void {
   subscribe(`navbar-notifications-${userId}`, [
-    { table: 'notifications', filter: `receiver_user_id=eq.${userId}` }
+    { table: 'notifications', filter: `receiver_user_id=eq.${userId}` },
   ])
 }
 

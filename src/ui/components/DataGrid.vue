@@ -39,28 +39,28 @@
 import { computed } from 'vue'
 
 interface Props<T> {
-	items: T[]
-	loading?: boolean
-	error?: string | null
-	emptyMessage?: string
-	gridClass?: string
-	skeletonCount?: number
-	skeletonHeight?: string
-	page?: number
-	totalPages?: number
-	showPagination?: boolean
+  items: T[]
+  loading?: boolean
+  error?: string | null
+  emptyMessage?: string
+  gridClass?: string
+  skeletonCount?: number
+  skeletonHeight?: string
+  page?: number
+  totalPages?: number
+  showPagination?: boolean
 }
 
 const props = withDefaults(defineProps<Props<T>>(), {
-	loading: false,
-	error: null,
-	emptyMessage: 'Aucun élément disponible.',
-	gridClass: 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3',
-	skeletonCount: 6,
-	skeletonHeight: '14rem',
-	page: 1,
-	totalPages: 1,
-	showPagination: false
+  loading: false,
+  error: null,
+  emptyMessage: 'Aucun élément disponible.',
+  gridClass: 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3',
+  skeletonCount: 6,
+  skeletonHeight: '14rem',
+  page: 1,
+  totalPages: 1,
+  showPagination: false,
 })
 
 const canGoPrevious = computed(() => props.page > 1)

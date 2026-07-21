@@ -15,7 +15,10 @@ interface UseRealtimeChannelsOptions {
   debounceMs?: number
 }
 
-export function useRealtimeChannels(onUpdate: () => void, options: UseRealtimeChannelsOptions = {}) {
+export function useRealtimeChannels(
+  onUpdate: () => void,
+  options: UseRealtimeChannelsOptions = {}
+) {
   const debounceMs = options.debounceMs ?? 0
   let channel: RealtimeChannel | null = null
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -53,7 +56,7 @@ export function useRealtimeChannels(onUpdate: () => void, options: UseRealtimeCh
           event,
           schema,
           table: subscription.table,
-          filter: subscription.filter
+          filter: subscription.filter,
         },
         () => {
           dispatchUpdate()
@@ -80,6 +83,6 @@ export function useRealtimeChannels(onUpdate: () => void, options: UseRealtimeCh
 
   return {
     subscribe,
-    unsubscribe
+    unsubscribe,
   }
 }

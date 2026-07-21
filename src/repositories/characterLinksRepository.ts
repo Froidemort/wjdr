@@ -1,8 +1,20 @@
 import { supabase } from '../db/supabase'
-import type { CharacterArmor, CharacterItem, CharacterSkill, CharacterTalent, CharacterWeapon, InventoryQuality } from '../types/domain'
+import type {
+  CharacterArmor,
+  CharacterItem,
+  CharacterSkill,
+  CharacterTalent,
+  CharacterWeapon,
+  InventoryQuality,
+} from '../types/domain'
 
 function normalizeQuality(value: string | null | undefined): InventoryQuality {
-  if (value === 'médiocre' || value === 'normal' || value === 'bonne' || value === 'exceptionelle') {
+  if (
+    value === 'médiocre' ||
+    value === 'normal' ||
+    value === 'bonne' ||
+    value === 'exceptionelle'
+  ) {
     return value
   }
 
@@ -15,43 +27,50 @@ function getWeaponEncumbrance(encumbrance: number, quality: InventoryQuality): n
 }
 
 function getArmorEncumbrance(encumbrance: number, quality: InventoryQuality): number {
-  const modifier = quality === 'exceptionelle' ? 0.5 : quality === 'bonne' ? 0.9 : quality === 'médiocre' ? 1.5 : 1
+  const modifier =
+    quality === 'exceptionelle' ? 0.5 : quality === 'bonne' ? 0.9 : quality === 'médiocre' ? 1.5 : 1
   return Math.max(0, Math.round(encumbrance * modifier))
 }
 
 interface SkillLinkRow {
   skill_id: string
   mastery_level: 1 | 2 | 3
-  skills?: {
-    id: string
-    name: string
-    stat_code: string
-    specialization: string | null
-    description: string | null
-    is_basic: boolean
-  } | Array<{
-    id: string
-    name: string
-    stat_code: string
-    specialization: string | null
-    description: string | null
-    is_basic: boolean
-  }> | null
+  skills?:
+    | {
+        id: string
+        name: string
+        stat_code: string
+        specialization: string | null
+        description: string | null
+        is_basic: boolean
+      }
+    | Array<{
+        id: string
+        name: string
+        stat_code: string
+        specialization: string | null
+        description: string | null
+        is_basic: boolean
+      }>
+    | null
 }
 
 interface TalentLinkRow {
   talent_id: string
-  talents?: {
-    id: string
-    name: string
-    specialization: string | null
-    description: string | null
-  } | Array<{
-    id: string
-    name: string
-    specialization: string | null
-    description: string | null
-  }> | null
+  talents?:
+    | {
+        id: string
+        name: string
+        specialization: string | null
+        description: string | null
+      }
+    | Array<{
+        id: string
+        name: string
+        specialization: string | null
+        description: string | null
+      }>
+    | null
 }
 
 interface WeaponLinkRow {
@@ -59,19 +78,22 @@ interface WeaponLinkRow {
   weapon_id: string
   quality: string
   equiped: 'droite' | 'gauche' | 'd&g' | null
-  weapons?: {
-    id: string
-    name: string
-    description: string | null
-    encumbrance: number
-    damage_formula: string
-  } | Array<{
-    id: string
-    name: string
-    description: string | null
-    encumbrance: number
-    damage_formula: string
-  }> | null
+  weapons?:
+    | {
+        id: string
+        name: string
+        description: string | null
+        encumbrance: number
+        damage_formula: string
+      }
+    | Array<{
+        id: string
+        name: string
+        description: string | null
+        encumbrance: number
+        damage_formula: string
+      }>
+    | null
 }
 
 interface ArmorLinkRow {
@@ -79,21 +101,24 @@ interface ArmorLinkRow {
   armor_id: string
   quality: string
   is_equipped: boolean
-  armors?: {
-    id: string
-    name: string
-    description: string | null
-    covered_locations?: string[] | null
-    encumbrance: number
-    armor_points: number
-  } | Array<{
-    id: string
-    name: string
-    description: string | null
-    covered_locations?: string[] | null
-    encumbrance: number
-    armor_points: number
-  }> | null
+  armors?:
+    | {
+        id: string
+        name: string
+        description: string | null
+        covered_locations?: string[] | null
+        encumbrance: number
+        armor_points: number
+      }
+    | Array<{
+        id: string
+        name: string
+        description: string | null
+        covered_locations?: string[] | null
+        encumbrance: number
+        armor_points: number
+      }>
+    | null
 }
 
 interface ItemLinkRow {
@@ -101,17 +126,20 @@ interface ItemLinkRow {
   item_id: string
   quality: string
   quantity: number
-  items?: {
-    id: string
-    name: string
-    description: string | null
-    encumbrance: number
-  } | Array<{
-    id: string
-    name: string
-    description: string | null
-    encumbrance: number
-  }> | null
+  items?:
+    | {
+        id: string
+        name: string
+        description: string | null
+        encumbrance: number
+      }
+    | Array<{
+        id: string
+        name: string
+        description: string | null
+        encumbrance: number
+      }>
+    | null
 }
 
 function unwrapRelated<T>(value: T | T[] | null | undefined): T | undefined {
@@ -125,7 +153,9 @@ function unwrapRelated<T>(value: T | T[] | null | undefined): T | undefined {
 export async function listCharacterSkills(characterId: string): Promise<CharacterSkill[]> {
   const { data, error } = await supabase
     .from('character_skills')
-    .select('skill_id, mastery_level, skills!inner(id, name, stat_code, specialization, description, is_basic)')
+    .select(
+      'skill_id, mastery_level, skills!inner(id, name, stat_code, specialization, description, is_basic)'
+    )
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'skills' })
 
@@ -136,13 +166,13 @@ export async function listCharacterSkills(characterId: string): Promise<Characte
   return ((data ?? []) as SkillLinkRow[]).map((row) => {
     const skill = unwrapRelated(row.skills)
     return {
-    skillId: row.skill_id,
-    name: skill?.name ?? 'Compétence inconnue',
-    statCode: skill?.stat_code ?? 'INT',
-    specialization: skill?.specialization ?? null,
-    description: skill?.description ?? null,
-    masteryLevel: row.mastery_level,
-    isBasic: Boolean(skill?.is_basic)
+      skillId: row.skill_id,
+      name: skill?.name ?? 'Compétence inconnue',
+      statCode: skill?.stat_code ?? 'INT',
+      specialization: skill?.specialization ?? null,
+      description: skill?.description ?? null,
+      masteryLevel: row.mastery_level,
+      isBasic: Boolean(skill?.is_basic),
     }
   })
 }
@@ -156,7 +186,7 @@ export async function addCharacterSkills(characterId: string, skillIds: string[]
   const rows = uniqueSkillIds.map((skillId) => ({
     character_id: characterId,
     skill_id: skillId,
-    mastery_level: 1
+    mastery_level: 1,
   }))
 
   const { error } = await supabase
@@ -168,7 +198,11 @@ export async function addCharacterSkills(characterId: string, skillIds: string[]
   }
 }
 
-export async function updateCharacterSkillMastery(characterId: string, skillId: string, masteryLevel: 1 | 2 | 3): Promise<void> {
+export async function updateCharacterSkillMastery(
+  characterId: string,
+  skillId: string,
+  masteryLevel: 1 | 2 | 3
+): Promise<void> {
   const { error } = await supabase
     .from('character_skills')
     .update({ mastery_level: masteryLevel })
@@ -206,10 +240,10 @@ export async function listCharacterTalents(characterId: string): Promise<Charact
   return ((data ?? []) as TalentLinkRow[]).map((row) => {
     const talent = unwrapRelated(row.talents)
     return {
-    talentId: row.talent_id,
-    name: talent?.name ?? 'Talent inconnu',
-    specialization: talent?.specialization ?? null,
-    description: talent?.description ?? null
+      talentId: row.talent_id,
+      name: talent?.name ?? 'Talent inconnu',
+      specialization: talent?.specialization ?? null,
+      description: talent?.description ?? null,
     }
   })
 }
@@ -222,7 +256,7 @@ export async function addCharacterTalents(characterId: string, talentIds: string
 
   const rows = uniqueTalentIds.map((talentId) => ({
     character_id: characterId,
-    talent_id: talentId
+    talent_id: talentId,
   }))
 
   const { error } = await supabase
@@ -249,7 +283,9 @@ export async function removeCharacterTalent(characterId: string, talentId: strin
 export async function listCharacterWeapons(characterId: string): Promise<CharacterWeapon[]> {
   const { data, error } = await supabase
     .from('character_weapons')
-    .select('id, weapon_id, quality, equiped, weapons!inner(id, name, description, encumbrance, damage_formula)')
+    .select(
+      'id, weapon_id, quality, equiped, weapons!inner(id, name, description, encumbrance, damage_formula)'
+    )
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'weapons' })
 
@@ -268,12 +304,16 @@ export async function listCharacterWeapons(characterId: string): Promise<Charact
       equipped: row.equiped,
       quality,
       encumbrance: getWeaponEncumbrance(weapon?.encumbrance ?? 0, quality),
-      damageFormula: weapon?.damage_formula ?? null
+      damageFormula: weapon?.damage_formula ?? null,
     }
   })
 }
 
-export async function addCharacterWeapons(characterId: string, weaponIds: string[], quality: InventoryQuality = 'normal'): Promise<void> {
+export async function addCharacterWeapons(
+  characterId: string,
+  weaponIds: string[],
+  quality: InventoryQuality = 'normal'
+): Promise<void> {
   const filteredWeaponIds = weaponIds.filter(Boolean)
   if (filteredWeaponIds.length === 0) {
     return
@@ -282,12 +322,10 @@ export async function addCharacterWeapons(characterId: string, weaponIds: string
   const rows = filteredWeaponIds.map((weaponId) => ({
     character_id: characterId,
     weapon_id: weaponId,
-    quality
+    quality,
   }))
 
-  const { error } = await supabase
-    .from('character_weapons')
-    .insert(rows)
+  const { error } = await supabase.from('character_weapons').insert(rows)
 
   if (error) {
     throw error
@@ -295,17 +333,17 @@ export async function addCharacterWeapons(characterId: string, weaponIds: string
 }
 
 export async function removeCharacterWeapon(linkId: string): Promise<void> {
-  const { error } = await supabase
-    .from('character_weapons')
-    .delete()
-    .eq('id', linkId)
+  const { error } = await supabase.from('character_weapons').delete().eq('id', linkId)
 
   if (error) {
     throw error
   }
 }
 
-export async function updateCharacterWeaponEquipped(linkId: string, equipped: 'droite' | 'gauche' | 'd&g' | null): Promise<void> {
+export async function updateCharacterWeaponEquipped(
+  linkId: string,
+  equipped: 'droite' | 'gauche' | 'd&g' | null
+): Promise<void> {
   const { error } = await supabase
     .from('character_weapons')
     .update({ equiped: equipped })
@@ -316,11 +354,11 @@ export async function updateCharacterWeaponEquipped(linkId: string, equipped: 'd
   }
 }
 
-export async function updateCharacterWeaponQuality(linkId: string, quality: InventoryQuality): Promise<void> {
-  const { error } = await supabase
-    .from('character_weapons')
-    .update({ quality })
-    .eq('id', linkId)
+export async function updateCharacterWeaponQuality(
+  linkId: string,
+  quality: InventoryQuality
+): Promise<void> {
+  const { error } = await supabase.from('character_weapons').update({ quality }).eq('id', linkId)
 
   if (error) {
     throw error
@@ -330,7 +368,9 @@ export async function updateCharacterWeaponQuality(linkId: string, quality: Inve
 export async function listCharacterArmors(characterId: string): Promise<CharacterArmor[]> {
   const { data, error } = await supabase
     .from('character_armors')
-    .select('id, armor_id, quality, is_equipped, armors!inner(id, name, description, covered_locations, encumbrance, armor_points)')
+    .select(
+      'id, armor_id, quality, is_equipped, armors!inner(id, name, description, covered_locations, encumbrance, armor_points)'
+    )
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'armors' })
 
@@ -350,12 +390,16 @@ export async function listCharacterArmors(characterId: string): Promise<Characte
       coveredLocations: armor?.covered_locations ?? null,
       quality,
       encumbrance: getArmorEncumbrance(armor?.encumbrance ?? 0, quality),
-      armorPoints: armor?.armor_points ?? 0
+      armorPoints: armor?.armor_points ?? 0,
     }
   })
 }
 
-export async function addCharacterArmors(characterId: string, armorIds: string[], quality: InventoryQuality = 'normal'): Promise<void> {
+export async function addCharacterArmors(
+  characterId: string,
+  armorIds: string[],
+  quality: InventoryQuality = 'normal'
+): Promise<void> {
   const filteredArmorIds = armorIds.filter(Boolean)
   if (filteredArmorIds.length === 0) {
     return
@@ -365,12 +409,10 @@ export async function addCharacterArmors(characterId: string, armorIds: string[]
     character_id: characterId,
     armor_id: armorId,
     quality,
-    is_equipped: false
+    is_equipped: false,
   }))
 
-  const { error } = await supabase
-    .from('character_armors')
-    .insert(rows)
+  const { error } = await supabase.from('character_armors').insert(rows)
 
   if (error) {
     throw error
@@ -378,17 +420,17 @@ export async function addCharacterArmors(characterId: string, armorIds: string[]
 }
 
 export async function removeCharacterArmor(linkId: string): Promise<void> {
-  const { error } = await supabase
-    .from('character_armors')
-    .delete()
-    .eq('id', linkId)
+  const { error } = await supabase.from('character_armors').delete().eq('id', linkId)
 
   if (error) {
     throw error
   }
 }
 
-export async function updateCharacterArmorEquipped(linkId: string, isEquipped: boolean): Promise<void> {
+export async function updateCharacterArmorEquipped(
+  linkId: string,
+  isEquipped: boolean
+): Promise<void> {
   const { error } = await supabase
     .from('character_armors')
     .update({ is_equipped: isEquipped })
@@ -399,11 +441,11 @@ export async function updateCharacterArmorEquipped(linkId: string, isEquipped: b
   }
 }
 
-export async function updateCharacterArmorQuality(linkId: string, quality: InventoryQuality): Promise<void> {
-  const { error } = await supabase
-    .from('character_armors')
-    .update({ quality })
-    .eq('id', linkId)
+export async function updateCharacterArmorQuality(
+  linkId: string,
+  quality: InventoryQuality
+): Promise<void> {
+  const { error } = await supabase.from('character_armors').update({ quality }).eq('id', linkId)
 
   if (error) {
     throw error
@@ -430,12 +472,17 @@ export async function listCharacterItems(characterId: string): Promise<Character
       description: item?.description ?? null,
       quality: normalizeQuality(row.quality),
       encumbrance: item?.encumbrance ?? 0,
-      quantity: row.quantity ?? 1
+      quantity: row.quantity ?? 1,
     }
   })
 }
 
-export async function addCharacterItems(characterId: string, itemIds: string[], quantity: number = 1, quality: InventoryQuality = 'normal'): Promise<void> {
+export async function addCharacterItems(
+  characterId: string,
+  itemIds: string[],
+  quantity: number = 1,
+  quality: InventoryQuality = 'normal'
+): Promise<void> {
   const filteredItemIds = itemIds.filter(Boolean)
   if (filteredItemIds.length === 0) {
     return
@@ -446,12 +493,10 @@ export async function addCharacterItems(characterId: string, itemIds: string[], 
     character_id: characterId,
     item_id: itemId,
     quality,
-    quantity: initialQuantity
+    quantity: initialQuantity,
   }))
 
-  const { error } = await supabase
-    .from('character_items')
-    .insert(rows)
+  const { error } = await supabase.from('character_items').insert(rows)
 
   if (error) {
     throw error
@@ -471,11 +516,11 @@ export async function updateCharacterItemQuantity(linkId: string, quantity: numb
   }
 }
 
-export async function updateCharacterItemQuality(linkId: string, quality: InventoryQuality): Promise<void> {
-  const { error } = await supabase
-    .from('character_items')
-    .update({ quality })
-    .eq('id', linkId)
+export async function updateCharacterItemQuality(
+  linkId: string,
+  quality: InventoryQuality
+): Promise<void> {
+  const { error } = await supabase.from('character_items').update({ quality }).eq('id', linkId)
 
   if (error) {
     throw error
@@ -483,10 +528,7 @@ export async function updateCharacterItemQuality(linkId: string, quality: Invent
 }
 
 export async function removeCharacterItem(linkId: string): Promise<void> {
-  const { error } = await supabase
-    .from('character_items')
-    .delete()
-    .eq('id', linkId)
+  const { error } = await supabase.from('character_items').delete().eq('id', linkId)
 
   if (error) {
     throw error

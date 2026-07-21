@@ -220,18 +220,21 @@ import { useAuthStore } from '../../stores/auth'
 import { getSessionById, updateSessionArchivedState } from '../../repositories/sessionsRepository'
 import { listCharactersBySession } from '../../repositories/charactersRepository'
 import {
-	listPendingJoinRequestsForSession,
-	markNotificationRead,
-	notifyJoinRequestAccepted,
-	notifyJoinRequestRejected,
-	type JoinRequestItem
+  listPendingJoinRequestsForSession,
+  markNotificationRead,
+  notifyJoinRequestAccepted,
+  notifyJoinRequestRejected,
+  type JoinRequestItem,
 } from '../../repositories/notificationsRepository'
 import {
-	createSessionInvitations,
-	listSessionInvitations,
-	type SessionInvitation
+  createSessionInvitations,
+  listSessionInvitations,
+  type SessionInvitation,
 } from '../../repositories/invitationsRepository'
-import { addUsersToSession, searchInvitableProfilesByMembership } from '../../repositories/usersSessionRepository'
+import {
+  addUsersToSession,
+  searchInvitableProfilesByMembership,
+} from '../../repositories/usersSessionRepository'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import { useSmartRefresh } from '../composables/useSmartRefresh'
 import type { CharacterSummary, Profile, SessionSummary } from '../../types/domain'
@@ -261,311 +264,341 @@ let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
 const sessionId = computed(() => String(route.params.id ?? ''))
 const isMj = computed(() => Boolean(session.value && authStore.user?.id === session.value.mjId))
-const hasOwnCharacter = computed(() => Boolean(authStore.user?.id && characters.value.some((character) => character.userId === authStore.user?.id)))
-const canCreateOwnCharacter = computed(() => Boolean(session.value && authStore.user?.id && !isMj.value && !session.value.isArchived && !hasOwnCharacter.value))
-const { subscribe, unsubscribe } = useRealtimeChannels(() => {
-	scheduleSessionRefresh()
-}, { debounceMs: 500 })
+const hasOwnCharacter = computed(() =>
+  Boolean(
+    authStore.user?.id &&
+      characters.value.some((character) => character.userId === authStore.user?.id)
+  )
+)
+const canCreateOwnCharacter = computed(() =>
+  Boolean(
+    session.value &&
+      authStore.user?.id &&
+      !isMj.value &&
+      !session.value.isArchived &&
+      !hasOwnCharacter.value
+  )
+)
+const { subscribe, unsubscribe } = useRealtimeChannels(
+  () => {
+    scheduleSessionRefresh()
+  },
+  { debounceMs: 500 }
+)
 
 async function loadSessionDetail(options: { background?: boolean } = {}): Promise<void> {
-	if (!sessionId.value) {
-		errorMessage.value = 'Session invalide.'
-		return
-	}
+  if (!sessionId.value) {
+    errorMessage.value = 'Session invalide.'
+    return
+  }
 
-	const isBackgroundRefresh = Boolean(options.background && session.value)
-	if (!isBackgroundRefresh) {
-		loading.value = true
-		errorMessage.value = null
-		joinRequestError.value = null
-	}
-	try {
-		const [sessionData, characterData] = await Promise.all([
-			getSessionById(sessionId.value),
-			listCharactersBySession(sessionId.value)
-		])
+  const isBackgroundRefresh = Boolean(options.background && session.value)
+  if (!isBackgroundRefresh) {
+    loading.value = true
+    errorMessage.value = null
+    joinRequestError.value = null
+  }
+  try {
+    const [sessionData, characterData] = await Promise.all([
+      getSessionById(sessionId.value),
+      listCharactersBySession(sessionId.value),
+    ])
 
-		session.value = sessionData
-		characters.value = sessionData ? characterData : []
+    session.value = sessionData
+    characters.value = sessionData ? characterData : []
 
-		if (!session.value) {
-			joinRequests.value = []
-			return
-		}
+    if (!session.value) {
+      joinRequests.value = []
+      return
+    }
 
-		const currentUserId = authStore.user?.id
-		if (!currentUserId) {
-			errorMessage.value = 'Utilisateur non connecté.'
-			return
-		}
+    const currentUserId = authStore.user?.id
+    if (!currentUserId) {
+      errorMessage.value = 'Utilisateur non connecté.'
+      return
+    }
 
-		const userIsMj = currentUserId === session.value.mjId
+    const userIsMj = currentUserId === session.value.mjId
 
-		if (userIsMj) {
-			await loadJoinRequests()
-			await loadInvitations()
-		} else {
-			joinRequests.value = []
-		}
-	} catch (error) {
-		if (!isBackgroundRefresh) {
-			errorMessage.value = error instanceof Error ? error.message : 'Impossible de charger la session.'
-		}
-	} finally {
-		if (!isBackgroundRefresh) {
-			loading.value = false
-		}
-	}
+    if (userIsMj) {
+      await loadJoinRequests()
+      await loadInvitations()
+    } else {
+      joinRequests.value = []
+    }
+  } catch (error) {
+    if (!isBackgroundRefresh) {
+      errorMessage.value =
+        error instanceof Error ? error.message : 'Impossible de charger la session.'
+    }
+  } finally {
+    if (!isBackgroundRefresh) {
+      loading.value = false
+    }
+  }
 }
 
 async function loadJoinRequests(): Promise<void> {
-	if (!session.value || !authStore.user?.id || !isMj.value) {
-		joinRequests.value = []
-		return
-	}
+  if (!session.value || !authStore.user?.id || !isMj.value) {
+    joinRequests.value = []
+    return
+  }
 
-	joinRequests.value = await listPendingJoinRequestsForSession(session.value.id, authStore.user.id)
+  joinRequests.value = await listPendingJoinRequestsForSession(session.value.id, authStore.user.id)
 }
 
 async function loadInvitations(): Promise<void> {
-	if (!session.value || !authStore.user?.id) {
-		return
-	}
+  if (!session.value || !authStore.user?.id) {
+    return
+  }
 
-	invitations.value = await listSessionInvitations(session.value.id, authStore.user.id)
+  invitations.value = await listSessionInvitations(session.value.id, authStore.user.id)
 }
 
 async function loadInviteCandidates(): Promise<void> {
-	inviteError.value = null
-	if (!session.value || !inviteQuery.value.trim()) {
-		inviteCandidates.value = []
-		return
-	}
+  inviteError.value = null
+  if (!session.value || !inviteQuery.value.trim()) {
+    inviteCandidates.value = []
+    return
+  }
 
-	try {
-		inviteCandidates.value = await searchInvitableProfilesByMembership(session.value.id, inviteQuery.value, session.value.mjId)
-	} catch (error) {
-		inviteError.value = error instanceof Error ? error.message : 'Impossible de charger la liste des joueurs.'
-	}
+  try {
+    inviteCandidates.value = await searchInvitableProfilesByMembership(
+      session.value.id,
+      inviteQuery.value,
+      session.value.mjId
+    )
+  } catch (error) {
+    inviteError.value =
+      error instanceof Error ? error.message : 'Impossible de charger la liste des joueurs.'
+  }
 }
 
 function toggleInvitee(userId: string): void {
-	if (selectedInvitees.value.has(userId)) {
-		selectedInvitees.value.delete(userId)
-	} else {
-		selectedInvitees.value.add(userId)
-	}
-	selectedInvitees.value = new Set(selectedInvitees.value)
+  if (selectedInvitees.value.has(userId)) {
+    selectedInvitees.value.delete(userId)
+  } else {
+    selectedInvitees.value.add(userId)
+  }
+  selectedInvitees.value = new Set(selectedInvitees.value)
 }
 
 async function inviteSelectedUsers(): Promise<void> {
-	if (!session.value || selectedInvitees.value.size === 0 || inviting.value || session.value.isArchived) {
-		return
-	}
+  if (
+    !session.value ||
+    selectedInvitees.value.size === 0 ||
+    inviting.value ||
+    session.value.isArchived
+  ) {
+    return
+  }
 
-	inviting.value = true
-	inviteError.value = null
-	try {
-		const inviteeIds = Array.from(selectedInvitees.value)
-		await addUsersToSession(session.value.id, inviteeIds)
-		await createSessionInvitations(
-			session.value.id,
-			session.value.name,
-			session.value.code,
-			session.value.mjId,
-			inviteeIds
-		)
-		selectedInvitees.value = new Set<string>()
-		inviteQuery.value = ''
-		inviteCandidates.value = []
-		await loadInvitations()
-	} catch (error) {
-		inviteError.value = error instanceof Error ? error.message : 'Invitation impossible.'
-	} finally {
-		inviting.value = false
-	}
+  inviting.value = true
+  inviteError.value = null
+  try {
+    const inviteeIds = Array.from(selectedInvitees.value)
+    await addUsersToSession(session.value.id, inviteeIds)
+    await createSessionInvitations(
+      session.value.id,
+      session.value.name,
+      session.value.code,
+      session.value.mjId,
+      inviteeIds
+    )
+    selectedInvitees.value = new Set<string>()
+    inviteQuery.value = ''
+    inviteCandidates.value = []
+    await loadInvitations()
+  } catch (error) {
+    inviteError.value = error instanceof Error ? error.message : 'Invitation impossible.'
+  } finally {
+    inviting.value = false
+  }
 }
 
 async function acceptJoinRequest(notificationId: string, requesterId: string): Promise<void> {
-	if (!session.value || !authStore.user?.id || joinRequestBusy.value) {
-		return
-	}
+  if (!session.value || !authStore.user?.id || joinRequestBusy.value) {
+    return
+  }
 
-	joinRequestBusy.value = true
-	joinRequestError.value = null
-	try {
-		await addUsersToSession(session.value.id, [requesterId])
-		await markNotificationRead(notificationId)
-		await notifyJoinRequestAccepted(session.value.id, requesterId, authStore.user.id)
-		await loadJoinRequests()
-	} catch (error) {
-		joinRequestError.value = error instanceof Error ? error.message : 'Traitement impossible.'
-	} finally {
-		joinRequestBusy.value = false
-	}
+  joinRequestBusy.value = true
+  joinRequestError.value = null
+  try {
+    await addUsersToSession(session.value.id, [requesterId])
+    await markNotificationRead(notificationId)
+    await notifyJoinRequestAccepted(session.value.id, requesterId, authStore.user.id)
+    await loadJoinRequests()
+  } catch (error) {
+    joinRequestError.value = error instanceof Error ? error.message : 'Traitement impossible.'
+  } finally {
+    joinRequestBusy.value = false
+  }
 }
 
 async function rejectJoinRequest(notificationId: string, requesterId: string): Promise<void> {
-	if (!session.value || !authStore.user?.id || joinRequestBusy.value) {
-		return
-	}
+  if (!session.value || !authStore.user?.id || joinRequestBusy.value) {
+    return
+  }
 
-	joinRequestBusy.value = true
-	joinRequestError.value = null
-	try {
-		await markNotificationRead(notificationId)
-		await notifyJoinRequestRejected(session.value.id, requesterId, authStore.user.id)
-		await loadJoinRequests()
-	} catch (error) {
-		joinRequestError.value = error instanceof Error ? error.message : 'Traitement impossible.'
-	} finally {
-		joinRequestBusy.value = false
-	}
+  joinRequestBusy.value = true
+  joinRequestError.value = null
+  try {
+    await markNotificationRead(notificationId)
+    await notifyJoinRequestRejected(session.value.id, requesterId, authStore.user.id)
+    await loadJoinRequests()
+  } catch (error) {
+    joinRequestError.value = error instanceof Error ? error.message : 'Traitement impossible.'
+  } finally {
+    joinRequestBusy.value = false
+  }
 }
 
 async function toggleSessionArchivedState(): Promise<void> {
-	if (!session.value || !isMj.value || archiveBusy.value) {
-		return
-	}
+  if (!session.value || !isMj.value || archiveBusy.value) {
+    return
+  }
 
-	archiveBusy.value = true
-	errorMessage.value = null
-	try {
-		await updateSessionArchivedState(session.value.id, !session.value.isArchived)
-		await loadSessionDetail()
-	} catch (error) {
-		errorMessage.value = error instanceof Error ? error.message : 'Modification de la session impossible.'
-	} finally {
-		archiveBusy.value = false
-	}
+  archiveBusy.value = true
+  errorMessage.value = null
+  try {
+    await updateSessionArchivedState(session.value.id, !session.value.isArchived)
+    await loadSessionDetail()
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Modification de la session impossible.'
+  } finally {
+    archiveBusy.value = false
+  }
 }
 
 async function onCharacterCreated(characterId: string): Promise<void> {
-	await loadSessionDetail()
-	await router.push(`/characters/${characterId}`)
+  await loadSessionDetail()
+  await router.push(`/characters/${characterId}`)
 }
 
 function buildSessionLink(id: string): string {
-	if (typeof window === 'undefined') {
-		return `/sessions/${id}`
-	}
+  if (typeof window === 'undefined') {
+    return `/sessions/${id}`
+  }
 
-	return `${window.location.origin}/sessions/${id}`
+  return `${window.location.origin}/sessions/${id}`
 }
 
 async function copySessionLink(): Promise<void> {
-	if (!session.value) {
-		return
-	}
+  if (!session.value) {
+    return
+  }
 
-	const link = buildSessionLink(session.value.id)
+  const link = buildSessionLink(session.value.id)
 
-	try {
-		if (navigator.clipboard?.writeText) {
-			await navigator.clipboard.writeText(link)
-		} else {
-			throw new Error('Clipboard API indisponible')
-		}
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(link)
+    } else {
+      throw new Error('Clipboard API indisponible')
+    }
 
-		copyFeedback.value = 'Lien copié.'
-	} catch {
-		copyFeedback.value = 'Copie impossible automatiquement.'
-	}
+    copyFeedback.value = 'Lien copié.'
+  } catch {
+    copyFeedback.value = 'Copie impossible automatiquement.'
+  }
 
-	if (copyFeedbackTimer) {
-		clearTimeout(copyFeedbackTimer)
-	}
+  if (copyFeedbackTimer) {
+    clearTimeout(copyFeedbackTimer)
+  }
 
-	copyFeedbackTimer = setTimeout(() => {
-		copyFeedback.value = ''
-	}, 2500)
+  copyFeedbackTimer = setTimeout(() => {
+    copyFeedback.value = ''
+  }, 2500)
 }
 
-useSmartRefresh(() => {
-	if (!sessionId.value || !authStore.user?.id) {
-		return
-	}
+useSmartRefresh(
+  () => {
+    if (!sessionId.value || !authStore.user?.id) {
+      return
+    }
 
-	void loadSessionDetail({ background: true })
-}, {
-	enabled: true,
-	minIntervalMs: 1500
-})
+    void loadSessionDetail({ background: true })
+  },
+  {
+    enabled: true,
+    minIntervalMs: 1500,
+  }
+)
 
 function scheduleSessionRefresh(): void {
-	if (sessionRefreshTimer) {
-		clearTimeout(sessionRefreshTimer)
-	}
+  if (sessionRefreshTimer) {
+    clearTimeout(sessionRefreshTimer)
+  }
 
-	sessionRefreshTimer = setTimeout(() => {
-		void loadSessionDetail()
-	}, 150)
+  sessionRefreshTimer = setTimeout(() => {
+    void loadSessionDetail()
+  }, 150)
 }
 
 function subscribeRealtime(targetSessionId: string): void {
-	const userId = authStore.user?.id
-	if (!userId) {
-		unsubscribe()
-		return
-	}
+  const userId = authStore.user?.id
+  if (!userId) {
+    unsubscribe()
+    return
+  }
 
-	subscribe(`session-detail-${targetSessionId}-${userId}`, [
-		{ table: 'sessions', filter: `id=eq.${targetSessionId}` },
-		{ table: 'users_session', filter: `session_id=eq.${targetSessionId}` },
-		{ table: 'characters', filter: `session_id=eq.${targetSessionId}` },
-		{ table: 'notifications', filter: `receiver_user_id=eq.${userId}` },
-		{ table: 'notifications', filter: `sender_user_id=eq.${userId}` }
-	])
+  subscribe(`session-detail-${targetSessionId}-${userId}`, [
+    { table: 'sessions', filter: `id=eq.${targetSessionId}` },
+    { table: 'users_session', filter: `session_id=eq.${targetSessionId}` },
+    { table: 'characters', filter: `session_id=eq.${targetSessionId}` },
+    { table: 'notifications', filter: `receiver_user_id=eq.${userId}` },
+    { table: 'notifications', filter: `sender_user_id=eq.${userId}` },
+  ])
 }
 
 watch(
-	() => [sessionId.value, authStore.user?.id] as const,
-	([value, userId]) => {
-		if (!value || !userId) {
-			session.value = null
-			characters.value = []
-			invitations.value = []
-			joinRequests.value = []
-			unsubscribe()
-			return
-		}
+  () => [sessionId.value, authStore.user?.id] as const,
+  ([value, userId]) => {
+    if (!value || !userId) {
+      session.value = null
+      characters.value = []
+      invitations.value = []
+      joinRequests.value = []
+      unsubscribe()
+      return
+    }
 
-		void loadSessionDetail()
-		subscribeRealtime(value)
-	},
-	{ immediate: true }
+    void loadSessionDetail()
+    subscribeRealtime(value)
+  },
+  { immediate: true }
 )
 
 let inviteSearchTimer: ReturnType<typeof setTimeout> | null = null
 
 function scheduleInviteSearch(): void {
-	if (inviteSearchTimer) {
-		clearTimeout(inviteSearchTimer)
-	}
+  if (inviteSearchTimer) {
+    clearTimeout(inviteSearchTimer)
+  }
 
-	inviteSearchTimer = setTimeout(() => {
-		void loadInviteCandidates()
-	}, 250)
+  inviteSearchTimer = setTimeout(() => {
+    void loadInviteCandidates()
+  }, 250)
 }
 
 watch(inviteQuery, () => {
-	scheduleInviteSearch()
+  scheduleInviteSearch()
 })
 
 onBeforeUnmount(() => {
-	if (inviteSearchTimer) {
-		clearTimeout(inviteSearchTimer)
-	}
+  if (inviteSearchTimer) {
+    clearTimeout(inviteSearchTimer)
+  }
 
-	if (sessionRefreshTimer) {
-		clearTimeout(sessionRefreshTimer)
-	}
+  if (sessionRefreshTimer) {
+    clearTimeout(sessionRefreshTimer)
+  }
 
-	if (copyFeedbackTimer) {
-		clearTimeout(copyFeedbackTimer)
-	}
+  if (copyFeedbackTimer) {
+    clearTimeout(copyFeedbackTimer)
+  }
 
-	unsubscribe()
+  unsubscribe()
 })
-
 </script>
