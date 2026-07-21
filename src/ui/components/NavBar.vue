@@ -189,13 +189,9 @@
 </template>
 
 <script lang="ts" setup>
+import { Bell, LogIn, LogOut, Menu, Scroll, UserCircle, Users } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Scroll, Users, LogIn, LogOut, Bell, UserCircle, Menu } from '@lucide/vue'
-import ThemeToggle from './ThemeToggle.vue'
-import { useAuthModalStore } from '../../stores/authModal'
-import { useAuthStore } from '../../stores/auth'
-import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import {
   countUnreadNotifications,
   getNotificationDisplayMessage,
@@ -204,6 +200,10 @@ import {
   markNotificationRead,
   type NotificationItem,
 } from '../../repositories/notificationsRepository'
+import { useAuthStore } from '../../stores/auth'
+import { useAuthModalStore } from '../../stores/authModal'
+import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import ThemeToggle from './ThemeToggle.vue'
 
 const authModalStore = useAuthModalStore()
 const authStore = useAuthStore()

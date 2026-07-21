@@ -2,9 +2,9 @@
 import { customAlphabet } from 'nanoid'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { createSession } from '../../repositories/sessionsRepository'
 import { useAuthStore } from '../../stores/auth'
 import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
-import { createSession } from '../../repositories/sessionsRepository'
 
 const modalStore = useSessionCreateModalStore()
 const authStore = useAuthStore()
