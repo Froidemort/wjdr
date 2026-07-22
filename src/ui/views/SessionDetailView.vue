@@ -78,6 +78,10 @@
 
 			<section v-if="isMj" class="space-y-3">
 				<h2 class="text-xl font-semibold">Gestion de session</h2>
+        <div v-if="adminLoading" class="flex items-center gap-2 text-sm opacity-70">
+          <span class="loading loading-spinner loading-xs" aria-hidden="true" />
+          Chargement des données MJ...
+        </div>
 				
 				<!-- MJ Sections Desktop Grid -->
 				<div class="grid gap-3 lg:grid-cols-2">
@@ -231,13 +235,12 @@ import {
 import { useAuthStore } from '../../stores/auth'
 import type { CharacterSummary, Profile, SessionSummary } from '../../types/domain'
 import AppCard from '../components/AppCard.vue'
-import type CharacterCreateModal from '../components/CharacterCreateModal.vue'
+import CharacterCreateModal from '../components/CharacterCreateModal.vue'
 import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
 import SearchInput from '../components/SearchInput.vue'
 import SessionAccessRequest from '../components/SessionAccessRequest.vue'
 import SessionNotesPanel from '../components/SessionNotesPanel.vue'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
-import { useSmartRefresh } from '../composables/useSmartRefresh'
 
 const route = useRoute()
 const router = useRouter()
@@ -257,9 +260,9 @@ const sessionInfoOpen = ref(true)
 const joinRequestError = ref<string | null>(null)
 const joinRequestBusy = ref(false)
 const archiveBusy = ref(false)
+const adminLoading = ref(false)
 const joinRequests = ref<JoinRequestItem[]>([])
 const characterCreateModalRef = ref<InstanceType<typeof CharacterCreateModal> | null>(null)
-let sessionRefreshTimer: ReturnType<typeof setTimeout> | null = null
 let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
 const sessionId = computed(() => String(route.params.id ?? ''))
@@ -281,7 +284,7 @@ const canCreateOwnCharacter = computed(() =>
 )
 const { subscribe, unsubscribe } = useRealtimeChannels(
   () => {
-    scheduleSessionRefresh()
+    void loadSessionDetail({ background: true })
   },
   { debounceMs: 500 }
 )
@@ -321,10 +324,10 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
     const userIsMj = currentUserId === session.value.mjId
 
     if (userIsMj) {
-      await loadJoinRequests()
-      await loadInvitations()
+      void refreshMjData()
     } else {
       joinRequests.value = []
+      invitations.value = []
     }
   } catch (error) {
     if (!isBackgroundRefresh) {
@@ -335,6 +338,29 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
     if (!isBackgroundRefresh) {
       loading.value = false
     }
+  }
+}
+
+async function refreshMjData(): Promise<void> {
+  if (!session.value || !authStore.user?.id || !isMj.value) {
+    joinRequests.value = []
+    invitations.value = []
+    adminLoading.value = false
+    return
+  }
+
+  adminLoading.value = true
+  joinRequestError.value = null
+  inviteError.value = null
+
+  try {
+    await Promise.all([loadJoinRequests(), loadInvitations()])
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Chargement MJ impossible.'
+    joinRequestError.value = message
+    inviteError.value = message
+  } finally {
+    adminLoading.value = false
   }
 }
 
@@ -512,30 +538,6 @@ async function copySessionLink(): Promise<void> {
   }, 2500)
 }
 
-useSmartRefresh(
-  () => {
-    if (!sessionId.value || !authStore.user?.id) {
-      return
-    }
-
-    void loadSessionDetail({ background: true })
-  },
-  {
-    enabled: true,
-    minIntervalMs: 1500,
-  }
-)
-
-function scheduleSessionRefresh(): void {
-  if (sessionRefreshTimer) {
-    clearTimeout(sessionRefreshTimer)
-  }
-
-  sessionRefreshTimer = setTimeout(() => {
-    void loadSessionDetail()
-  }, 150)
-}
-
 function subscribeRealtime(targetSessionId: string): void {
   const userId = authStore.user?.id
   if (!userId) {
@@ -551,7 +553,6 @@ function subscribeRealtime(targetSessionId: string): void {
     { table: 'notifications', filter: `sender_user_id=eq.${userId}` },
   ])
 }
-
 watch(
   () => [sessionId.value, authStore.user?.id] as const,
   ([value, userId]) => {
@@ -589,10 +590,6 @@ watch(inviteQuery, () => {
 onBeforeUnmount(() => {
   if (inviteSearchTimer) {
     clearTimeout(inviteSearchTimer)
-  }
-
-  if (sessionRefreshTimer) {
-    clearTimeout(sessionRefreshTimer)
   }
 
   if (copyFeedbackTimer) {

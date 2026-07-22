@@ -36,12 +36,10 @@ interface JoinRequestRow {
   message: string
   is_read: boolean
   created_at: string
-}
-
-interface ProfileRow {
-  id: string
-  username: string
-  email: string
+  requester?: Array<{
+    username: string
+    email: string
+  }> | null
 }
 
 export interface PaginatedNotifications {
@@ -163,14 +161,6 @@ export function extractNotificationSessionId(
 
   const fromPath = notification.message.match(/\/sessions\/([0-9a-f-]{36})/i)
   return fromPath?.[1] ?? null
-}
-
-function mapJoinRequestProfile(row: ProfileRow): ProfileRow {
-  return {
-    id: row.id,
-    username: row.username,
-    email: row.email,
-  }
 }
 
 export async function listNotificationsForUser(userId: string): Promise<NotificationItem[]> {
@@ -351,7 +341,9 @@ export async function listPendingJoinRequestsForSession(
 ): Promise<JoinRequestItem[]> {
   const { data, error } = await supabase
     .from('notifications')
-    .select('id, sender_user_id, receiver_user_id, message, is_read, created_at')
+    .select(
+      'id, sender_user_id, receiver_user_id, message, is_read, created_at, requester:profiles!notifications_sender_user_id_fkey(username, email)'
+    )
     .eq('receiver_user_id', mjId)
     .eq('title', JOIN_REQUEST_TITLE)
     .eq('is_read', false)
@@ -365,29 +357,10 @@ export async function listPendingJoinRequestsForSession(
     .filter((row) => Boolean(row.sender_user_id))
     .filter((row) => isJoinRequestForSession(row.message, sessionId))
 
-  const requesterIds = Array.from(new Set(rows.map((row) => row.sender_user_id as string)))
-  if (requesterIds.length === 0) {
-    return []
-  }
-
-  const { data: profilesData, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, username, email')
-    .in('id', requesterIds)
-
-  if (profilesError) {
-    throw profilesError
-  }
-
-  const profilesById = new Map<string, ProfileRow>()
-  for (const profile of ((profilesData ?? []) as ProfileRow[]).map(mapJoinRequestProfile)) {
-    profilesById.set(profile.id, profile)
-  }
-
   return rows
     .map((row) => {
       const requesterId = row.sender_user_id as string
-      const profile = profilesById.get(requesterId)
+      const profile = row.requester?.[0]
       if (!profile) {
         return null
       }

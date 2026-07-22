@@ -15,6 +15,10 @@ interface NotificationRow {
   created_at: string | null
   title: string
   message: string
+  receiver?: Array<{
+    username: string
+    email: string
+  }> | null
 }
 
 interface ProfileRow {
@@ -76,7 +80,9 @@ export async function listSessionInvitations(
 ): Promise<SessionInvitation[]> {
   const { data, error } = await supabase
     .from('notifications')
-    .select('receiver_user_id, is_read, created_at, title, message')
+    .select(
+      'receiver_user_id, is_read, created_at, title, message, receiver:profiles!notifications_receiver_user_id_fkey(username, email)'
+    )
     .eq('sender_user_id', mjId)
     .order('created_at', { ascending: false })
 
@@ -87,28 +93,10 @@ export async function listSessionInvitations(
   const rows = ((data ?? []) as NotificationRow[]).filter((row) =>
     isInvitationForSession(row, sessionId)
   )
-  const userIds = Array.from(new Set(rows.map((row) => row.receiver_user_id)))
-  if (userIds.length === 0) {
-    return []
-  }
-
-  const { data: profilesData, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, username, email')
-    .in('id', userIds)
-
-  if (profilesError) {
-    throw profilesError
-  }
-
-  const profilesById = new Map<string, Profile>()
-  for (const profile of ((profilesData ?? []) as ProfileRow[]).map(mapProfile)) {
-    profilesById.set(profile.id, profile)
-  }
 
   return rows
     .map((row) => {
-      const profile = profilesById.get(row.receiver_user_id)
+      const profile = row.receiver?.[0]
       if (!profile) {
         return null
       }

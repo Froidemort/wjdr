@@ -50,7 +50,7 @@ export async function searchCatalog(
     return []
   }
 
-  let request = supabase.from(table).select(CATALOG_SELECT_BY_TABLE[table]).limit(20)
+  let request = supabase.from(table).select(CATALOG_SELECT_BY_TABLE[table]).limit(12)
 
   if (table === 'skills' || table === 'talents') {
     request = request.or(`name.ilike.%${trimmed}%,specialization.ilike.%${trimmed}%`)

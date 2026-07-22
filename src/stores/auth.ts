@@ -33,6 +33,16 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
   const initialized = ref(false)
   const authError = ref<string | null>(null)
+  const identityCache = ref<{
+    userId: string | null
+    displayName: string
+    avatarUrl: string | null
+  }>({
+    userId: null,
+    displayName: '',
+    avatarUrl: null,
+  })
+  let identityLoadPromise: Promise<void> | null = null
 
   const isAuthenticated = computed(() => Boolean(user.value))
 
@@ -57,7 +67,19 @@ export const useAuthStore = defineStore('auth', () => {
     return currentUser.email ?? ''
   }
 
-  async function loadIdentity(userId: string): Promise<void> {
+  async function loadIdentity(userId: string, options: { force?: boolean } = {}): Promise<void> {
+    if (!options.force && identityCache.value.userId === userId) {
+      displayName.value = identityCache.value.displayName
+      avatarUrl.value = identityCache.value.avatarUrl
+      return
+    }
+
+    if (!options.force && identityLoadPromise) {
+      await identityLoadPromise
+      return
+    }
+
+    identityLoadPromise = (async () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('full_name, username, avatar_url')
@@ -72,8 +94,22 @@ export const useAuthStore = defineStore('auth', () => {
 
     const fullName = data?.full_name?.trim() ?? ''
     const username = data?.username?.trim() ?? ''
-    displayName.value = fullName || username || deriveFallbackDisplayName(user.value)
-    avatarUrl.value = data?.avatar_url ?? null
+    const nextDisplayName = fullName || username || deriveFallbackDisplayName(user.value)
+    const nextAvatarUrl = data?.avatar_url ?? null
+    displayName.value = nextDisplayName
+    avatarUrl.value = nextAvatarUrl
+    identityCache.value = {
+      userId,
+      displayName: nextDisplayName,
+      avatarUrl: nextAvatarUrl,
+    }
+    })()
+
+    try {
+      await identityLoadPromise
+    } finally {
+      identityLoadPromise = null
+    }
   }
 
   async function initAuth(): Promise<void> {
@@ -103,6 +139,11 @@ export const useAuthStore = defineStore('auth', () => {
         } else {
           displayName.value = ''
           avatarUrl.value = null
+          identityCache.value = {
+            userId: null,
+            displayName: '',
+            avatarUrl: null,
+          }
         }
       })
 
@@ -175,6 +216,11 @@ export const useAuthStore = defineStore('auth', () => {
       }
       displayName.value = ''
       avatarUrl.value = null
+      identityCache.value = {
+        userId: null,
+        displayName: '',
+        avatarUrl: null,
+      }
     } catch (error) {
       authError.value = error instanceof Error ? error.message : 'Déconnexion impossible.'
       throw error
@@ -190,7 +236,7 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
-    await loadIdentity(user.value.id)
+    await loadIdentity(user.value.id, { force: true })
   }
 
   return {

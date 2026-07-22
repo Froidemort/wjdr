@@ -11,30 +11,39 @@ export interface RealtimeTableSubscription {
   event?: RealtimeEvent
 }
 
+export interface RealtimeUpdatePayload {
+  table: string
+  event: RealtimeEvent
+}
+
 interface UseRealtimeChannelsOptions {
   debounceMs?: number
 }
 
 export function useRealtimeChannels(
-  onUpdate: () => void,
+  onUpdate: (payload?: RealtimeUpdatePayload) => void,
   options: UseRealtimeChannelsOptions = {}
 ) {
   const debounceMs = options.debounceMs ?? 0
   let channel: RealtimeChannel | null = null
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
+  let latestPayload: RealtimeUpdatePayload | undefined
 
-  function dispatchUpdate(): void {
+  function dispatchUpdate(payload?: RealtimeUpdatePayload): void {
     if (debounceMs <= 0) {
-      onUpdate()
+      onUpdate(payload)
       return
     }
+
+    latestPayload = payload
 
     if (debounceTimer) {
       clearTimeout(debounceTimer)
     }
 
     debounceTimer = setTimeout(() => {
-      onUpdate()
+      onUpdate(latestPayload)
+      latestPayload = undefined
     }, debounceMs)
   }
 
@@ -59,7 +68,10 @@ export function useRealtimeChannels(
           filter: subscription.filter,
         },
         () => {
-          dispatchUpdate()
+          dispatchUpdate({
+            table: subscription.table,
+            event,
+          })
         }
       )
     }
@@ -72,6 +84,8 @@ export function useRealtimeChannels(
       clearTimeout(debounceTimer)
       debounceTimer = null
     }
+
+    latestPayload = undefined
 
     if (channel) {
       void supabase.removeChannel(channel)

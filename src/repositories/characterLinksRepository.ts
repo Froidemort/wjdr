@@ -142,12 +142,72 @@ interface ItemLinkRow {
     | null
 }
 
+export interface CharacterLinksBundle {
+  skills: CharacterSkill[]
+  talents: CharacterTalent[]
+  weapons: CharacterWeapon[]
+  armors: CharacterArmor[]
+  items: CharacterItem[]
+}
+
+const characterLinksCache = new Map<string, CharacterLinksBundle>()
+
 function unwrapRelated<T>(value: T | T[] | null | undefined): T | undefined {
   if (!value) {
     return undefined
   }
 
   return Array.isArray(value) ? value[0] : value
+}
+
+function cloneLinksBundle(bundle: CharacterLinksBundle): CharacterLinksBundle {
+  return {
+    skills: bundle.skills.map((item) => ({ ...item })),
+    talents: bundle.talents.map((item) => ({ ...item })),
+    weapons: bundle.weapons.map((item) => ({ ...item })),
+    armors: bundle.armors.map((item) => ({ ...item })),
+    items: bundle.items.map((item) => ({ ...item })),
+  }
+}
+
+export function invalidateCharacterLinksCache(characterId?: string): void {
+  if (characterId) {
+    characterLinksCache.delete(characterId)
+    return
+  }
+
+  characterLinksCache.clear()
+}
+
+export async function listCharacterLinksBundle(
+  characterId: string,
+  options: { force?: boolean } = {}
+): Promise<CharacterLinksBundle> {
+  if (!options.force) {
+    const cached = characterLinksCache.get(characterId)
+    if (cached) {
+      return cloneLinksBundle(cached)
+    }
+  }
+
+  const [skills, talents, weapons, armors, items] = await Promise.all([
+    listCharacterSkills(characterId),
+    listCharacterTalents(characterId),
+    listCharacterWeapons(characterId),
+    listCharacterArmors(characterId),
+    listCharacterItems(characterId),
+  ])
+
+  const bundle: CharacterLinksBundle = {
+    skills,
+    talents,
+    weapons,
+    armors,
+    items,
+  }
+
+  characterLinksCache.set(characterId, cloneLinksBundle(bundle))
+  return cloneLinksBundle(bundle)
 }
 
 export async function listCharacterSkills(characterId: string): Promise<CharacterSkill[]> {

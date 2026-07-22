@@ -35,6 +35,12 @@ interface CharacterRow {
   money_copper: number
 }
 
+interface CharacterWithCareerRow extends CharacterRow {
+  career?: {
+    name?: string
+  } | null
+}
+
 interface CharacterStatRow {
   stat_code: string
   base_value: number
@@ -264,8 +270,10 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
     }
 
     const rows = (data ?? []) as CharacterRow[]
-    const careerNames = await resolveCareerNames(rows.map((row) => row.career_id))
-    const avatars = await resolveOwnerAvatars(rows.map((row) => row.user_id))
+    const [careerNames, avatars] = await Promise.all([
+      resolveCareerNames(rows.map((row) => row.career_id)),
+      resolveOwnerAvatars(rows.map((row) => row.user_id)),
+    ])
     return rows.map((row) =>
       mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null)
     )
@@ -287,8 +295,10 @@ export async function listCharactersBySession(sessionId: string): Promise<Charac
     }
 
     const rows = (data ?? []) as CharacterRow[]
-    const careerNames = await resolveCareerNames(rows.map((row) => row.career_id))
-    const avatars = await resolveOwnerAvatars(rows.map((row) => row.user_id))
+    const [careerNames, avatars] = await Promise.all([
+      resolveCareerNames(rows.map((row) => row.career_id)),
+      resolveOwnerAvatars(rows.map((row) => row.user_id)),
+    ])
     return rows.map((row) =>
       mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null)
     )
@@ -301,7 +311,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
       supabase
         .from('characters')
         .select(
-          'id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+          'id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper, career:careers!characters_career_id_fkey(name)'
         )
         .eq('id', characterId)
         .maybeSingle(),
@@ -334,8 +344,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
       return null
     }
 
-    const characterRow = characterResult.data as CharacterRow
-    const careerNames = await resolveCareerNames([characterRow.career_id])
+    const characterRow = characterResult.data as CharacterWithCareerRow
     const secondaryByCode = new Map<string, boolean>(
       ((staticStatsResult.data ?? []) as StaticStatRow[]).map((row) => [
         row.code,
@@ -344,7 +353,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
     )
 
     return {
-      ...mapCharacter(characterRow, careerNames.get(characterRow.career_id) ?? null, null),
+      ...mapCharacter(characterRow, characterRow.career?.name ?? null, null),
       stats: ((statsResult.data ?? []) as CharacterStatRow[]).map((row) => ({
         ...mapCharacterStat(row),
         isSecondary: secondaryByCode.get(row.stat_code) ?? false,
