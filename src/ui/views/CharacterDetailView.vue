@@ -1,5 +1,5 @@
 <template>
-	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
+  <main class="mx-auto max-w-6xl p-4 pb-24 sm:p-6 sm:pb-6 space-y-4">
 		<div v-if="loading && !character" class="skeleton h-56 w-full" />
 
 		<div v-else-if="errorMessage && !character" role="alert" class="alert alert-error alert-soft">
@@ -21,7 +21,7 @@
 						<span class="text-xl">{{ character.careerName || 'Inconnue' }}</span>
 						<button
 							v-if="canEditQuickSection"
-							class="btn btn-primary btn-xs"
+              class="btn btn-sm btn-square min-h-11 min-w-11"
 							aria-label="Modifier la carrière"
 							@click="openCareerModal"
 						>
@@ -32,8 +32,8 @@
 					</div>
 				</div>
 
-				<div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-					<CharacterResourceCard
+        <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
+          <CharacterResourceCard
 						label="Vie"
 						icon="heart"
 						:current="editable.pvCurrent"
@@ -82,13 +82,15 @@
 						@commit="onMoneyCommit"
 						@subtract="onMoneySubtract"
 					/>
-					<CharacterDerivedStatsCard
+          <div class="sm:col-span-2 lg:col-span-1">
+            <CharacterDerivedStatsCard
 						:total-encumbrance="totalEncumbrance"
 						:max-encumbrance="maxEncumbrance"
 						:bonus-force="bonusForce"
 						:bonus-endurance="bonusEndurance"
 						:armor-by-location="armorByLocation"
-					/>
+            />
+          </div>
 				</div>
 			</AppCard>
 
@@ -105,7 +107,7 @@
 					<h2 class="text-lg">Caractéristiques</h2>
 				</summary>
 				<div class="collapse-content">
-					<div class="mb-3 flex flex-wrap items-center justify-center gap-3 border-b border-base-300 pb-3">
+          <div class="mb-3 flex flex-wrap items-center justify-start gap-3 border-b border-base-300 pb-3">
 						<StateCycleBadge
 							:value="characteristicsViewMode"
 							:options="CHARACTERISTICS_VIEW_OPTIONS"
@@ -114,7 +116,7 @@
 						<button
 							v-if="canEditQuickSection"
 							type="button"
-							class="btn btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9"
+              class="btn btn-square min-h-11 min-w-11"
 							aria-label="Importer les caractéristiques de carrière"
 							@click.stop.prevent="openStatsImportModal"
 						>
@@ -159,22 +161,22 @@
 
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
-					<div class="flex items-center justify-between gap-2">
-						<h2 class="text-lg">Compétences</h2>
-						<button v-if="canEditQuickSection" class="btn btn-sm" @click.stop.prevent="openCatalogModal('skills')">
-							<Plus class="h-4 w-4" />
-						</button>
-					</div>
+          <h2 class="text-lg">Compétences</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
+            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des compétences" @click.stop.prevent="openCatalogModal('skills')">
+              <Plus class="h-4 w-4" />
+            </button>
+          </div>
 					<div v-if="sortedCharacterSkills.length === 0" class="text-sm opacity-70">Aucune compétence.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="skill in sortedCharacterSkills" :key="skill.skillId" v-memo="[skill.masteryLevel, canEditQuickSection]" class="card border border-base-300 bg-base-100">
+            <article v-for="skill in sortedCharacterSkills" :key="skill.skillId" v-memo="[skill.masteryLevel, canEditQuickSection]" class="group card border border-base-300 bg-base-100">
 							<div class="card-body p-3 gap-3">
 								<div class="flex items-start justify-between gap-2">
 									<div class="flex items-start gap-2">
-										<h4 class="font-semibold">{{ formatNamedWithSpecialization(skill.name, skill.specialization) }}</h4>
-										<span class="badge badge-warning badge-sm self-start">{{ skill.statCode }}</span>
+                    <h4 class="font-semibold">{{ formatNamedWithSpecialization(skill.name, skill.specialization) }}</h4>
+                    <span class="badge badge-neutral badge-sm self-start">{{ skill.statCode }}</span>
 										<div
 											v-if="!skill.isBasic"
 											class="tooltip self-start"
@@ -194,37 +196,37 @@
 											</svg>
 										</div>
 									</div>
-									<div class="flex items-center gap-1">
+                  <div class="hover-actions flex items-center gap-1">
 										<button
 											v-if="skill.description"
-											class="btn btn-ghost btn-xs"
+                      class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
 											aria-label="Afficher la description de la compétence"
 											@click="openDescriptionModal(formatNamedWithSpecialization(skill.name, skill.specialization), skill.description)"
 										>
 											<Info class="h-4 w-4" />
 										</button>
-										<button v-if="canEditQuickSection" class="btn btn-ghost btn-xs" @click="onDeleteSkill(skill.skillId)">
+                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" @click="onDeleteSkill(skill.skillId)">
 											<Trash2 class="h-4 w-4" />
 										</button>
 									</div>
 								</div>
 								<div class="join" role="radiogroup" aria-label="Niveau de maîtrise">
 									<button
-										class="btn btn-sm join-item"
+                    class="btn btn-sm h-11 min-h-11 join-item"
 										:class="skill.masteryLevel === 1 ? 'btn-active' : ''"
 										@click="onChangeSkillMastery(skill.skillId, 1)"
 									>
 										Acquis
 									</button>
 									<button
-										class="btn btn-sm join-item"
+                    class="btn btn-sm h-11 min-h-11 join-item"
 										:class="skill.masteryLevel === 2 ? 'btn-active' : ''"
 										@click="onChangeSkillMastery(skill.skillId, 2)"
 									>
 										+10%
 									</button>
 									<button
-										class="btn btn-sm join-item"
+                    class="btn btn-sm h-11 min-h-11 join-item"
 										:class="skill.masteryLevel === 3 ? 'btn-active' : ''"
 										@click="onChangeSkillMastery(skill.skillId, 3)"
 									>
@@ -239,30 +241,30 @@
 
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
-					<div class="flex items-center justify-between gap-2">
-						<h2 class="text-lg">Talents</h2>
-						<button v-if="canEditQuickSection" class="btn btn-sm" @click.stop.prevent="openCatalogModal('talents')">
-							<Plus class="h-4 w-4" />
-						</button>
-					</div>
+          <h2 class="text-lg">Talents</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
+            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des talents" @click.stop.prevent="openCatalogModal('talents')">
+              <Plus class="h-4 w-4" />
+            </button>
+          </div>
 					<div v-if="sortedCharacterTalents.length === 0" class="text-sm opacity-70">Aucun talent.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="talent in sortedCharacterTalents" :key="talent.talentId" v-memo="[talent.talentId, canEditQuickSection]" class="card border border-base-300 bg-base-100">
+            <article v-for="talent in sortedCharacterTalents" :key="talent.talentId" v-memo="[talent.talentId, canEditQuickSection]" class="group card border border-base-300 bg-base-100">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold">{{ formatNamedWithSpecialization(talent.name, talent.specialization) }}</h4>
-									<div class="flex items-center gap-1">
+                  <div class="hover-actions flex items-center gap-1">
 										<button
 											v-if="talent.description"
-											class="btn btn-ghost btn-xs"
+                      class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
 											aria-label="Afficher la description du talent"
 											@click="openDescriptionModal(formatNamedWithSpecialization(talent.name, talent.specialization), talent.description)"
 										>
 											<Info class="h-4 w-4" />
 										</button>
-										<button v-if="canEditQuickSection" class="btn btn-ghost btn-xs" @click="onDeleteTalent(talent.talentId)">
+                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" @click="onDeleteTalent(talent.talentId)">
 											<Trash2 class="h-4 w-4" />
 										</button>
 									</div>
@@ -274,9 +276,9 @@
 			</details>
 
 			<dialog ref="descriptionDialogRef" class="modal modal-top sm:modal-middle" @close="closeDescriptionModal">
-				<div class="modal-box border border-base-300 p-6 max-w-lg">
-					<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closeDescriptionModal">✕</button>
-					<h3 class="text-lg font-semibold">{{ descriptionTitle || 'Description' }}</h3>
+        <div class="modal-box grim-modal-box p-6 max-w-lg">
+          <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeDescriptionModal" aria-label="Fermer">✕</button>
+          <h3 class="grim-modal-title text-2xl pr-8">{{ descriptionTitle || 'Description' }}</h3>
 					<p class="mt-3 whitespace-pre-line text-sm opacity-90">{{ descriptionContent || 'Aucune description.' }}</p>
 				</div>
 				<form method="dialog" class="modal-backdrop">
@@ -286,14 +288,14 @@
 
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
-					<div class="flex items-center justify-between gap-2">
-						<h2 class="text-lg">Armes</h2>
-						<button v-if="canEditQuickSection" class="btn btn-sm" @click.stop.prevent="openCatalogModal('weapons')">
-							<Plus class="h-4 w-4" />
-						</button>
-					</div>
+          <h2 class="text-lg">Armes</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
+            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des armes" @click.stop.prevent="openCatalogModal('weapons')">
+              <Plus class="h-4 w-4" />
+            </button>
+          </div>
 					<div v-if="sortedCharacterWeapons.length === 0" class="text-sm opacity-70">Aucune arme.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 						<article v-for="weapon in sortedCharacterWeapons" :key="weapon.id" v-memo="[weapon.equipped, weapon.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
@@ -301,19 +303,26 @@
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ weapon.name }}</h4>
 									<div class="flex items-center gap-1">
-										<StateCycleBadge
-											v-if="canEditQuickSection"
-											:value="weapon.equipped"
-											:options="WEAPON_EQUIPPED_OPTIONS"
-											@change="onWeaponStateChange(weapon, $event)"
-										/>
-										<button v-if="canEditQuickSection" class="btn btn-ghost btn-xs" @click="onDeleteWeapon(weapon.id)">
+                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" @click="onDeleteWeapon(weapon.id)">
 											<Trash2 class="h-4 w-4" />
 										</button>
 									</div>
 								</div>
 								<p v-if="weapon.description" class="text-sm opacity-70">{{ weapon.description }}</p>
-								<div class="flex gap-1 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <StateCycleBadge
+                    v-if="canEditQuickSection"
+                    :value="weapon.equipped"
+                    :options="WEAPON_EQUIPPED_OPTIONS"
+                    @change="onWeaponStateChange(weapon, $event)"
+                  />
+                  <span
+                    v-else
+                    class="badge badge-sm"
+                    :class="weapon.equipped ? 'badge-secondary' : 'badge-outline'"
+                  >
+                    {{ weapon.equipped === null ? 'Inventaire' : weapon.equipped === 'd&g' ? 'Deux mains' : weapon.equipped === 'droite' ? 'Droite' : 'Gauche' }}
+                  </span>
 									<StateCycleBadge
 										v-if="canEditQuickSection"
 										:value="weapon.quality"
@@ -323,12 +332,6 @@
 									<span v-else class="badge badge-sm" :class="qualityBadgeClass(weapon.quality)">{{ weapon.quality || 'normal' }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ weapon.encumbrance }}</span>
 									<span v-if="weapon.damageFormula" class="badge badge-sm badge-outline gap-1"><Sword class="h-3 w-3" /> {{ weapon.damageFormula }}</span>
-									<StateCycleBadge
-										v-if="!canEditQuickSection"
-										:value="weapon.equipped"
-										:options="WEAPON_EQUIPPED_OPTIONS"
-										disabled
-									/>
 								</div>
 							</div>
 						</article>
@@ -338,14 +341,14 @@
 
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
-					<div class="flex items-center justify-between gap-2">
-						<h2 class="text-lg">Armures</h2>
-						<button v-if="canEditQuickSection" class="btn btn-sm" @click.stop.prevent="openCatalogModal('armors')">
-							<Plus class="h-4 w-4" />
-						</button>
-					</div>
+          <h2 class="text-lg">Armures</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
+            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des armures" @click.stop.prevent="openCatalogModal('armors')">
+              <Plus class="h-4 w-4" />
+            </button>
+          </div>
 					<div v-if="sortedCharacterArmors.length === 0" class="text-sm opacity-70">Aucune armure.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 						<article v-for="armor in sortedCharacterArmors" :key="armor.id" v-memo="[armor.isEquipped, armor.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
@@ -353,19 +356,26 @@
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ armor.name }}</h4>
 									<div class="flex items-center gap-1">
-										<StateCycleBadge
-											v-if="canEditQuickSection"
-											:value="armor.isEquipped"
-											:options="ARMOR_EQUIPPED_OPTIONS"
-											@change="onArmorStateChange(armor, $event)"
-										/>
-										<button v-if="canEditQuickSection" class="btn btn-ghost btn-xs" @click="onDeleteArmor(armor.id)">
+                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" @click="onDeleteArmor(armor.id)">
 											<Trash2 class="h-4 w-4" />
 										</button>
 									</div>
 								</div>
 								<p v-if="armor.description" class="text-sm opacity-70">{{ armor.description }}</p>
-								<div class="flex gap-1 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <StateCycleBadge
+                    v-if="canEditQuickSection"
+                    :value="armor.isEquipped"
+                    :options="ARMOR_EQUIPPED_OPTIONS"
+                    @change="onArmorStateChange(armor, $event)"
+                  />
+                  <span
+                    v-else
+                    class="badge badge-sm"
+                    :class="armor.isEquipped ? 'badge-success' : 'badge-outline'"
+                  >
+                    {{ armor.isEquipped ? 'Équipée' : 'Inventaire' }}
+                  </span>
 									<StateCycleBadge
 										v-if="canEditQuickSection"
 										:value="armor.quality"
@@ -375,12 +385,6 @@
 									<span v-else class="badge badge-sm" :class="qualityBadgeClass(armor.quality)">{{ armor.quality || 'normal' }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ armor.encumbrance }}</span>
 									<span class="badge badge-sm badge-outline gap-1"><Shield class="h-3 w-3" /> {{ armor.armorPoints }}</span>
-									<StateCycleBadge
-										v-if="!canEditQuickSection"
-										:value="armor.isEquipped"
-										:options="ARMOR_EQUIPPED_OPTIONS"
-										disabled
-									/>
 									<span v-if="armor.coveredLocations?.length" class="w-full text-xs opacity-75 break-words">{{ armor.coveredLocations.join(', ') }}</span>
 								</div>
 							</div>
@@ -391,14 +395,14 @@
 
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
-					<div class="flex items-center justify-between gap-2">
-						<h2 class="text-lg">Équipements</h2>
-						<button v-if="canEditQuickSection" class="btn btn-sm" @click.stop.prevent="openCatalogModal('items')">
-							<Plus class="h-4 w-4" />
-						</button>
-					</div>
+          <h2 class="text-lg">Équipements</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
+            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des équipements" @click.stop.prevent="openCatalogModal('items')">
+              <Plus class="h-4 w-4" />
+            </button>
+          </div>
 					<div v-if="sortedCharacterItems.length === 0" class="text-sm opacity-70">Aucun équipement.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 						<article v-for="item in sortedCharacterItems" :key="item.id" v-memo="[item.quantity, item.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
@@ -408,7 +412,7 @@
 									<div class="flex items-center gap-1">
 										<button
 											v-if="item.description"
-											class="btn btn-ghost btn-xs"
+                      class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
 											aria-label="Afficher la description de l'équipement"
 											@click="openDescriptionModal(item.name, item.description)"
 										>
@@ -416,7 +420,7 @@
 										</button>
 										<button
 											v-if="canEditQuickSection"
-											class="btn btn-ghost btn-xs text-error"
+                      class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11 text-error"
 											aria-label="Retirer l'équipement de l'inventaire"
 											@click="onDeleteItem(item.id)"
 										>
@@ -435,16 +439,16 @@
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ item.encumbrance }}</span>
 									<div v-if="canEditQuickSection" class="join items-stretch">
 										<button
-											class="btn btn-sm h-10 min-h-10 min-w-10 join-item px-3 text-base font-semibold leading-none"
+                      class="btn btn-sm h-11 min-h-11 min-w-11 join-item px-3 text-base font-semibold leading-none"
 											:disabled="item.quantity <= 1"
 											aria-label="Réduire la quantité"
 											@click="onChangeItemQuantity(item, -1)"
 										>
 											-
 										</button>
-										<span class="join-item inline-flex h-10 min-h-10 min-w-12 items-center justify-center bg-secondary px-3 text-sm font-bold tracking-wide text-secondary-content border-none">x{{ item.quantity }}</span>
+                    <span class="join-item inline-flex h-11 min-h-11 min-w-12 items-center justify-center bg-secondary px-3 text-sm font-bold tracking-wide text-secondary-content border-none">x{{ item.quantity }}</span>
 										<button
-											class="btn btn-sm h-10 min-h-10 min-w-10 join-item px-3 text-base font-semibold leading-none"
+                      class="btn btn-sm h-11 min-h-11 min-w-11 join-item px-3 text-base font-semibold leading-none"
 											aria-label="Augmenter la quantité"
 											@click="onChangeItemQuantity(item, 1)"
 										>
@@ -460,9 +464,9 @@
 			</details>
 
 			<dialog ref="statsImportDialogRef" class="modal modal-top sm:modal-middle" @close="closeStatsImportModal">
-				<div class="modal-box border border-base-300 p-4 sm:p-6 max-w-3xl">
-					<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closeStatsImportModal">✕</button>
-					<h3 class="text-lg font-semibold">Import rapide des avancées de carrière</h3>
+        <div class="modal-box grim-modal-box p-4 sm:p-6 max-w-3xl">
+          <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeStatsImportModal" aria-label="Fermer">✕</button>
+          <h3 class="grim-modal-title text-2xl pr-8">Import rapide des avancées de carrière</h3>
 					<p class="mt-1 text-xs opacity-70">Renseigne les valeurs d'avancée totale (0-99). Laisse vide pour ignorer une caractéristique.</p>
 
 					<div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -489,7 +493,7 @@
 						<span>{{ statsImportError }}</span>
 					</div>
 
-					<div class="mt-4 flex items-center justify-end gap-2 border-t border-base-300 pt-3">
+          <div class="grim-modal-actions mt-4 flex items-center justify-end gap-2 border-t border-base-300 pt-3">
 						<button type="button" class="btn btn-sm btn-ghost" @click="closeStatsImportModal">Annuler</button>
 						<button type="button" class="btn btn-sm" :disabled="statsImportSaving" @click="confirmStatsImport">
 							<span v-if="statsImportSaving" class="loading loading-spinner loading-xs" aria-hidden="true" />
@@ -504,9 +508,9 @@
 		</template>
 
 		<dialog ref="careerDialogRef" class="modal modal-top sm:modal-middle" @close="closeCareerModal">
-			<div class="modal-box border border-base-300 p-6">
-				<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closeCareerModal">✕</button>
-				<h3 class="mb-4 text-center text-xl font-semibold">Changer de carrière</h3>
+      <div class="modal-box grim-modal-box p-6">
+        <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeCareerModal" aria-label="Fermer">✕</button>
+        <h3 class="grim-modal-title mb-4 text-center text-3xl">Changer de carrière</h3>
 
 				<div class="space-y-3">
 					<SearchInput v-model="careerQuery" placeholder="Chercher une carrière" />
@@ -531,9 +535,9 @@
 						<span>{{ careerError }}</span>
 					</div>
 
-					<div class="flex items-center justify-end gap-2">
+          <div class="grim-modal-actions flex items-center justify-end gap-2">
 						<button class="btn btn-sm" @click="closeCareerModal">Annuler</button>
-						<button class="btn btn-sm btn-accent" :disabled="changingCareer" @click="confirmCareerChange">
+            <button class="btn btn-sm" :disabled="changingCareer" @click="confirmCareerChange">
 							<span v-if="changingCareer" class="loading loading-spinner loading-xs" aria-hidden="true" />
 							Valider
 						</button>
@@ -547,9 +551,9 @@
 		</dialog>
 
 		<dialog ref="catalogDialogRef" class="modal modal-top sm:modal-middle" @close="closeCatalogModal">
-			<div class="modal-box border border-base-300 p-6 max-w-2xl">
-				<button class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4" @click="closeCatalogModal">✕</button>
-				<h3 class="mb-6 text-center text-2xl font-bold text-primary">Ajouter des {{ modalSectionLabel }}</h3>
+      <div class="modal-box grim-modal-box w-11/12 max-w-2xl p-4 sm:p-6 max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
+        <button class="btn btn-sm btn-circle grim-modal-close absolute right-4 top-4" @click="closeCatalogModal" aria-label="Fermer">✕</button>
+        <h3 class="grim-modal-title mb-4 pr-8 text-center text-2xl sm:text-3xl text-primary">Ajouter des {{ modalSectionLabel }}</h3>
 
 				<div v-if="catalogSection === 'items'" class="mb-4 flex justify-center">
 					<div class="join">
@@ -572,7 +576,7 @@
 					</div>
 				</div>
 
-				<div class="space-y-5">
+        <div class="space-y-4 overflow-y-auto pr-1">
 					<template v-if="catalogSection === 'items' && itemCatalogMode === 'create'">
 						<div class="grid gap-3">
 							<label class="fieldset">
@@ -629,7 +633,7 @@
 
 					<template v-else>
 						<!-- Search Input -->
-						<div>
+            <div class="sticky top-0 z-10 bg-base-100/95 backdrop-blur py-1">
 							<SearchInput 
 								v-model="catalogQuery" 
 								:placeholder="`Chercher des ${modalSectionLabel}`" 
@@ -638,11 +642,11 @@
 						</div>
 
 						<!-- Catalog Options List -->
-						<div class="rounded-lg border border-base-300 bg-base-100 overflow-hidden">
-							<div class="max-h-80 overflow-y-auto">
-								<ul v-if="catalogOptions.length > 0" class="menu menu-compact">
+            <div class="rounded-lg border border-base-300 bg-base-100 overflow-hidden">
+              <div class="max-h-64 overflow-y-auto">
+                <ul v-if="displayedCatalogOptions.length > 0" class="menu menu-compact">
 									<li
-										v-for="option in catalogOptions"
+                    v-for="option in displayedCatalogOptions"
 										:key="option.id"
 										:class="[
 											'transition-colors border-l-4',
@@ -652,9 +656,9 @@
 										]"
 									>
 										<label class="label cursor-pointer justify-start gap-3 px-4 py-3 rounded-none">
-											<input
+                      <input
 												type="checkbox"
-												class="checkbox checkbox-sm"
+                        class="checkbox checkbox-md"
 												:checked="selectedCatalogIds.includes(option.id)"
 												@change="toggleCatalogSelection(option.id)"
 											/>
@@ -673,9 +677,41 @@
 										</label>
 									</li>
 								</ul>
-								<p v-else class="text-center text-sm opacity-70 py-8">Aucun élément trouvé.</p>
+                <p v-else class="text-center text-sm opacity-70 py-8">Aucun élément trouvé.</p>
 							</div>
 						</div>
+
+            <p v-if="catalogOptions.length > displayedCatalogOptions.length" class="text-xs opacity-70 px-1">
+              Affichage limité aux {{ displayedCatalogOptions.length }} premiers résultats. Précise votre recherche pour affiner.
+            </p>
+
+            <div
+              v-if="catalogSection === 'items'"
+              class="rounded-lg border border-base-300 bg-base-200 p-4"
+            >
+              <div class="mb-3">
+                <p class="text-sm font-semibold">Paramètres appliqués à toute la sélection</p>
+                <p class="text-xs opacity-70">La même qualité et la même quantité seront attribuées à tous les équipements sélectionnés.</p>
+              </div>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="fieldset">
+                  <span class="fieldset-legend">Qualité</span>
+                  <select v-model="selectedItemsQuality" class="select">
+                    <option v-for="quality in ITEM_QUALITY_OPTIONS" :key="quality" :value="quality">{{ quality }}</option>
+                  </select>
+                </label>
+
+                <label class="fieldset">
+                  <span class="fieldset-legend">Quantité</span>
+                  <input
+                    v-model.number="selectedItemsQuantity"
+                    type="number"
+                    min="1"
+                    class="input"
+                  />
+                </label>
+              </div>
+            </div>
 
 						<!-- Selection Summary -->
 						<div v-if="selectedCatalogIds.length > 0" class="rounded-lg border border-base-300 bg-base-200 p-4">
@@ -684,11 +720,11 @@
 								<p class="text-xs opacity-70">Clique sur un badge pour le retirer.</p>
 							</div>
 							<div class="flex flex-wrap gap-2">
-								<button
+                <button
 									v-for="selectedId in selectedCatalogIds"
 									:key="selectedId"
 									type="button"
-									class="btn btn-xs btn-outline btn-neutral h-auto min-h-0 max-w-full justify-start gap-2 px-3 py-2 normal-case whitespace-normal text-left"
+                  class="btn btn-sm btn-outline btn-neutral h-auto min-h-11 max-w-full justify-start gap-2 px-3 py-2 normal-case whitespace-normal text-left"
 									:aria-label="`Retirer ${selectedCatalogLabels[selectedId] || selectedId} de la sélection`"
 									@click="removeCatalogSelection(selectedId)"
 								>
@@ -705,12 +741,12 @@
 						<span>{{ catalogError }}</span>
 					</div>
 
-					<!-- Action Buttons -->
-					<div class="flex items-center justify-end gap-3 pt-4 border-t border-base-300">
+          <!-- Action Buttons -->
+          <div class="grim-modal-actions mt-3 border-t border-base-300 bg-base-100/95 backdrop-blur sticky bottom-0 flex items-center justify-end gap-3 pt-3">
 						<button class="btn btn-sm btn-ghost" @click="closeCatalogModal">Annuler</button>
 						<button
 							v-if="catalogSection === 'items' && itemCatalogMode === 'create'"
-							class="btn btn-sm btn-primary"
+              class="btn btn-sm"
 							:disabled="creatingItem"
 							@click="confirmItemCreate"
 						>
@@ -719,7 +755,7 @@
 						</button>
 						<button
 							v-else
-							class="btn btn-sm btn-primary"
+              class="btn btn-sm"
 							:disabled="addingCatalog || selectedCatalogIds.length === 0"
 							@click="confirmCatalogAdd"
 						>
@@ -734,17 +770,19 @@
 			</form>
 		</dialog>
 
-		<!-- Pied de page navigation -->
-		<footer class="flex flex-wrap gap-2 pt-2">
-			<router-link v-if="character" class="btn btn-sm btn-ghost" :to="`/sessions/${character.sessionId}`">
-				<ChevronLeft class="h-4 w-4" />
-				Retour à la session
-			</router-link>
-			<router-link class="btn btn-sm btn-ghost" to="/">
-				<ChevronLeft class="h-4 w-4" />
-				Menu principal
-			</router-link>
-		</footer>
+    <!-- Pied de page navigation -->
+    <footer class="fixed inset-x-0 bottom-0 z-40 border-t border-base-300 bg-base-100/95 px-3 py-2 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+      <div class="mx-auto flex w-full max-w-6xl gap-2">
+        <router-link v-if="character" class="btn btn-sm min-h-11 flex-1" :to="`/sessions/${character.sessionId}`">
+          <ChevronLeft class="h-4 w-4" />
+          Retour à la session
+        </router-link>
+        <router-link class="btn btn-sm min-h-11 flex-1" to="/">
+          <ChevronLeft class="h-4 w-4" />
+          Menu principal
+        </router-link>
+      </div>
+    </footer>
 	</main>
 </template>
 
@@ -765,7 +803,7 @@ import {
   Venus,
   Weight,
 } from '@lucide/vue'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { createCatalogItem, searchCatalog } from '../../repositories/catalogRepository'
 import {
@@ -774,11 +812,8 @@ import {
   addCharacterSkills,
   addCharacterTalents,
   addCharacterWeapons,
-  listCharacterArmors,
-  listCharacterItems,
-  listCharacterSkills,
-  listCharacterTalents,
-  listCharacterWeapons,
+  invalidateCharacterLinksCache,
+  listCharacterLinksBundle,
   removeCharacterArmor,
   removeCharacterItem,
   removeCharacterSkill,
@@ -819,7 +854,10 @@ import SearchInput from '../components/SearchInput.vue'
 import StateCycleBadge from '../components/StateCycleBadge.vue'
 import { useLiveSave } from '../composables/useLiveSave'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
-import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import {
+  type RealtimeUpdatePayload,
+  useRealtimeChannels,
+} from '../composables/useRealtimeChannels'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
 
@@ -848,20 +886,20 @@ const CATALOG_LABELS: Record<CatalogSection, string> = {
 }
 
 const WEAPON_EQUIPPED_OPTIONS = [
-  { value: null, label: 'Inventaire', badgeClass: 'badge-outline' },
-  { value: 'droite', label: 'Droite', badgeClass: 'badge-primary' },
-  { value: 'gauche', label: 'Gauche', badgeClass: 'badge-primary' },
-  { value: 'd&g', label: 'Deux mains', badgeClass: 'badge-primary' },
+  { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
+  { value: 'droite', label: 'Droite', badgeClass: 'btn-secondary' },
+  { value: 'gauche', label: 'Gauche', badgeClass: 'btn-secondary' },
+  { value: 'd&g', label: 'Deux mains', badgeClass: 'btn-secondary' },
 ] as const
 
 const ARMOR_EQUIPPED_OPTIONS = [
-  { value: false, label: 'Inventaire', badgeClass: 'badge-outline' },
-  { value: true, label: 'Équipée', badgeClass: 'badge-success' },
+  { value: false, label: 'Inventaire', badgeClass: 'btn-outline' },
+  { value: true, label: 'Équipée', badgeClass: 'btn-success' },
 ] as const
 
 const CHARACTERISTICS_VIEW_OPTIONS = [
-  { value: 'normal', label: 'Détaillé', badgeClass: 'badge-outline' },
-  { value: 'compact', label: 'Compact', badgeClass: 'badge-warning' },
+  { value: 'compact', label: 'Compact', badgeClass: 'btn-neutral' },
+  { value: 'normal', label: 'Détaillé', badgeClass: 'btn-outline' },
 ] as const
 
 const route = useRoute()
@@ -873,7 +911,7 @@ const character = ref<CharacterDetail | null>(null)
 const characterId = computed(() => String(route.params.id ?? ''))
 const isMoneyEditing = ref(false)
 let deferredRealtimeReloadTimer: ReturnType<typeof setTimeout> | null = null
-let backgroundRefreshInterval: ReturnType<typeof setInterval> | null = null
+let deferredLinksReloadTimer: ReturnType<typeof setTimeout> | null = null
 
 const careerDialogRef = ref<HTMLDialogElement | null>(null)
 const careerQuery = ref('')
@@ -895,12 +933,17 @@ const catalogError = ref<string | null>(null)
 const addingCatalog = ref(false)
 const itemCatalogMode = ref<'search' | 'create'>('search')
 const creatingItem = ref(false)
+const MAX_CATALOG_RESULTS = 8
+let catalogSearchTimer: ReturnType<typeof setTimeout> | null = null
+let catalogSearchSequence = 0
 const ITEM_QUALITY_OPTIONS = ['médiocre', 'normal', 'bonne', 'exceptionelle'] as const
 const ITEM_QUALITY_STATE_OPTIONS = ITEM_QUALITY_OPTIONS.map((quality) => ({
   value: quality,
   label: quality,
-  badgeClass: qualityBadgeClass(quality),
+  badgeClass: qualityStateClass(quality),
 }))
+const selectedItemsQuality = ref<(typeof ITEM_QUALITY_OPTIONS)[number]>('normal')
+const selectedItemsQuantity = ref(1)
 const newItemForm = ref({
   name: '',
   description: '',
@@ -935,10 +978,24 @@ const editable = ref({
   moneyCopper: 0,
 })
 
+const lastSavedEditable = ref({
+  pvMax: 0,
+  pvCurrent: 0,
+  fortuneMax: 0,
+  fortuneCurrent: 0,
+  destinyCurrent: 0,
+  xpTotal: 0,
+  xpAvailable: 0,
+  insanityPoints: 0,
+  moneyGold: 0,
+  moneySilver: 0,
+  moneyCopper: 0,
+})
+
 const canEditQuickSection = computed(() =>
   Boolean(character.value && authStore.user?.id === character.value.userId)
 )
-const characteristicsViewMode = ref<'normal' | 'compact'>('normal')
+const characteristicsViewMode = ref<'normal' | 'compact'>('compact')
 const modalSectionLabel = computed(() => CATALOG_LABELS[catalogSection.value])
 
 function sortByName<T extends { name: string }>(entries: T[]): T[] {
@@ -952,6 +1009,7 @@ const sortedCharacterTalents = computed(() => sortByName(characterTalents.value)
 const sortedCharacterWeapons = computed(() => sortByName(characterWeapons.value))
 const sortedCharacterArmors = computed(() => sortByName(characterArmors.value))
 const sortedCharacterItems = computed(() => sortByName(characterItems.value))
+const displayedCatalogOptions = computed(() => catalogOptions.value.slice(0, MAX_CATALOG_RESULTS))
 
 const visibleStats = computed(() => {
   if (!character.value) {
@@ -1101,6 +1159,8 @@ const { status, triggerSave, triggerSaveNow } = useLiveSave(
       money_silver: payload.moneySilver,
       money_copper: payload.moneyCopper,
     })
+
+    markSavedEditable(payload)
   },
   500
 )
@@ -1156,6 +1216,47 @@ const globalStateLabel = computed(() => {
   return ''
 })
 
+function isEditableEqual(
+  left: typeof editable.value,
+  right: typeof lastSavedEditable.value
+): boolean {
+  return (
+    left.pvMax === right.pvMax &&
+    left.pvCurrent === right.pvCurrent &&
+    left.fortuneMax === right.fortuneMax &&
+    left.fortuneCurrent === right.fortuneCurrent &&
+    left.destinyCurrent === right.destinyCurrent &&
+    left.xpTotal === right.xpTotal &&
+    left.xpAvailable === right.xpAvailable &&
+    left.insanityPoints === right.insanityPoints &&
+    left.moneyGold === right.moneyGold &&
+    left.moneySilver === right.moneySilver &&
+    left.moneyCopper === right.moneyCopper
+  )
+}
+
+function markSavedEditable(snapshot: typeof editable.value): void {
+  lastSavedEditable.value = { ...snapshot }
+}
+
+function isSavingInProgress(): boolean {
+  return (
+    status.value === 'pending' ||
+    status.value === 'saving' ||
+    statSaveStatus.value === 'pending' ||
+    statSaveStatus.value === 'saving'
+  )
+}
+
+function invalidateCurrentLinksCache(): void {
+  const currentCharacterId = character.value?.id ?? characterId.value
+  if (!currentCharacterId) {
+    return
+  }
+
+  invalidateCharacterLinksCache(currentCharacterId)
+}
+
 const allStatsSorted = computed(() => {
   if (!character.value) {
     return []
@@ -1181,13 +1282,40 @@ const allStatsSorted = computed(() => {
   })
 })
 
-function requestExternalCharacterRefresh(): void {
-  if (
-    status.value === 'pending' ||
-    status.value === 'saving' ||
-    statSaveStatus.value === 'pending' ||
-    statSaveStatus.value === 'saving'
-  ) {
+const LINK_TABLES = new Set([
+  'character_skills',
+  'character_talents',
+  'character_weapons',
+  'character_armors',
+  'character_items',
+])
+
+function requestExternalCharacterRefresh(update?: RealtimeUpdatePayload): void {
+  const table = update?.table
+  const currentCharacterId = character.value?.id ?? characterId.value
+  if (!currentCharacterId) {
+    return
+  }
+
+  if (table && LINK_TABLES.has(table)) {
+    invalidateCharacterLinksCache(currentCharacterId)
+
+    if (isSavingInProgress()) {
+      if (deferredLinksReloadTimer) {
+        clearTimeout(deferredLinksReloadTimer)
+      }
+
+      deferredLinksReloadTimer = setTimeout(() => {
+        void loadCharacterLinks(currentCharacterId, { force: true })
+      }, 700)
+      return
+    }
+
+    void loadCharacterLinks(currentCharacterId, { force: true })
+    return
+  }
+
+  if (isSavingInProgress()) {
     if (deferredRealtimeReloadTimer) {
       clearTimeout(deferredRealtimeReloadTimer)
     }
@@ -1202,26 +1330,22 @@ function requestExternalCharacterRefresh(): void {
 }
 
 const { subscribe: subscribeRealtime, unsubscribe: unsubscribeRealtime } = useRealtimeChannels(
-  () => {
-    requestExternalCharacterRefresh()
+  (update) => {
+    requestExternalCharacterRefresh(update)
   },
   { debounceMs: 450 }
 )
 
-async function loadCharacterLinks(characterId: string): Promise<void> {
-  const [skills, talents, weapons, armors, items] = await Promise.all([
-    listCharacterSkills(characterId),
-    listCharacterTalents(characterId),
-    listCharacterWeapons(characterId),
-    listCharacterArmors(characterId),
-    listCharacterItems(characterId),
-  ])
-
-  characterSkills.value = skills
-  characterTalents.value = talents
-  characterWeapons.value = weapons
-  characterArmors.value = armors
-  characterItems.value = items
+async function loadCharacterLinks(
+  characterId: string,
+  options: { force?: boolean } = {}
+): Promise<void> {
+  const links = await listCharacterLinksBundle(characterId, options)
+  characterSkills.value = links.skills
+  characterTalents.value = links.talents
+  characterWeapons.value = links.weapons
+  characterArmors.value = links.armors
+  characterItems.value = links.items
 }
 
 async function loadCharacter(options: { background?: boolean } = {}): Promise<void> {
@@ -1266,6 +1390,7 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
     }
 
     editable.value = nextEditable
+    markSavedEditable(nextEditable)
 
     await loadCharacterLinks(data.id)
   } catch (error) {
@@ -1281,11 +1406,9 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
 }
 
 function onQuickValueChange(field: keyof typeof editable.value, value: number): void {
+  const previousValue = editable.value[field]
   const newValue = Math.max(0, value)
   const isMoneyField = field === 'moneyGold' || field === 'moneySilver' || field === 'moneyCopper'
-  if (isMoneyField) {
-    isMoneyEditing.value = true
-  }
 
   // Constraint: current <= max for resource types
   if (field === 'pvCurrent' && editable.value.pvMax !== undefined) {
@@ -1294,6 +1417,14 @@ function onQuickValueChange(field: keyof typeof editable.value, value: number): 
     editable.value[field] = Math.min(newValue, editable.value.fortuneMax) as never
   } else {
     editable.value[field] = newValue as never
+  }
+
+  if (editable.value[field] === previousValue) {
+    return
+  }
+
+  if (isMoneyField) {
+    isMoneyEditing.value = true
   }
 
   if (!isMoneyField) {
@@ -1360,6 +1491,10 @@ function onStatBaseChange(statCode: string, baseValue: number): void {
   }
 
   const nextBase = Math.max(0, baseValue)
+  if (nextBase === target.baseValue) {
+    return
+  }
+
   target.baseValue = nextBase
   triggerStatSave({ statCode, baseValue: nextBase })
 }
@@ -1375,6 +1510,10 @@ function onStatTotalAdvancedChange(statCode: string, totalAdvanced: number): voi
   }
 
   const nextTotalAdvanced = Math.max(0, totalAdvanced)
+  if (nextTotalAdvanced === target.totalAdvanced) {
+    return
+  }
+
   target.totalAdvanced = nextTotalAdvanced
   triggerStatSave({ statCode, totalAdvanced: nextTotalAdvanced })
 }
@@ -1425,6 +1564,11 @@ async function confirmStatsImport(): Promise<void> {
   const updates = Object.entries(statsImportValues.value)
     .map(([statCode, rawValue]) => ({ statCode, rawValue: rawValue.trim() }))
     .filter(({ rawValue }) => rawValue.length > 0)
+    .filter(({ statCode, rawValue }) => {
+      const parsedValue = Math.max(0, Math.min(99, Number(rawValue)))
+      const localStat = character.value?.stats.find((stat) => stat.statCode === statCode)
+      return localStat ? localStat.totalAdvanced !== parsedValue : true
+    })
 
   if (updates.length === 0) {
     closeStatsImportModal()
@@ -1458,12 +1602,17 @@ async function onChangeSkillMastery(skillId: string, level: 1 | 2 | 3): Promise<
     return
   }
 
+  const target = characterSkills.value.find((skill) => skill.skillId === skillId)
+  if (target && target.masteryLevel === level) {
+    return
+  }
+
   try {
     await updateCharacterSkillMastery(character.value.id, skillId, level)
-    const target = characterSkills.value.find((skill) => skill.skillId === skillId)
     if (target) {
       target.masteryLevel = level
     }
+    invalidateCurrentLinksCache()
   } catch (error) {
     errorMessage.value =
       error instanceof Error ? error.message : 'Modification du niveau de maitrise impossible.'
@@ -1477,7 +1626,8 @@ async function onDeleteSkill(skillId: string): Promise<void> {
 
   try {
     await removeCharacterSkill(character.value.id, skillId)
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
   }
@@ -1490,7 +1640,8 @@ async function onDeleteTalent(talentId: string): Promise<void> {
 
   try {
     await removeCharacterTalent(character.value.id, talentId)
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
   }
@@ -1503,7 +1654,8 @@ async function onDeleteWeapon(linkId: string): Promise<void> {
 
   try {
     await removeCharacterWeapon(linkId)
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
   }
@@ -1530,6 +1682,10 @@ async function onWeaponStateChange(
   }
 
   const nextEquipped: 'droite' | 'gauche' | 'd&g' | null = value
+  if (weapon.equipped === nextEquipped) {
+    return
+  }
+
   if (!canEquipWeaponCheck(weapon, nextEquipped)) {
     return
   }
@@ -1537,6 +1693,7 @@ async function onWeaponStateChange(
   try {
     await updateCharacterWeaponEquipped(weapon.id, nextEquipped)
     weapon.equipped = nextEquipped
+    invalidateCurrentLinksCache()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
   }
@@ -1565,7 +1722,8 @@ async function onWeaponQualityChange(
 
   try {
     await updateCharacterWeaponQuality(weapon.id, quality)
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
   }
@@ -1578,7 +1736,8 @@ async function onDeleteArmor(linkId: string): Promise<void> {
 
   try {
     await removeCharacterArmor(linkId)
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
   }
@@ -1602,6 +1761,10 @@ async function onArmorStateChange(
   }
 
   const nextEquipped = value
+  if (armor.isEquipped === nextEquipped) {
+    return
+  }
+
   if (!canEquipArmorCheck(armor, nextEquipped)) {
     return
   }
@@ -1609,6 +1772,7 @@ async function onArmorStateChange(
   try {
     await updateCharacterArmorEquipped(armor.id, nextEquipped)
     armor.isEquipped = nextEquipped
+    invalidateCurrentLinksCache()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
   }
@@ -1637,7 +1801,8 @@ async function onArmorQualityChange(
 
   try {
     await updateCharacterArmorQuality(armor.id, quality)
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
   }
@@ -1653,6 +1818,11 @@ function resetNewItemForm(): void {
   }
 }
 
+function resetSelectedItemsSettings(): void {
+  selectedItemsQuality.value = 'normal'
+  selectedItemsQuantity.value = 1
+}
+
 async function onDeleteItem(linkId: string): Promise<void> {
   if (!canEditQuickSection.value || !character.value) {
     return
@@ -1660,7 +1830,8 @@ async function onDeleteItem(linkId: string): Promise<void> {
 
   try {
     await removeCharacterItem(linkId)
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
   }
@@ -1679,6 +1850,7 @@ async function onChangeItemQuantity(item: CharacterItem, delta: number): Promise
   try {
     await updateCharacterItemQuantity(item.id, nextQuantity)
     item.quantity = nextQuantity
+    invalidateCurrentLinksCache()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
   }
@@ -1708,6 +1880,7 @@ async function onItemQualityChange(
   try {
     await updateCharacterItemQuality(item.id, quality)
     item.quality = quality
+    invalidateCurrentLinksCache()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
   }
@@ -1751,6 +1924,11 @@ async function confirmCareerChange(): Promise<void> {
     return
   }
 
+  if (selectedCareerId.value === character.value.careerId) {
+    closeCareerModal()
+    return
+  }
+
   changingCareer.value = true
   careerError.value = null
   try {
@@ -1774,6 +1952,7 @@ function openCatalogModal(section: CatalogSection): void {
   catalogError.value = null
   itemCatalogMode.value = 'search'
   creatingItem.value = false
+  resetSelectedItemsSettings()
   resetNewItemForm()
   if (!catalogDialogRef.value) {
     return
@@ -1805,6 +1984,7 @@ function closeCatalogModal(): void {
   catalogError.value = null
   itemCatalogMode.value = 'search'
   creatingItem.value = false
+  resetSelectedItemsSettings()
   resetNewItemForm()
 }
 
@@ -1823,6 +2003,8 @@ function toggleCatalogSelection(id: string): void {
   }
 
   selectedCatalogIds.value = [...selectedCatalogIds.value, id]
+  catalogQuery.value = ''
+  catalogOptions.value = []
 }
 
 function removeCatalogSelection(id: string): void {
@@ -1852,12 +2034,18 @@ async function confirmCatalogAdd(): Promise<void> {
     } else if (catalogSection.value === 'weapons') {
       await addCharacterWeapons(character.value.id, selectedCatalogIds.value)
     } else if (catalogSection.value === 'items') {
-      await addCharacterItems(character.value.id, selectedCatalogIds.value)
+      await addCharacterItems(
+        character.value.id,
+        selectedCatalogIds.value,
+        Math.max(1, Math.floor(selectedItemsQuantity.value || 1)),
+        selectedItemsQuality.value
+      )
     } else {
       await addCharacterArmors(character.value.id, selectedCatalogIds.value)
     }
 
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
     closeCatalogModal()
   } catch (error) {
     catalogError.value = error instanceof Error ? error.message : 'Ajout impossible.'
@@ -1899,7 +2087,8 @@ async function confirmItemCreate(): Promise<void> {
       normalizedQuantity,
       newItemForm.value.quality
     )
-    await loadCharacterLinks(character.value.id)
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
     closeCatalogModal()
   } catch (error) {
     catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
@@ -1923,22 +2112,39 @@ watch(careerQuery, async (value) => {
 })
 
 watch(catalogQuery, async (value) => {
+  if (catalogSearchTimer) {
+    clearTimeout(catalogSearchTimer)
+    catalogSearchTimer = null
+  }
+
   if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
     catalogOptions.value = []
     return
   }
 
   const trimmed = value.trim()
-  if (!trimmed) {
+  if (trimmed.length < 2) {
     catalogOptions.value = []
     return
   }
 
-  try {
-    catalogOptions.value = await searchCatalog(catalogSection.value, trimmed)
-  } catch {
-    catalogOptions.value = []
-  }
+  const requestId = ++catalogSearchSequence
+  catalogSearchTimer = setTimeout(async () => {
+    try {
+      const results = await searchCatalog(catalogSection.value, trimmed)
+      if (requestId !== catalogSearchSequence) {
+        return
+      }
+
+      catalogOptions.value = results
+    } catch {
+      if (requestId !== catalogSearchSequence) {
+        return
+      }
+
+      catalogOptions.value = []
+    }
+  }, 180)
 })
 
 async function saveQuickFields(options: { immediate?: boolean } = {}): Promise<void> {
@@ -1967,6 +2173,10 @@ async function saveQuickFields(options: { immediate?: boolean } = {}): Promise<v
   editable.value.moneyGold = coercedMoney.gold
   editable.value.moneySilver = coercedMoney.silver
   editable.value.moneyCopper = coercedMoney.copper
+
+  if (isEditableEqual(editable.value, lastSavedEditable.value)) {
+    return
+  }
 
   if (options.immediate) {
     await triggerSaveNow({ ...editable.value })
@@ -2027,15 +2237,35 @@ function formatCatalogOptionLabel(option: CatalogItem): string {
 function qualityBadgeClass(quality: string | null): string {
   const normalized = quality?.trim().toLowerCase() ?? ''
   if (normalized === 'médiocre') {
-    return 'badge-error'
+    return 'badge-warning'
+  }
+  if (normalized === 'normal') {
+    return 'badge-neutral'
   }
   if (normalized === 'bonne') {
     return 'badge-info'
   }
   if (normalized === 'exceptionelle') {
-    return 'badge-secondary'
+    return 'badge-success'
   }
-  return 'badge-ghost'
+  return 'badge-outline'
+}
+
+function qualityStateClass(quality: string | null): string {
+  const normalized = quality?.trim().toLowerCase() ?? ''
+  if (normalized === 'médiocre') {
+    return 'btn-warning'
+  }
+  if (normalized === 'normal') {
+    return 'btn-neutral'
+  }
+  if (normalized === 'bonne') {
+    return 'btn-info'
+  }
+  if (normalized === 'exceptionelle') {
+    return 'btn-success'
+  }
+  return 'btn-outline'
 }
 
 watch(
@@ -2063,25 +2293,20 @@ watch(
   { immediate: true }
 )
 
-onMounted(() => {
-  backgroundRefreshInterval = setInterval(() => {
-    if (!character.value || document.visibilityState !== 'visible') {
-      return
-    }
-
-    requestExternalCharacterRefresh()
-  }, 2000)
-})
-
 onBeforeUnmount(() => {
   if (deferredRealtimeReloadTimer) {
     clearTimeout(deferredRealtimeReloadTimer)
     deferredRealtimeReloadTimer = null
   }
 
-  if (backgroundRefreshInterval) {
-    clearInterval(backgroundRefreshInterval)
-    backgroundRefreshInterval = null
+  if (deferredLinksReloadTimer) {
+    clearTimeout(deferredLinksReloadTimer)
+    deferredLinksReloadTimer = null
+  }
+
+  if (catalogSearchTimer) {
+    clearTimeout(catalogSearchTimer)
+    catalogSearchTimer = null
   }
 })
 </script>

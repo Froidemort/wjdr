@@ -26,19 +26,28 @@ const subtractDialogRef = ref<HTMLDialogElement | null>(null)
 const subtractSilver = ref(0)
 const subtractCopper = ref(0)
 
+function parseNonNegativeInteger(value: string): number {
+  const parsed = Number.parseInt(value, 10)
+  if (!Number.isFinite(parsed)) {
+    return 0
+  }
+
+  return Math.max(0, parsed)
+}
+
 function onGoldInput(event: Event): void {
   const target = event.target as HTMLInputElement
-  emit('update:gold', Math.max(0, Number(target.value || 0)))
+  emit('update:gold', parseNonNegativeInteger(target.value))
 }
 
 function onSilverInput(event: Event): void {
   const target = event.target as HTMLInputElement
-  emit('update:silver', Math.max(0, Number(target.value || 0)))
+  emit('update:silver', parseNonNegativeInteger(target.value))
 }
 
 function onCopperInput(event: Event): void {
   const target = event.target as HTMLInputElement
-  emit('update:copper', Math.max(0, Number(target.value || 0)))
+  emit('update:copper', parseNonNegativeInteger(target.value))
 }
 
 function onMoneyFieldBlur(): void {
@@ -85,7 +94,7 @@ function confirmSubtract(): void {
         <button
           v-if="editable"
           type="button"
-          class="btn btn-ghost btn-xs text-error"
+          class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11 text-error"
           aria-label="Soustraire de l'argent"
           @click="openSubtractDialog"
         >
@@ -100,9 +109,9 @@ function confirmSubtract(): void {
               :value="gold"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-11 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Couronnes d or"
-              @change="onGoldInput"
+              @input="onGoldInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
@@ -118,9 +127,9 @@ function confirmSubtract(): void {
               :value="silver"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-11 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Pistoles d argent"
-              @change="onSilverInput"
+              @input="onSilverInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
@@ -136,9 +145,9 @@ function confirmSubtract(): void {
               :value="copper"
               type="number"
               min="0"
-              class="input input-sm h-10 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              class="input input-sm h-11 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Sous de cuivre"
-              @change="onCopperInput"
+              @input="onCopperInput"
               @blur="onMoneyFieldBlur"
             />
           </template>
@@ -152,8 +161,8 @@ function confirmSubtract(): void {
   </article>
 
   <dialog ref="subtractDialogRef" class="modal modal-top sm:modal-middle" @close="onSubtractDialogClosed">
-    <div class="modal-box border border-base-300 p-5 max-w-md">
-      <h3 class="text-lg font-semibold text-center">Soustraire de l'argent</h3>
+    <div class="modal-box grim-modal-box p-5 max-w-md">
+      <h3 class="grim-modal-title text-2xl text-center">Soustraire de l'argent</h3>
 
       <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label class="fieldset">
@@ -179,7 +188,7 @@ function confirmSubtract(): void {
         </label>
       </div>
 
-      <div class="mt-5 flex items-center justify-end gap-2">
+      <div class="grim-modal-actions mt-5 flex items-center justify-end gap-2">
         <button type="button" class="btn btn-sm btn-ghost" @click="closeSubtractDialog">Annuler</button>
         <button type="button" class="btn btn-sm" @click="confirmSubtract">Soustraire</button>
       </div>

@@ -13,7 +13,6 @@ import {
 import type { SessionNote } from '../../types/domain'
 import { useBusyOperations } from '../composables/useBusyOperations'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
-import { useSmartRefresh } from '../composables/useSmartRefresh'
 import AppCard from './AppCard.vue'
 import DataGrid from './DataGrid.vue'
 
@@ -187,6 +186,21 @@ async function handleSaveEdit(noteId: string): Promise<void> {
     return
   }
 
+  const currentNote = notes.value.find((note) => note.id === noteId)
+  if (!currentNote) {
+    return
+  }
+
+  const unchanged =
+    currentNote.title.trim() === editDraft.title.trim() &&
+    (currentNote.contentText ?? '').trim() === editDraft.contentText.trim() &&
+    (currentNote.contentCharacterNote ?? '').trim() === editDraft.contentCharacterNote.trim()
+
+  if (unchanged) {
+    cancelEdit()
+    return
+  }
+
   editError.value = validateContent(editDraft.contentText, editDraft.contentCharacterNote)
   if (editError.value) {
     return
@@ -257,15 +271,6 @@ onMounted(() => {
   )
 })
 
-useSmartRefresh(
-  () => {
-    void loadNotes(false)
-  },
-  {
-    enabled: !props.isMj,
-    minIntervalMs: 1500,
-  }
-)
 </script>
 
 <template>

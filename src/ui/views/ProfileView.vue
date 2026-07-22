@@ -174,6 +174,8 @@ const authStore = useAuthStore()
 
 const email = ref('')
 const username = ref('')
+const initialEmail = ref('')
+const initialUsername = ref('')
 const newEmail = ref('')
 const emailCurrentPassword = ref('')
 const passwordCurrent = ref('')
@@ -207,6 +209,10 @@ const avatarCompressionOptions = {
   fileType: 'image/jpeg',
 } as const
 
+function normalizeField(value: string): string {
+	return value.trim().toLowerCase()
+}
+
 function onAvatarLoadError(): void {
   avatarLoadFailed.value = true
   if (!avatarError.value) {
@@ -222,6 +228,8 @@ async function loadProfile(): Promise<void> {
   const profile = await getProfileSettings(authStore.user.id)
   username.value = profile.username
   email.value = profile.email
+	initialUsername.value = profile.username
+	initialEmail.value = profile.email
   newEmail.value = profile.email
   persistedAvatarUrl.value = profile.avatarUrl
   avatarLoadFailed.value = false
@@ -235,9 +243,18 @@ async function saveUsername(): Promise<void> {
   savingUsername.value = true
   usernameError.value = ''
   usernameSuccess.value = ''
+
+	const nextUsername = normalizeField(username.value)
+	if (nextUsername === normalizeField(initialUsername.value)) {
+		usernameSuccess.value = 'Aucun changement à enregistrer.'
+		savingUsername.value = false
+		return
+	}
+
   try {
-    const nextUsername = await updateProfileUsername(authStore.user.id, username.value)
-    username.value = nextUsername
+		const savedUsername = await updateProfileUsername(authStore.user.id, username.value)
+		username.value = savedUsername
+		initialUsername.value = savedUsername
     await authStore.refreshDisplayName()
     usernameSuccess.value = 'Username mis a jour.'
   } catch (error) {
@@ -258,6 +275,11 @@ async function changeEmail(): Promise<void> {
     return
   }
 
+	if (normalizeField(newEmail.value) === normalizeField(initialEmail.value)) {
+		emailSuccess.value = 'Aucun changement à enregistrer.'
+		return
+	}
+
   if (!emailCurrentPassword.value) {
     emailError.value = 'Veuillez confirmer votre mot de passe actuel.'
     return
@@ -270,6 +292,7 @@ async function changeEmail(): Promise<void> {
     await reauthenticateWithPassword(email.value, emailCurrentPassword.value)
     const nextEmail = await updateProfileEmail(authStore.user.id, newEmail.value)
     email.value = nextEmail
+	initialEmail.value = nextEmail
     newEmail.value = nextEmail
     emailCurrentPassword.value = ''
     emailSuccess.value = 'Email mis a jour. Verifiez votre boite de reception.'
@@ -304,6 +327,11 @@ async function changePassword(): Promise<void> {
     passwordError.value = 'Le nouveau mot de passe doit contenir au moins 8 caracteres.'
     return
   }
+
+	if (passwordCurrent.value === passwordNext.value) {
+		passwordError.value = 'Le nouveau mot de passe est identique à l ancien.'
+		return
+	}
 
   updatingPassword.value = true
   passwordError.value = ''
