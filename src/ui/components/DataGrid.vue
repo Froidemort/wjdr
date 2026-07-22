@@ -11,8 +11,9 @@
 		</div>
 
 		<!-- Empty State -->
-		<div v-else-if="items.length === 0" class="alert alert-warning alert-soft">
-			<span>{{ emptyMessage }}</span>
+		<div v-else-if="items.length === 0" class="empty-state-panel rounded-box p-6 text-center">
+			<p class="text-lg font-semibold">Aucun resultat</p>
+			<p class="mt-1 text-sm opacity-75">{{ emptyMessage }}</p>
 		</div>
 
 		<!-- Data Grid -->

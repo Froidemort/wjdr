@@ -73,16 +73,17 @@ function onTotalAdvancedInput(event: Event): void {
     <div class="card-body p-4 gap-3">
       <div class="flex flex-col items-center justify-center gap-1 text-center">
         <h4 class="text-2xl font-black leading-none">{{ stat.statCode }}</h4>
-        <span class="badge badge-ghost text-xs">{{ stat.isSecondary ? 'Secondaire' : 'Principale' }}</span>
       </div>
 
       <div class="rounded-box border border-base-300 p-3" :class="totalToneClass">
-        <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Total</div>
+        <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Valeur totale</div>
+        <div class="mt-0.5 text-[11px] text-center opacity-65">Base + avancement courant</div>
         <div class="text-4xl font-black leading-none tabular-nums text-center" :class="totalValueClass">{{ totalValue }}</div>
       </div>
 
       <div class="rounded-box border border-base-300 p-3">
-        <div class="mt-2 flex items-center justify-between gap-2">
+        <div class="text-xs font-semibold uppercase tracking-wide text-center opacity-75">Avancement courant / total</div>
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div class="text-2xl font-extrabold tabular-nums flex items-center gap-2">
             <span>{{ stat.currentAdvanced }}</span>
             <span class="opacity-60">/</span>
@@ -91,7 +92,7 @@ function onTotalAdvancedInput(event: Event): void {
                 :value="stat.totalAdvanced"
                 type="number"
                 min="0"
-                class="input input-sm h-10 w-20 text-center text-2xl font-bold tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                class="input input-sm h-11 w-20 text-center text-2xl font-bold tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 aria-label="Valeur maximale d'avancement"
                 @change="onTotalAdvancedInput"
               />
@@ -99,20 +100,21 @@ function onTotalAdvancedInput(event: Event): void {
             <span v-else>{{ stat.totalAdvanced }}</span>
           </div>
           <div v-if="editable" class="join items-stretch">
-            <button class="btn btn-sm h-10 min-h-10 min-w-14 join-item px-2 text-sm font-semibold" aria-label="Diminuer l'avancement" @click="onTickDown">-{{ tickStep }}</button>
-            <button class="btn btn-sm h-10 min-h-10 min-w-14 join-item px-2 text-sm font-semibold" aria-label="Augmenter l'avancement" @click="onTickUp">+{{ tickStep }}</button>
+            <button class="btn btn-sm h-11 min-h-11 min-w-16 join-item px-3 text-base font-semibold" aria-label="Diminuer l'avancement" @click="onTickDown">-{{ tickStep }}</button>
+            <button class="btn btn-sm h-11 min-h-11 min-w-16 join-item px-3 text-base font-semibold" aria-label="Augmenter l'avancement" @click="onTickUp">+{{ tickStep }}</button>
           </div>
         </div>
       </div>
 
       <div class="rounded-box border border-base-300 p-3">
-        <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Base</div>
+        <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Valeur de base</div>
+        <div class="mt-0.5 text-[11px] text-center opacity-65">Avant modificateurs et progression</div>
         <template v-if="editable">
           <input
             :value="stat.baseValue"
             type="number"
             min="0"
-            class="input input-sm mt-2 h-10 w-full text-center text-2xl font-bold tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            class="input input-sm mt-2 h-11 w-full text-center text-2xl font-bold tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             aria-label="Valeur de base"
             @change="onBaseInput"
           />

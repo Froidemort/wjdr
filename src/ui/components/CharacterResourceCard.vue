@@ -52,36 +52,41 @@ function onMaxInput(event: Event): void {
 </script>
 
 <template>
-  <article class="card border border-base-300 bg-base-100">
-    <div class="card-body p-4 gap-4">
-      <div class="flex items-center justify-between">
-        <div class="tooltip" :data-tip="label">
-          <component :is="iconComponent" :class="iconClass" />
+  <article class="card border border-base-300 bg-base-100 min-w-0">
+    <div class="card-body p-3 sm:p-4 gap-2 sm:gap-3">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex min-w-0 items-center gap-2">
+          <div class="tooltip inline-flex shrink-0" :data-tip="label">
+            <component :is="iconComponent" :class="iconClass" />
+          </div>
+          <p class="truncate text-sm sm:text-base font-semibold leading-tight text-base-content/85">{{ label }}</p>
         </div>
-        <div class="flex items-center gap-2 font-semibold tabular-nums">
+        <div class="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2 font-semibold tabular-nums">
           <template v-if="editable">
             <input
               :value="current"
               type="number"
               min="0"
-              class="input input-sm h-10 w-20 text-center text-xl font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              inputmode="numeric"
+              class="input input-xs sm:input-sm h-10 w-14 sm:w-16 text-center text-base sm:text-lg font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Valeur courante"
               @change="onCurrentInput"
             />
-            <span class="text-lg opacity-60">/</span>
+            <span class="text-base sm:text-lg opacity-60">/</span>
             <input
               :value="max"
               type="number"
               min="0"
-              class="input input-sm h-10 w-20 text-center text-xl font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              inputmode="numeric"
+              class="input input-xs sm:input-sm h-10 w-14 sm:w-16 text-center text-base sm:text-lg font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               aria-label="Valeur maximale"
               @change="onMaxInput"
             />
           </template>
           <template v-else>
-            <span class="text-4xl font-black leading-none">{{ current }}</span>
-            <span class="text-xl opacity-50">/</span>
-            <span class="text-3xl font-bold leading-none opacity-80">{{ max }}</span>
+            <span class="text-2xl sm:text-4xl font-black leading-none">{{ current }}</span>
+            <span class="text-base sm:text-xl opacity-50">/</span>
+            <span class="text-xl sm:text-3xl font-bold leading-none opacity-80">{{ max }}</span>
           </template>
         </div>
       </div>

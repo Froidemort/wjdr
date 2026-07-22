@@ -123,9 +123,9 @@ async function onSubmit(): Promise<void> {
 
 <template>
   <dialog ref="dialogRef" class="modal modal-middle" aria-labelledby="session-create-title" @close="modalStore.closeModal()">
-    <div class="modal-box w-11/12 max-w-xl border border-base-300 p-4 sm:p-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
-      <button class="btn btn-sm btn-circle btn-outline absolute right-2 top-2" @click="modalStore.closeModal()" aria-label="Fermer la modale">✕</button>
-      <h3 id="session-create-title" class="mb-1 pr-8 text-center text-2xl font-semibold">Créer une session</h3>
+    <div class="modal-box grim-modal-box w-11/12 max-w-xl p-4 sm:p-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
+      <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="modalStore.closeModal()" aria-label="Fermer la modale">✕</button>
+      <h3 id="session-create-title" class="grim-modal-title mb-1 pr-8 text-center text-3xl">Créer une session</h3>
       <p class="mb-5 text-center text-sm opacity-70">Renseignez les informations de votre table avant de lancer l'aventure.</p>
 
       <form class="space-y-4" @submit.prevent="onSubmit">
@@ -150,7 +150,7 @@ async function onSubmit(): Promise<void> {
           <span>{{ errorMessage }}</span>
         </div>
 
-        <button type="submit" class="btn btn-accent w-full mt-1" :disabled="loading">
+        <button type="submit" class="btn w-full mt-1" :disabled="loading">
           <span v-if="loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
           <span>Valider</span>
         </button>

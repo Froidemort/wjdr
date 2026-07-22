@@ -43,8 +43,8 @@ function cycleState(): void {
 <template>
   <button
     type="button"
-    class="badge badge-lg cursor-pointer px-3 font-warhammer tracking-wide transition-colors duration-500"
-    :class="currentOption?.badgeClass ?? 'badge-outline'"
+    class="btn btn-sm min-h-11 px-3 normal-case tracking-wide"
+    :class="currentOption?.badgeClass ?? 'btn-outline'"
     :disabled="disabled"
     :aria-label="`Etat actuel: ${currentOption?.label ?? 'N/A'}. Activer pour changer.`"
     :aria-disabled="disabled ? 'true' : 'false'"

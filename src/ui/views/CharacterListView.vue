@@ -9,7 +9,7 @@
 			:loading="loading"
 			:error="errorMessage"
 			empty-message="Aucun personnage disponible."
-			grid-class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+      grid-class="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
 		>
 			<template #default="{ items }">
 				<CharacterSummaryCard
@@ -17,6 +17,7 @@
 					:key="character.id"
 					:character="character"
 					action-label="Ouvrir"
+          compact
 				>
 				</CharacterSummaryCard>
 			</template>

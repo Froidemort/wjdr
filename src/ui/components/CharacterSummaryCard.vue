@@ -28,8 +28,8 @@ withDefaults(
   >
     <CharacterSummaryStats :character="character" :compact="compact" :destiny-total="destinyTotal" />
 
-    <div class="card-actions justify-end" :class="compact ? 'mt-3' : 'mt-4'">
-      <router-link class="btn btn-sm btn-accent" :to="actionTo || `/characters/${character.id}`">{{ actionLabel }}</router-link>
+    <div class="card-actions" :class="compact ? 'mt-2 justify-end' : 'mt-3 justify-end'">
+      <router-link class="btn btn-sm" :to="actionTo || `/characters/${character.id}`">{{ actionLabel }}</router-link>
     </div>
   </AppCard>
 </template>

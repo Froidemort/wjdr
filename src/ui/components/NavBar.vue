@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar border-b border-base-300 bg-base-200 px-4">
     <div class="flex-shrink-0">
-      <router-link to="/" class="btn btn-soft normal-case text-lg font-bold sm:text-xl font-warhammer">
+      <router-link to="/" class="btn btn-sm normal-case text-lg font-bold sm:text-xl">
         GRIMORIUM
       </router-link>
     </div>
@@ -14,7 +14,7 @@
             class="tooltip tooltip-bottom flex-shrink-0"
             :data-tip="displayName?.substring(0, 20) || 'Profil'"
           >
-            <router-link to="/profile" class="btn btn-ghost btn-sm btn-square text-primary">
+            <router-link to="/profile" class="btn btn-sm btn-square nav-icon-btn" aria-label="Profil">
               <div v-if="avatarUrl" class="avatar">
                 <div class="w-7 rounded-full ring ring-base-300 ring-offset-1 ring-offset-base-100">
                   <img :src="avatarUrl" alt="Avatar utilisateur" class="object-cover" />
@@ -27,7 +27,7 @@
           <div ref="notificationsMenuRef" class="relative">
             <button
               ref="notificationsButtonRef"
-              class="btn btn-ghost btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom text-primary"
+              class="btn btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom nav-icon-btn"
               data-tip="Notifications"
               @click="toggleNotifications"
               aria-label="Notifications"
@@ -68,7 +68,7 @@
               </div>
 
               <div v-else-if="notificationsPreview.length === 0" class="alert alert-warning alert-soft text-sm mt-3">
-                <span>Aucune missive pour l instant.</span>
+                <span>Aucune missive pour l'instant.</span>
               </div>
 
               <div v-else class="mt-3 space-y-2 max-h-72 overflow-y-auto">
@@ -96,15 +96,15 @@
             </div>
           </div>
 
-          <router-link to="/sessions" class="btn btn-ghost btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom text-primary" data-tip="Mes sessions">
+          <router-link to="/sessions" class="btn btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom nav-icon-btn" data-tip="Mes sessions" aria-label="Mes sessions">
             <Scroll class="w-6 h-6" />
           </router-link>
 
-          <router-link to="/characters" class="btn btn-ghost btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom text-primary" data-tip="Mes personnages">
+          <router-link to="/characters" class="btn btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom nav-icon-btn" data-tip="Mes personnages" aria-label="Mes personnages">
             <Users class="w-6 h-6" />
           </router-link>
 
-          <button @click="logout" class="btn btn-ghost btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom text-error" data-tip="Se déconnecter">
+          <button @click="logout" class="btn btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom nav-icon-btn text-error" data-tip="Se déconnecter">
             <LogOut class="w-6 h-6" />
           </button>
 
@@ -128,35 +128,35 @@
         <ul
           id="mobile-nav-menu"
           popover
-          class="dropdown dropdown-end menu bg-base-100 rounded-box z-20 w-52 p-2 shadow"
+          class="dropdown dropdown-end menu bg-base-100 rounded-box z-50 w-56 p-2 shadow-lg"
           style="position-anchor:--mobile-nav-anchor"
         >
           <li>
-            <router-link to="/profile" class="flex items-center gap-2">
+            <router-link to="/profile" class="flex min-h-11 items-center gap-2">
               <UserCircle class="h-5 w-5 text-primary" />
               <span>Profil</span>
             </router-link>
           </li>
           <li>
-            <button @click="handleMobileNotificationsClick" class="flex items-center gap-2">
+            <button @click="handleMobileNotificationsClick" class="flex min-h-11 items-center gap-2">
               <Bell class="h-5 w-5 text-primary" />
               <span>Notifications {{ unreadCount > 0 ? `(${unreadCount})` : '' }}</span>
             </button>
           </li>
           <li>
-            <router-link to="/sessions" class="flex items-center gap-2">
+            <router-link to="/sessions" class="flex min-h-11 items-center gap-2">
               <Scroll class="h-5 w-5 text-primary" />
               <span>Mes sessions</span>
             </router-link>
           </li>
           <li>
-            <router-link to="/characters" class="flex items-center gap-2">
+            <router-link to="/characters" class="flex min-h-11 items-center gap-2">
               <Users class="h-5 w-5 text-primary" />
               <span>Mes personnages</span>
             </router-link>
           </li>
           <li>
-            <button @click="logout" class="flex items-center gap-2 text-error">
+            <button @click="logout" class="flex min-h-11 items-center gap-2 text-error">
               <LogOut class="h-5 w-5" />
               <span>Se déconnecter</span>
             </button>
@@ -167,7 +167,7 @@
       <button
         v-if="!isAuthenticated"
         @click="openSignUp"
-        class="btn btn-sm btn-outline btn-accent"
+        class="btn btn-sm"
         data-tip="S'inscrire"
         aria-label="S'inscrire"
       >

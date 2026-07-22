@@ -1,16 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @plugin "daisyui";
 
 @theme {
-  --font-warhammer: "IM Fell English", serif;
-  --default-font-family: "IM Fell English", serif;
+  --font-grim-title: "IM Fell English SC", serif;
+  --font-grim-body: "Source Sans 3", "Segoe UI", sans-serif;
+  --default-font-family: var(--font-grim-body);
 }
 
 html,
 body,
 #app {
-  font-family: var(--font-warhammer);
+  font-family: var(--font-grim-body);
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -63,11 +64,11 @@ body,
 
 html[data-theme="grimorium-dark"] {
   --money-gold-bg: color-mix(in oklab, var(--color-accent) 24%, var(--color-base-200));
-  --money-gold-text: color-mix(in oklab, var(--color-accent-content) 55%, var(--color-base-content));
+  /* --money-gold-text: color-mix(in oklab, var(--color-accent-content) 55%, var(--color-base-content)); */
   --money-silver-bg: color-mix(in oklab, var(--color-info) 10%, var(--color-base-200));
-  --money-silver-text: color-mix(in oklab, var(--color-base-content) 88%, var(--color-info-content));
+  /* --money-silver-text: color-mix(in oklab, var(--color-base-content) 88%, var(--color-info-content)); */
   --money-copper-bg: color-mix(in oklab, var(--color-secondary) 8%, var(--color-base-200));
-  --money-copper-text: color-mix(in oklab, var(--color-base-content) 82%, var(--color-secondary-content));
+  /* --money-copper-text: color-mix(in oklab, var(--color-base-content) 82%, var(--color-secondary-content)); */
 }
 
 /* ============================================================================
@@ -117,11 +118,11 @@ html[data-theme="grimorium-dark"] {
 
 html[data-theme="grimorium-light"] {
   --money-gold-bg: color-mix(in oklab, var(--color-accent) 24%, var(--color-base-100));
-  --money-gold-text: color-mix(in oklab, var(--color-base-content) 92%, var(--color-accent-content));
+  /* --money-gold-text: color-mix(in oklab, var(--color-base-content) 92%, var(--color-accent-content)); */
   --money-silver-bg: color-mix(in oklab, var(--color-info) 8%, var(--color-base-100));
-  --money-silver-text: color-mix(in oklab, var(--color-base-content) 86%, var(--color-info-content));
+  /* --money-silver-text: color-mix(in oklab, var(--color-base-content) 86%, var(--color-info-content)); */
   --money-copper-bg: color-mix(in oklab, var(--color-secondary) 10%, var(--color-base-100));
-  --money-copper-text: color-mix(in oklab, var(--color-base-content) 84%, var(--color-secondary-content));
+  /* --money-copper-text: color-mix(in oklab, var(--color-base-content) 84%, var(--color-secondary-content)); */
 }
 
 /* ============================================================================
@@ -130,25 +131,25 @@ html[data-theme="grimorium-light"] {
 
 /* Hiérarchie typographique stricte pour accessibilité et sémantique */
 h1 {
-  font-family: var(--font-warhammer);
+  font-family: var(--font-grim-title);
   font-size: 2.25rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.035em;
   margin-bottom: 1rem;
   line-height: 1.2;
 }
 
 h2 {
-  font-family: var(--font-warhammer);
+  font-family: var(--font-grim-title);
   font-size: 1.75rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   margin-bottom: 0.875rem;
   line-height: 1.25;
 }
 
 h3 {
-  font-family: var(--font-warhammer);
+  font-family: var(--font-grim-title);
   font-size: 1.375rem;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -157,7 +158,7 @@ h3 {
 }
 
 h4 {
-  font-family: var(--font-warhammer);
+  font-family: var(--font-grim-title);
   font-size: 1.125rem;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -166,7 +167,7 @@ h4 {
 }
 
 p, .font-warhammer {
-  font-family: var(--font-warhammer);
+  font-family: var(--font-grim-body);
   letter-spacing: 0.02em;
   font-weight: 500;
 }
@@ -193,13 +194,74 @@ label,
 .stat-title,
 .stat-value,
 .stat-desc {
-  font-family: var(--font-warhammer);
+  font-family: var(--font-grim-body);
+}
+
+h1,
+h2,
+h3,
+h4,
+.card-title,
+.navbar .btn,
+.footer .font-bold {
+  font-family: var(--font-grim-title);
 }
 
 /* Petite subtilité pour casser l'aspect trop lisse de l'UI moderne */
 input, select, textarea, .card {
   box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.035);
   transition: all 0.2s ease-in-out;
+}
+
+::placeholder {
+  color: color-mix(in oklab, var(--color-base-content) 72%, transparent);
+  opacity: 1;
+}
+
+.btn {
+  border-color: color-mix(in oklab, var(--color-base-content) 18%, transparent);
+  background-color: color-mix(in oklab, var(--color-base-200) 84%, var(--color-neutral));
+  color: var(--color-base-content);
+  letter-spacing: 0.015em;
+  font-weight: 600;
+}
+
+.btn:hover {
+  background-color: color-mix(in oklab, var(--color-base-300) 88%, var(--color-neutral));
+}
+
+.btn-primary,
+.btn-accent {
+  border-color: color-mix(in oklab, var(--color-accent) 44%, var(--color-base-content));
+  background-color: color-mix(in oklab, var(--color-accent) 30%, var(--color-base-200));
+  color: color-mix(in oklab, var(--color-base-content) 92%, var(--color-accent-content));
+}
+
+.btn-primary:hover,
+.btn-accent:hover {
+  background-color: color-mix(in oklab, var(--color-accent) 42%, var(--color-base-200));
+}
+
+.btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  background-color: color-mix(in oklab, var(--color-base-300) 72%, transparent);
+}
+
+.badge {
+  font-family: var(--font-grim-body);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-success,
+.badge-warning,
+.badge-error,
+.badge-info {
+  color: color-mix(in oklab, var(--color-base-content) 92%, black);
 }
 
 /* Champs plus discrets et focus plus elegant */
@@ -304,29 +366,30 @@ a:focus-visible,
 [role="button"]:focus-visible,
 [role="tab"]:focus-visible,
 [role="link"]:focus-visible {
-  outline: 2px solid;
-  outline-color: var(--color-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--color-base-100) 92%, transparent),
+    0 0 0 4px color-mix(in oklab, var(--color-accent) 36%, transparent);
 }
 
 .badge:focus-visible {
-  outline: 1.5px solid var(--color-primary);
-  outline-offset: 1px;
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-accent) 36%, transparent);
 }
 
 /* Support pour les contrôles de formulaire */
 input[type="checkbox"]:focus-visible,
 input[type="radio"]:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 30%, transparent);
 }
 
 /* Indicateur de focus pour les carrousels et menus */
 [role="menuitem"]:focus-visible,
 [role="menuitemcheckbox"]:focus-visible,
 [role="menuitemradio"]:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
+  outline: none;
+  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--color-accent) 35%, transparent);
   background-color: var(--color-base-200);
 }
 
@@ -337,17 +400,101 @@ input[type="radio"]:focus-visible {
 
 .money-slot-gold {
   --money-slot-bg: var(--money-gold-bg);
-  --money-slot-text: var(--money-gold-text);
+  /* --money-slot-text: var(--money-gold-text); */
 }
 
 .money-slot-silver {
   --money-slot-bg: var(--money-silver-bg);
-  --money-slot-text: var(--money-silver-text);
+  /* --money-slot-text: var(--money-silver-text); */
 }
 
 .money-slot-copper {
   --money-slot-bg: var(--money-copper-bg);
-  --money-slot-text: var(--money-copper-text);
+  /* --money-slot-text: var(--money-copper-text); */
+}
+
+.nav-icon-btn {
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 14%, transparent);
+  background-color: color-mix(in oklab, var(--color-base-100) 86%, transparent);
+}
+
+.nav-icon-btn.router-link-active,
+.nav-icon-btn.router-link-exact-active {
+  color: var(--color-accent);
+  border-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
+  background-color: color-mix(in oklab, var(--color-accent) 14%, var(--color-base-100));
+}
+
+.empty-state-panel {
+  border: 1px dashed color-mix(in oklab, var(--color-base-content) 22%, transparent);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--color-base-100) 82%, var(--color-secondary)) 0%,
+      color-mix(in oklab, var(--color-base-200) 84%, var(--color-neutral)) 100%
+    );
+}
+
+.hover-actions {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease-in-out;
+}
+
+.group:hover .hover-actions,
+.group:focus-within .hover-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .hover-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.grim-modal-box {
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 16%, transparent);
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--color-base-100) 88%, var(--color-secondary)) 0%,
+      color-mix(in oklab, var(--color-base-100) 100%, var(--color-neutral)) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--color-base-content) 10%, transparent),
+    0 20px 50px color-mix(in oklab, black 45%, transparent);
+}
+
+.grim-modal-title {
+  font-family: var(--font-grim-title);
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+}
+
+.grim-modal-close {
+  border-color: color-mix(in oklab, var(--color-base-content) 18%, transparent);
+  background-color: color-mix(in oklab, var(--color-base-200) 80%, transparent);
+}
+
+.grim-modal-close:hover {
+  background-color: color-mix(in oklab, var(--color-base-300) 80%, transparent);
+}
+
+.grim-modal-actions {
+  border-top: 1px solid color-mix(in oklab, var(--color-base-content) 14%, transparent);
+  padding-top: 0.75rem;
+}
+
+.modal-backdrop {
+  background: color-mix(in oklab, var(--color-neutral) 55%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+#mobile-nav-menu::backdrop {
+  background: color-mix(in oklab, var(--color-neutral) 38%, transparent);
+  backdrop-filter: blur(1px);
 }
 
 @media (max-width: 640px) {

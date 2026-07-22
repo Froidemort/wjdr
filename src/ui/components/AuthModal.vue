@@ -61,14 +61,15 @@ async function onSubmit(): Promise<void> {
     aria-labelledby="auth-modal-title"
     @close="authModalStore.closeModal()"
   >
-    <div class="modal-box border border-base-300 p-6">
+    <div class="modal-box grim-modal-box p-6 sm:p-7">
       
       <button 
         @click="authModalStore.closeModal()" 
-        class="btn btn-sm btn-circle btn-outline absolute right-2 top-2"
+        class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3"
+        aria-label="Fermer"
       >✕</button>
 
-      <h3 id="auth-modal-title" class="mb-4 text-center text-2xl font-semibold">
+      <h3 id="auth-modal-title" class="grim-modal-title mb-5 text-center text-3xl">
         {{ authModalStore.mode === 'login' ? 'Connexion' : 'Inscription' }}
       </h3>
 
@@ -97,7 +98,7 @@ async function onSubmit(): Promise<void> {
           <span>{{ localError }}</span>
         </div>
 
-        <button type="submit" class="btn btn-accent w-full mt-2" :disabled="authStore.loading">
+        <button type="submit" class="btn w-full mt-2" :disabled="authStore.loading">
           <span v-if="authStore.loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
           <span>{{ authModalStore.mode === 'login' ? 'Se connecter' : 'Créer le compte' }}</span>
         </button>

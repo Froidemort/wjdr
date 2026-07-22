@@ -1,18 +1,18 @@
 <template>
 	<AppCard :title="title" :compact="compact">
-		<form class="flex flex-col gap-3 sm:flex-row" @submit.prevent="$emit('submit')">
+		<form :class="compact ? 'flex flex-col items-center gap-2 sm:flex-row sm:items-end sm:justify-start' : 'flex flex-col gap-3 sm:flex-row'" @submit.prevent="$emit('submit')">
 			<input 
 				:value="modelValue"
 				type="text" 
 				:maxlength="maxLength"
-				:class="['input', inputClass]"
+				:class="['input bg-base-100', inputClass]"
 				:placeholder="placeholder"
 				:disabled="Boolean(disabled || loading)"
 				@input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
 			/>
 			<button 
 				type="submit"
-				class="btn btn-sm btn-accent"
+				:class="compact ? 'btn btn-sm w-full sm:w-auto' : 'btn btn-sm'"
 				:disabled="Boolean(disabled || loading)"
 				:aria-busy="loading ? 'true' : 'false'"
 			>

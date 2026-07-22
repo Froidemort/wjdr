@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollText } from '@lucide/vue'
 import { watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -121,8 +122,15 @@ watch(page, () => {
 			<span>{{ error }}</span>
 		</div>
 
-		<div v-else-if="notifications.length === 0" class="alert alert-warning alert-soft">
-			<span>Aucune missive pour l instant.</span>
+		<div v-else-if="notifications.length === 0" class="empty-state-panel rounded-box p-8 text-center">
+			<div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-base-300 bg-base-100">
+				<ScrollText class="h-7 w-7 text-accent" aria-hidden="true" />
+			</div>
+			<h2 class="text-2xl">Aucune missive pour l'instant</h2>
+			<p class="mt-2 text-sm opacity-75">Quand un maitre de jeu te contacte, ses messages apparaitront ici.</p>
+			<div class="mt-4">
+				<router-link class="btn btn-sm" to="/sessions">Voir mes sessions</router-link>
+			</div>
 		</div>
 
 		<div v-else class="space-y-3">

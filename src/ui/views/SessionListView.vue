@@ -2,22 +2,22 @@
 	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
 		<header class="flex items-center justify-between">
 			<h1 class="text-2xl font-semibold">Sessions</h1>
-			<button class="btn btn-sm btn-accent" @click="openSessionCreate">Creer une session</button>
+      <button class="btn btn-sm" @click="openSessionCreate">Creer une session</button>
 		</header>
 
-		<InputAction
-			v-model="joinCode"
-			title="Rejoindre une session par code"
-			placeholder="ABCDEF"
-			button-label="Rejoindre"
-			:loading="joining"
-			:success-message="joinSuccess"
-			:error-message="joinError"
-			:max-length="6"
-			input-class="uppercase sm:max-w-xs"
-			compact
-			@submit="joinWithCode"
-		/>
+    <InputAction
+      v-model="joinCode"
+      title="Rejoindre une session"
+      placeholder="A B C D E F"
+      button-label="Rejoindre"
+      :loading="joining"
+      :success-message="joinSuccess"
+      :error-message="joinError"
+      :max-length="6"
+      input-class="uppercase text-center font-semibold tracking-[0.35em] max-w-72"
+      compact
+      @submit="joinWithCode"
+    />
 
 		<DataGrid
 			:items="sessionsList"
@@ -35,18 +35,19 @@
 				<AppCard v-for="session in items" :key="session.id" :title="session.name">
 					<p class="text-sm opacity-80 line-clamp-3">{{ session.description || 'Aucune description.' }}</p>
 					<div class="mt-3 flex items-center gap-2">
-						<span class="badge" :class="session.isArchived ? 'badge-warning' : 'badge-success'">
+            <span class="badge badge-sm" :class="session.isArchived ? 'badge-warning' : 'badge-success'">
 							{{ session.isArchived ? 'Archivée' : 'Active' }}
 						</span>
 					</div>
-					<div class="card-actions mt-4 justify-end">
-						<div class="tooltip" :data-tip="feedbackMap[session.id] || `Code : ${session.code}`">
-							<button class="btn btn-sm btn-ghost" @click="copyLink(session.id, `/sessions/${session.id}`)">
-								<Link class="h-4 w-4" />
-								Lien
-							</button>
-						</div>
-						<router-link class="btn btn-sm btn-accent" :to="`/sessions/${session.id}`">Ouvrir</router-link>
+          <div class="card-actions mt-4 items-center justify-between">
+            <button
+              class="link link-hover text-sm"
+              :title="feedbackMap[session.id] || `Code : ${session.code}`"
+              @click="copyLink(session.id, `/sessions/${session.id}`)"
+            >
+              Copier le lien de session
+            </button>
+            <router-link class="btn btn-sm" :to="`/sessions/${session.id}`">Ouvrir</router-link>
 					</div>
 				</AppCard>
 			</template>
@@ -57,7 +58,6 @@
 </template>
 
 <script setup lang="ts">
-import { Link } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { requestJoinByCode } from '../../repositories/notificationsRepository'
 import { listSessionsForUserPaginated } from '../../repositories/sessionsRepository'
@@ -71,7 +71,6 @@ import PageFooter from '../components/PageFooter.vue'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
 import { usePagination } from '../composables/usePagination'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
-import { useSmartRefresh } from '../composables/useSmartRefresh'
 
 const authStore = useAuthStore()
 const sessionCreateModalStore = useSessionCreateModalStore()
@@ -174,20 +173,6 @@ async function joinWithCode(): Promise<void> {
     joining.value = false
   }
 }
-
-useSmartRefresh(
-  () => {
-    if (!authStore.user?.id) {
-      return
-    }
-
-    void loadSessions({ background: true })
-  },
-  {
-    enabled: true,
-    minIntervalMs: 1500,
-  }
-)
 
 watch(
   () => authStore.user?.id,

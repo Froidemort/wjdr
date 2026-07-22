@@ -1,8 +1,8 @@
 <template>
 	<dialog ref="dialogRef" class="modal modal-middle" @close="onClose">
-		<div class="modal-box border border-base-300 p-6">
-			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="close">✕</button>
-			<h3 class="mb-4 text-center text-2xl font-semibold">Créer mon personnage</h3>
+		<div class="modal-box grim-modal-box p-6 sm:p-7">
+			<button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="close" aria-label="Fermer">✕</button>
+			<h3 class="grim-modal-title mb-4 text-center text-3xl">Créer mon personnage</h3>
 
 			<form class="flex flex-col space-y-4" @submit.prevent="submit">
 				<label class="form-control">
@@ -32,7 +32,7 @@
 					<span>{{ errorMessage }}</span>
 				</div>
 
-				<button type="submit" class="btn btn-accent w-full" :disabled="loading">
+				<button type="submit" class="btn w-full" :disabled="loading">
 					<span v-if="loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
 					<span>Valider</span>
 				</button>
