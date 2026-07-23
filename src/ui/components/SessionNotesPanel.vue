@@ -340,12 +340,12 @@ onMounted(() => {
         </div>
 
         <label class="form-control w-full">
-          <span class="label-text mb-1">Titre</span>
+          <span class="label-text mb-2">Titre</span>
           <input v-model="createForm.title" type="text" class="input input-bordered w-full" placeholder="Titre de la note" />
         </label>
 
         <label class="form-control w-full">
-          <span class="label-text mb-1">Contenu texte</span>
+          <span class="label-text mb-2">Contenu texte</span>
           <textarea
             v-model="createForm.contentText"
             class="textarea textarea-bordered min-h-24 w-full"
@@ -443,11 +443,11 @@ onMounted(() => {
 
               <div v-if="editNoteId === note.id" class="rounded-box border border-base-300 bg-base-100 p-3 space-y-2">
                 <label class="form-control w-full">
-                  <span class="label-text mb-1">Titre</span>
+                  <span class="label-text mb-2">Titre</span>
                   <input v-model="editDraft.title" type="text" class="input input-bordered w-full" />
                 </label>
                 <label class="form-control w-full">
-                  <span class="label-text mb-1">Contenu texte</span>
+                  <span class="label-text mb-2">Contenu texte</span>
                   <textarea v-model="editDraft.contentText" class="textarea textarea-bordered min-h-20 w-full" />
                 </label>
                 <div class="flex items-center gap-2">
