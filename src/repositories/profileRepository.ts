@@ -1,16 +1,11 @@
 import { supabase } from '../db/supabase'
+import type { ProfileSettingsRow } from '../types/db'
 import { isValidUsername } from '../utils/validation'
 
 export interface ProfileSettings {
   username: string
   email: string
   avatarUrl: string | null
-}
-
-interface ProfileRow {
-  username: string
-  email: string
-  avatar_url: string | null
 }
 
 function normalizeUsername(value: string): string {
@@ -40,7 +35,7 @@ export async function getProfileSettings(userId: string): Promise<ProfileSetting
     throw new Error('Profil introuvable.')
   }
 
-  const row = data as ProfileRow
+  const row = data as ProfileSettingsRow
   return {
     username: row.username,
     email: row.email,

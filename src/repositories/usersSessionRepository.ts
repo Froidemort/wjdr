@@ -1,13 +1,8 @@
 import { supabase } from '../db/supabase'
+import type { BasicProfileRow } from '../types/db'
 import type { Profile } from '../types/domain'
 
-interface ProfileRow {
-  id: string
-  username: string
-  email: string
-}
-
-function mapProfile(row: ProfileRow): Profile {
+function mapProfile(row: BasicProfileRow): Profile {
   return {
     id: row.id,
     username: row.username,
@@ -120,7 +115,7 @@ export async function searchInvitableProfilesByMembership(
     ...(membersResult.data ?? []).map((row) => row.user_id as string),
   ])
 
-  return ((profilesResult.data ?? []) as ProfileRow[])
+  return ((profilesResult.data ?? []) as BasicProfileRow[])
     .map(mapProfile)
     .filter((profile) => !blockedIds.has(profile.id))
 }

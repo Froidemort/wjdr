@@ -1,16 +1,7 @@
 import { supabase } from '../db/supabase'
+import type { SessionRow } from '../types/db'
 import type { SessionSummary } from '../types/domain'
 import { listUserSessionIds } from './usersSessionRepository'
-
-interface SessionRow {
-  id: string
-  name: string
-  code: string
-  description: string | null
-  is_archived: boolean
-  mj_id: string
-  created_at: string | null
-}
 
 export interface PaginatedSessions {
   items: SessionSummary[]

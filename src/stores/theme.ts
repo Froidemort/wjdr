@@ -11,6 +11,10 @@ export const useThemeStore = defineStore('theme', () => {
   const theme = ref<ThemeName>(LIGHT_THEME)
 
   function setTheme(nextTheme: ThemeName): void {
+    if (theme.value === nextTheme && document.documentElement.getAttribute('data-theme') === nextTheme) {
+      return
+    }
+
     theme.value = nextTheme
     document.documentElement.setAttribute('data-theme', nextTheme)
     localStorage.setItem(THEME_STORAGE_KEY, nextTheme)

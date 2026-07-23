@@ -32,45 +32,63 @@
 					</div>
 				</div>
 
-        <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-          <CharacterResourceCard
-						label="Vie"
-						icon="heart"
-						:current="editable.pvCurrent"
-						:max="editable.pvMax"
-						:editable="canEditQuickSection"
-						@update:current="onQuickValueChange('pvCurrent', $event)"
-						@update:max="onQuickValueChange('pvMax', $event)"
-					/>
-					<CharacterResourceCard
-						label="Fortune"
-						icon="clover"
-						:current="editable.fortuneCurrent"
-						:max="editable.fortuneMax"
-						:editable="canEditQuickSection"
-						@update:current="onQuickValueChange('fortuneCurrent', $event)"
-						@update:max="onQuickValueChange('fortuneMax', $event)"
-					/>
-					<CharacterResourceCard
-						label="Destin"
-						icon="wand-sparkles"
-						:current="editable.destinyCurrent"
-						:max="editable.destinyCurrent"
-						:editable="canEditQuickSection"
-						@update:current="onQuickValueChange('destinyCurrent', $event)"
-					/>
-					<CharacterXpCard
-						:current="editable.xpAvailable"
-						:max="editable.xpTotal"
-						:editable="canEditQuickSection"
-						@update:current="onQuickValueChange('xpAvailable', $event)"
-						@update:max="onQuickValueChange('xpTotal', $event)"
-					/>
-					<CharacterInsanityCard
-						:current="editable.insanityPoints"
-						:editable="canEditQuickSection"
-						@update:current="onQuickValueChange('insanityPoints', $event)"
-					/>
+          <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
+            <CharacterValueCard
+              label="Vie"
+              :icon="Heart"
+              icon-class="h-6 w-6 text-error"
+              :current="editable.pvCurrent"
+              :max="editable.pvMax"
+              :editable="canEditQuickSection"
+              current-aria-label="Valeur courante de vie"
+              max-aria-label="Valeur maximale de vie"
+              @update:current="onQuickValueChange('pvCurrent', $event)"
+              @update:max="onQuickValueChange('pvMax', $event)"
+            />
+            <CharacterValueCard
+              label="Fortune"
+              :icon="Clover"
+              icon-class="h-6 w-6 text-success"
+              :current="editable.fortuneCurrent"
+              :max="editable.fortuneMax"
+              :editable="canEditQuickSection"
+              current-aria-label="Valeur courante de fortune"
+              max-aria-label="Valeur maximale de fortune"
+              @update:current="onQuickValueChange('fortuneCurrent', $event)"
+              @update:max="onQuickValueChange('fortuneMax', $event)"
+            />
+            <CharacterValueCard
+              label="Destin"
+              :icon="WandSparkles"
+              icon-class="h-6 w-6 text-accent"
+              :current="editable.destinyCurrent"
+              :max="editable.destinyCurrent"
+              :editable="canEditQuickSection"
+              current-aria-label="Valeur courante de destin"
+              max-aria-label="Valeur maximale de destin"
+              @update:current="onQuickValueChange('destinyCurrent', $event)"
+            />
+            <CharacterValueCard
+              label="Experience"
+              :icon="ScrollText"
+              icon-class="h-6 w-6 text-base-content/80"
+              :current="editable.xpAvailable"
+              :max="editable.xpTotal"
+              :editable="canEditQuickSection"
+              current-aria-label="Experience disponible"
+              max-aria-label="Experience maximale"
+              @update:current="onQuickValueChange('xpAvailable', $event)"
+              @update:max="onQuickValueChange('xpTotal', $event)"
+            />
+            <CharacterValueCard
+              label="Points de folie"
+              :icon="Hospital"
+              icon-class="h-6 w-6 text-warning"
+              :current="editable.insanityPoints"
+              :editable="canEditQuickSection"
+              current-aria-label="Points de folie"
+              @update:current="onQuickValueChange('insanityPoints', $event)"
+            />
 					<CharacterMoneyCard
 						:gold="editable.moneyGold"
 						:silver="editable.moneySilver"
@@ -793,13 +811,18 @@ import {
   Import,
   Info,
   LoaderCircle,
+  Clover,
+  Heart,
   Mars,
   Pencil,
   Plus,
+  ScrollText,
+  Hospital,
   Shield,
   Sword,
   Trash2,
   UserCog,
+  WandSparkles,
   Venus,
   Weight,
 } from '@lucide/vue'
@@ -845,11 +868,9 @@ import type {
 } from '../../types/domain'
 import AppCard from '../components/AppCard.vue'
 import CharacterDerivedStatsCard from '../components/CharacterDerivedStatsCard.vue'
-import CharacterInsanityCard from '../components/CharacterInsanityCard.vue'
 import CharacteristicCard from '../components/CharacteristicCard.vue'
 import CharacterMoneyCard from '../components/CharacterMoneyCard.vue'
-import CharacterResourceCard from '../components/CharacterResourceCard.vue'
-import CharacterXpCard from '../components/CharacterXpCard.vue'
+import CharacterValueCard from '../components/CharacterValueCard.vue'
 import SearchInput from '../components/SearchInput.vue'
 import StateCycleBadge from '../components/StateCycleBadge.vue'
 import { useLiveSave } from '../composables/useLiveSave'
@@ -2033,6 +2054,8 @@ async function confirmCatalogAdd(): Promise<void> {
       await addCharacterTalents(character.value.id, selectedCatalogIds.value)
     } else if (catalogSection.value === 'weapons') {
       await addCharacterWeapons(character.value.id, selectedCatalogIds.value)
+    } else if (catalogSection.value === 'armors') {
+      await addCharacterArmors(character.value.id, selectedCatalogIds.value)
     } else if (catalogSection.value === 'items') {
       await addCharacterItems(
         character.value.id,
@@ -2040,8 +2063,6 @@ async function confirmCatalogAdd(): Promise<void> {
         Math.max(1, Math.floor(selectedItemsQuantity.value || 1)),
         selectedItemsQuality.value
       )
-    } else {
-      await addCharacterArmors(character.value.id, selectedCatalogIds.value)
     }
 
     invalidateCurrentLinksCache()
@@ -2061,16 +2082,12 @@ async function confirmItemCreate(): Promise<void> {
 
   const trimmedName = newItemForm.value.name.trim()
   if (!trimmedName) {
-    catalogError.value = 'Le nom est obligatoire.'
+    catalogError.value = 'Le nom de l\'équipement est obligatoire.'
     return
   }
 
-  const normalizedEncumbrance = Number.isFinite(newItemForm.value.encumbrance)
-    ? Math.max(0, Math.floor(newItemForm.value.encumbrance))
-    : 0
-  const normalizedQuantity = Number.isFinite(newItemForm.value.quantity)
-    ? Math.max(1, Math.floor(newItemForm.value.quantity))
-    : 1
+  const normalizedEncumbrance = Math.max(0, Math.floor(newItemForm.value.encumbrance || 0))
+  const normalizedQuantity = Math.max(1, Math.floor(newItemForm.value.quantity || 1))
 
   creatingItem.value = true
   catalogError.value = null

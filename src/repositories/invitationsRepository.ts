@@ -1,4 +1,5 @@
 import { supabase } from '../db/supabase'
+import type { BasicProfileRow } from '../types/db'
 import type { Profile } from '../types/domain'
 
 export interface SessionInvitation {
@@ -19,12 +20,6 @@ interface NotificationRow {
     username: string
     email: string
   }> | null
-}
-
-interface ProfileRow {
-  id: string
-  username: string
-  email: string
 }
 
 const LEGACY_INVITATION_PREFIX = 'INVITATION_SESSION_'
@@ -66,7 +61,7 @@ async function assertSessionWritable(sessionId: string): Promise<void> {
   }
 }
 
-function mapProfile(row: ProfileRow): Profile {
+function mapProfile(row: BasicProfileRow): Profile {
   return {
     id: row.id,
     username: row.username,
@@ -151,7 +146,7 @@ export async function searchInvitableProfilesByNotification(
     ...invitationRows.map((row) => row.receiver_user_id as string),
   ])
 
-  return ((profilesResult.data ?? []) as ProfileRow[])
+  return ((profilesResult.data ?? []) as BasicProfileRow[])
     .map(mapProfile)
     .filter((profile) => !blockedIds.has(profile.id))
 }

@@ -47,11 +47,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import {
-  type CharacterGender,
-  type CharacterRace,
-  createCharacterForSession,
-} from '../../repositories/charactersRepository'
+import type { CharacterGender, CharacterRace } from '../../types/character'
+import { createCharacterForSession } from '../../repositories/charactersRepository'
 
 const props = defineProps<{ sessionId: string; userId: string }>()
 const emit = defineEmits<{ created: [characterId: string] }>()

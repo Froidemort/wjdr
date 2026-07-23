@@ -1,67 +1,18 @@
 import { supabase } from '../db/supabase'
+import type {
+  CareerRow,
+  CharacterRow,
+  CharacterStatRow,
+  CharacterWithCareerRow,
+  ProfileAvatarRow,
+  StaticStatRow,
+} from '../types/db'
+import type { CreateCharacterPayload } from '../types/character'
 import type { CharacterDetail, CharacterStatValue, CharacterSummary } from '../types/domain'
 
+export type { CharacterGender, CharacterRace, CreateCharacterPayload } from '../types/character'
+
 const DEFAULT_CHARACTER_CAREER_NAME = 'Serviteur'
-
-export type CharacterRace = 'elfe' | 'halfling' | 'humain' | 'nain'
-export type CharacterGender = 'masculin' | 'féminin'
-
-export interface CreateCharacterPayload {
-  userId: string
-  sessionId: string
-  name: string
-  race: CharacterRace
-  gender: CharacterGender
-}
-
-interface CharacterRow {
-  id: string
-  name: string
-  race: string
-  gender: string
-  session_id: string
-  user_id: string
-  career_id: string
-  pv_current: number
-  pv_max: number
-  fortune_current: number
-  fortune_max: number
-  destiny_current: number
-  xp_total: number
-  xp_available: number
-  insanity_points: number
-  money_gold: number
-  money_silver: number
-  money_copper: number
-}
-
-interface CharacterWithCareerRow extends CharacterRow {
-  career?: {
-    name?: string
-  } | null
-}
-
-interface CharacterStatRow {
-  stat_code: string
-  base_value: number
-  current_advanced: number
-  total_advanced: number
-}
-
-interface CareerRow {
-  id: string
-  name?: string
-}
-
-interface ProfileAvatarRow {
-  id: string
-  avatar_url?: string | null
-}
-
-interface StaticStatRow {
-  code: string
-  is_secondary?: boolean
-}
 
 function isTransientError(error: unknown): boolean {
   if (!error || typeof error !== 'object') {
