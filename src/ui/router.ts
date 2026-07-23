@@ -1,13 +1,29 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useAuthModalStore } from '../stores/authModal'
-import CharacterDetailView from './views/CharacterDetailView.vue'
-import CharacterListView from './views/CharacterListView.vue'
 import HomeView from './views/HomeView.vue'
-import NotificationsView from './views/NotificationsView.vue'
-import ProfileView from './views/ProfileView.vue'
-import SessionDetailView from './views/SessionDetailView.vue'
-import SessionListView from './views/SessionListView.vue'
+
+const CharacterDetailView = () => import('./views/CharacterDetailView.vue')
+const CharacterListView = () => import('./views/CharacterListView.vue')
+const NotificationsView = () => import('./views/NotificationsView.vue')
+const ProfileView = () => import('./views/ProfileView.vue')
+const SessionDetailView = () => import('./views/SessionDetailView.vue')
+const SessionListView = () => import('./views/SessionListView.vue')
+
+let didPrefetchFrequentViews = false
+
+function prefetchFrequentAuthenticatedViews(): void {
+  if (didPrefetchFrequentViews) {
+    return
+  }
+
+  didPrefetchFrequentViews = true
+  void Promise.allSettled([
+    import('./views/SessionListView.vue'),
+    import('./views/SessionDetailView.vue'),
+    import('./views/CharacterDetailView.vue'),
+  ])
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -72,6 +88,10 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   const isConnected = authStore.isAuthenticated
+
+  if (isConnected) {
+    prefetchFrequentAuthenticatedViews()
+  }
 
   if (requiresAuth && !isConnected) {
     const authModalStore = useAuthModalStore()
