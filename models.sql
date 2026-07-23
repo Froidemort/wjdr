@@ -252,14 +252,12 @@ CREATE TABLE notifications (
 create table session_notes (
   id uuid default gen_random_uuid() primary key,
   session_id uuid not null references sessions(id) on delete cascade,
-  author_user_id uuid references profiles(id) on delete set null,
+  author_user_id uuid not null default auth.uid() references profiles(id) on delete cascade,
 
   title varchar(200) not null,
 
-  -- Colonnes par type de contenu (une seule table)
+  -- Notes de session texte uniquement (M2 image retire de ce scope)
   content_text text,
-  content_character_note text,
-  content_image_path text, -- reserve pour M2
 
   is_visible boolean not null default false,
   is_archived boolean not null default false,
@@ -267,11 +265,9 @@ create table session_notes (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
-  -- Au moins un contenu
+  -- Une note doit contenir du texte
   constraint session_notes_has_content check (
     coalesce(length(trim(content_text)), 0) > 0
-    or coalesce(length(trim(content_character_note)), 0) > 0
-    or coalesce(length(trim(content_image_path)), 0) > 0
   )
 );
 
@@ -297,6 +293,91 @@ begin
   end if;
 end
 $$;
+
+alter table session_notes
+  enable row level security;
+
+create policy "MJs can read all session notes." on session_notes
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1
+      from sessions s
+      where s.id = session_notes.session_id
+        and s.mj_id = (select auth.uid())
+    )
+  );
+
+create policy "Players can read visible session notes." on session_notes
+  for select
+  to authenticated
+  using (
+    is_visible = true
+    and exists (
+      select 1
+      from users_session us
+      where us.session_id = session_notes.session_id
+        and us.user_id = (select auth.uid())
+        and us.active = true
+    )
+  );
+
+create policy "Session members can create notes." on session_notes
+  for insert
+  to authenticated
+  with check (
+    (select auth.uid()) is not null
+    and author_user_id = (select auth.uid())
+    and coalesce(length(trim(content_text)), 0) > 0
+    and exists (
+      select 1
+      from users_session us
+      join sessions s on s.id = us.session_id
+      where us.session_id = session_notes.session_id
+        and us.user_id = (select auth.uid())
+        and us.active = true
+        and s.is_archived = false
+    )
+  );
+
+create policy "Authors and MJs can update notes." on session_notes
+  for update
+  to authenticated
+  using (
+    author_user_id = (select auth.uid())
+    or exists (
+      select 1
+      from sessions s
+      where s.id = session_notes.session_id
+        and s.mj_id = (select auth.uid())
+    )
+  )
+  with check (
+    coalesce(length(trim(content_text)), 0) > 0
+    and (
+      author_user_id = (select auth.uid())
+      or exists (
+        select 1
+        from sessions s
+        where s.id = session_notes.session_id
+          and s.mj_id = (select auth.uid())
+      )
+    )
+  );
+
+create policy "Authors and MJs can delete notes." on session_notes
+  for delete
+  to authenticated
+  using (
+    author_user_id = (select auth.uid())
+    or exists (
+      select 1
+      from sessions s
+      where s.id = session_notes.session_id
+        and s.mj_id = (select auth.uid())
+    )
+  );
 
 
 -- Ajout des règles, données, compétences et des talents présents dans les règles de Warhammer 2ème édition.

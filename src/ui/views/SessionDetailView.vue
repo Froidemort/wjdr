@@ -74,6 +74,8 @@
 			<SessionNotesPanel
 				:session-id="session.id"
 				:is-mj="isMj"
+        :current-user-id="authStore.user?.id ?? null"
+        :is-session-archived="session.isArchived"
 			/>
 
 			<section v-if="isMj" class="space-y-3">

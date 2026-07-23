@@ -20,8 +20,6 @@ interface SessionNoteRow {
   author_user_id: string | null
   title: string
   content_text: string | null
-  content_character_note: string | null
-  content_image_path: string | null
   is_visible: boolean
   is_archived: boolean
   created_at: string
@@ -84,8 +82,6 @@ function mapSessionNote(row: SessionNoteRow): SessionNote {
     authorUserId: row.author_user_id,
     title: row.title,
     contentText: row.content_text,
-    contentCharacterNote: row.content_character_note,
-    contentImagePath: row.content_image_path,
     isVisible: row.is_visible,
     isArchived: row.is_archived,
     createdAt: row.created_at,
@@ -120,7 +116,7 @@ export async function listSessionNotesForSession(
     let query = supabase
       .from('session_notes')
       .select(
-        'id, session_id, author_user_id, title, content_text, content_character_note, content_image_path, is_visible, is_archived, created_at, updated_at'
+        'id, session_id, author_user_id, title, content_text, is_visible, is_archived, created_at, updated_at'
       )
       .eq('session_id', sessionId)
 
@@ -145,11 +141,9 @@ export async function createSessionNote(payload: CreateSessionNoteInput): Promis
   }
 
   const contentText = normalizeNullableText(payload.contentText)
-  const contentCharacterNote = normalizeNullableText(payload.contentCharacterNote)
-  const contentImagePath = normalizeNullableText(payload.contentImagePath)
 
-  if (!contentText && !contentCharacterNote && !contentImagePath) {
-    throw new Error('Ajoutez au moins un contenu de note.')
+  if (!contentText) {
+    throw new Error('Ajoutez un contenu texte a la note.')
   }
 
   const { data, error } = await supabase
@@ -158,8 +152,6 @@ export async function createSessionNote(payload: CreateSessionNoteInput): Promis
       session_id: payload.sessionId,
       title,
       content_text: contentText,
-      content_character_note: contentCharacterNote,
-      content_image_path: contentImagePath,
       is_visible: payload.isVisible ?? false,
     })
     .select('id')
@@ -190,14 +182,6 @@ export async function updateSessionNote(
     updatePayload.content_text = normalizeNullableText(patch.contentText)
   }
 
-  if ('contentCharacterNote' in patch) {
-    updatePayload.content_character_note = normalizeNullableText(patch.contentCharacterNote)
-  }
-
-  if ('contentImagePath' in patch) {
-    updatePayload.content_image_path = normalizeNullableText(patch.contentImagePath)
-  }
-
   if (typeof patch.isVisible === 'boolean') {
     updatePayload.is_visible = patch.isVisible
   }
@@ -208,18 +192,11 @@ export async function updateSessionNote(
 
   updatePayload.updated_at = new Date().toISOString()
 
-  if (
-    'content_text' in updatePayload ||
-    'content_character_note' in updatePayload ||
-    'content_image_path' in updatePayload
-  ) {
+  if ('content_text' in updatePayload) {
     const contentText = (updatePayload.content_text as string | null | undefined) ?? null
-    const contentCharacterNote =
-      (updatePayload.content_character_note as string | null | undefined) ?? null
-    const contentImagePath = (updatePayload.content_image_path as string | null | undefined) ?? null
 
-    if (!contentText && !contentCharacterNote && !contentImagePath) {
-      throw new Error('Ajoutez au moins un contenu de note.')
+    if (!contentText) {
+      throw new Error('Ajoutez un contenu texte a la note.')
     }
   }
 

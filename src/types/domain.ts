@@ -1,3 +1,5 @@
+import type { CharacterCore } from './character'
+
 export type UserRole = 'mj' | 'player'
 
 export interface Profile {
@@ -23,8 +25,6 @@ export interface SessionNote {
   authorUserId: string | null
   title: string
   contentText: string | null
-  contentCharacterNote: string | null
-  contentImagePath: string | null
   isVisible: boolean
   isArchived: boolean
   createdAt: string
@@ -35,40 +35,18 @@ export interface CreateSessionNoteInput {
   sessionId: string
   title: string
   contentText?: string | null
-  contentCharacterNote?: string | null
-  contentImagePath?: string | null
   isVisible?: boolean
 }
 
 export interface UpdateSessionNoteInput {
   title?: string
   contentText?: string | null
-  contentCharacterNote?: string | null
-  contentImagePath?: string | null
   isVisible?: boolean
   isArchived?: boolean
 }
 
-export interface CharacterSummary {
-  id: string
-  name: string
-  race: string
-  gender: 'masculin' | 'féminin'
-  sessionId: string
-  userId: string
-  careerId: string
+export interface CharacterSummary extends CharacterCore {
   careerName: string | null
-  pvCurrent: number
-  pvMax: number
-  fortuneCurrent: number
-  fortuneMax: number
-  destinyCurrent: number
-  xpTotal: number
-  xpAvailable: number
-  insanityPoints: number
-  moneyGold: number
-  moneySilver: number
-  moneyCopper: number
   ownerAvatarUrl: string | null
 }
 

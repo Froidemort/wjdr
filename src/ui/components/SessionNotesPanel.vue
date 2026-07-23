@@ -15,16 +15,18 @@ import { useBusyOperations } from '../composables/useBusyOperations'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import AppCard from './AppCard.vue'
 import DataGrid from './DataGrid.vue'
+import SearchInput from './SearchInput.vue'
 
 interface SessionNoteDraft {
   title: string
   contentText: string
-  contentCharacterNote: string
 }
 
 const props = defineProps<{
   sessionId: string
   isMj: boolean
+  currentUserId?: string | null
+  isSessionArchived?: boolean
 }>()
 
 const loading = ref(false)
@@ -32,10 +34,10 @@ const errorMessage = ref<string | null>(null)
 const notes = ref<SessionNote[]>([])
 const creating = ref(false)
 const createError = ref<string | null>(null)
+const searchQuery = ref('')
 const createForm = reactive({
   title: '',
   contentText: '',
-  contentCharacterNote: '',
   isVisible: false,
 })
 
@@ -44,7 +46,6 @@ const editError = ref<string | null>(null)
 const editDraft = reactive<SessionNoteDraft>({
   title: '',
   contentText: '',
-  contentCharacterNote: '',
 })
 
 const { isBusy, setBusy, clearBusy } = useBusyOperations()
@@ -57,25 +58,89 @@ const { subscribe } = useRealtimeChannels(
 
 const visibleNotes = computed(() => notes.value.filter((note) => note.isVisible))
 const notesToDisplay = computed(() => (props.isMj ? notes.value : visibleNotes.value))
+const canCreateNote = computed(
+  () => Boolean(props.currentUserId) && !Boolean(props.isSessionArchived)
+)
 
-function resolveNoteKindLabel(note: SessionNote): string {
-  if ((note.contentCharacterNote ?? '').trim().length > 0) {
-    return 'Note personnage'
+function countOccurrences(haystack: string, needle: string): number {
+  if (!haystack || !needle) {
+    return 0
   }
 
-  if ((note.contentText ?? '').trim().length > 0) {
-    return 'Note texte'
+  let index = 0
+  let count = 0
+  while (index <= haystack.length) {
+    const found = haystack.indexOf(needle, index)
+    if (found === -1) {
+      break
+    }
+    count += 1
+    index = found + needle.length
+  }
+  return count
+}
+
+function computeSearchScore(note: SessionNote, query: string): number {
+  if (!query) {
+    return 0
   }
 
-  return 'Note'
+  const title = note.title.toLowerCase()
+  const content = (note.contentText ?? '').toLowerCase()
+  const tokens = query.split(/\s+/).filter(Boolean)
+
+  let score = 0
+  for (const token of tokens) {
+    const titleHits = countOccurrences(title, token)
+    const contentHits = countOccurrences(content, token)
+
+    if (titleHits > 0) {
+      score += 50 + titleHits * 10
+    }
+
+    if (contentHits > 0) {
+      score += 18 + contentHits * 4
+    }
+  }
+
+  if (title.includes(query)) {
+    score += 60
+  }
+
+  if (content.includes(query)) {
+    score += 20
+  }
+
+  return score
+}
+
+const filteredNotes = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) {
+    return notesToDisplay.value
+  }
+
+  return notesToDisplay.value
+    .map((note) => ({ note, score: computeSearchScore(note, query) }))
+    .filter((entry) => entry.score > 0)
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score
+      }
+      return right.note.createdAt.localeCompare(left.note.createdAt)
+    })
+    .map((entry) => entry.note)
+})
+
+function canManageNote(note: SessionNote): boolean {
+  if (!props.currentUserId) {
+    return false
+  }
+
+  return props.isMj || note.authorUserId === props.currentUserId
 }
 
 function resolveNoteMainContent(note: SessionNote): string {
-  const characterContent = note.contentCharacterNote?.trim()
-  if (characterContent) {
-    return characterContent
-  }
-
   const textContent = note.contentText?.trim()
   if (textContent) {
     return textContent
@@ -99,7 +164,6 @@ function formatDate(value: string): string {
 function resetCreateForm(): void {
   createForm.title = ''
   createForm.contentText = ''
-  createForm.contentCharacterNote = ''
   createForm.isVisible = false
 }
 
@@ -108,7 +172,6 @@ function startEdit(note: SessionNote): void {
   editNoteId.value = note.id
   editDraft.title = note.title
   editDraft.contentText = note.contentText ?? ''
-  editDraft.contentCharacterNote = note.contentCharacterNote ?? ''
 }
 
 function cancelEdit(): void {
@@ -116,16 +179,11 @@ function cancelEdit(): void {
   editError.value = null
 }
 
-function validateContent(text: string, characterNote: string): string | null {
+function validateContent(text: string): string | null {
   const hasText = text.trim().length > 0
-  const hasCharacterNote = characterNote.trim().length > 0
 
-  if (!hasText && !hasCharacterNote) {
-    return 'Ajoutez un contenu texte ou une note personnage.'
-  }
-
-  if (hasText && hasCharacterNote) {
-    return 'Remplissez un seul type de contenu par note.'
+  if (!hasText) {
+    return 'Ajoutez un contenu texte.'
   }
 
   return null
@@ -154,11 +212,11 @@ async function loadNotes(showLoading = true): Promise<void> {
 }
 
 async function handleCreate(): Promise<void> {
-  if (!props.isMj || creating.value) {
+  if (!canCreateNote.value || creating.value) {
     return
   }
 
-  createError.value = validateContent(createForm.contentText, createForm.contentCharacterNote)
+  createError.value = validateContent(createForm.contentText)
   if (createError.value) {
     return
   }
@@ -169,8 +227,7 @@ async function handleCreate(): Promise<void> {
       sessionId: props.sessionId,
       title: createForm.title,
       contentText: createForm.contentText,
-      contentCharacterNote: createForm.contentCharacterNote,
-      isVisible: createForm.isVisible,
+      isVisible: props.isMj ? createForm.isVisible : true,
     })
     resetCreateForm()
     await loadNotes()
@@ -182,26 +239,21 @@ async function handleCreate(): Promise<void> {
 }
 
 async function handleSaveEdit(noteId: string): Promise<void> {
-  if (!props.isMj) {
-    return
-  }
-
   const currentNote = notes.value.find((note) => note.id === noteId)
-  if (!currentNote) {
+  if (!currentNote || !canManageNote(currentNote)) {
     return
   }
 
   const unchanged =
     currentNote.title.trim() === editDraft.title.trim() &&
-    (currentNote.contentText ?? '').trim() === editDraft.contentText.trim() &&
-    (currentNote.contentCharacterNote ?? '').trim() === editDraft.contentCharacterNote.trim()
+    (currentNote.contentText ?? '').trim() === editDraft.contentText.trim()
 
   if (unchanged) {
     cancelEdit()
     return
   }
 
-  editError.value = validateContent(editDraft.contentText, editDraft.contentCharacterNote)
+  editError.value = validateContent(editDraft.contentText)
   if (editError.value) {
     return
   }
@@ -211,7 +263,6 @@ async function handleSaveEdit(noteId: string): Promise<void> {
     await updateSessionNote(noteId, {
       title: editDraft.title,
       contentText: editDraft.contentText,
-      contentCharacterNote: editDraft.contentCharacterNote,
     })
     cancelEdit()
     await loadNotes()
@@ -249,6 +300,11 @@ async function handleToggleArchived(note: SessionNote): Promise<void> {
 }
 
 async function handleDelete(noteId: string): Promise<void> {
+  const currentNote = notes.value.find((note) => note.id === noteId)
+  if (!currentNote || !canManageNote(currentNote)) {
+    return
+  }
+
   setBusy(`delete-${noteId}`)
   try {
     await deleteSessionNote(noteId)
@@ -277,8 +333,12 @@ onMounted(() => {
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Notes de session</h2>
 
-    <AppCard v-if="isMj" title="Ajouter une note" compact>
+    <AppCard v-if="canCreateNote" title="Ajouter une note" compact>
       <div class="space-y-3">
+        <div v-if="isSessionArchived" class="alert alert-warning alert-soft text-sm">
+          <span>Session archivée: ajout de note indisponible.</span>
+        </div>
+
         <label class="form-control w-full">
           <span class="label-text mb-1">Titre</span>
           <input v-model="createForm.title" type="text" class="input input-bordered w-full" placeholder="Titre de la note" />
@@ -293,22 +353,13 @@ onMounted(() => {
           />
         </label>
 
-        <label class="form-control w-full">
-          <span class="label-text mb-1">Note personnage simplifiee</span>
-          <textarea
-            v-model="createForm.contentCharacterNote"
-            class="textarea textarea-bordered min-h-24 w-full"
-            placeholder="Nom, role, traits utiles..."
-          />
-        </label>
-
-        <label class="label cursor-pointer justify-start gap-3">
+        <label v-if="isMj" class="label cursor-pointer justify-start gap-3">
           <input v-model="createForm.isVisible" type="checkbox" class="toggle toggle-sm" />
           <span class="label-text">Visible par les joueurs</span>
         </label>
 
         <div class="flex items-center gap-2">
-          <button class="btn btn-sm" :disabled="creating" @click="handleCreate">
+          <button class="btn btn-sm" :disabled="creating || isSessionArchived" @click="handleCreate">
             <span v-if="creating" class="loading loading-spinner loading-xs" aria-hidden="true" />
             Creer la note
           </button>
@@ -321,8 +372,15 @@ onMounted(() => {
     </AppCard>
 
     <AppCard title="Liste des notes" compact>
+      <div class="mb-3 space-y-2">
+        <SearchInput v-model="searchQuery" placeholder="Rechercher dans le titre et le texte" />
+        <p class="text-xs opacity-70">
+          Priorite de tri: correspondances du titre, puis du texte.
+        </p>
+      </div>
+
       <DataGrid
-        :items="notesToDisplay"
+        :items="filteredNotes"
         :loading="loading"
         :error="errorMessage"
         empty-message="Aucune note disponible."
@@ -336,7 +394,7 @@ onMounted(() => {
               <div>
                 <h3 class="font-semibold">{{ note.title }}</h3>
                 <p class="text-xs opacity-70">
-                  {{ resolveNoteKindLabel(note) }} · {{ formatDate(note.createdAt) }}
+                  Note texte · {{ formatDate(note.createdAt) }}
                 </p>
               </div>
               <div class="flex items-center gap-2">
@@ -349,9 +407,10 @@ onMounted(() => {
 
             <p class="whitespace-pre-wrap text-sm">{{ resolveNoteMainContent(note) }}</p>
 
-            <template v-if="isMj">
+            <template v-if="canManageNote(note)">
               <div class="flex flex-wrap items-center gap-2">
                 <button
+                  v-if="isMj"
                   class="btn btn-xs"
                   :disabled="isBusy(`visibility-${note.id}`) || note.isArchived"
                   @click="handleToggleVisibility(note)"
@@ -359,6 +418,7 @@ onMounted(() => {
                   {{ note.isVisible ? 'Rendre privee' : 'Rendre visible' }}
                 </button>
                 <button
+                  v-if="isMj"
                   class="btn btn-xs"
                   :disabled="isBusy(`archive-${note.id}`)"
                   @click="handleToggleArchived(note)"
@@ -389,10 +449,6 @@ onMounted(() => {
                 <label class="form-control w-full">
                   <span class="label-text mb-1">Contenu texte</span>
                   <textarea v-model="editDraft.contentText" class="textarea textarea-bordered min-h-20 w-full" />
-                </label>
-                <label class="form-control w-full">
-                  <span class="label-text mb-1">Note personnage simplifiee</span>
-                  <textarea v-model="editDraft.contentCharacterNote" class="textarea textarea-bordered min-h-20 w-full" />
                 </label>
                 <div class="flex items-center gap-2">
                   <button class="btn btn-xs" :disabled="isBusy(`save-${note.id}`)" @click="handleSaveEdit(note.id)">
