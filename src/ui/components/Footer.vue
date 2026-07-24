@@ -1,3 +1,9 @@
+<script setup lang="ts">
+defineOptions({ name: 'AppFooter' })
+
+const appVersion = '0.0.8'
+</script>
+
 <template>
 <footer class="footer footer-horizontal hidden lg:flex w-full justify-between border-t border-base-300 bg-base-200 text-base-content items-center p-4">
   <aside class="flex items-center gap-2">
@@ -49,7 +55,3 @@
   </nav>
 </footer>
 </template>
-
-<script setup lang="ts">
-const appVersion = '0.0.8'
-</script>

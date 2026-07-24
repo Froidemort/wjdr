@@ -1,60 +1,136 @@
 <template>
-	<main class="mx-auto max-w-5xl p-4 sm:p-6">
-		<section class="hero rounded-box border border-base-300 bg-base-100">
-			<div class="hero-content text-center py-12">
-				<div class="max-w-2xl space-y-4">
-					<h1 class="text-4xl font-bold sm:text-5xl">Grimorium</h1>
-					<p v-if="authStore.isAuthenticated && authStore.displayName" class="text-lg font-medium">
-						Bienvenue <span class="badge badge-ghost">{{ authStore.displayName }}</span> !
-					</p>
-					<p class="text-base-content/80">
-						GRIMORIUM est un outil de gestion de parties pour le jeu de rôle Warhammer JDR V2. Il permet aux joueurs et maîtres de jeu de créer et gérer des sessions, des personnages et des campagnes.
-					</p>
-					<div v-if="!authStore.isAuthenticated" class="flex flex-wrap justify-center gap-3 pt-2">
-						<button class="btn w-full sm:w-auto" @click="openSignup">Inscription</button>
-						<button class="btn w-full sm:w-auto" @click="openLogin">Connexion</button>
-					</div>
-					
-					<div v-else class="flex flex-wrap justify-center gap-3 pt-2">
-						<button class="btn btn-accent w-full sm:w-auto" @click="openSessionCreate">
-							<Plus class="h-5 w-5" />
-							Créer une session
-						</button>
-						<router-link class="btn btn-accent w-full sm:w-auto" to="/sessions">
-							<Scroll class="h-5 w-5" />
-							Mes sessions
-						</router-link>
-						<router-link class="btn btn-accent w-full sm:w-auto" to="/characters">
-							<Users class="h-5 w-5" />
-							Mes personnages
-						</router-link>
-					</div>
-					<p class="text-base-content/80">
-						Une section de ressources sera bientôt disponible pour vous aider à créer vos parties et personnages.
-					</p>
+	<main class="w-full">
+		<section
+			v-if="!authStore.isAuthenticated"
+			class="grid lg:min-h-[calc(100dvh-8rem)] lg:grid-cols-2"
+			aria-label="Accueil et authentification"
+		>
+			<div
+				class="order-2 bg-gradient-to-b from-base-100 to-base-200/30 px-6 py-10 sm:px-10 lg:order-1 lg:px-12 lg:py-14 xl:px-16"
+			>
+				<div class="mx-auto max-w-md lg:mx-0 lg:max-w-lg">
+					<header class="space-y-3">
+						<p class="text-xs font-bold uppercase tracking-[0.2em] text-primary">Warhammer JDR V2</p>
+						<h1 id="home-brand" class="grim-modal-title text-4xl sm:text-5xl">Grimorium</h1>
+						<div class="h-px w-16 bg-primary/40" aria-hidden="true" />
+						<p class="text-sm leading-relaxed text-base-content/80 sm:text-base">
+							GRIMORIUM est un outil de gestion de parties pour le jeu de rôle Warhammer JDR V2. Il
+							permet aux joueurs et maîtres de jeu de créer et gérer des sessions, des personnages et
+							des campagnes.
+						</p>
+						<p class="flex gap-2 text-sm text-base-content/60">
+							<Scroll class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+							<span>Ressources à venir pour préparer vos parties et personnages.</span>
+						</p>
+					</header>
+
+					<ul
+						class="mt-8 divide-y divide-base-300/60 border-y border-base-300/60"
+						aria-label="Ce que propose Grimorium"
+					>
+						<HomePillarCard
+							v-for="pillar in pillars"
+							:key="pillar.title"
+							:numeral="pillar.numeral"
+							:title="pillar.title"
+							:description="pillar.description"
+							:icon="pillar.icon"
+						/>
+					</ul>
 				</div>
 			</div>
+
+			<div
+				class="order-1 flex flex-col justify-center border-b border-base-300/50 bg-base-200/40 px-6 py-10 sm:px-10 lg:order-2 lg:min-h-[calc(100dvh-8rem)] lg:border-b-0 lg:border-l lg:px-12 lg:py-14 xl:px-16"
+			>
+				<AuthForm class="mx-auto w-full max-w-md" />
+			</div>
 		</section>
+
+		<template v-else>
+			<div class="min-h-[calc(100dvh-8rem)] p-4 sm:p-6 lg:px-8">
+				<section
+					class="mb-8 flex flex-col justify-center px-2 py-8 text-center sm:py-10"
+					aria-labelledby="home-brand"
+				>
+					<p class="text-xs font-bold uppercase tracking-[0.2em] text-primary">Warhammer JDR V2</p>
+					<h1 id="home-brand" class="grim-modal-title mt-3 text-5xl sm:text-6xl">Grimorium</h1>
+					<p v-if="authStore.displayName" class="mt-4 text-base font-medium sm:text-lg">
+						Bienvenue,
+						<span class="badge badge-ghost badge-lg align-middle">{{ authStore.displayName }}</span>
+					</p>
+				</section>
+
+				<section class="grid gap-3 sm:grid-cols-3 sm:gap-4" aria-label="Actions rapides">
+					<button
+						type="button"
+						class="rounded-box border border-base-300 bg-base-100 p-4 text-left transition-colors hover:border-primary/40 hover:bg-base-200 sm:p-5"
+						@click="openSessionCreate"
+					>
+						<div class="mb-2 flex items-center gap-2.5">
+							<Plus class="size-5 shrink-0 text-primary" aria-hidden="true" />
+							<span class="font-semibold">Créer une session</span>
+						</div>
+						<p class="text-sm text-base-content/75">Lancez une nouvelle table pour votre campagne.</p>
+					</button>
+
+					<router-link
+						to="/sessions"
+						class="rounded-box border border-base-300 bg-base-100 p-4 transition-colors hover:border-primary/40 hover:bg-base-200 sm:p-5"
+					>
+						<div class="mb-2 flex items-center gap-2.5">
+							<Scroll class="size-5 shrink-0 text-primary" aria-hidden="true" />
+							<span class="font-semibold">Mes sessions</span>
+						</div>
+						<p class="text-sm text-base-content/75">Retrouvez vos parties en cours et archives.</p>
+					</router-link>
+
+					<router-link
+						to="/characters"
+						class="rounded-box border border-base-300 bg-base-100 p-4 transition-colors hover:border-primary/40 hover:bg-base-200 sm:p-5"
+					>
+						<div class="mb-2 flex items-center gap-2.5">
+							<Users class="size-5 shrink-0 text-primary" aria-hidden="true" />
+							<span class="font-semibold">Mes personnages</span>
+						</div>
+						<p class="text-sm text-base-content/75">Consultez et mettez à jour vos feuilles.</p>
+					</router-link>
+				</section>
+			</div>
+		</template>
 	</main>
 </template>
 
 <script setup lang="ts">
-import { Plus, Scroll, Users } from '@lucide/vue'
+import { NotebookPen, Plus, Scroll, Users } from '@lucide/vue'
 import { useAuthStore } from '../../stores/auth'
-import { useAuthModalStore } from '../../stores/authModal'
 import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
+import AuthForm from '../components/AuthForm.vue'
+import HomePillarCard from '../components/HomePillarCard.vue'
 
 const authStore = useAuthStore()
-const authModalStore = useAuthModalStore()
 const sessionCreateModalStore = useSessionCreateModalStore()
 
-function openLogin(): void {
-  authModalStore.openModal('login')
-}
-
-function openSignup(): void {
-  authModalStore.openModal('signup')
-}
+const pillars = [
+  {
+    numeral: 'I',
+    title: 'Sessions',
+    description: 'Créez une table, invitez vos joueurs et suivez la campagne.',
+    icon: Scroll,
+  },
+  {
+    numeral: 'II',
+    title: 'Personnages',
+    description: 'Feuilles V2 : caractéristiques, carrières et équipement.',
+    icon: Users,
+  },
+  {
+    numeral: 'III',
+    title: 'Notes',
+    description: 'Notes de session, accès et progression pour le MJ et les joueurs.',
+    icon: NotebookPen,
+  },
+] as const
 
 function openSessionCreate(): void {
   sessionCreateModalStore.openModal()

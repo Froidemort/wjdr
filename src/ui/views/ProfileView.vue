@@ -90,12 +90,12 @@
 						</label>
 						<input v-model="newEmail" type="email" class="input input-bordered w-full" placeholder="nouvel-email@exemple.com" />
 					</div>
-					<div class="form-control w-full">
-						<label class="label">
-							<span class="label-text">Mot de passe actuel</span>
-						</label>
-						<input v-model="emailCurrentPassword" type="password" class="input input-bordered w-full" placeholder="••••••••" />
-					</div>
+					<PasswordInput
+						v-model="emailCurrentPassword"
+						label="Mot de passe actuel"
+						bordered
+						autocomplete="current-password"
+					/>
 					<div class="flex justify-end">
 						<button class="btn btn-accent" :disabled="updatingEmail" @click="changeEmail">
 							<span v-if="updatingEmail" class="loading loading-spinner loading-sm" aria-hidden="true" />
@@ -114,24 +114,25 @@
 
 				<div class="space-y-3">
 					<h3 class="font-semibold">Mot de passe</h3>
-					<div class="form-control w-full">
-						<label class="label">
-							<span class="label-text">Ancien mot de passe</span>
-						</label>
-						<input v-model="passwordCurrent" type="password" placeholder="••••••••" class="input input-bordered w-full" />
-					</div>
-					<div class="form-control w-full">
-						<label class="label">
-							<span class="label-text">Nouveau mot de passe</span>
-						</label>
-						<input v-model="passwordNext" type="password" placeholder="••••••••" class="input input-bordered w-full" />
-					</div>
-					<div class="form-control w-full">
-						<label class="label">
-							<span class="label-text">Confirmer le mot de passe</span>
-						</label>
-						<input v-model="passwordConfirm" type="password" placeholder="••••••••" class="input input-bordered w-full" />
-					</div>
+					<PasswordInput
+						v-model="passwordCurrent"
+						label="Ancien mot de passe"
+						bordered
+						autocomplete="current-password"
+					/>
+					<PasswordInput
+						v-model="passwordNext"
+						label="Nouveau mot de passe"
+						bordered
+						autocomplete="new-password"
+						show-strength
+					/>
+					<PasswordInput
+						v-model="passwordConfirm"
+						label="Confirmer le mot de passe"
+						bordered
+						autocomplete="new-password"
+					/>
 					<button class="btn btn-accent w-full" :disabled="updatingPassword" @click="changePassword">
 						<span v-if="updatingPassword" class="loading loading-spinner loading-sm" aria-hidden="true" />
 						Changer le mot de passe
@@ -157,6 +158,7 @@
 
 <script setup lang="ts">
 import { ChevronLeft, UserCircle } from '@lucide/vue'
+import PasswordInput from '../components/PasswordInput.vue'
 import imageCompression from 'browser-image-compression'
 import { onMounted, ref } from 'vue'
 import {

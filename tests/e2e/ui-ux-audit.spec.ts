@@ -28,7 +28,7 @@ test.beforeAll(() => {
 })
 
 test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics', () => {
-  test('1) App shell semantics, skip link, dialog labelling and focus return', async ({ page }) => {
+  test('1) App shell semantics, skip link and auth form labelling', async ({ page }) => {
     await page.goto('/')
 
     const skipLink = page.getByRole('link', { name: 'Aller au contenu principal' })
@@ -42,31 +42,15 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
     await expect(page.locator('header nav')).toHaveCount(1)
     await expect(page.locator('nav')).toHaveCount(2)
 
-    const loginTrigger = page.getByRole('button', { name: 'Se connecter' }).first()
-    await expect(loginTrigger).toBeVisible()
+    const authTitle = page.locator('#auth-form-title')
+    await expect(authTitle).toBeVisible()
+    await expect(authTitle).toHaveText('Connexion')
 
-    await loginTrigger.click()
-
-    const dialog = page.locator('dialog.modal[aria-labelledby]').first()
-    await expect(dialog).toBeVisible()
-
-    const labelledBy = await dialog.getAttribute('aria-labelledby')
-    expect(labelledBy).toBeTruthy()
-
-    const titleLocator = page.locator(`#${labelledBy}`)
-    await expect(titleLocator).toBeVisible()
-
-    await page.keyboard.press('Escape')
-    await expect(dialog).not.toBeVisible()
-
-    await expect
-      .poll(async () => loginTrigger.evaluate((element) => document.activeElement === element), {
-        timeout: 3000,
-      })
-      .toBe(true)
+    const authForm = page.locator('[aria-labelledby="auth-form-title"] form').first()
+    await expect(authForm).toBeVisible()
 
     await page.screenshot({
-      path: screenshotPath('01-app-shell-and-modal-focus.png'),
+      path: screenshotPath('01-app-shell-and-auth-form.png'),
       fullPage: true,
     })
   })
@@ -139,16 +123,15 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
     })
 
     await page.goto('/')
-    await page.getByRole('button', { name: 'Se connecter' }).first().click()
 
-    const dialog = page.locator('dialog.modal').first()
-    await expect(dialog).toBeVisible()
+    const authPanel = page.locator('[aria-labelledby="auth-form-title"]')
+    await expect(authPanel).toBeVisible()
 
-    const authForm = dialog.locator('form').first()
+    const authForm = authPanel.locator('form').first()
     await expect(authForm).toHaveCount(1)
 
-    const textInput = dialog.locator('input[type="text"]').first()
-    const passwordInput = dialog.locator('input[type="password"]').first()
+    const textInput = authPanel.locator('input[type="text"]').first()
+    const passwordInput = authPanel.locator('input[type="password"]').first()
 
     await expect(textInput).toBeVisible()
     await expect(passwordInput).toBeVisible()
@@ -157,17 +140,17 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
     await textInput.fill('demo@example.com')
     await passwordInput.fill('invalid-password')
 
-    const submitButton = dialog.getByRole('button', { name: 'Se connecter' })
+    const submitButton = authPanel.getByRole('button', { name: 'Se connecter' })
     await passwordInput.press('Enter')
 
     await expect.poll(() => tokenRequestCount, { timeout: 5000 }).toBeGreaterThan(0)
     await expect(submitButton).toBeDisabled()
 
-    await expect(dialog.getByRole('alert')).toBeVisible({ timeout: 10000 })
+    await expect(authPanel.getByRole('alert')).toBeVisible({ timeout: 10000 })
     await expect(submitButton).toBeEnabled()
 
     await page.screenshot({
-      path: screenshotPath('03-form-submit-feedback-auth-modal.png'),
+      path: screenshotPath('03-form-submit-feedback-auth.png'),
       fullPage: true,
     })
   })

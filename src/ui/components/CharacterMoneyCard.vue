@@ -2,7 +2,7 @@
 import { BanknoteArrowDown, Coins } from '@lucide/vue'
 import { ref } from 'vue'
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     gold: number
     silver: number

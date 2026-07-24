@@ -110,12 +110,6 @@
 
         </div>
         
-        <!-- Theme Toggle (Desktop) -->
-        <div class="ml-1 border-l border-base-300 pl-1">
-          <div class="tooltip tooltip-bottom" data-tip="Basculer thème">
-            <ThemeToggle />
-          </div>
-        </div>
         <!-- Mobile Menu (visible only on mobile) -->
         <button
           class="btn btn-ghost btn-square min-h-11 min-w-11 sm:hidden"
@@ -164,32 +158,15 @@
         </ul>
       </template>
 
-      <button
-        v-if="!isAuthenticated"
-        @click="openSignUp"
-        class="btn btn-sm"
-        data-tip="S'inscrire"
-        aria-label="S'inscrire"
-      >
-        <span class="text-xs sm:text-sm">S'inscrire</span>
-      </button>
-
-      <button
-        v-if="!isAuthenticated"
-        @click="openLogin"
-        class="btn btn-sm"
-        data-tip="Se connecter"
-        aria-label="Se connecter"
-      >
-        <LogIn class="w-4 h-4" />
-        <span class="text-xs sm:text-sm">Se connecter</span>
-      </button>
+      <div class="tooltip tooltip-bottom" data-tip="Basculer thème">
+        <ThemeToggle />
+      </div>
     </div>
   </nav>
 </template>
 
 <script lang="ts" setup>
-import { Bell, LogIn, LogOut, Menu, Scroll, UserCircle, Users } from '@lucide/vue'
+import { Bell, LogOut, Menu, Scroll, UserCircle, Users } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -201,11 +178,9 @@ import {
   type NotificationItem,
 } from '../../repositories/notificationsRepository'
 import { useAuthStore } from '../../stores/auth'
-import { useAuthModalStore } from '../../stores/authModal'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import ThemeToggle from './ThemeToggle.vue'
 
-const authModalStore = useAuthModalStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const notificationsPreview = ref<NotificationItem[]>([])
@@ -306,14 +281,6 @@ function handleEscapeKey(event: KeyboardEvent): void {
 async function markPreviewAsRead(notificationId: string): Promise<void> {
   await markNotificationRead(notificationId)
   await loadNotificationsPreview()
-}
-
-function openLogin(): void {
-  authModalStore.openModal('login')
-}
-
-function openSignUp(): void {
-  authModalStore.openModal('signup')
 }
 
 watch(
