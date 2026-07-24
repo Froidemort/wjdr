@@ -1,6 +1,7 @@
 import { supabase } from '../db/supabase'
-import type { BasicProfileRow } from '../types/db'
 import type { Profile } from '../types/domain'
+import { assertCampaignWritable } from './shared/campaignGuards'
+import { mapBasicProfile, searchProfilesByTerm } from './shared/profileSearch'
 
 export interface SessionInvitation {
   userId: string
@@ -26,51 +27,23 @@ const LEGACY_INVITATION_PREFIX = 'INVITATION_SESSION_'
 
 export const invitationTitle = (): string => 'Invitation a une session'
 
-export const invitationMarker = (sessionId: string): string => `[session:${sessionId}]`
+export const invitationMarker = (campaignId: string): string => `[session:${campaignId}]`
 
-function legacyInvitationTitle(sessionId: string): string {
-  return `${LEGACY_INVITATION_PREFIX}${sessionId}`
+function legacyInvitationTitle(campaignId: string): string {
+  return `${LEGACY_INVITATION_PREFIX}${campaignId}`
 }
 
-function isInvitationForSession(row: NotificationRow, sessionId: string): boolean {
-  const marker = invitationMarker(sessionId)
+function isInvitationForCampaign(row: NotificationRow, campaignId: string): boolean {
+  const marker = invitationMarker(campaignId)
   return (
     row.title === invitationTitle() ||
-    row.title === legacyInvitationTitle(sessionId) ||
+    row.title === legacyInvitationTitle(campaignId) ||
     row.message.includes(marker)
   )
 }
 
-async function assertSessionWritable(sessionId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from('sessions')
-    .select('id, is_archived')
-    .eq('id', sessionId)
-    .maybeSingle()
-
-  if (error) {
-    throw error
-  }
-
-  if (!data) {
-    throw new Error('Session introuvable.')
-  }
-
-  if (data.is_archived) {
-    throw new Error('Session archivee: action interdite.')
-  }
-}
-
-function mapProfile(row: BasicProfileRow): Profile {
-  return {
-    id: row.id,
-    username: row.username,
-    email: row.email,
-  }
-}
-
-export async function listSessionInvitations(
-  sessionId: string,
+export async function listCampaignInvitations(
+  campaignId: string,
   mjId: string
 ): Promise<SessionInvitation[]> {
   const { data, error } = await supabase
@@ -86,7 +59,7 @@ export async function listSessionInvitations(
   }
 
   const rows = ((data ?? []) as NotificationRow[]).filter((row) =>
-    isInvitationForSession(row, sessionId)
+    isInvitationForCampaign(row, campaignId)
   )
 
   return rows
@@ -108,37 +81,26 @@ export async function listSessionInvitations(
 }
 
 export async function searchInvitableProfilesByNotification(
-  sessionId: string,
+  campaignId: string,
   query: string,
   mjId: string
 ): Promise<Profile[]> {
-  const trimmed = query.trim().toLowerCase()
-  if (!trimmed) {
+  const profiles = await searchProfilesByTerm(query)
+  if (profiles.length === 0) {
     return []
   }
 
-  const [profilesResult, invitationsResult] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, username, email')
-      .or(`username.ilike.%${trimmed}%,email.ilike.%${trimmed}%`)
-      .limit(20),
-    supabase
-      .from('notifications')
-      .select('receiver_user_id, title, message, is_read, created_at')
-      .eq('sender_user_id', mjId),
-  ])
+  const { data: invitationsData, error: invitationsError } = await supabase
+    .from('notifications')
+    .select('receiver_user_id, title, message, is_read, created_at')
+    .eq('sender_user_id', mjId)
 
-  if (profilesResult.error) {
-    throw profilesResult.error
+  if (invitationsError) {
+    throw invitationsError
   }
 
-  if (invitationsResult.error) {
-    throw invitationsResult.error
-  }
-
-  const invitationRows = ((invitationsResult.data ?? []) as NotificationRow[]).filter((row) =>
-    isInvitationForSession(row, sessionId)
+  const invitationRows = ((invitationsData ?? []) as NotificationRow[]).filter((row) =>
+    isInvitationForCampaign(row, campaignId)
   )
 
   const blockedIds = new Set<string>([
@@ -146,19 +108,17 @@ export async function searchInvitableProfilesByNotification(
     ...invitationRows.map((row) => row.receiver_user_id as string),
   ])
 
-  return ((profilesResult.data ?? []) as BasicProfileRow[])
-    .map(mapProfile)
-    .filter((profile) => !blockedIds.has(profile.id))
+  return profiles.map(mapBasicProfile).filter((profile) => !blockedIds.has(profile.id))
 }
 
-export async function createSessionInvitations(
-  sessionId: string,
-  sessionName: string,
-  _sessionCode: string,
+export async function createCampaignInvitations(
+  campaignId: string,
+  campaignName: string,
+  _campaignCode: string,
   mjId: string,
   userIds: string[]
 ): Promise<void> {
-  await assertSessionWritable(sessionId)
+  await assertCampaignWritable(campaignId)
 
   const uniqueUserIds = Array.from(new Set(userIds))
   if (uniqueUserIds.length === 0) {
@@ -176,7 +136,7 @@ export async function createSessionInvitations(
 
   const existingIds = new Set(
     ((existingData ?? []) as NotificationRow[])
-      .filter((row) => isInvitationForSession(row, sessionId))
+      .filter((row) => isInvitationForCampaign(row, campaignId))
       .map((row) => row.receiver_user_id as string)
   )
   const newIds = uniqueUserIds.filter((id) => !existingIds.has(id))
@@ -184,7 +144,7 @@ export async function createSessionInvitations(
     return
   }
 
-  const message = `Vous etes convie a la table "${sessionName}".\nLe Vieux Monde attend votre venue.\n${invitationMarker(sessionId)}`
+  const message = `Vous etes convie a la table "${campaignName}".\nLe Vieux Monde attend votre venue.\n${invitationMarker(campaignId)}`
   const rows = newIds.map((receiverId) => ({
     sender_user_id: mjId,
     receiver_user_id: receiverId,
@@ -198,3 +158,6 @@ export async function createSessionInvitations(
     throw error
   }
 }
+
+export const listSessionInvitations = listCampaignInvitations
+export const createSessionInvitations = createCampaignInvitations

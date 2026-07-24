@@ -1,5 +1,6 @@
 import { supabase } from '../db/supabase'
 import type { CreateSessionNoteInput, SessionNote, UpdateSessionNoteInput } from '../types/domain'
+import { withRetry } from './shared/retry'
 
 export type SessionNotesRealtimeEvent = '*' | 'INSERT' | 'UPDATE' | 'DELETE'
 
@@ -12,11 +13,13 @@ export interface SessionNotesRealtimeSubscription {
 
 interface ListSessionNotesOptions {
   visibleOnly?: boolean
+  sessionId?: string | null
 }
 
 interface SessionNoteRow {
   id: string
-  session_id: string
+  campaign_id: string
+  session_id: string | null
   author_user_id: string | null
   title: string
   content_text: string | null
@@ -26,44 +29,14 @@ interface SessionNoteRow {
   updated_at: string
 }
 
-export function buildSessionNotesChannelName(sessionId: string): string {
-  return `session-notes-${sessionId}`
+export function buildSessionNotesChannelName(campaignId: string): string {
+  return `session-notes-${campaignId}`
 }
 
 export function buildSessionNotesRealtimeSubscriptions(
-  sessionId: string
+  campaignId: string
 ): SessionNotesRealtimeSubscription[] {
-  return [{ table: 'session_notes', filter: `session_id=eq.${sessionId}` }]
-}
-
-function isTransientError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false
-  }
-
-  const maybeError = error as { status?: number; message?: string }
-  if (typeof maybeError.status === 'number' && maybeError.status >= 500) {
-    return true
-  }
-
-  const msg = (maybeError.message ?? '').toLowerCase()
-  return msg.includes('fetch') || msg.includes('network') || msg.includes('timeout')
-}
-
-async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 2): Promise<T> {
-  let lastError: unknown = null
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      return await operation()
-    } catch (error) {
-      lastError = error
-      if (attempt >= maxAttempts || !isTransientError(error)) {
-        throw error
-      }
-    }
-  }
-
-  throw lastError
+  return [{ table: 'session_notes', filter: `campaign_id=eq.${campaignId}` }]
 }
 
 function normalizeNullableText(value: string | null | undefined): string | null {
@@ -78,6 +51,7 @@ function normalizeNullableText(value: string | null | undefined): string | null 
 function mapSessionNote(row: SessionNoteRow): SessionNote {
   return {
     id: row.id,
+    campaignId: row.campaign_id,
     sessionId: row.session_id,
     authorUserId: row.author_user_id,
     title: row.title,
@@ -108,17 +82,21 @@ function mapSessionNoteWriteError(error: unknown): Error {
   return new Error('Operation note de session impossible.')
 }
 
-export async function listSessionNotesForSession(
-  sessionId: string,
+export async function listSessionNotesForCampaign(
+  campaignId: string,
   options: ListSessionNotesOptions = {}
 ): Promise<SessionNote[]> {
   return withRetry(async () => {
     let query = supabase
       .from('session_notes')
       .select(
-        'id, session_id, author_user_id, title, content_text, is_visible, is_archived, created_at, updated_at'
+        'id, campaign_id, session_id, author_user_id, title, content_text, is_visible, is_archived, created_at, updated_at'
       )
-      .eq('session_id', sessionId)
+      .eq('campaign_id', campaignId)
+
+    if (options.sessionId) {
+      query = query.eq('session_id', options.sessionId)
+    }
 
     if (options.visibleOnly) {
       query = query.eq('is_visible', true)
@@ -149,7 +127,8 @@ export async function createSessionNote(payload: CreateSessionNoteInput): Promis
   const { data, error } = await supabase
     .from('session_notes')
     .insert({
-      session_id: payload.sessionId,
+      campaign_id: payload.campaignId,
+      session_id: payload.sessionId || null,
       title,
       content_text: contentText,
       is_visible: payload.isVisible ?? false,

@@ -1,4 +1,5 @@
 import { supabase } from '../db/supabase'
+import { withRetry } from './shared/retry'
 import { isValidSessionCode, isValidUUID, validateInput } from '../utils/validation'
 
 export interface NotificationItem {
@@ -53,47 +54,12 @@ const JOIN_REQUEST_REJECTED_TITLE = 'Demande de session refusee'
 const INVITATION_TITLE = 'Invitation a une session'
 const LEGACY_INVITATION_PREFIX = 'INVITATION_SESSION_'
 
-function joinRequestSessionMarker(sessionId: string): string {
-  return `[join-request-session:${sessionId}]`
+function joinRequestCampaignMarker(campaignId: string): string {
+  return `[join-request-session:${campaignId}]`
 }
 
-function isJoinRequestForSession(message: string, sessionId: string): boolean {
-  return message.includes(joinRequestSessionMarker(sessionId))
-}
-
-function isTransientError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false
-  }
-
-  const maybeError = error as { status?: number; message?: string }
-  if (typeof maybeError.status === 'number' && maybeError.status >= 500) {
-    return true
-  }
-
-  const msg = (maybeError.message ?? '').toLowerCase()
-  return (
-    msg.includes('fetch') ||
-    msg.includes('network') ||
-    msg.includes('timeout') ||
-    msg.includes('temporarily unavailable')
-  )
-}
-
-async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 2): Promise<T> {
-  let lastError: unknown = null
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      return await operation()
-    } catch (error) {
-      lastError = error
-      if (attempt >= maxAttempts || !isTransientError(error)) {
-        throw error
-      }
-    }
-  }
-
-  throw lastError
+function isJoinRequestForCampaign(message: string, campaignId: string): boolean {
+  return message.includes(joinRequestCampaignMarker(campaignId))
 }
 
 function mapNotification(row: NotificationRow): NotificationItem {
@@ -196,7 +162,7 @@ export async function listNotificationsForUserPaginated(
       items: ((data ?? []) as NotificationRow[]).map(mapNotification),
       total: count ?? 0,
     }
-  })
+  }, { extraTransientKeywords: ['temporarily unavailable'] })
 }
 
 export async function markNotificationRead(notificationId: string): Promise<void> {
@@ -244,14 +210,17 @@ export async function deleteNotification(notificationId: string): Promise<void> 
   }
 }
 
-export async function requestJoinSession(sessionId: string, requesterId: string): Promise<void> {
+export async function requestJoinCampaign(campaignId: string, requesterId: string): Promise<void> {
   // Validate inputs before RPC call
-  validateInput(sessionId, isValidUUID, 'Session ID invalide.')
+  validateInput(campaignId, isValidUUID, 'Campaign ID invalide.')
   validateInput(requesterId, isValidUUID, 'Requester ID invalide.')
 
-  const { data: ownerId, error: ownerError } = await supabase.rpc('get_session_owner_for_request', {
-    target_session_id: sessionId,
-  })
+  const { data: ownerId, error: ownerError } = await supabase.rpc(
+    'get_campaign_owner_for_request',
+    {
+      target_campaign_id: campaignId,
+    }
+  )
 
   if (ownerError) {
     throw ownerError
@@ -259,14 +228,14 @@ export async function requestJoinSession(sessionId: string, requesterId: string)
 
   const mjId = String(ownerId ?? '')
   if (!mjId) {
-    throw new Error('Session introuvable ou archivee.')
+    throw new Error('Campagne introuvable ou archivee.')
   }
 
   if (mjId === requesterId) {
-    throw new Error('Vous etes deja MJ de cette session.')
+    throw new Error('Vous etes deja MJ de cette campagne.')
   }
 
-  const marker = joinRequestSessionMarker(sessionId)
+  const marker = joinRequestCampaignMarker(campaignId)
   const { data: existingRows, error: existingError } = await supabase
     .from('notifications')
     .select('id, is_read')
@@ -306,13 +275,13 @@ export async function requestJoinSession(sessionId: string, requesterId: string)
   }
 }
 
-export async function requestJoinByCode(userId: string, code: string): Promise<void> {
+export async function requestCampaignJoinByCode(userId: string, code: string): Promise<void> {
   // Validate inputs
   validateInput(userId, isValidUUID, 'User ID invalide.')
   validateInput(
     code.trim().toUpperCase(),
     isValidSessionCode,
-    'Code session invalide (format: 6 caracteres alphanumeriques).'
+    'Code campagne invalide (format: 6 caracteres alphanumeriques).'
   )
 
   const normalized = code.trim().toUpperCase()
@@ -320,7 +289,7 @@ export async function requestJoinByCode(userId: string, code: string): Promise<v
     throw new Error('Code invalide.')
   }
 
-  const { data: sessionId, error } = await supabase.rpc('get_session_id_by_code', {
+  const { data: campaignId, error } = await supabase.rpc('get_campaign_id_by_code', {
     target_code: normalized,
   })
 
@@ -328,15 +297,15 @@ export async function requestJoinByCode(userId: string, code: string): Promise<v
     throw error
   }
 
-  if (!sessionId) {
-    throw new Error('Session introuvable ou archivée.')
+  if (!campaignId) {
+    throw new Error('Campagne introuvable ou archivee.')
   }
 
-  await requestJoinSession(String(sessionId), userId)
+  await requestJoinCampaign(String(campaignId), userId)
 }
 
-export async function listPendingJoinRequestsForSession(
-  sessionId: string,
+export async function listPendingJoinRequestsForCampaign(
+  campaignId: string,
   mjId: string
 ): Promise<JoinRequestItem[]> {
   const { data, error } = await supabase
@@ -355,7 +324,7 @@ export async function listPendingJoinRequestsForSession(
 
   const rows = ((data ?? []) as JoinRequestRow[])
     .filter((row) => Boolean(row.sender_user_id))
-    .filter((row) => isJoinRequestForSession(row.message, sessionId))
+    .filter((row) => isJoinRequestForCampaign(row.message, campaignId))
 
   return rows
     .map((row) => {
@@ -377,7 +346,7 @@ export async function listPendingJoinRequestsForSession(
 }
 
 export async function notifyJoinRequestAccepted(
-  sessionId: string,
+  campaignId: string,
   requesterId: string,
   mjId: string
 ): Promise<void> {
@@ -385,7 +354,7 @@ export async function notifyJoinRequestAccepted(
     sender_user_id: mjId,
     receiver_user_id: requesterId,
     title: JOIN_REQUEST_ACCEPTED_TITLE,
-    message: `Le Maître du Jeu accepte votre entree a la table.\n[session:${sessionId}]`,
+    message: `Le Maître du Jeu accepte votre entree a la table.\n[session:${campaignId}]`,
   })
 
   if (error) {
@@ -394,7 +363,7 @@ export async function notifyJoinRequestAccepted(
 }
 
 export async function notifyJoinRequestRejected(
-  _sessionId: string,
+  _campaignId: string,
   requesterId: string,
   mjId: string
 ): Promise<void> {
@@ -409,3 +378,7 @@ export async function notifyJoinRequestRejected(
     throw error
   }
 }
+
+export const requestJoinSession = requestJoinCampaign
+export const requestJoinByCode = requestCampaignJoinByCode
+export const listPendingJoinRequestsForSession = listPendingJoinRequestsForCampaign

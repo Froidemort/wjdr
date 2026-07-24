@@ -9,40 +9,11 @@ import type {
 } from '../types/db'
 import type { CreateCharacterPayload } from '../types/character'
 import type { CharacterDetail, CharacterStatValue, CharacterSummary } from '../types/domain'
+import { withRetry } from './shared/retry'
 
 export type { CharacterGender, CharacterRace, CreateCharacterPayload } from '../types/character'
 
 const DEFAULT_CHARACTER_CAREER_NAME = 'Serviteur'
-
-function isTransientError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false
-  }
-
-  const maybeError = error as { status?: number; message?: string }
-  if (typeof maybeError.status === 'number' && maybeError.status >= 500) {
-    return true
-  }
-
-  const msg = (maybeError.message ?? '').toLowerCase()
-  return msg.includes('fetch') || msg.includes('network') || msg.includes('timeout')
-}
-
-async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 2): Promise<T> {
-  let lastError: unknown = null
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      return await operation()
-    } catch (error) {
-      lastError = error
-      if (attempt >= maxAttempts || !isTransientError(error)) {
-        throw error
-      }
-    }
-  }
-
-  throw lastError
-}
 
 function mapCharacter(
   row: CharacterRow,
@@ -54,7 +25,7 @@ function mapCharacter(
     name: row.name,
     race: row.race,
     gender: row.gender === 'masculin' ? 'masculin' : 'féminin',
-    sessionId: row.session_id,
+    campaignId: row.campaign_id,
     userId: row.user_id,
     careerId: row.career_id,
     careerName,
@@ -128,10 +99,10 @@ function mapCharacterStat(row: CharacterStatRow): CharacterStatValue {
   }
 }
 
-async function assertCharacterSessionWritable(characterId: string): Promise<void> {
+async function assertCharacterCampaignWritable(characterId: string): Promise<void> {
   const { data: characterMeta, error: characterMetaError } = await supabase
     .from('characters')
-    .select('session_id')
+    .select('campaign_id')
     .eq('id', characterId)
     .maybeSingle()
 
@@ -143,18 +114,18 @@ async function assertCharacterSessionWritable(characterId: string): Promise<void
     throw new Error('Personnage introuvable.')
   }
 
-  const { data: sessionMeta, error: sessionMetaError } = await supabase
-    .from('sessions')
+  const { data: campaignMeta, error: campaignMetaError } = await supabase
+    .from('campaigns')
     .select('is_archived')
-    .eq('id', characterMeta.session_id as string)
+    .eq('id', characterMeta.campaign_id as string)
     .maybeSingle()
 
-  if (sessionMetaError) {
-    throw sessionMetaError
+  if (campaignMetaError) {
+    throw campaignMetaError
   }
 
-  if (sessionMeta?.is_archived) {
-    throw new Error('Session archivee: action interdite.')
+  if (campaignMeta?.is_archived) {
+    throw new Error('Campagne archivee: action interdite.')
   }
 }
 
@@ -211,7 +182,7 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
     const { data, error } = await supabase
       .from('characters')
       .select(
-        'id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
       )
       .eq('user_id', userId)
       .order('name', { ascending: true })
@@ -231,14 +202,14 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
   })
 }
 
-export async function listCharactersBySession(sessionId: string): Promise<CharacterSummary[]> {
+export async function listCharactersByCampaign(campaignId: string): Promise<CharacterSummary[]> {
   return withRetry(async () => {
     const { data, error } = await supabase
       .from('characters')
       .select(
-        'id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
       )
-      .eq('session_id', sessionId)
+      .eq('campaign_id', campaignId)
       .order('name', { ascending: true })
 
     if (error) {
@@ -262,7 +233,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
       supabase
         .from('characters')
         .select(
-          'id, name, race, gender, session_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper, career:careers!characters_career_id_fkey(name)'
+          'id, name, race, gender, campaign_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper, career:careers!characters_career_id_fkey(name)'
         )
         .eq('id', characterId)
         .maybeSingle(),
@@ -329,7 +300,7 @@ export async function updateCharacterCore(
     money_copper: number
   }>
 ): Promise<void> {
-  await assertCharacterSessionWritable(characterId)
+  await assertCharacterCampaignWritable(characterId)
 
   const { error } = await supabase.from('characters').update(payload).eq('id', characterId)
 
@@ -344,7 +315,7 @@ export async function updateCharacterCareer(characterId: string, careerId: strin
     throw new Error('Carriere invalide.')
   }
 
-  await assertCharacterSessionWritable(characterId)
+  await assertCharacterCampaignWritable(characterId)
 
   const { error } = await supabase
     .from('characters')
@@ -378,7 +349,7 @@ export async function updateCharacterStatValues(
     throw new Error('Caracteristique invalide.')
   }
 
-  await assertCharacterSessionWritable(characterId)
+  await assertCharacterCampaignWritable(characterId)
 
   const updatePayload: { base_value?: number; current_advanced?: number; total_advanced?: number } =
     {}
@@ -407,7 +378,7 @@ export async function updateCharacterStatValues(
   }
 }
 
-export async function createCharacterForSession(payload: CreateCharacterPayload): Promise<string> {
+export async function createCharacterForCampaign(payload: CreateCharacterPayload): Promise<string> {
   const trimmedName = payload.name.trim()
   if (!trimmedName) {
     throw new Error('Nom de personnage obligatoire.')
@@ -416,7 +387,7 @@ export async function createCharacterForSession(payload: CreateCharacterPayload)
   const { data: existingCharacter, error: existingError } = await supabase
     .from('characters')
     .select('id')
-    .eq('session_id', payload.sessionId)
+    .eq('campaign_id', payload.campaignId)
     .eq('user_id', payload.userId)
     .maybeSingle()
 
@@ -425,7 +396,7 @@ export async function createCharacterForSession(payload: CreateCharacterPayload)
   }
 
   if (existingCharacter) {
-    throw new Error('Vous avez deja un personnage dans cette session.')
+    throw new Error('Vous avez deja un personnage dans cette campagne.')
   }
 
   const careerId = await resolveDefaultCareerId()
@@ -434,7 +405,7 @@ export async function createCharacterForSession(payload: CreateCharacterPayload)
     .from('characters')
     .insert({
       user_id: payload.userId,
-      session_id: payload.sessionId,
+      campaign_id: payload.campaignId,
       name: trimmedName,
       race: payload.race,
       career_id: careerId,
