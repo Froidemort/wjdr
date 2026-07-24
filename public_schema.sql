@@ -56,14 +56,19 @@ $$;
 
 CREATE FUNCTION public.get_email_by_username(search_username text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
+    SET search_path TO ''
     AS $$
 declare
   found_email text;
 begin
-  select email into found_email
-  from public.profiles
-  where lower(username) = lower(search_username)
+  -- Empêche l'exposition d'emails aux appels anonymes.
+  if auth.uid() is null then
+    return null;
+  end if;
+
+  select p.email into found_email
+  from public.profiles p
+  where lower(p.username) = lower(search_username)
   limit 1;
 
   return found_email;
