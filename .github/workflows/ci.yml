@@ -23,7 +23,8 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run lint
+      - run: npx eslint .
+      - run: npm run typecheck
 
   audit:
     name: Audit dependencies
