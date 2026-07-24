@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { useAuthModalStore } from '../stores/authModal'
+import { useAuthFormStore } from '../stores/authForm'
 import HomeView from './views/HomeView.vue'
 
 const CharacterDetailView = () => import('./views/CharacterDetailView.vue')
@@ -94,8 +94,7 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (requiresAuth && !isConnected) {
-    const authModalStore = useAuthModalStore()
-    authModalStore.openModal('login')
+    useAuthFormStore().setMode('login')
     next({ path: '/' })
     return
   }

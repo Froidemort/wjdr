@@ -3,6 +3,8 @@
  * Prevents injection and malformed inputs
  */
 
+import { passwordStrength } from 'check-password-strength'
+
 /**
  * Validates UUID v4 format
  * @param value - Value to validate
@@ -58,4 +60,39 @@ export function validateInput<T>(
     throw new Error(errorMessage)
   }
   return value
+}
+
+export type PasswordStrengthLevel = 0 | 1 | 2 | 3 | 4
+
+export type PasswordStrength = {
+  level: PasswordStrengthLevel
+  label: string
+  barClass: string
+}
+
+const STRENGTH_UI = [
+  { level: 1, label: 'Faible', barClass: 'bg-error' },
+  { level: 2, label: 'Moyen', barClass: 'bg-warning' },
+  { level: 3, label: 'Solide', barClass: 'bg-accent' },
+  { level: 4, label: 'Excellent', barClass: 'bg-success' },
+] as const satisfies ReadonlyArray<PasswordStrength>
+
+/** Seuils plus souples que le défaut du package (Strong à 12+ chars). */
+const STRENGTH_OPTIONS = [
+  { id: 0, value: 'Too weak', minDiversity: 0, minLength: 0 },
+  { id: 1, value: 'Weak', minDiversity: 2, minLength: 6 },
+  { id: 2, value: 'Medium', minDiversity: 3, minLength: 8 },
+  { id: 3, value: 'Strong', minDiversity: 3, minLength: 10 },
+] as const
+
+/**
+ * Robustesse via check-password-strength (longueur + diversité des caractères).
+ */
+export function getPasswordStrength(password: string): PasswordStrength {
+  if (!password) {
+    return { level: 0, label: '', barClass: 'bg-base-300' }
+  }
+
+  const { id } = passwordStrength(password, [...STRENGTH_OPTIONS])
+  return STRENGTH_UI[id] ?? STRENGTH_UI[0]
 }

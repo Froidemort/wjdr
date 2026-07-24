@@ -6,7 +6,6 @@
     <header>
       <NavBar />
     </header>
-    <AuthModal />
     <SessionCreateModal />
     <main id="main-content" class="flex-1" tabindex="-1">
       <router-view />
@@ -19,7 +18,6 @@
 import { watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import AuthModal from './ui/components/AuthModal.vue'
 import Footer from './ui/components/Footer.vue'
 import NavBar from './ui/components/NavBar.vue'
 import SessionCreateModal from './ui/components/SessionCreateModal.vue'

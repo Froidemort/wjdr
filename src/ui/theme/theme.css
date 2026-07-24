@@ -480,6 +480,18 @@ input[type="radio"]:focus-visible {
     0 20px 50px color-mix(in oklab, black 45%, transparent);
 }
 
+.grim-hero-panel {
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 14%, transparent);
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--color-base-100) 82%, var(--color-secondary)) 0%,
+      color-mix(in oklab, var(--color-base-200) 70%, var(--color-base-100)) 55%,
+      color-mix(in oklab, var(--color-base-100) 92%, var(--color-neutral)) 100%
+    );
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+
 .grim-modal-title {
   font-family: var(--font-grim-title);
   letter-spacing: 0.02em;
@@ -512,14 +524,21 @@ input[type="radio"]:focus-visible {
 
 @media (max-width: 640px) {
   .modal {
-    align-items: flex-start;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
-    padding-bottom: 0.5rem;
+    align-items: center;
+    justify-items: center;
+    /* Pas de padding ici : sinon cadre noir (fond dialog seul) autour du backdrop. */
+    padding: 0;
   }
 
   .modal-box {
-    margin-top: 0;
-    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 1rem);
+    margin:
+      calc(env(safe-area-inset-top, 0px) + 0.75rem)
+      0.75rem
+      calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    max-height: calc(
+      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem
+    );
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
