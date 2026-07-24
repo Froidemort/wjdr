@@ -7,8 +7,8 @@
 		</div>
 
 		<template v-else-if="session">
-			<AppCard :title="session.name">
-				<!-- En-tête : role + code de session avec copie -->
+      <AppCard :title="session.name">
+        <!-- En-tête : role + code de campagne avec copie -->
 				<div class="flex flex-wrap items-center justify-between gap-3 mb-3">
 					<div class="flex flex-wrap items-center gap-2">
 					<span class="badge" :class="isMj ? 'badge-secondary' : 'badge-neutral'">{{ isMj ? 'MJ' : 'Joueur' }}</span>
@@ -16,7 +16,7 @@
 					<div class="tooltip" :data-tip="copyFeedback || `Code : ${session.code}`">
 						<button class="btn btn-xs btn-ghost font-mono" @click="copySessionLink">
 							<Copy class="h-3 w-3" />
-							{{ session.code }}
+              {{ session.code }}
 						</button>
 					</div>
 					</div>
@@ -28,7 +28,7 @@
 						@click="toggleSessionArchivedState"
 					>
 						<span v-if="archiveBusy" class="loading loading-spinner loading-xs" aria-hidden="true" />
-						{{ session.isArchived ? 'Désarchiver' : 'Archiver' }}
+            {{ session.isArchived ? 'Désarchiver' : 'Archiver' }}
 					</button>
 				</div>
 
@@ -55,7 +55,7 @@
 					</div>
 
 					<div v-if="characters.length === 0" class="alert alert-warning alert-soft">
-						<span>Aucun personnage dans cette session.</span>
+            <span>Aucun personnage dans cette campagne.</span>
 					</div>
 
 					<div v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -71,15 +71,95 @@
 				</div>
 			</AppCard>
 
+      <AppCard title="Sessions de campagne" class="space-y-4">
+        <div v-if="sessions.length === 0" class="alert alert-info alert-soft text-sm">
+          <span>Aucune session n'a encore été posée sur cette campagne.</span>
+        </div>
+
+        <ul v-else class="timeline timeline-snap-icon timeline-vertical">
+          <li v-for="sessionItem in sessions" :key="sessionItem.id">
+            <hr />
+            <div class="timeline-start">
+              <div class="badge badge-outline badge-primary">
+                {{ formatCampaignSessionDate(sessionItem.date) }}
+              </div>
+            </div>
+            <div class="timeline-middle">
+              <span class="status status-primary" />
+            </div>
+            <div class="timeline-end timeline-box w-full space-y-2">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h3 class="font-semibold">{{ formatCampaignSessionTitle(sessionItem) }}</h3>
+                  <p class="text-xs opacity-70">Séance datée · {{ formatCampaignSessionDate(sessionItem.date) }}</p>
+                </div>
+                <button
+                  v-if="isMj"
+                  class="btn btn-xs btn-error"
+                  @click="deleteCampaignSession(sessionItem)"
+                >
+                  Supprimer
+                </button>
+              </div>
+              <p v-if="sessionItem.description" class="text-sm whitespace-pre-line opacity-80">
+                {{ sessionItem.description }}
+              </p>
+            </div>
+          </li>
+        </ul>
+
+        <div v-if="isMj" class="space-y-3 border-t border-base-300 pt-4">
+          <h3 class="text-sm font-semibold uppercase tracking-[0.15em] opacity-70">
+            Ajouter une session datée
+          </h3>
+          <div class="grid gap-3 lg:grid-cols-3">
+            <label class="form-control">
+              <span class="label-text mb-2">Date</span>
+              <input v-model="sessionCreateForm.date" type="date" class="input input-bordered" required />
+            </label>
+            <label class="form-control">
+              <span class="label-text mb-2">Titre optionnel</span>
+              <input
+                v-model="sessionCreateForm.name"
+                type="text"
+                class="input input-bordered"
+                maxlength="100"
+                placeholder="Ex. Arrivée à Middenheim"
+              />
+            </label>
+            <label class="form-control lg:col-span-3">
+              <span class="label-text mb-2">Description optionnelle</span>
+              <textarea
+                v-model="sessionCreateForm.description"
+                class="textarea textarea-bordered min-h-24"
+                maxlength="500"
+                placeholder="Résumé, objectifs, conséquences..."
+              />
+            </label>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs opacity-70">La date est la clé de lecture principale pour cette campagne.</p>
+            <button class="btn btn-sm" :disabled="sessionCreateLoading" @click="createCampaignSession">
+              <span v-if="sessionCreateLoading" class="loading loading-spinner loading-xs" aria-hidden="true" />
+              Créer la session
+            </button>
+          </div>
+          <div v-if="sessionCreateError" role="alert" class="alert alert-error alert-soft text-sm">
+            <span>{{ sessionCreateError }}</span>
+          </div>
+        </div>
+      </AppCard>
+
 			<SessionNotesPanel
-				:session-id="session.id"
+				:campaign-id="session.id"
 				:is-mj="isMj"
+        :sessions="sessions"
         :current-user-id="authStore.user?.id ?? null"
         :is-session-archived="session.isArchived"
 			/>
 
-			<section v-if="isMj" class="space-y-3">
-				<h2 class="text-xl font-semibold">Gestion de session</h2>
+      <section v-if="isMj" class="space-y-3">
+        <h2 class="text-xl font-semibold">Gestion de campagne</h2>
         <div v-if="adminLoading" class="flex items-center gap-2 text-sm opacity-70">
           <span class="loading loading-spinner loading-xs" aria-hidden="true" />
           Chargement des données MJ...
@@ -92,8 +172,8 @@
 						<h3 class="mb-2 text-sm font-semibold opacity-75">INVITER DES JOUEURS</h3>
 						<AppCard title="Ajouter des membres">
 					<div class="space-y-3">
-						<div v-if="session.isArchived" class="alert alert-warning alert-soft text-sm">
-							<span>Session archivee: invitations bloquees.</span>
+            <div v-if="session.isArchived" class="alert alert-warning alert-soft text-sm">
+              <span>Campagne archivée: invitations bloquées.</span>
 						</div>
 						<SearchInput v-model="inviteQuery" placeholder="Chercher un joueur (username ou email)" />
 
@@ -131,8 +211,8 @@
 					</div>
 					
 					<!-- Statut des invitations -->
-					<div>
-						<h3 class="mb-2 text-sm font-semibold opacity-75">STATUT DES INVITATIONS</h3>
+            <div>
+              <h3 class="mb-2 text-sm font-semibold opacity-75">STATUT DES INVITATIONS</h3>
 						<div class="space-y-3">
 							<AppCard title="Invitations envoyees" compact>
 								<div v-if="invitations.length === 0" class="text-sm opacity-70">Aucun joueur invite.</div>
@@ -147,7 +227,7 @@
 								</ul>
 							</AppCard>
 
-							<AppCard title="Demandes de session" compact>
+                <AppCard title="Demandes de campagne" compact>
 								<div v-if="joinRequests.length === 0" class="text-sm opacity-70">Aucune demande en attente.</div>
 								<ul v-else class="list rounded-box bg-base-200">
 									<li v-for="request in joinRequests" :key="request.notificationId" class="list-row">
@@ -185,27 +265,27 @@
 
 		<template v-else>
 			<SessionAccessRequest
-				v-if="authStore.user"
-				:session-id="sessionId"
+        v-if="authStore.user"
+        :session-id="sessionId"
 				:user-id="authStore.user.id"
 			/>
 			<AppCard v-else title="Accès restreint">
-				<p class="text-sm opacity-80">Connectez-vous pour accéder à cette session.</p>
+        <p class="text-sm opacity-80">Connectez-vous pour accéder à cette campagne.</p>
 			</AppCard>
 		</template>
 
 		<!-- Pied de page navigation -->
 		<footer class="flex justify-start pt-2">
-			<router-link class="btn btn-sm btn-ghost" to="/sessions">
+      <router-link class="btn btn-sm btn-ghost" to="/sessions">
 				<ChevronLeft class="h-4 w-4" />
-				Retour aux sessions
+        Retour aux campagnes
 			</router-link>
 		</footer>
 
 		<CharacterCreateModal
 			v-if="session && authStore.user"
 			ref="characterCreateModalRef"
-			:session-id="session.id"
+			:campaign-id="session.id"
 			:user-id="authStore.user.id"
 			@created="onCharacterCreated"
 		/>
@@ -216,26 +296,31 @@
 import { ChevronLeft, Copy } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { listCharactersBySession } from '../../repositories/charactersRepository'
+import { listCharactersByCampaign } from '../../repositories/charactersRepository'
 import {
-  createSessionInvitations,
-  listSessionInvitations,
+  createCampaignInvitations,
+  listCampaignInvitations,
   type SessionInvitation,
 } from '../../repositories/invitationsRepository'
 import {
+  createSession,
+  deleteSession,
+  listSessionsForCampaign,
+} from '../../repositories/sessionsRepository'
+import {
   type JoinRequestItem,
-  listPendingJoinRequestsForSession,
+  listPendingJoinRequestsForCampaign,
   markNotificationRead,
   notifyJoinRequestAccepted,
   notifyJoinRequestRejected,
 } from '../../repositories/notificationsRepository'
-import { getSessionById, updateSessionArchivedState } from '../../repositories/sessionsRepository'
+import { getCampaignById, updateCampaignArchivedState } from '../../repositories/campaignsRepository'
 import {
-  addUsersToSession,
+  addUsersToCampaign,
   searchInvitableProfilesByMembership,
-} from '../../repositories/usersSessionRepository'
+} from '../../repositories/usersCampaignsRepository'
 import { useAuthStore } from '../../stores/auth'
-import type { CharacterSummary, Profile, SessionSummary } from '../../types/domain'
+import type { CharacterSummary, Profile, CampaignSummary, SessionSummary } from '../../types/domain'
 import AppCard from '../components/AppCard.vue'
 import CharacterCreateModal from '../components/CharacterCreateModal.vue'
 import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
@@ -249,14 +334,22 @@ const router = useRouter()
 const authStore = useAuthStore()
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
-const session = ref<SessionSummary | null>(null)
+const session = ref<CampaignSummary | null>(null)
 const characters = ref<CharacterSummary[]>([])
+const sessions = ref<SessionSummary[]>([])
 const invitations = ref<SessionInvitation[]>([])
 const inviteCandidates = ref<Profile[]>([])
 const inviteQuery = ref('')
 const selectedInvitees = ref(new Set<string>())
 const inviting = ref(false)
 const inviteError = ref<string | null>(null)
+const sessionCreateLoading = ref(false)
+const sessionCreateError = ref<string | null>(null)
+const sessionCreateForm = ref({
+  date: '',
+  name: '',
+  description: '',
+})
 const copyFeedback = ref('')
 const sessionInfoOpen = ref(true)
 const joinRequestError = ref<string | null>(null)
@@ -268,6 +361,7 @@ const characterCreateModalRef = ref<InstanceType<typeof CharacterCreateModal> | 
 let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
 const sessionId = computed(() => String(route.params.id ?? ''))
+const campaignId = sessionId
 const isMj = computed(() => Boolean(session.value && authStore.user?.id === session.value.mjId))
 const hasOwnCharacter = computed(() =>
   Boolean(
@@ -284,6 +378,82 @@ const canCreateOwnCharacter = computed(() =>
       !hasOwnCharacter.value
   )
 )
+
+function formatCampaignSessionDate(value: string): string {
+  const parsed = new Date(`${value}T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'full',
+  }).format(parsed)
+}
+
+function formatCampaignSessionTitle(sessionItem: SessionSummary): string {
+  const trimmedTitle = sessionItem.name?.trim()
+  return trimmedTitle ? trimmedTitle : 'Session de campagne'
+}
+
+function resetSessionCreateForm(): void {
+  sessionCreateForm.value = {
+    date: '',
+    name: '',
+    description: '',
+  }
+}
+
+async function createCampaignSession(): Promise<void> {
+  if (!session.value || !isMj.value || sessionCreateLoading.value) {
+    return
+  }
+
+  sessionCreateError.value = null
+  const date = sessionCreateForm.value.date.trim()
+  if (!date) {
+    sessionCreateError.value = 'La date de session est requise.'
+    return
+  }
+
+  sessionCreateLoading.value = true
+  try {
+    await createSession({
+      campaignId: session.value.id,
+      date,
+      name: sessionCreateForm.value.name.trim() || null,
+      description: sessionCreateForm.value.description.trim() || null,
+    })
+    resetSessionCreateForm()
+    await loadSessionDetail()
+  } catch (error) {
+    sessionCreateError.value =
+      error instanceof Error ? error.message : 'Creation de session impossible.'
+  } finally {
+    sessionCreateLoading.value = false
+  }
+}
+
+async function deleteCampaignSession(sessionItem: SessionSummary): Promise<void> {
+  if (!isMj.value) {
+    return
+  }
+
+  if (typeof window !== 'undefined') {
+    const confirmed = window.confirm(
+      `Supprimer la session du ${formatCampaignSessionDate(sessionItem.date)} ?`
+    )
+    if (!confirmed) {
+      return
+    }
+  }
+
+  try {
+    await deleteSession(sessionItem.id)
+    await loadSessionDetail()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Suppression de session impossible.'
+  }
+}
 const { subscribe, unsubscribe } = useRealtimeChannels(
   () => {
     void loadSessionDetail({ background: true })
@@ -293,7 +463,7 @@ const { subscribe, unsubscribe } = useRealtimeChannels(
 
 async function loadSessionDetail(options: { background?: boolean } = {}): Promise<void> {
   if (!sessionId.value) {
-    errorMessage.value = 'Session invalide.'
+    errorMessage.value = 'Campagne invalide.'
     return
   }
 
@@ -305,8 +475,8 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
   }
   try {
     const [sessionData, characterData] = await Promise.all([
-      getSessionById(sessionId.value),
-      listCharactersBySession(sessionId.value),
+      getCampaignById(sessionId.value),
+      listCharactersByCampaign(sessionId.value),
     ])
 
     session.value = sessionData
@@ -314,7 +484,14 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
 
     if (!session.value) {
       joinRequests.value = []
+      sessions.value = []
       return
+    }
+
+    try {
+      sessions.value = await listSessionsForCampaign(sessionId.value)
+    } catch {
+      sessions.value = []
     }
 
     const currentUserId = authStore.user?.id
@@ -334,7 +511,7 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
   } catch (error) {
     if (!isBackgroundRefresh) {
       errorMessage.value =
-        error instanceof Error ? error.message : 'Impossible de charger la session.'
+        error instanceof Error ? error.message : 'Impossible de charger la campagne.'
     }
   } finally {
     if (!isBackgroundRefresh) {
@@ -372,7 +549,7 @@ async function loadJoinRequests(): Promise<void> {
     return
   }
 
-  joinRequests.value = await listPendingJoinRequestsForSession(session.value.id, authStore.user.id)
+  joinRequests.value = await listPendingJoinRequestsForCampaign(session.value.id, authStore.user.id)
 }
 
 async function loadInvitations(): Promise<void> {
@@ -380,7 +557,7 @@ async function loadInvitations(): Promise<void> {
     return
   }
 
-  invitations.value = await listSessionInvitations(session.value.id, authStore.user.id)
+  invitations.value = await listCampaignInvitations(session.value.id, authStore.user.id)
 }
 
 async function loadInviteCandidates(): Promise<void> {
@@ -425,8 +602,8 @@ async function inviteSelectedUsers(): Promise<void> {
   inviteError.value = null
   try {
     const inviteeIds = Array.from(selectedInvitees.value)
-    await addUsersToSession(session.value.id, inviteeIds)
-    await createSessionInvitations(
+    await addUsersToCampaign(session.value.id, inviteeIds)
+    await createCampaignInvitations(
       session.value.id,
       session.value.name,
       session.value.code,
@@ -452,7 +629,7 @@ async function acceptJoinRequest(notificationId: string, requesterId: string): P
   joinRequestBusy.value = true
   joinRequestError.value = null
   try {
-    await addUsersToSession(session.value.id, [requesterId])
+    await addUsersToCampaign(session.value.id, [requesterId])
     await markNotificationRead(notificationId)
     await notifyJoinRequestAccepted(session.value.id, requesterId, authStore.user.id)
     await loadJoinRequests()
@@ -489,11 +666,11 @@ async function toggleSessionArchivedState(): Promise<void> {
   archiveBusy.value = true
   errorMessage.value = null
   try {
-    await updateSessionArchivedState(session.value.id, !session.value.isArchived)
+    await updateCampaignArchivedState(session.value.id, !session.value.isArchived)
     await loadSessionDetail()
   } catch (error) {
     errorMessage.value =
-      error instanceof Error ? error.message : 'Modification de la session impossible.'
+      error instanceof Error ? error.message : 'Modification de la campagne impossible.'
   } finally {
     archiveBusy.value = false
   }
@@ -548,9 +725,9 @@ function subscribeRealtime(targetSessionId: string): void {
   }
 
   subscribe(`session-detail-${targetSessionId}-${userId}`, [
-    { table: 'sessions', filter: `id=eq.${targetSessionId}` },
-    { table: 'users_session', filter: `session_id=eq.${targetSessionId}` },
-    { table: 'characters', filter: `session_id=eq.${targetSessionId}` },
+    { table: 'campaigns', filter: `id=eq.${targetSessionId}` },
+    { table: 'users_campaigns', filter: `campaign_id=eq.${targetSessionId}` },
+    { table: 'characters', filter: `campaign_id=eq.${targetSessionId}` },
     { table: 'notifications', filter: `receiver_user_id=eq.${userId}` },
     { table: 'notifications', filter: `sender_user_id=eq.${userId}` },
   ])

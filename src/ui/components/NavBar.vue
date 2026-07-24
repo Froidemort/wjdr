@@ -96,7 +96,7 @@
             </div>
           </div>
 
-          <router-link to="/sessions" class="btn btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom nav-icon-btn" data-tip="Mes sessions" aria-label="Mes sessions">
+          <router-link to="/sessions" class="btn btn-square min-h-11 min-w-11 sm:min-h-9 sm:min-w-9 tooltip tooltip-bottom nav-icon-btn" data-tip="Mes campagnes" aria-label="Mes campagnes">
             <Scroll class="w-6 h-6" />
           </router-link>
 
@@ -140,7 +140,7 @@
           <li>
             <router-link to="/sessions" class="flex min-h-11 items-center gap-2">
               <Scroll class="h-5 w-5 text-primary" />
-              <span>Mes sessions</span>
+              <span>Mes campagnes</span>
             </router-link>
           </li>
           <li>

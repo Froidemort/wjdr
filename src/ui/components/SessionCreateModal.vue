@@ -2,7 +2,7 @@
 import { customAlphabet } from 'nanoid'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { createSession } from '../../repositories/sessionsRepository'
+import { createCampaign } from '../../repositories/campaignsRepository'
 import { useAuthStore } from '../../stores/auth'
 import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
 
@@ -87,10 +87,10 @@ async function onSubmit(): Promise<void> {
   loading.value = true
   errorMessage.value = null
   try {
-    let sessionId: string | null = null
+    let campaignId: string | null = null
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
-        sessionId = await createSession({
+        campaignId = await createCampaign({
           mjId: authStore.user.id,
           name: name.value.trim(),
           description: description.value.trim(),
@@ -105,14 +105,14 @@ async function onSubmit(): Promise<void> {
       }
     }
 
-    if (!sessionId) {
-      throw new Error('Impossible de forger un sceau de session valide.')
+    if (!campaignId) {
+      throw new Error('Impossible de forger un sceau de campagne valide.')
     }
 
     modalStore.closeModal()
     name.value = ''
     description.value = ''
-    await router.push(`/sessions/${sessionId}`)
+    await router.push(`/sessions/${campaignId}`)
   } catch (error) {
     errorMessage.value = mapCreateSessionError(error)
   } finally {
@@ -122,25 +122,25 @@ async function onSubmit(): Promise<void> {
 </script>
 
 <template>
-  <dialog ref="dialogRef" class="modal modal-middle" aria-labelledby="session-create-title" @close="modalStore.closeModal()">
+  <dialog ref="dialogRef" class="modal modal-middle" aria-labelledby="campaign-create-title" @close="modalStore.closeModal()">
     <div class="modal-box grim-modal-box w-11/12 max-w-xl p-4 sm:p-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
       <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="modalStore.closeModal()" aria-label="Fermer la modale">✕</button>
-      <h3 id="session-create-title" class="grim-modal-title mb-1 pr-8 text-center text-3xl">Créer une session</h3>
+      <h3 id="campaign-create-title" class="grim-modal-title mb-1 pr-8 text-center text-3xl">Créer une campagne</h3>
       <p class="mb-5 text-center text-sm opacity-70">Renseignez les informations de votre table avant de lancer l'aventure.</p>
 
       <form class="space-y-4" @submit.prevent="onSubmit">
         <div class="form-control">
-          <label class="label" for="session-name">
-            <span class="label-text">Nom de la session</span>
+          <label class="label" for="campaign-name">
+            <span class="label-text">Nom de la campagne</span>
           </label>
-          <input id="session-name" v-model="name" type="text" class="input w-full" required maxlength="100" />
+          <input id="campaign-name" v-model="name" type="text" class="input w-full" required maxlength="100" />
         </div>
 
         <div class="form-control">
-          <label class="label" for="session-description">
+          <label class="label" for="campaign-description">
             <span class="label-text">Description</span>
           </label>
-          <textarea id="session-description" v-model="description" class="textarea w-full min-h-28" rows="4" maxlength="500" />
+          <textarea id="campaign-description" v-model="description" class="textarea w-full min-h-28" rows="4" maxlength="500" />
           <label class="label">
             <span class="label-text-alt opacity-70">500 caractères maximum</span>
           </label>

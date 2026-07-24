@@ -15,8 +15,8 @@
 						<div class="h-px w-16 bg-primary/40" aria-hidden="true" />
 						<p class="text-sm leading-relaxed text-base-content/80 sm:text-base">
 							GRIMORIUM est un outil de gestion de parties pour le jeu de rôle Warhammer JDR V2. Il
-							permet aux joueurs et maîtres de jeu de créer et gérer des sessions, des personnages et
-							des campagnes.
+							permet aux joueurs et maîtres de jeu de créer et gérer des campagnes, des sessions
+							(datées), des personnages et des notes.
 						</p>
 						<p class="flex gap-2 text-sm text-base-content/60">
 							<Scroll class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
@@ -69,7 +69,7 @@
 					>
 						<div class="mb-2 flex items-center gap-2.5">
 							<Plus class="size-5 shrink-0 text-primary" aria-hidden="true" />
-							<span class="font-semibold">Créer une session</span>
+							<span class="font-semibold">Créer une campagne</span>
 						</div>
 						<p class="text-sm text-base-content/75">Lancez une nouvelle table pour votre campagne.</p>
 					</button>
@@ -80,9 +80,9 @@
 					>
 						<div class="mb-2 flex items-center gap-2.5">
 							<Scroll class="size-5 shrink-0 text-primary" aria-hidden="true" />
-							<span class="font-semibold">Mes sessions</span>
+							<span class="font-semibold">Mes campagnes</span>
 						</div>
-						<p class="text-sm text-base-content/75">Retrouvez vos parties en cours et archives.</p>
+						<p class="text-sm text-base-content/75">Retrouvez vos tables en cours et archivées.</p>
 					</router-link>
 
 					<router-link
@@ -114,8 +114,8 @@ const sessionCreateModalStore = useSessionCreateModalStore()
 const pillars = [
   {
     numeral: 'I',
-    title: 'Sessions',
-    description: 'Créez une table, invitez vos joueurs et suivez la campagne.',
+    title: 'Campagnes',
+		description: 'Créez une table, invitez vos joueurs et suivez la campagne au travers de sessions datées.',
     icon: Scroll,
   },
   {
@@ -127,7 +127,7 @@ const pillars = [
   {
     numeral: 'III',
     title: 'Notes',
-    description: 'Notes de session, accès et progression pour le MJ et les joueurs.',
+		description: 'Notes de campagne, accès et progression pour le MJ et les joueurs.',
     icon: NotebookPen,
   },
 ] as const

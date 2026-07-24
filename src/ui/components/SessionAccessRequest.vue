@@ -2,7 +2,7 @@
 	<AppCard title="Accès restreint">
 		<div class="space-y-4">
 			<p class="text-sm opacity-80">
-				Cette session ne vous est pas encore ouverte. Vous pouvez envoyer une demande au Maître du Jeu,
+				Cette campagne ne vous est pas encore ouverte. Vous pouvez envoyer une demande au Maître du Jeu,
 				qui pourra l'accepter ou la refuser.
 			</p>
 
@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { ChevronLeft } from '@lucide/vue'
 import { ref } from 'vue'
-import { requestJoinSession } from '../../repositories/notificationsRepository'
+import { requestJoinCampaign } from '../../repositories/notificationsRepository'
 import AppCard from './AppCard.vue'
 
 const props = defineProps<{ sessionId: string; userId: string }>()
@@ -49,7 +49,7 @@ async function sendRequest(): Promise<void> {
   successMessage.value = null
   errorMessage.value = null
   try {
-    await requestJoinSession(props.sessionId, props.userId)
+		await requestJoinCampaign(props.sessionId, props.userId)
     successMessage.value =
       "Ta demande a été envoyée au Maître du Jeu ! Que Sigmar t'accorde sa faveur."
   } catch (error) {

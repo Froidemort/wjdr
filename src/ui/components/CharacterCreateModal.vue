@@ -48,9 +48,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { CharacterGender, CharacterRace } from '../../types/character'
-import { createCharacterForSession } from '../../repositories/charactersRepository'
+import { createCharacterForCampaign } from '../../repositories/charactersRepository'
 
-const props = defineProps<{ sessionId: string; userId: string }>()
+const props = defineProps<{ campaignId: string; userId: string }>()
 const emit = defineEmits<{ created: [characterId: string] }>()
 
 const dialogRef = ref<HTMLDialogElement | null>(null)
@@ -93,9 +93,9 @@ async function submit(): Promise<void> {
   loading.value = true
   errorMessage.value = null
   try {
-    const characterId = await createCharacterForSession({
+    const characterId = await createCharacterForCampaign({
       userId: props.userId,
-      sessionId: props.sessionId,
+      campaignId: props.campaignId,
       name: name.value,
       race: race.value,
       gender: gender.value,

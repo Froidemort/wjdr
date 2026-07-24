@@ -4,7 +4,7 @@ import { watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   deleteNotification,
-  extractNotificationSessionId,
+	extractNotificationSessionId,
   getNotificationDisplayMessage,
   getNotificationDisplayTitle,
   markAllNotificationsRead,
@@ -15,6 +15,7 @@ import { useAuthStore } from '../../stores/auth'
 import AppCard from '../components/AppCard.vue'
 import { useBusyOperations } from '../composables/useBusyOperations'
 import { useNotificationsLoad } from '../composables/useNotificationsLoad'
+import { usePaginatedNavigation } from '../composables/usePaginatedNavigation'
 import { usePagination } from '../composables/usePagination'
 
 const authStore = useAuthStore()
@@ -29,13 +30,21 @@ const { notifications, totalNotifications, loading, error, load, subscribe, unsu
     pageSize,
     page: () => page.value,
   })
+const { goToPreviousPage, goToNextPage } = usePaginatedNavigation({
+	canGoPrevious,
+	canGoNext,
+	loading,
+	previousPage,
+	nextPage,
+	onNavigate: load,
+})
 
 totalItems.value = totalNotifications.value
 
-async function openSessionFromNotification(notif: NotificationItem): Promise<void> {
-  const sessionId = extractNotificationSessionId(notif)
-  if (sessionId) {
-    await router.push(`/sessions/${sessionId}`)
+async function openCampaignFromNotification(notif: NotificationItem): Promise<void> {
+	const campaignId = extractNotificationSessionId(notif)
+	if (campaignId) {
+		await router.push(`/sessions/${campaignId}`)
   }
 }
 
@@ -71,18 +80,6 @@ async function handleMarkAllRead(): Promise<void> {
   }
 }
 
-function goToPreviousPage(): void {
-  if (!canGoPrevious.value || loading.value) return
-  previousPage()
-  void load()
-}
-
-function goToNextPage(): void {
-  if (!canGoNext.value || loading.value) return
-  nextPage()
-  void load()
-}
-
 watch(
   () => authStore.user?.id,
   (userId) => {
@@ -96,10 +93,6 @@ watch(
   },
   { immediate: true }
 )
-
-watch(page, () => {
-  void load()
-})
 </script>
 
 <template>
@@ -129,7 +122,7 @@ watch(page, () => {
 			<h2 class="text-2xl">Aucune missive pour l'instant</h2>
 			<p class="mt-2 text-sm opacity-75">Quand un maitre de jeu te contacte, ses messages apparaitront ici.</p>
 			<div class="mt-4">
-				<router-link class="btn btn-sm" to="/sessions">Voir mes sessions</router-link>
+				<router-link class="btn btn-sm" to="/sessions">Voir mes campagnes</router-link>
 			</div>
 		</div>
 
@@ -157,9 +150,9 @@ watch(page, () => {
 						<button
 							v-if="extractNotificationSessionId(notif)"
 							class="btn btn-sm"
-							@click="openSessionFromNotification(notif)"
+							@click="openCampaignFromNotification(notif)"
 						>
-							Ouvrir la session
+							Ouvrir la campagne
 						</button>
 						<button 
 							class="btn btn-sm btn-ghost" 

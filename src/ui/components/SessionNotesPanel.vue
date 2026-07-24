@@ -5,12 +5,12 @@ import {
   buildSessionNotesRealtimeSubscriptions,
   createSessionNote,
   deleteSessionNote,
-  listSessionNotesForSession,
+  listSessionNotesForCampaign,
   toggleSessionNoteArchivedState,
   toggleSessionNoteVisibility,
   updateSessionNote,
 } from '../../repositories/sessionNotesRepository'
-import type { SessionNote } from '../../types/domain'
+import type { SessionNote, SessionSummary } from '../../types/domain'
 import { useBusyOperations } from '../composables/useBusyOperations'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import AppCard from './AppCard.vue'
@@ -23,10 +23,11 @@ interface SessionNoteDraft {
 }
 
 const props = defineProps<{
-  sessionId: string
+  campaignId: string
   isMj: boolean
   currentUserId?: string | null
   isSessionArchived?: boolean
+  sessions?: SessionSummary[]
 }>()
 
 const loading = ref(false)
@@ -39,6 +40,7 @@ const createForm = reactive({
   title: '',
   contentText: '',
   isVisible: false,
+  sessionId: '',
 })
 
 const editNoteId = ref<string | null>(null)
@@ -165,6 +167,21 @@ function resetCreateForm(): void {
   createForm.title = ''
   createForm.contentText = ''
   createForm.isVisible = false
+  createForm.sessionId = ''
+}
+
+function formatSessionLabel(session: SessionSummary): string {
+  const dateLabel = formatDate(session.date)
+  return session.name?.trim() ? `${dateLabel} · ${session.name.trim()}` : dateLabel
+}
+
+function resolveSessionLabel(sessionId: string | null | undefined): string | null {
+  if (!sessionId) {
+    return null
+  }
+
+  const session = props.sessions?.find((entry) => entry.id === sessionId)
+  return session ? formatSessionLabel(session) : null
 }
 
 function startEdit(note: SessionNote): void {
@@ -190,7 +207,7 @@ function validateContent(text: string): string | null {
 }
 
 async function loadNotes(showLoading = true): Promise<void> {
-  if (!props.sessionId) {
+  if (!props.campaignId) {
     return
   }
 
@@ -200,10 +217,10 @@ async function loadNotes(showLoading = true): Promise<void> {
 
   errorMessage.value = null
   try {
-    notes.value = await listSessionNotesForSession(props.sessionId, { visibleOnly: !props.isMj })
+    notes.value = await listSessionNotesForCampaign(props.campaignId, { visibleOnly: !props.isMj })
   } catch (error) {
     errorMessage.value =
-      error instanceof Error ? error.message : 'Impossible de charger les notes de session.'
+      error instanceof Error ? error.message : 'Impossible de charger les notes de campagne.'
   } finally {
     if (showLoading) {
       loading.value = false
@@ -224,7 +241,8 @@ async function handleCreate(): Promise<void> {
   creating.value = true
   try {
     await createSessionNote({
-      sessionId: props.sessionId,
+      campaignId: props.campaignId,
+      sessionId: createForm.sessionId || null,
       title: createForm.title,
       contentText: createForm.contentText,
       isVisible: props.isMj ? createForm.isVisible : true,
@@ -322,8 +340,8 @@ async function handleDelete(noteId: string): Promise<void> {
 onMounted(() => {
   void loadNotes()
   subscribe(
-    buildSessionNotesChannelName(props.sessionId),
-    buildSessionNotesRealtimeSubscriptions(props.sessionId)
+    buildSessionNotesChannelName(props.campaignId),
+    buildSessionNotesRealtimeSubscriptions(props.campaignId)
   )
 })
 
@@ -331,12 +349,12 @@ onMounted(() => {
 
 <template>
   <section class="space-y-3">
-    <h2 class="text-xl font-semibold">Notes de session</h2>
+    <h2 class="text-xl font-semibold">Notes de campagne</h2>
 
-    <AppCard v-if="canCreateNote" title="Ajouter une note" compact>
+    <AppCard v-if="canCreateNote" title="Ajouter une note à la campagne" compact>
       <div class="space-y-3">
         <div v-if="isSessionArchived" class="alert alert-warning alert-soft text-sm">
-          <span>Session archivée: ajout de note indisponible.</span>
+          <span>Campagne archivée: ajout de note indisponible.</span>
         </div>
 
         <label class="form-control w-full">
@@ -351,6 +369,17 @@ onMounted(() => {
             class="textarea textarea-bordered min-h-24 w-full"
             placeholder="Message, indice, contexte..."
           />
+        </label>
+
+        <label class="form-control w-full" v-if="sessions?.length">
+          <span class="label-text mb-2">Session liée</span>
+          <select v-model="createForm.sessionId" class="select select-bordered w-full">
+            <option value="">Aucune session</option>
+            <option v-for="session in sessions" :key="session.id" :value="session.id">
+              {{ formatSessionLabel(session) }}
+            </option>
+          </select>
+          <span class="label-text-alt opacity-70">La date reste la clé principale d'identification.</span>
         </label>
 
         <label v-if="isMj" class="label cursor-pointer justify-start gap-3">
@@ -395,6 +424,9 @@ onMounted(() => {
                 <h3 class="font-semibold">{{ note.title }}</h3>
                 <p class="text-xs opacity-70">
                   Note texte · {{ formatDate(note.createdAt) }}
+                </p>
+                <p v-if="resolveSessionLabel(note.sessionId)" class="mt-1 text-xs">
+                  <span class="badge badge-outline badge-sm">{{ resolveSessionLabel(note.sessionId) }}</span>
                 </p>
               </div>
               <div class="flex items-center gap-2">
