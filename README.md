@@ -1,50 +1,51 @@
 # Warhammer RPG App
 
-Warhammer Fantasy Roleplay 2nd edition companion app built with Vue 3, DaisyUI, Pinia, Supabase, and Vercel.
+Warhammer Fantasy Roleplay 2nd edition companion app built with Vue 3, TypeScript, DaisyUI, Pinia, and Supabase.
 
-The app provides collaborative session and character management with live updates and a French in-app UI.
+The app focuses on collaborative session and character management with realtime updates and a French in-app UI.
 
-## Current Scope
+## Features
 
-- Authentication with Supabase Auth (email and username lookup flow)
-- Profile management (display identity and avatar support)
-- Session management (create, list, detail, archive/unarchive)
-- Session join workflow (request and invitation-style notifications)
-- Character management (create, list, detail)
+- Supabase authentication with email and username lookup flow
+- Profile page with identity and avatar management
+- Session lifecycle: create, list, detail, archive/unarchive
+- Session join flow with request and invitation notifications
+- Character lifecycle: create, list, detail
 - Character sheet quick updates:
-	- resources: PV, Fortune, Destin
-	- XP tracking (total and available)
-	- money tracking with automatic currency coercion
-	- characteristics editing
-	- skills, talents, weapons, armors, and items
+  - resources (PV, Fortune, Destin)
+  - XP (total and available)
+  - money with automatic currency coercion
+  - characteristics, skills, talents, weapons, armors, and items
 - Equipment UX:
-	- alphabetical listing by name
-	- state-cycle badges for equipped states
-	- derived stats card (BF, BE, encumbrance, armor by location)
-- Realtime updates for key entities and notifications
+  - alphabetical ordering by item name
+  - state-cycle badges for equipped states
+  - derived stats (BF, BE, encumbrance, armor by location)
+- Realtime updates for sessions, characters, and notifications
 
 ## Tech Stack
 
 - Vue 3 + TypeScript
-- Vue Router
-- Pinia
+- Vue Router + Pinia
 - Tailwind CSS v4 + DaisyUI v5
 - Supabase (Auth, Postgres, Realtime)
 - Vite
 - Vitest + Playwright
 
-## Project Structure
+## Project Map
 
-- src/ui/views: main pages (home, characters, sessions, notifications, profile)
-- src/ui/components: reusable UI components
-- src/ui/composables: reusable UI and realtime logic
-- src/repositories: data access layer to Supabase
-- src/stores: Pinia stores
-- src/types: shared domain types
-- src/db: Supabase client
-- tests/unit: unit tests
-- tests/e2e: end-to-end tests
-- models.sql: database schema, policies, and SQL functions
+- [src/ui/views](src/ui/views): route-level pages
+- [src/ui/components](src/ui/components): reusable UI components
+- [src/ui/composables](src/ui/composables): reusable UI/realtime hooks
+- [src/repositories](src/repositories): Supabase data access layer
+- [src/stores](src/stores): Pinia stores
+- [src/types](src/types): shared domain and DB types
+- [src/db](src/db): Supabase client bootstrap
+- [src/services](src/services): pure service logic (example: dice)
+- [src/utils](src/utils): shared helpers and validation
+- [tests/unit](tests/unit): unit tests
+- [tests/e2e](tests/e2e): Playwright end-to-end tests
+- [docs/testing-m1.md](docs/testing-m1.md): additional testing notes and scenarios
+- [models.sql](models.sql): schema, RLS policies, and SQL functions
 
 ## Prerequisites
 
@@ -54,7 +55,7 @@ The app provides collaborative session and character management with live update
 
 ## Environment Variables
 
-Create a .env file at repository root:
+Create a `.env` file at repository root:
 
 ```bash
 VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -63,98 +64,57 @@ VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 
 ## Database Setup
 
-1. Open your Supabase SQL editor.
-2. Run the SQL from models.sql.
-3. Verify that required tables, policies (RLS), and functions are created.
+1. Open Supabase SQL Editor.
+2. Run [models.sql](models.sql).
+3. Confirm tables, RLS policies, and SQL functions are created.
 
-## Local Development
+**NOTE :** not all the RLS, functions, grants are defined in this file.
 
-Install dependencies:
+## Development
 
 ```bash
 npm install
-```
-
-Run development server:
-
-```bash
 npm run dev
 ```
 
-Type check:
+Useful commands:
 
 ```bash
 npm run typecheck
-```
-
-Production build:
-
-```bash
+npm run lint
 npm run build
-```
-
-Local preview build:
-
-```bash
 npm run preview
 ```
 
 ## Testing
 
-Run unit tests:
-
 ```bash
 npm run test:unit
-```
-
-Run unit tests in watch mode:
-
-```bash
 npm run test:unit:watch
-```
-
-Run end-to-end tests:
-
-```bash
 npm run test:e2e
+npm test
 ```
 
-Run deploy smoke tests against a hosted URL:
+Deploy smoke tests:
 
 ```bash
 PLAYWRIGHT_BASE_URL=https://your-preview-url.vercel.app npm run test:e2e:deploy
 ```
 
-Run full test suite:
-
-```bash
-npm test
-```
-
-Additional testing notes:
-
-- docs/testing-m1.md
+See [docs/testing-m1.md](docs/testing-m1.md) for detailed testing notes.
 
 ## Deployment
 
-This repository is configured for Vercel deployment with:
+Deployment is configured for Vercel. See [vercel.json](vercel.json).
 
-- SPA rewrite fallback to index.html
-- long cache headers for versioned static assets
-- revalidation-friendly headers for manifest and service worker files
-
-Configuration file:
-
-- vercel.json
-
-## Security and Access Model
+## Security
 
 - Supabase Auth for identity
-- Row-Level Security in database policies
-- Repository-based data access with typed domain models
-- Route-level authentication guards in the frontend router
+- Row-Level Security (RLS) in Postgres policies
+- Repository-based typed data access
+- Route-level auth guards in the frontend router
 
 ## Notes
 
-- User-facing UI strings are intentionally in French.
-- Documentation and code identifiers are maintained in English.
+- User-facing UI strings are in French.
+- Code identifiers and documentation are in English.
