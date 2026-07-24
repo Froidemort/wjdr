@@ -361,7 +361,6 @@ const characterCreateModalRef = ref<InstanceType<typeof CharacterCreateModal> | 
 let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
 const sessionId = computed(() => String(route.params.id ?? ''))
-const campaignId = sessionId
 const isMj = computed(() => Boolean(session.value && authStore.user?.id === session.value.mjId))
 const hasOwnCharacter = computed(() =>
   Boolean(

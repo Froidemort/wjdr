@@ -42,6 +42,7 @@ function mapCampaignWriteError(error: unknown): Error {
 }
 
 export async function listCampaignsForUser(userId: string): Promise<CampaignSummary[]> {
+  void userId
   return withRetry(async () => {
     const { data, error } = await supabase
       .from('campaigns')
