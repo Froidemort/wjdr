@@ -3,7 +3,7 @@
 		<section class="hero rounded-box border border-base-300 bg-base-100">
 			<div class="hero-content text-center py-12">
 				<div class="max-w-2xl space-y-4">
-					<h1 class="text-4xl font-bold sm:text-5xl">Warhammer JDR V2</h1>
+					<h1 class="text-4xl font-bold sm:text-5xl">Grimorium</h1>
 					<p v-if="authStore.isAuthenticated && authStore.displayName" class="text-lg font-medium">
 						Bienvenue <span class="badge badge-ghost">{{ authStore.displayName }}</span> !
 					</p>
