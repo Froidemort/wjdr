@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { useAuthFormStore } from '../../stores/authForm'
 import PasswordInput from './PasswordInput.vue'
@@ -13,6 +13,16 @@ const password = ref('')
 const passwordConfirm = ref('')
 const localError = ref<string | null>(null)
 
+const isLogin = computed(() => authFormStore.mode === 'login')
+
+const tabClass = (active: boolean) =>
+  [
+    'cursor-pointer border-b-2 pb-3 font-[family-name:var(--font-grim-title)] text-sm uppercase tracking-wide transition-colors',
+    active
+      ? 'border-primary text-base-content'
+      : 'border-transparent text-base-content/45 hover:text-base-content/70',
+  ].join(' ')
+
 watch(
   () => authFormStore.mode,
   () => {
@@ -24,13 +34,13 @@ watch(
 async function onSubmit(): Promise<void> {
   localError.value = null
 
-  if (authFormStore.mode === 'signup' && password.value !== passwordConfirm.value) {
+  if (!isLogin.value && password.value !== passwordConfirm.value) {
     localError.value = 'Les mots de passe ne correspondent pas.'
     return
   }
 
   try {
-    if (authFormStore.mode === 'login') {
+    if (isLogin.value) {
       await authStore.signIn(identifier.value, password.value)
     } else {
       await authStore.signUp(username.value, email.value, password.value)
@@ -48,23 +58,64 @@ async function onSubmit(): Promise<void> {
 
 <template>
   <div class="w-full" aria-labelledby="auth-form-title">
-    <h2 id="auth-form-title" class="grim-modal-title mb-5 text-center text-3xl">
-      {{ authFormStore.mode === 'login' ? 'Connexion' : 'Inscription' }}
+    <div
+      role="tablist"
+      aria-label="Mode d'authentification"
+      class="mb-6 flex justify-center gap-8 border-b border-base-300/70 sm:gap-12"
+    >
+      <button
+        id="auth-tab-login"
+        type="button"
+        role="tab"
+        :class="tabClass(isLogin)"
+        :aria-selected="isLogin ? 'true' : 'false'"
+        aria-controls="auth-form-panel"
+        @click="authFormStore.setMode('login')"
+      >
+        Connexion
+      </button>
+      <button
+        id="auth-tab-signup"
+        type="button"
+        role="tab"
+        :class="tabClass(!isLogin)"
+        :aria-selected="!isLogin ? 'true' : 'false'"
+        aria-controls="auth-form-panel"
+        @click="authFormStore.setMode('signup')"
+      >
+        Inscription
+      </button>
+    </div>
+
+    <h2 id="auth-form-title" class="sr-only">
+      {{ isLogin ? 'Connexion' : 'Inscription' }}
     </h2>
 
-    <form class="space-y-3 sm:space-y-4" @submit.prevent="onSubmit">
-      <div v-if="authFormStore.mode === 'signup'" class="form-control">
-        <label class="label"><span class="label-text">Nom d'utilisateur</span></label>
+    <form
+      id="auth-form-panel"
+      role="tabpanel"
+      :aria-labelledby="isLogin ? 'auth-tab-login' : 'auth-tab-signup'"
+      class="space-y-4"
+      @submit.prevent="onSubmit"
+    >
+      <div v-if="!isLogin" class="form-control">
+        <label class="label py-1">
+          <span class="label-text">Nom d'utilisateur</span>
+        </label>
         <input v-model="username" type="text" class="input w-full" required autocomplete="username" />
       </div>
 
-      <div v-if="authFormStore.mode === 'login'" class="form-control">
-        <label class="label"><span class="label-text">Email ou nom d'utilisateur</span></label>
+      <div v-if="isLogin" class="form-control">
+        <label class="label py-1">
+          <span class="label-text">Email ou nom d'utilisateur</span>
+        </label>
         <input v-model="identifier" type="text" class="input w-full" required autocomplete="username" />
       </div>
 
-      <div v-if="authFormStore.mode === 'signup'" class="form-control">
-        <label class="label"><span class="label-text">Email</span></label>
+      <div v-if="!isLogin" class="form-control">
+        <label class="label py-1">
+          <span class="label-text">Email</span>
+        </label>
         <input v-model="email" type="email" class="input w-full" required autocomplete="email" />
       </div>
 
@@ -73,12 +124,12 @@ async function onSubmit(): Promise<void> {
         label="Mot de passe"
         required
         :minlength="6"
-        :autocomplete="authFormStore.mode === 'login' ? 'current-password' : 'new-password'"
-        :show-strength="authFormStore.mode === 'signup'"
+        :autocomplete="isLogin ? 'current-password' : 'new-password'"
+        :show-strength="!isLogin"
       />
 
       <PasswordInput
-        v-if="authFormStore.mode === 'signup'"
+        v-if="!isLogin"
         v-model="passwordConfirm"
         label="Confirmer le mot de passe"
         required
@@ -90,28 +141,28 @@ async function onSubmit(): Promise<void> {
         <span>{{ localError }}</span>
       </div>
 
-      <button type="submit" class="btn mt-1 min-h-11 w-full sm:mt-2" :disabled="authStore.loading">
+      <button type="submit" class="btn btn-primary mt-2 min-h-11 w-full" :disabled="authStore.loading">
         <span v-if="authStore.loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
-        <span>{{ authFormStore.mode === 'login' ? 'Se connecter' : 'Créer le compte' }}</span>
+        <span>{{ isLogin ? 'Se connecter' : 'Créer le compte' }}</span>
       </button>
     </form>
 
-    <div class="mt-4 text-center text-sm leading-relaxed opacity-80 sm:mt-5">
-      <p v-if="authFormStore.mode === 'login'">
+    <div class="mt-5 border-t border-base-300/50 pt-4 text-center text-sm leading-relaxed text-base-content/70">
+      <p v-if="isLogin">
         Nouveau dans l'Empire ?
         <button
           type="button"
-          class="link link-primary font-semibold sm:ml-1"
+          class="link link-primary cursor-pointer font-semibold"
           @click="authFormStore.setMode('signup')"
         >
           Créer un compte
         </button>
       </p>
       <p v-else>
-        Déja inscrit ?
+        Déjà inscrit ?
         <button
           type="button"
-          class="link link-primary font-semibold sm:ml-1"
+          class="link link-primary cursor-pointer font-semibold"
           @click="authFormStore.setMode('login')"
         >
           Se connecter

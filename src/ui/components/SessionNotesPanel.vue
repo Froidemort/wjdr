@@ -59,7 +59,7 @@ const { subscribe } = useRealtimeChannels(
 const visibleNotes = computed(() => notes.value.filter((note) => note.isVisible))
 const notesToDisplay = computed(() => (props.isMj ? notes.value : visibleNotes.value))
 const canCreateNote = computed(
-  () => Boolean(props.currentUserId) && !Boolean(props.isSessionArchived)
+  () => Boolean(props.currentUserId && !props.isSessionArchived)
 )
 
 function countOccurrences(haystack: string, needle: string): number {

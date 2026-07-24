@@ -526,7 +526,6 @@ input[type="radio"]:focus-visible {
   .modal {
     align-items: center;
     justify-items: center;
-    /* Pas de padding ici : sinon cadre noir (fond dialog seul) autour du backdrop. */
     padding: 0;
   }
 
