@@ -161,6 +161,10 @@ export async function updateSessionNote(
     updatePayload.content_text = normalizeNullableText(patch.contentText)
   }
 
+  if ('sessionId' in patch) {
+    updatePayload.session_id = patch.sessionId || null
+  }
+
   if (typeof patch.isVisible === 'boolean') {
     updatePayload.is_visible = patch.isVisible
   }

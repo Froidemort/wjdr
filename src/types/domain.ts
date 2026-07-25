@@ -60,6 +60,7 @@ export interface CreateSessionInput {
 export interface UpdateSessionNoteInput {
   title?: string
   contentText?: string | null
+  sessionId?: string | null
   isVisible?: boolean
   isArchived?: boolean
 }
