@@ -121,7 +121,7 @@
                 <div class="badge badge-outline badge-primary">
                   {{ formatCampaignSessionDate(sessionItem.date) }}
                 </div>
-                <div class="badge badge-ghost badge-sm" :class="getSessionStatusClass(sessionItem.date)">
+                <div class="badge badge-sm font-semibold" :class="getSessionStatusClass(sessionItem.date)">
                   {{ getSessionStatusLabel(sessionItem.date) }}
                 </div>
               </div>
@@ -221,47 +221,49 @@
           </li>
         </ul>
 
-        <div v-if="isMj" class="space-y-3 border-t border-base-300 pt-4">
+        <div v-if="isMj" class="space-y-4 border-t border-base-300 pt-4">
           <h3 class="text-sm font-semibold uppercase tracking-[0.15em] opacity-70">
             Ajouter une session datée
           </h3>
           <div v-if="session.isArchived" class="alert alert-warning alert-soft text-sm">
             <span>Campagne archivée: création de session bloquée.</span>
           </div>
-          <div class="grid gap-3 lg:grid-cols-3">
-            <label class="form-control">
-              <span class="label-text mb-2">Date</span>
-              <input v-model="sessionCreateForm.date" type="date" class="input input-bordered" required />
-            </label>
-            <label class="form-control">
-              <span class="label-text mb-2">Titre optionnel</span>
-              <input
-                v-model="sessionCreateForm.name"
-                type="text"
-                class="input input-bordered"
-                maxlength="100"
-                placeholder="Ex. Arrivée à Middenheim"
-              />
-            </label>
-            <label class="form-control lg:col-span-3">
-              <span class="label-text mb-2">Description optionnelle</span>
-              <textarea
-                v-model="sessionCreateForm.description"
-                class="textarea textarea-bordered min-h-24"
-                maxlength="500"
-                placeholder="Résumé, objectifs, conséquences..."
-              />
-            </label>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <button
-              class="btn btn-sm"
-              :disabled="sessionCreateLoading || session.isArchived"
-              @click="createCampaignSession"
-            >
-              <span v-if="sessionCreateLoading" class="loading loading-spinner loading-xs" aria-hidden="true" />
-              Créer la session
-            </button>
+          <div class="rounded-box border border-base-300 bg-base-200/70 p-4 sm:p-5">
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="form-control">
+                <span class="label-text mb-2">Date</span>
+                <input v-model="sessionCreateForm.date" type="date" class="input input-bordered" required />
+              </label>
+              <label class="form-control">
+                <span class="label-text mb-2">Titre optionnel</span>
+                <input
+                  v-model="sessionCreateForm.name"
+                  type="text"
+                  class="input input-bordered"
+                  maxlength="100"
+                  placeholder="Ex. Arrivée à Middenheim"
+                />
+              </label>
+              <label class="form-control md:col-span-2">
+                <span class="label-text mb-2">Description optionnelle</span>
+                <textarea
+                  v-model="sessionCreateForm.description"
+                  class="textarea textarea-bordered min-h-24"
+                  maxlength="500"
+                  placeholder="Résumé, objectifs, conséquences..."
+                />
+              </label>
+            </div>
+            <div class="mt-4 flex items-center justify-start gap-3">
+              <button
+                class="btn btn-sm"
+                :disabled="sessionCreateLoading || session.isArchived"
+                @click="createCampaignSession"
+              >
+                <span v-if="sessionCreateLoading" class="loading loading-spinner loading-xs" aria-hidden="true" />
+                Créer la session
+              </button>
+            </div>
           </div>
           <div v-if="sessionCreateError" role="alert" class="alert alert-error alert-soft text-sm">
             <span>{{ sessionCreateError }}</span>
@@ -385,7 +387,7 @@
 		<template v-else>
       <SessionAccessRequest
         v-if="authStore.user"
-        :session-id="sessionId"
+				:session-id="campaignId"
 				:user-id="authStore.user.id"
 			/>
 			<AppCard v-else title="Accès restreint">
@@ -490,7 +492,7 @@ const joinRequests = ref<JoinRequestItem[]>([])
 const characterCreateModalRef = ref<InstanceType<typeof CharacterCreateModal> | null>(null)
 let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
-const sessionId = computed(() => String(route.params.id ?? ''))
+const campaignId = computed(() => String(route.params.id ?? ''))
 const isMj = computed(() => Boolean(session.value && authStore.user?.id === session.value.mjId))
 const hasOwnCharacter = computed(() =>
   Boolean(
@@ -561,16 +563,16 @@ function getSessionStatusLabel(value: string): string {
     return 'A venir'
   }
 
-  return 'Passee'
+  return 'Passée'
 }
 
 function getSessionStatusClass(value: string): string {
   const status = getSessionDateStatus(value)
   if (status === 'past') {
-    return 'badge-secondary text-secondary-content'
+    return 'badge-secondary border border-secondary-content/30 text-secondary-content shadow-sm'
   }
 
-  return 'badge-info text-info-content'
+  return 'badge-info border border-info-content/30 text-info-content'
 }
 
 function mapCreateSessionError(error: unknown): string {
@@ -613,7 +615,7 @@ function formatCampaignSessionTitle(sessionItem: SessionSummary): string {
 }
 
 function buildCampaignSessionDetailLink(targetSessionId: string): string {
-  return `/campaigns/${sessionId.value}/timeline/${targetSessionId}`
+  return `/campaigns/${campaignId.value}/timeline/${targetSessionId}`
 }
 
 function resetSessionCreateForm(): void {
@@ -738,7 +740,7 @@ const { subscribe, unsubscribe } = useRealtimeChannels(
 )
 
 async function loadSessionDetail(options: { background?: boolean } = {}): Promise<void> {
-  if (!sessionId.value) {
+  if (!campaignId.value) {
     errorMessage.value = 'Campagne invalide.'
     return
   }
@@ -751,8 +753,8 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
   }
   try {
     const [sessionData, characterData] = await Promise.all([
-      getCampaignById(sessionId.value),
-      listCharactersByCampaign(sessionId.value),
+      getCampaignById(campaignId.value),
+      listCharactersByCampaign(campaignId.value),
     ])
 
     session.value = sessionData
@@ -765,7 +767,7 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
     }
 
     try {
-      sessions.value = await listSessionsForCampaign(sessionId.value)
+      sessions.value = await listSessionsForCampaign(campaignId.value)
     } catch {
       sessions.value = []
     }
@@ -1016,7 +1018,7 @@ watch(isMj, (value) => {
   }
 })
 watch(
-  () => [sessionId.value, authStore.user?.id] as const,
+  () => [campaignId.value, authStore.user?.id] as const,
   ([value, userId]) => {
     if (!value || !userId) {
       session.value = null

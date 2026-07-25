@@ -44,7 +44,7 @@ totalItems.value = totalNotifications.value
 async function openCampaignFromNotification(notif: NotificationItem): Promise<void> {
 	const campaignId = extractNotificationSessionId(notif)
 	if (campaignId) {
-		await router.push(`/sessions/${campaignId}`)
+		await router.push(`/campaigns/${campaignId}`)
   }
 }
 
@@ -122,7 +122,7 @@ watch(
 			<h2 class="text-2xl">Aucune missive pour l'instant</h2>
 			<p class="mt-2 text-sm opacity-75">Quand un maitre de jeu te contacte, ses messages apparaitront ici.</p>
 			<div class="mt-4">
-				<router-link class="btn btn-sm" to="/sessions">Voir mes campagnes</router-link>
+				<router-link class="btn btn-sm" to="/campaigns">Voir mes campagnes</router-link>
 			</div>
 		</div>
 

@@ -65,7 +65,7 @@
 					<button
 						type="button"
 						class="rounded-box border border-base-300 bg-base-100 p-4 text-left transition-colors hover:border-primary/40 hover:bg-base-200 sm:p-5"
-						@click="openSessionCreate"
+						@click="openCampaignCreate"
 					>
 						<div class="mb-2 flex items-center gap-2.5">
 							<Plus class="size-5 shrink-0 text-primary" aria-hidden="true" />
@@ -75,7 +75,7 @@
 					</button>
 
 					<router-link
-						to="/sessions"
+						to="/campaigns"
 						class="rounded-box border border-base-300 bg-base-100 p-4 transition-colors hover:border-primary/40 hover:bg-base-200 sm:p-5"
 					>
 						<div class="mb-2 flex items-center gap-2.5">
@@ -104,12 +104,12 @@
 <script setup lang="ts">
 import { NotebookPen, Plus, Scroll, Users } from '@lucide/vue'
 import { useAuthStore } from '../../stores/auth'
-import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
+import { useCampaignCreateModalStore } from '../../stores/campaignCreateModal'
 import AuthForm from '../components/AuthForm.vue'
 import HomePillarCard from '../components/HomePillarCard.vue'
 
 const authStore = useAuthStore()
-const sessionCreateModalStore = useSessionCreateModalStore()
+const campaignCreateModalStore = useCampaignCreateModalStore()
 
 const pillars = [
   {
@@ -132,7 +132,7 @@ const pillars = [
   },
 ] as const
 
-function openSessionCreate(): void {
-  sessionCreateModalStore.openModal()
+function openCampaignCreate(): void {
+	campaignCreateModalStore.openModal()
 }
 </script>

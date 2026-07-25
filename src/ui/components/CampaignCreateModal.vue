@@ -4,9 +4,9 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createCampaign } from '../../repositories/campaignsRepository'
 import { useAuthStore } from '../../stores/auth'
-import { useSessionCreateModalStore } from '../../stores/sessionCreateModal'
+import { useCampaignCreateModalStore } from '../../stores/campaignCreateModal'
 
-const modalStore = useSessionCreateModalStore()
+const modalStore = useCampaignCreateModalStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const dialogRef = ref<HTMLDialogElement | null>(null)
@@ -18,7 +18,7 @@ const errorMessage = ref<string | null>(null)
 
 const generateAlphaNumeric = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 6)
 
-function generateSessionCode(): string {
+function generateCampaignCode(): string {
   for (let attempt = 0; attempt < 10; attempt += 1) {
     const candidate = generateAlphaNumeric()
     const letterCount = (candidate.match(/[A-Z]/g) ?? []).length
@@ -27,14 +27,13 @@ function generateSessionCode(): string {
     }
   }
 
-  // Fallback deterministic mix to guarantee at least two letters.
   const fallback = generateAlphaNumeric().split('')
   fallback[0] = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 1)()
   fallback[1] = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 1)()
   return fallback.join('')
 }
 
-function mapCreateSessionError(error: unknown): string {
+function mapCreateCampaignError(error: unknown): string {
   if (error instanceof Error) {
     const maybeStatus = (error as { status?: number }).status
     const message = error.message.toLowerCase()
@@ -59,7 +58,7 @@ function mapCreateSessionError(error: unknown): string {
     return error.message
   }
 
-  return 'La creation de la table a echoue.'
+  return 'La creation de la campagne a echoue.'
 }
 
 watch(
@@ -94,7 +93,7 @@ async function onSubmit(): Promise<void> {
           mjId: authStore.user.id,
           name: name.value.trim(),
           description: description.value.trim(),
-          code: generateSessionCode(),
+          code: generateCampaignCode(),
         })
         break
       } catch (error) {
@@ -112,9 +111,9 @@ async function onSubmit(): Promise<void> {
     modalStore.closeModal()
     name.value = ''
     description.value = ''
-    await router.push(`/sessions/${campaignId}`)
+    await router.push(`/campaigns/${campaignId}`)
   } catch (error) {
-    errorMessage.value = mapCreateSessionError(error)
+    errorMessage.value = mapCreateCampaignError(error)
   } finally {
     loading.value = false
   }

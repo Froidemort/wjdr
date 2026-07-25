@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export const useSessionCreateModalStore = defineStore('sessionCreateModal', () => {
+export const useCampaignCreateModalStore = defineStore('campaignCreateModal', () => {
   const isOpen = ref(false)
 
   function openModal(): void {
