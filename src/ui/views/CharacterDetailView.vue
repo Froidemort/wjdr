@@ -120,6 +120,12 @@
 				</div>
 			</div>
 
+      <div v-if="actionSuccessMessage" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
+        <div class="alert bg-success text-success-content py-3 px-4 min-h-0 shadow-lg gap-2 border-0" role="status" aria-live="polite">
+          <span class="text-sm sm:text-base font-medium">{{ actionSuccessMessage }}</span>
+        </div>
+      </div>
+
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
 				<summary class="collapse-title">
 					<h2 class="text-lg">Caractéristiques</h2>
@@ -182,6 +188,9 @@
           <h2 class="text-lg">Compétences</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="getSectionSuccessMessage('skills')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
+            <span>{{ getSectionSuccessMessage('skills') }}</span>
+          </div>
           <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
             <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des compétences" @click.stop.prevent="openCatalogModal('skills')">
               <Plus class="h-4 w-4" />
@@ -223,7 +232,7 @@
 										>
 											<Info class="h-4 w-4" />
 										</button>
-                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" @click="onDeleteSkill(skill.skillId)">
+                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `skill-${skill.skillId}` ? 'true' : 'false'" @click="onDeleteSkill(skill.skillId)">
 											<Trash2 class="h-4 w-4" />
 										</button>
 									</div>
@@ -232,6 +241,8 @@
 									<button
                     class="btn btn-sm h-11 min-h-11 join-item"
 										:class="skill.masteryLevel === 1 ? 'btn-active' : ''"
+                    :disabled="Boolean(actionBusyKey)"
+                    :aria-busy="actionBusyKey === `mastery-${skill.skillId}` ? 'true' : 'false'"
 										@click="onChangeSkillMastery(skill.skillId, 1)"
 									>
 										Acquis
@@ -239,6 +250,8 @@
 									<button
                     class="btn btn-sm h-11 min-h-11 join-item"
 										:class="skill.masteryLevel === 2 ? 'btn-active' : ''"
+                    :disabled="Boolean(actionBusyKey)"
+                    :aria-busy="actionBusyKey === `mastery-${skill.skillId}` ? 'true' : 'false'"
 										@click="onChangeSkillMastery(skill.skillId, 2)"
 									>
 										+10%
@@ -246,6 +259,8 @@
 									<button
                     class="btn btn-sm h-11 min-h-11 join-item"
 										:class="skill.masteryLevel === 3 ? 'btn-active' : ''"
+                    :disabled="Boolean(actionBusyKey)"
+                    :aria-busy="actionBusyKey === `mastery-${skill.skillId}` ? 'true' : 'false'"
 										@click="onChangeSkillMastery(skill.skillId, 3)"
 									>
 										+20%
@@ -262,6 +277,9 @@
           <h2 class="text-lg">Talents</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="getSectionSuccessMessage('talents')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
+            <span>{{ getSectionSuccessMessage('talents') }}</span>
+          </div>
           <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
             <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des talents" @click.stop.prevent="openCatalogModal('talents')">
               <Plus class="h-4 w-4" />
@@ -282,7 +300,7 @@
 										>
 											<Info class="h-4 w-4" />
 										</button>
-                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" @click="onDeleteTalent(talent.talentId)">
+                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `talent-${talent.talentId}` ? 'true' : 'false'" @click="onDeleteTalent(talent.talentId)">
 											<Trash2 class="h-4 w-4" />
 										</button>
 									</div>
@@ -309,19 +327,33 @@
           <h2 class="text-lg">Armes</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="getSectionSuccessMessage('weapons')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
+            <span>{{ getSectionSuccessMessage('weapons') }}</span>
+          </div>
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="badge badge-outline">Total: {{ weaponStats.total }}</span>
+            <span class="badge badge-outline">Equipees: {{ weaponStats.equipped }}</span>
+            <span class="badge badge-outline">Inventaire: {{ weaponStats.total - weaponStats.equipped }}</span>
+          </div>
+          <div class="mb-3 join join-vertical sm:join-horizontal">
+            <button class="btn btn-xs ui-critical-action join-item" :class="weaponFilter === 'all' ? 'btn-active' : ''" @click="weaponFilter = 'all'">Toutes</button>
+            <button class="btn btn-xs ui-critical-action join-item" :class="weaponFilter === 'equipped' ? 'btn-active' : ''" @click="weaponFilter = 'equipped'">Equipees</button>
+            <button class="btn btn-xs ui-critical-action join-item" :class="weaponFilter === 'inventory' ? 'btn-active' : ''" @click="weaponFilter = 'inventory'">Inventaire</button>
+          </div>
           <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
             <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des armes" @click.stop.prevent="openCatalogModal('weapons')">
               <Plus class="h-4 w-4" />
             </button>
           </div>
 					<div v-if="sortedCharacterWeapons.length === 0" class="text-sm opacity-70">Aucune arme.</div>
+          <div v-else-if="filteredCharacterWeapons.length === 0" class="text-sm opacity-70">Aucune arme pour ce filtre.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="weapon in sortedCharacterWeapons" :key="weapon.id" v-memo="[weapon.equipped, weapon.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
+						<article v-for="weapon in filteredCharacterWeapons" :key="weapon.id" v-memo="[weapon.equipped, weapon.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ weapon.name }}</h4>
 									<div class="flex items-center gap-1">
-                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" @click="onDeleteWeapon(weapon.id)">
+                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `weapon-${weapon.id}` ? 'true' : 'false'" @click="onDeleteWeapon(weapon.id)">
 											<Trash2 class="h-4 w-4" />
 										</button>
 									</div>
@@ -362,19 +394,33 @@
           <h2 class="text-lg">Armures</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="getSectionSuccessMessage('armors')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
+            <span>{{ getSectionSuccessMessage('armors') }}</span>
+          </div>
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="badge badge-outline">Total: {{ armorStats.total }}</span>
+            <span class="badge badge-outline">Equipees: {{ armorStats.equipped }}</span>
+            <span class="badge badge-outline">Inventaire: {{ armorStats.total - armorStats.equipped }}</span>
+          </div>
+          <div class="mb-3 join join-vertical sm:join-horizontal">
+            <button class="btn btn-xs ui-critical-action join-item" :class="armorFilter === 'all' ? 'btn-active' : ''" @click="armorFilter = 'all'">Toutes</button>
+            <button class="btn btn-xs ui-critical-action join-item" :class="armorFilter === 'equipped' ? 'btn-active' : ''" @click="armorFilter = 'equipped'">Equipees</button>
+            <button class="btn btn-xs ui-critical-action join-item" :class="armorFilter === 'inventory' ? 'btn-active' : ''" @click="armorFilter = 'inventory'">Inventaire</button>
+          </div>
           <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
             <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des armures" @click.stop.prevent="openCatalogModal('armors')">
               <Plus class="h-4 w-4" />
             </button>
           </div>
 					<div v-if="sortedCharacterArmors.length === 0" class="text-sm opacity-70">Aucune armure.</div>
+          <div v-else-if="filteredCharacterArmors.length === 0" class="text-sm opacity-70">Aucune armure pour ce filtre.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="armor in sortedCharacterArmors" :key="armor.id" v-memo="[armor.isEquipped, armor.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
+						<article v-for="armor in filteredCharacterArmors" :key="armor.id" v-memo="[armor.isEquipped, armor.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ armor.name }}</h4>
 									<div class="flex items-center gap-1">
-                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" @click="onDeleteArmor(armor.id)">
+                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `armor-${armor.id}` ? 'true' : 'false'" @click="onDeleteArmor(armor.id)">
 											<Trash2 class="h-4 w-4" />
 										</button>
 									</div>
@@ -416,14 +462,33 @@
           <h2 class="text-lg">Équipements</h2>
 				</summary>
 				<div class="collapse-content">
+          <div v-if="getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
+            <span>{{ getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog') }}</span>
+          </div>
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="badge badge-outline">Total: {{ itemStats.total }}</span>
+            <span class="badge badge-outline">Mediocre: {{ itemStats.mediocre }}</span>
+            <span class="badge badge-outline">Normal: {{ itemStats.normal }}</span>
+            <span class="badge badge-outline">Bonne: {{ itemStats.good }}</span>
+            <span class="badge badge-outline">Exceptionelle: {{ itemStats.exceptional }}</span>
+          </div>
+          <div class="mb-3 grid gap-2 sm:grid-cols-[auto,1fr]">
+            <div class="join join-vertical sm:join-horizontal">
+              <button class="btn btn-xs ui-critical-action join-item" :class="itemFilterQuality === 'all' ? 'btn-active' : ''" @click="itemFilterQuality = 'all'">Toutes</button>
+              <button class="btn btn-xs ui-critical-action join-item" :class="itemFilterQuality === 'normal' ? 'btn-active' : ''" @click="itemFilterQuality = 'normal'">Normal</button>
+              <button class="btn btn-xs ui-critical-action join-item" :class="itemFilterQuality === 'bonne' ? 'btn-active' : ''" @click="itemFilterQuality = 'bonne'">Bonne</button>
+            </div>
+            <SearchInput v-model="itemFilterQuery" placeholder="Filtrer les équipements" aria-label="Filtrer les equipements" />
+          </div>
           <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
             <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des équipements" @click.stop.prevent="openCatalogModal('items')">
               <Plus class="h-4 w-4" />
             </button>
           </div>
 					<div v-if="sortedCharacterItems.length === 0" class="text-sm opacity-70">Aucun équipement.</div>
+          <div v-else-if="filteredCharacterItems.length === 0" class="text-sm opacity-70">Aucun équipement pour ce filtre.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="item in sortedCharacterItems" :key="item.id" v-memo="[item.quantity, item.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
+						<article v-for="item in filteredCharacterItems" :key="item.id" v-memo="[item.quantity, item.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ item.name }}</h4>
@@ -440,6 +505,8 @@
 											v-if="canEditQuickSection"
                       class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11 text-error"
 											aria-label="Retirer l'équipement de l'inventaire"
+                      :disabled="Boolean(actionBusyKey)"
+                      :aria-busy="actionBusyKey === `item-${item.id}` ? 'true' : 'false'"
 											@click="onDeleteItem(item.id)"
 										>
 											<Trash2 class="h-4 w-4" />
@@ -458,7 +525,8 @@
 									<div v-if="canEditQuickSection" class="join items-stretch">
 										<button
                       class="btn btn-sm h-11 min-h-11 min-w-11 join-item px-3 text-base font-semibold leading-none"
-											:disabled="item.quantity <= 1"
+                      :disabled="item.quantity <= 1 || Boolean(actionBusyKey)"
+                      :aria-busy="actionBusyKey === `item-qty-${item.id}` ? 'true' : 'false'"
 											aria-label="Réduire la quantité"
 											@click="onChangeItemQuantity(item, -1)"
 										>
@@ -467,6 +535,8 @@
                     <span class="join-item inline-flex h-11 min-h-11 min-w-12 items-center justify-center bg-secondary px-3 text-sm font-bold tracking-wide text-secondary-content border-none">x{{ item.quantity }}</span>
 										<button
                       class="btn btn-sm h-11 min-h-11 min-w-11 join-item px-3 text-base font-semibold leading-none"
+                      :disabled="Boolean(actionBusyKey)"
+                      :aria-busy="actionBusyKey === `item-qty-${item.id}` ? 'true' : 'false'"
 											aria-label="Augmenter la quantité"
 											@click="onChangeItemQuantity(item, 1)"
 										>
@@ -510,10 +580,13 @@
 					<div v-if="statsImportError" role="alert" class="alert alert-error alert-soft mt-4">
 						<span>{{ statsImportError }}</span>
 					</div>
+          <div v-if="getSectionSuccessMessage('stats')" role="status" class="alert alert-success alert-soft mt-4 text-sm">
+            <span>{{ getSectionSuccessMessage('stats') }}</span>
+          </div>
 
           <div class="grim-modal-actions mt-4 flex items-center justify-end gap-2 border-t border-base-300 pt-3">
-						<button type="button" class="btn btn-sm btn-ghost" @click="closeStatsImportModal">Annuler</button>
-						<button type="button" class="btn btn-sm" :disabled="statsImportSaving" @click="confirmStatsImport">
+            <button type="button" class="btn btn-sm btn-ghost ui-critical-action" @click="closeStatsImportModal">Annuler</button>
+            <button type="button" class="btn btn-sm ui-critical-action" :disabled="statsImportSaving" @click="confirmStatsImport">
 							<span v-if="statsImportSaving" class="loading loading-spinner loading-xs" aria-hidden="true" />
 							Appliquer
 						</button>
@@ -532,6 +605,11 @@
 
 				<div class="space-y-3">
 					<SearchInput v-model="careerQuery" placeholder="Chercher une carrière" />
+          <p class="text-xs opacity-70">Saisissez au moins 2 caractères.</p>
+          <div v-if="careerSearchLoading" class="flex items-center gap-2 text-sm opacity-70">
+            <span class="loading loading-spinner loading-xs" aria-hidden="true" />
+            Recherche des carriere...
+          </div>
 
 					<div class="max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
 						<ul v-if="careerOptions.length > 0" class="menu menu-sm">
@@ -545,17 +623,20 @@
 								</button>
 							</li>
 						</ul>
-						<p v-else class="text-sm opacity-70 px-2 py-1">Aucune carrière trouvée.</p>
+            <p v-else class="text-sm opacity-70 px-2 py-1">{{ careerQuery.trim().length < 2 ? 'Commencez a taper pour rechercher une carriere.' : 'Aucune carriere trouvee.' }}</p>
 					</div>
 
 					<p v-if="selectedCareerName" class="text-sm opacity-80">Sélection: {{ selectedCareerName }}</p>
+          <div v-if="getSectionSuccessMessage('career')" role="status" class="alert alert-success alert-soft text-sm">
+            <span>{{ getSectionSuccessMessage('career') }}</span>
+          </div>
 					<div v-if="careerError" role="alert" class="alert alert-error alert-soft text-sm">
 						<span>{{ careerError }}</span>
 					</div>
 
           <div class="grim-modal-actions flex items-center justify-end gap-2">
-						<button class="btn btn-sm" @click="closeCareerModal">Annuler</button>
-            <button class="btn btn-sm" :disabled="changingCareer" @click="confirmCareerChange">
+						<button class="btn btn-sm ui-critical-action" @click="closeCareerModal">Annuler</button>
+            <button class="btn btn-sm ui-critical-action" :disabled="changingCareer" @click="confirmCareerChange">
 							<span v-if="changingCareer" class="loading loading-spinner loading-xs" aria-hidden="true" />
 							Valider
 						</button>
@@ -575,17 +656,17 @@
 
 				<div v-if="catalogSection === 'items'" class="mb-4 flex justify-center">
 					<div class="join">
-						<button
+            <button
 							type="button"
-							class="btn btn-sm join-item"
+              class="btn btn-sm join-item ui-critical-action"
 							:class="itemCatalogMode === 'search' ? 'btn-active' : ''"
 							@click="itemCatalogMode = 'search'"
 						>
 							Recherche
 						</button>
-						<button
+            <button
 							type="button"
-							class="btn btn-sm join-item"
+              class="btn btn-sm join-item ui-critical-action"
 							:class="itemCatalogMode === 'create' ? 'btn-active' : ''"
 							@click="itemCatalogMode = 'create'"
 						>
@@ -657,7 +738,13 @@
 								:placeholder="`Chercher des ${modalSectionLabel}`" 
 								class="w-full" 
 							/>
+              <p class="mt-2 text-xs opacity-70">Saisissez au moins 2 caractères pour lancer la recherche.</p>
 						</div>
+
+            <div v-if="catalogSearchLoading" class="flex items-center gap-2 text-sm opacity-70">
+              <span class="loading loading-spinner loading-xs" aria-hidden="true" />
+              Recherche en cours...
+            </div>
 
 						<!-- Catalog Options List -->
             <div class="rounded-lg border border-base-300 bg-base-100 overflow-hidden">
@@ -695,7 +782,7 @@
 										</label>
 									</li>
 								</ul>
-                <p v-else class="text-center text-sm opacity-70 py-8">Aucun élément trouvé.</p>
+                <p v-else class="text-center text-sm opacity-70 py-8">{{ catalogQuery.trim().length < 2 ? 'Saisissez au moins 2 caracteres.' : 'Aucun element trouve.' }}</p>
 							</div>
 						</div>
 
@@ -761,10 +848,10 @@
 
           <!-- Action Buttons -->
           <div class="grim-modal-actions mt-3 border-t border-base-300 bg-base-100/95 backdrop-blur sticky bottom-0 flex items-center justify-end gap-3 pt-3">
-						<button class="btn btn-sm btn-ghost" @click="closeCatalogModal">Annuler</button>
+            <button class="btn btn-sm btn-ghost ui-critical-action" @click="closeCatalogModal">Annuler</button>
 						<button
 							v-if="catalogSection === 'items' && itemCatalogMode === 'create'"
-              class="btn btn-sm"
+              class="btn btn-sm ui-critical-action"
 							:disabled="creatingItem"
 							@click="confirmItemCreate"
 						>
@@ -773,7 +860,7 @@
 						</button>
 						<button
 							v-else
-              class="btn btn-sm"
+              class="btn btn-sm ui-critical-action"
 							:disabled="addingCatalog || selectedCatalogIds.length === 0"
 							@click="confirmCatalogAdd"
 						>
@@ -983,6 +1070,18 @@ const characterTalents = ref<CharacterTalent[]>([])
 const characterWeapons = ref<CharacterWeapon[]>([])
 const characterArmors = ref<CharacterArmor[]>([])
 const characterItems = ref<CharacterItem[]>([])
+const actionSuccessMessage = ref<string | null>(null)
+type FeedbackSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items' | 'stats' | 'career' | 'catalog'
+const sectionSuccess = ref<{ section: FeedbackSection; message: string } | null>(null)
+const weaponFilter = ref<'all' | 'equipped' | 'inventory'>('all')
+const armorFilter = ref<'all' | 'equipped' | 'inventory'>('all')
+const itemFilterQuality = ref<'all' | 'médiocre' | 'normal' | 'bonne' | 'exceptionelle'>('all')
+const itemFilterQuery = ref('')
+const careerSearchLoading = ref(false)
+const catalogSearchLoading = ref(false)
+const actionBusyKey = ref<string | null>(null)
+let actionSuccessTimer: ReturnType<typeof setTimeout> | null = null
+let sectionSuccessTimer: ReturnType<typeof setTimeout> | null = null
 
 const editable = ref({
   pvMax: 0,
@@ -1030,6 +1129,54 @@ const sortedCharacterTalents = computed(() => sortByName(characterTalents.value)
 const sortedCharacterWeapons = computed(() => sortByName(characterWeapons.value))
 const sortedCharacterArmors = computed(() => sortByName(characterArmors.value))
 const sortedCharacterItems = computed(() => sortByName(characterItems.value))
+const filteredCharacterWeapons = computed(() => {
+  if (weaponFilter.value === 'all') {
+    return sortedCharacterWeapons.value
+  }
+
+  return sortedCharacterWeapons.value.filter((weapon) =>
+    weaponFilter.value === 'equipped' ? weapon.equipped !== null : weapon.equipped === null
+  )
+})
+const filteredCharacterArmors = computed(() => {
+  if (armorFilter.value === 'all') {
+    return sortedCharacterArmors.value
+  }
+
+  return sortedCharacterArmors.value.filter((armor) =>
+    armorFilter.value === 'equipped' ? armor.isEquipped : !armor.isEquipped
+  )
+})
+const filteredCharacterItems = computed(() => {
+  const normalizedQuery = itemFilterQuery.value.trim().toLowerCase()
+
+  return sortedCharacterItems.value.filter((item) => {
+    const qualityMatch =
+      itemFilterQuality.value === 'all' || item.quality.trim().toLowerCase() === itemFilterQuality.value
+
+    const queryMatch =
+      normalizedQuery.length === 0 ||
+      item.name.toLowerCase().includes(normalizedQuery) ||
+      (item.description ?? '').toLowerCase().includes(normalizedQuery)
+
+    return qualityMatch && queryMatch
+  })
+})
+const weaponStats = computed(() => ({
+  total: characterWeapons.value.length,
+  equipped: characterWeapons.value.filter((weapon) => weapon.equipped !== null).length,
+}))
+const armorStats = computed(() => ({
+  total: characterArmors.value.length,
+  equipped: characterArmors.value.filter((armor) => armor.isEquipped).length,
+}))
+const itemStats = computed(() => ({
+  total: characterItems.value.length,
+  mediocre: characterItems.value.filter((item) => item.quality === 'médiocre').length,
+  normal: characterItems.value.filter((item) => item.quality === 'normal').length,
+  good: characterItems.value.filter((item) => item.quality === 'bonne').length,
+  exceptional: characterItems.value.filter((item) => item.quality === 'exceptionelle').length,
+}))
 const displayedCatalogOptions = computed(() => catalogOptions.value.slice(0, MAX_CATALOG_RESULTS))
 
 const visibleStats = computed(() => {
@@ -1610,6 +1757,7 @@ async function confirmStatsImport(): Promise<void> {
     }
 
     await loadCharacter({ background: true })
+    setSectionSuccess('stats', `${updates.length} caracteristique(s) mise(s) a jour.`)
     closeStatsImportModal()
   } catch (error) {
     statsImportError.value = error instanceof Error ? error.message : 'Import impossible.'
@@ -1623,62 +1771,91 @@ async function onChangeSkillMastery(skillId: string, level: 1 | 2 | 3): Promise<
     return
   }
 
+  const currentCharacter = character.value
+
   const target = characterSkills.value.find((skill) => skill.skillId === skillId)
   if (target && target.masteryLevel === level) {
     return
   }
 
-  try {
-    await updateCharacterSkillMastery(character.value.id, skillId, level)
-    if (target) {
-      target.masteryLevel = level
+  await runWithBusyAction(`mastery-${skillId}`, async () => {
+    try {
+      await updateCharacterSkillMastery(currentCharacter.id, skillId, level)
+      if (target) {
+        target.masteryLevel = level
+      }
+      invalidateCurrentLinksCache()
+      setSectionSuccess('skills', 'Niveau de maitrise mis a jour.')
+    } catch (error) {
+      errorMessage.value =
+        error instanceof Error ? error.message : 'Modification du niveau de maitrise impossible.'
     }
-    invalidateCurrentLinksCache()
-  } catch (error) {
-    errorMessage.value =
-      error instanceof Error ? error.message : 'Modification du niveau de maitrise impossible.'
-  }
+  })
 }
 
 async function onDeleteSkill(skillId: string): Promise<void> {
-  if (!character.value || !canEditQuickSection.value) {
+  if (!character.value || !canEditQuickSection.value || actionBusyKey.value) {
     return
   }
 
+  if (!confirmDestructiveAction('Supprimer cette competence ?')) {
+    return
+  }
+
+  actionBusyKey.value = `skill-${skillId}`
   try {
     await removeCharacterSkill(character.value.id, skillId)
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
+    setSectionSuccess('skills', 'Competence supprimee.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  } finally {
+    endAction()
   }
 }
 
 async function onDeleteTalent(talentId: string): Promise<void> {
-  if (!character.value || !canEditQuickSection.value) {
+  if (!character.value || !canEditQuickSection.value || actionBusyKey.value) {
     return
   }
 
+  if (!confirmDestructiveAction('Supprimer ce talent ?')) {
+    return
+  }
+
+  actionBusyKey.value = `talent-${talentId}`
   try {
     await removeCharacterTalent(character.value.id, talentId)
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
+    setSectionSuccess('talents', 'Talent supprime.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  } finally {
+    endAction()
   }
 }
 
 async function onDeleteWeapon(linkId: string): Promise<void> {
-  if (!canEditQuickSection.value || !character.value) {
+  if (!canEditQuickSection.value || !character.value || actionBusyKey.value) {
     return
   }
 
+  if (!confirmDestructiveAction('Supprimer cette arme ?')) {
+    return
+  }
+
+  actionBusyKey.value = `weapon-${linkId}`
   try {
     await removeCharacterWeapon(linkId)
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
+    setSectionSuccess('weapons', 'Arme supprimee.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  } finally {
+    endAction()
   }
 }
 
@@ -1711,12 +1888,19 @@ async function onWeaponStateChange(
     return
   }
 
+  if (!beginAction(`weapon-state-${weapon.id}`)) {
+    return
+  }
+
   try {
     await updateCharacterWeaponEquipped(weapon.id, nextEquipped)
     weapon.equipped = nextEquipped
     invalidateCurrentLinksCache()
+    setSectionSuccess('weapons', 'Etat de l arme mis a jour.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  } finally {
+    endAction()
   }
 }
 
@@ -1728,12 +1912,9 @@ async function onWeaponQualityChange(
     return
   }
 
-  if (
-    quality !== 'médiocre' &&
-    quality !== 'normal' &&
-    quality !== 'bonne' &&
-    quality !== 'exceptionelle'
-  ) {
+  const currentCharacter = character.value
+
+  if (!isInventoryQuality(quality)) {
     return
   }
 
@@ -1741,26 +1922,37 @@ async function onWeaponQualityChange(
     return
   }
 
-  try {
-    await updateCharacterWeaponQuality(weapon.id, quality)
-    invalidateCurrentLinksCache()
-    await loadCharacterLinks(character.value.id, { force: true })
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-  }
+  await runWithBusyAction(`weapon-quality-${weapon.id}`, async () => {
+    try {
+      await updateCharacterWeaponQuality(weapon.id, quality)
+      invalidateCurrentLinksCache()
+      await loadCharacterLinks(currentCharacter.id, { force: true })
+      setSectionSuccess('weapons', 'Qualite de l arme mise a jour.')
+    } catch (error) {
+      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+    }
+  })
 }
 
 async function onDeleteArmor(linkId: string): Promise<void> {
-  if (!canEditQuickSection.value || !character.value) {
+  if (!canEditQuickSection.value || !character.value || actionBusyKey.value) {
     return
   }
 
+  if (!confirmDestructiveAction('Supprimer cette armure ?')) {
+    return
+  }
+
+  actionBusyKey.value = `armor-${linkId}`
   try {
     await removeCharacterArmor(linkId)
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
+    setSectionSuccess('armors', 'Armure supprimee.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  } finally {
+    endAction()
   }
 }
 
@@ -1790,12 +1982,19 @@ async function onArmorStateChange(
     return
   }
 
+  if (!beginAction(`armor-state-${armor.id}`)) {
+    return
+  }
+
   try {
     await updateCharacterArmorEquipped(armor.id, nextEquipped)
     armor.isEquipped = nextEquipped
     invalidateCurrentLinksCache()
+    setSectionSuccess('armors', 'Etat de l armure mis a jour.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  } finally {
+    endAction()
   }
 }
 
@@ -1807,12 +2006,9 @@ async function onArmorQualityChange(
     return
   }
 
-  if (
-    quality !== 'médiocre' &&
-    quality !== 'normal' &&
-    quality !== 'bonne' &&
-    quality !== 'exceptionelle'
-  ) {
+  const currentCharacter = character.value
+
+  if (!isInventoryQuality(quality)) {
     return
   }
 
@@ -1820,13 +2016,16 @@ async function onArmorQualityChange(
     return
   }
 
-  try {
-    await updateCharacterArmorQuality(armor.id, quality)
-    invalidateCurrentLinksCache()
-    await loadCharacterLinks(character.value.id, { force: true })
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-  }
+  await runWithBusyAction(`armor-quality-${armor.id}`, async () => {
+    try {
+      await updateCharacterArmorQuality(armor.id, quality)
+      invalidateCurrentLinksCache()
+      await loadCharacterLinks(currentCharacter.id, { force: true })
+      setSectionSuccess('armors', 'Qualite de l armure mise a jour.')
+    } catch (error) {
+      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+    }
+  })
 }
 
 function resetNewItemForm(): void {
@@ -1845,16 +2044,24 @@ function resetSelectedItemsSettings(): void {
 }
 
 async function onDeleteItem(linkId: string): Promise<void> {
-  if (!canEditQuickSection.value || !character.value) {
+  if (!canEditQuickSection.value || !character.value || actionBusyKey.value) {
     return
   }
 
+  if (!confirmDestructiveAction('Supprimer cet equipement ?')) {
+    return
+  }
+
+  actionBusyKey.value = `item-${linkId}`
   try {
     await removeCharacterItem(linkId)
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
+    setSectionSuccess('items', 'Equipement supprime.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+  } finally {
+    endAction()
   }
 }
 
@@ -1868,12 +2075,19 @@ async function onChangeItemQuantity(item: CharacterItem, delta: number): Promise
     return
   }
 
+  if (!beginAction(`item-qty-${item.id}`)) {
+    return
+  }
+
   try {
     await updateCharacterItemQuantity(item.id, nextQuantity)
     item.quantity = nextQuantity
     invalidateCurrentLinksCache()
+    setSectionSuccess('items', 'Quantite mise a jour.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  } finally {
+    endAction()
   }
 }
 
@@ -1885,12 +2099,7 @@ async function onItemQualityChange(
     return
   }
 
-  if (
-    quality !== 'médiocre' &&
-    quality !== 'normal' &&
-    quality !== 'bonne' &&
-    quality !== 'exceptionelle'
-  ) {
+  if (!isInventoryQuality(quality)) {
     return
   }
 
@@ -1898,13 +2107,16 @@ async function onItemQualityChange(
     return
   }
 
-  try {
-    await updateCharacterItemQuality(item.id, quality)
-    item.quality = quality
-    invalidateCurrentLinksCache()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-  }
+  await runWithBusyAction(`item-quality-${item.id}`, async () => {
+    try {
+      await updateCharacterItemQuality(item.id, quality)
+      item.quality = quality
+      invalidateCurrentLinksCache()
+      setSectionSuccess('items', 'Qualite de l equipement mise a jour.')
+    } catch (error) {
+      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+    }
+  })
 }
 
 function openCareerModal(): void {
@@ -1913,6 +2125,7 @@ function openCareerModal(): void {
   selectedCareerName.value = null
   careerQuery.value = ''
   careerOptions.value = []
+  careerSearchLoading.value = false
   if (!careerDialogRef.value) {
     return
   }
@@ -1927,6 +2140,7 @@ function closeCareerModal(): void {
   selectedCareerId.value = null
   selectedCareerName.value = null
   careerError.value = null
+  careerSearchLoading.value = false
 }
 
 function selectCareer(id: string, name: string): void {
@@ -1950,11 +2164,16 @@ async function confirmCareerChange(): Promise<void> {
     return
   }
 
+  if (!confirmDestructiveAction('Confirmer le changement de carriere ?')) {
+    return
+  }
+
   changingCareer.value = true
   careerError.value = null
   try {
     await updateCharacterCareer(character.value.id, selectedCareerId.value)
     await loadCharacter()
+    setSectionSuccess('career', 'Carriere mise a jour.')
     closeCareerModal()
   } catch (error) {
     careerError.value =
@@ -1971,6 +2190,7 @@ function openCatalogModal(section: CatalogSection): void {
   selectedCatalogIds.value = []
   selectedCatalogLabels.value = {}
   catalogError.value = null
+  catalogSearchLoading.value = false
   itemCatalogMode.value = 'search'
   creatingItem.value = false
   resetSelectedItemsSettings()
@@ -2003,6 +2223,7 @@ function closeCatalogModal(): void {
   selectedCatalogIds.value = []
   selectedCatalogLabels.value = {}
   catalogError.value = null
+  catalogSearchLoading.value = false
   itemCatalogMode.value = 'search'
   creatingItem.value = false
   resetSelectedItemsSettings()
@@ -2045,6 +2266,10 @@ async function confirmCatalogAdd(): Promise<void> {
     return
   }
 
+  if (!confirmDestructiveAction(`Ajouter ${selectedCatalogIds.value.length} element(s) a la fiche ?`)) {
+    return
+  }
+
   addingCatalog.value = true
   catalogError.value = null
   try {
@@ -2067,6 +2292,7 @@ async function confirmCatalogAdd(): Promise<void> {
 
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
+    setSectionSuccess('catalog', `${selectedCatalogIds.value.length} element(s) ajoute(s).`)
     closeCatalogModal()
   } catch (error) {
     catalogError.value = error instanceof Error ? error.message : 'Ajout impossible.'
@@ -2089,6 +2315,10 @@ async function confirmItemCreate(): Promise<void> {
   const normalizedEncumbrance = Math.max(0, Math.floor(newItemForm.value.encumbrance || 0))
   const normalizedQuantity = Math.max(1, Math.floor(newItemForm.value.quantity || 1))
 
+  if (!confirmDestructiveAction('Creer puis ajouter cet equipement a la fiche ?')) {
+    return
+  }
+
   creatingItem.value = true
   catalogError.value = null
   try {
@@ -2106,6 +2336,7 @@ async function confirmItemCreate(): Promise<void> {
     )
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
+    setSectionSuccess('catalog', 'Equipement cree et ajoute.')
     closeCatalogModal()
   } catch (error) {
     catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
@@ -2116,15 +2347,19 @@ async function confirmItemCreate(): Promise<void> {
 
 watch(careerQuery, async (value) => {
   const trimmed = value.trim()
-  if (!trimmed) {
+  if (trimmed.length < 2) {
     careerOptions.value = []
+    careerSearchLoading.value = false
     return
   }
 
+  careerSearchLoading.value = true
   try {
     careerOptions.value = await searchCatalog('careers', trimmed)
   } catch {
     careerOptions.value = []
+  } finally {
+    careerSearchLoading.value = false
   }
 })
 
@@ -2136,17 +2371,20 @@ watch(catalogQuery, async (value) => {
 
   if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
     catalogOptions.value = []
+    catalogSearchLoading.value = false
     return
   }
 
   const trimmed = value.trim()
   if (trimmed.length < 2) {
     catalogOptions.value = []
+    catalogSearchLoading.value = false
     return
   }
 
   const requestId = ++catalogSearchSequence
   catalogSearchTimer = setTimeout(async () => {
+    catalogSearchLoading.value = true
     try {
       const results = await searchCatalog(catalogSection.value, trimmed)
       if (requestId !== catalogSearchSequence) {
@@ -2160,6 +2398,10 @@ watch(catalogQuery, async (value) => {
       }
 
       catalogOptions.value = []
+    } finally {
+      if (requestId === catalogSearchSequence) {
+        catalogSearchLoading.value = false
+      }
     }
   }, 180)
 })
@@ -2285,6 +2527,75 @@ function qualityStateClass(quality: string | null): string {
   return 'btn-outline'
 }
 
+function setActionSuccess(message: string): void {
+  actionSuccessMessage.value = message
+  if (actionSuccessTimer) {
+    clearTimeout(actionSuccessTimer)
+  }
+
+  actionSuccessTimer = setTimeout(() => {
+    actionSuccessMessage.value = null
+  }, 4000)
+}
+
+function setSectionSuccess(section: FeedbackSection, message: string): void {
+  sectionSuccess.value = { section, message }
+  if (sectionSuccessTimer) {
+    clearTimeout(sectionSuccessTimer)
+  }
+
+  sectionSuccessTimer = setTimeout(() => {
+    sectionSuccess.value = null
+  }, 4500)
+
+  setActionSuccess(message)
+}
+
+function getSectionSuccessMessage(section: FeedbackSection): string | null {
+  if (!sectionSuccess.value || sectionSuccess.value.section !== section) {
+    return null
+  }
+
+  return sectionSuccess.value.message
+}
+
+function confirmDestructiveAction(message: string): boolean {
+  if (typeof window === 'undefined') {
+    return true
+  }
+
+  return window.confirm(message)
+}
+
+function beginAction(key: string): boolean {
+  if (actionBusyKey.value) {
+    return false
+  }
+
+  actionBusyKey.value = key
+  return true
+}
+
+function endAction(): void {
+  actionBusyKey.value = null
+}
+
+async function runWithBusyAction(key: string, operation: () => Promise<void>): Promise<void> {
+  if (!beginAction(key)) {
+    return
+  }
+
+  try {
+    await operation()
+  } finally {
+    endAction()
+  }
+}
+
+function isInventoryQuality(value: string | boolean | null): value is 'médiocre' | 'normal' | 'bonne' | 'exceptionelle' {
+  return value === 'médiocre' || value === 'normal' || value === 'bonne' || value === 'exceptionelle'
+}
+
 watch(
   () => characterId.value,
   (value) => {
@@ -2324,6 +2635,11 @@ onBeforeUnmount(() => {
   if (catalogSearchTimer) {
     clearTimeout(catalogSearchTimer)
     catalogSearchTimer = null
+  }
+
+  if (actionSuccessTimer) {
+    clearTimeout(actionSuccessTimer)
+    actionSuccessTimer = null
   }
 })
 </script>

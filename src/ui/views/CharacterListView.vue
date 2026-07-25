@@ -1,14 +1,30 @@
 <template>
 	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
-		<header class="flex items-center justify-between">
+		<header class="flex flex-wrap items-center justify-between gap-2">
 			<h1 class="text-2xl font-semibold">Mes personnages</h1>
 		</header>
 
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="badge badge-outline">Total: {{ charactersList.length }}</span>
+        <span class="badge badge-outline">Filtres: {{ filteredCharacters.length }}</span>
+      </div>
+
+      <div class="grid gap-2 sm:grid-cols-[auto,1fr]">
+        <div class="join join-vertical sm:join-horizontal">
+          <button class="btn btn-xs join-item ui-critical-action" :class="raceFilter === 'all' ? 'btn-active' : ''" @click="raceFilter = 'all'">Toutes races</button>
+          <button class="btn btn-xs join-item ui-critical-action" :class="raceFilter === 'humain' ? 'btn-active' : ''" @click="raceFilter = 'humain'">Humains</button>
+          <button class="btn btn-xs join-item ui-critical-action" :class="raceFilter === 'nain' ? 'btn-active' : ''" @click="raceFilter = 'nain'">Nains</button>
+        </div>
+        <SearchInput v-model="searchQuery" placeholder="Filtrer par nom" aria-label="Filtrer les personnages par nom" />
+      </div>
+    </section>
+
 		<DataGrid
-			:items="charactersList"
+			:items="filteredCharacters"
 			:loading="loading"
 			:error="errorMessage"
-			empty-message="Aucun personnage disponible."
+			empty-message="Aucun personnage pour ce filtre."
       grid-class="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
 		>
 			<template #default="{ items }">
@@ -28,13 +44,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { listCharactersForUser } from '../../repositories/charactersRepository'
 import { useAuthStore } from '../../stores/auth'
 import type { CharacterSummary } from '../../types/domain'
 import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
 import DataGrid from '../components/DataGrid.vue'
 import PageFooter from '../components/PageFooter.vue'
+import SearchInput from '../components/SearchInput.vue'
 import { useLoadingState } from '../composables/useLoadingState'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 
@@ -53,6 +70,20 @@ const { subscribe, unsubscribe } = useRealtimeChannels(
 )
 
 const charactersList = computed(() => characters.value ?? [])
+const searchQuery = ref('')
+const raceFilter = ref<'all' | 'humain' | 'nain'>('all')
+const filteredCharacters = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+
+  return charactersList.value.filter((character) => {
+    const race = character.race.trim().toLowerCase()
+    const matchesRace = raceFilter.value === 'all' || race === raceFilter.value
+    const matchesQuery =
+      query.length === 0 || character.name.toLowerCase().includes(query)
+
+    return matchesRace && matchesQuery
+  })
+})
 
 async function loadCharacters(): Promise<void> {
   if (!authStore.user?.id) {

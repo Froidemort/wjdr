@@ -12,7 +12,10 @@
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="space-y-3">
               <div class="flex flex-wrap items-center gap-2">
-                <span class="badge badge-outline">{{ formatCampaignSessionDate(sessionItem.date) }}</span>
+                <span class="badge badge-outline whitespace-nowrap">
+                  <span class="sm:hidden">{{ formatCampaignSessionDateCompact(sessionItem.date) }}</span>
+                  <span class="hidden sm:inline">{{ formatCampaignSessionDate(sessionItem.date) }}</span>
+                </span>
                 <span class="badge" :class="getSessionStatusClass(sessionItem.date)">
                   {{ getSessionStatusLabel(sessionItem.date) }}
                 </span>
@@ -25,7 +28,7 @@
 
             <router-link
               v-if="isMj"
-              class="btn btn-sm"
+              class="btn btn-sm ui-critical-action min-h-11"
               :to="`/campaigns/${campaign.id}`"
             >
               Modifier la timeline
@@ -42,7 +45,7 @@
                 <p v-else class="text-sm italic opacity-60">Pas de description.</p>
               </div>
 
-              <div class="stats stats-vertical border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal">
+              <div class="stats stats-vertical border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal w-full sm:w-auto">
                 <div class="stat px-4 py-3">
                   <div class="stat-title">Créée</div>
                   <div class="stat-value text-lg">{{ formatTimestamp(sessionItem.createdAt) }}</div>
@@ -120,6 +123,15 @@ function formatCampaignSessionDate(value: string): string {
   }
 
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(parsed)
+}
+
+function formatCampaignSessionDateCompact(value: string): string {
+  const parsed = parseSessionDate(value)
+  if (!parsed) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short' }).format(parsed)
 }
 
 function formatTimestamp(value: string | null): string {
