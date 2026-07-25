@@ -2,7 +2,7 @@
 	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
 		<header class="flex items-center justify-between">
       <h1 class="text-2xl font-semibold">Campagnes</h1>
-      <button class="btn btn-sm" @click="openSessionCreate">Creer une campagne</button>
+      <button class="btn btn-sm" @click="openSessionCreate">Créer une campagne</button>
 		</header>
 
     <InputAction

@@ -212,8 +212,8 @@ export async function deleteNotification(notificationId: string): Promise<void> 
 
 export async function requestJoinCampaign(campaignId: string, requesterId: string): Promise<void> {
   // Validate inputs before RPC call
-  validateInput(campaignId, isValidUUID, 'Campaign ID invalide.')
-  validateInput(requesterId, isValidUUID, 'Requester ID invalide.')
+  validateInput(campaignId, isValidUUID, 'L\'ID de la campagne est invalide.')
+  validateInput(requesterId, isValidUUID, 'L\'ID de l\'utilisateur est invalide.')
 
   const { data: ownerId, error: ownerError } = await supabase.rpc(
     'get_campaign_owner_for_request',

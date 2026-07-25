@@ -390,7 +390,7 @@ onMounted(() => {
         <div class="flex items-center gap-2">
           <button class="btn btn-sm" :disabled="creating || isSessionArchived" @click="handleCreate">
             <span v-if="creating" class="loading loading-spinner loading-xs" aria-hidden="true" />
-            Creer la note
+            Créer la note
           </button>
         </div>
 
