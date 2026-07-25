@@ -522,7 +522,12 @@ watch(
                   Note texte · {{ formatDateTime(note.createdAt) }}
                 </p>
                 <p class="mt-1 text-xs">
-                  <span class="badge badge-outline badge-sm">{{ resolveSessionLabel(note.sessionId) }}</span>
+                  <span
+                    class="badge badge-outline badge-xs inline-block max-w-[11rem] overflow-hidden text-ellipsis whitespace-nowrap align-middle sm:max-w-none"
+                    :title="resolveSessionLabel(note.sessionId)"
+                  >
+                    {{ resolveSessionLabel(note.sessionId) }}
+                  </span>
                 </p>
               </div>
               <div class="flex items-center gap-2">

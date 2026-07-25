@@ -7,6 +7,24 @@ type AuthIdentifier = {
   email: string
 }
 
+const AUTH_TOKEN_COOKIE_NAME = 'wjdr_auth_token'
+
+function syncAuthTokenCookie(session: Session | null): void {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  const secureFlag = window.location.protocol === 'https:' ? '; Secure' : ''
+  if (!session?.access_token) {
+    document.cookie = `${AUTH_TOKEN_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${secureFlag}`
+    return
+  }
+
+  const expires = session.expires_at ? new Date(session.expires_at * 1000) : null
+  const expiresClause = expires ? `; Expires=${expires.toUTCString()}` : ''
+  document.cookie = `${AUTH_TOKEN_COOKIE_NAME}=${encodeURIComponent(session.access_token)}; Path=/; SameSite=Lax${secureFlag}${expiresClause}`
+}
+
 async function resolveIdentifier(input: string): Promise<AuthIdentifier> {
   const identifier = input.trim().toLowerCase()
   if (identifier.includes('@')) {
@@ -127,6 +145,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       session.value = data.session
       user.value = data.session?.user ?? null
+      syncAuthTokenCookie(data.session)
       if (user.value?.id) {
         await loadIdentity(user.value.id)
       }
@@ -134,6 +153,7 @@ export const useAuthStore = defineStore('auth', () => {
       supabase.auth.onAuthStateChange((_event, nextSession) => {
         session.value = nextSession
         user.value = nextSession?.user ?? null
+        syncAuthTokenCookie(nextSession)
         if (user.value?.id) {
           void loadIdentity(user.value.id)
         } else {
@@ -216,6 +236,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
       displayName.value = ''
       avatarUrl.value = null
+      syncAuthTokenCookie(null)
       identityCache.value = {
         userId: null,
         displayName: '',

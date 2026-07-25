@@ -219,14 +219,19 @@ watch(
       return
     }
 
-    void loadData()
+    void (async () => {
+      await loadData()
+      const resolvedCampaignId = campaign.value?.id
+      if (!userId || !resolvedCampaignId) {
+        unsubscribe()
+        return
+      }
 
-    if (userId) {
-      subscribe(`campaign-session-${nextCampaignId}-${nextSessionId}-${userId}`, [
-        { table: 'campaigns', filter: `id=eq.${nextCampaignId}` },
+      subscribe(`campaign-session-${resolvedCampaignId}-${nextSessionId}-${userId}`, [
+        { table: 'campaigns', filter: `id=eq.${resolvedCampaignId}` },
         { table: 'sessions', filter: `id=eq.${nextSessionId}` },
       ])
-    }
+    })()
   },
   { immediate: true }
 )

@@ -3,6 +3,10 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/campaigns/:identifier([A-Za-z0-9]{6})",
+      "destination": "/api/campaigns/:identifier"
+    },
+    {
       "source": "/((?!assets/|icons/|manifest.webmanifest|sw.js|workbox-.*\\.js|registerSW.js|favicon\\.svg).*)",
       "destination": "/index.html"
     }

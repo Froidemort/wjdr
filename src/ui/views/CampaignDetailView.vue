@@ -72,15 +72,21 @@
 			</AppCard>
 
       <AppCard title="Sessions de campagne" class="space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-2 text-sm">
-            <span class="badge badge-outline">{{ sessions.length }} sessions</span>
-            <span v-if="nextSession" class="badge badge-soft badge-success">
-              Prochaine: {{ formatCampaignSessionDate(nextSession.date) }}
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-wrap items-center gap-2 text-sm">
+            <span class="badge badge-outline badge-sm whitespace-nowrap">
+              <List class="h-3.5 w-3.5" aria-hidden="true" />
+              <span class="sm:hidden">{{ sessions.length }} sess.</span>
+              <span class="hidden sm:inline">{{ sessions.length }} sessions</span>
+            </span>
+            <span v-if="nextSession" class="badge badge-soft badge-success badge-sm whitespace-nowrap">
+              <CalendarDays class="h-3.5 w-3.5" aria-hidden="true" />
+              <span class="sm:hidden">{{ formatCampaignSessionDateCompact(nextSession.date) }}</span>
+              <span class="hidden sm:inline">Prochaine: {{ formatCampaignSessionDate(nextSession.date) }}</span>
             </span>
           </div>
 
-          <div class="join">
+          <div class="join self-start sm:self-auto">
             <button
               class="btn btn-xs join-item"
               :class="sessionTimelineFilter === 'all' ? 'btn-active' : ''"
@@ -113,30 +119,45 @@
           <span>Aucune session pour ce filtre.</span>
         </div>
 
-        <ul v-else class="timeline timeline-snap-icon timeline-vertical pl-1 sm:pl-3">
+        <ul
+          v-else
+          class="timeline timeline-snap-icon timeline-vertical relative pl-1 sm:pl-3 [--timeline-col-start:4.8rem] sm:[--timeline-col-start:minmax(0,1fr)] before:absolute before:top-0 before:bottom-0 before:w-px before:bg-base-300 before:left-[5.05rem] sm:before:left-1/2 sm:before:-translate-x-1/2"
+        >
           <li v-for="sessionItem in timelineSessions" :key="sessionItem.id">
-            <hr />
+            <hr class="hidden" />
             <div class="timeline-start">
               <div class="space-y-2 text-right">
-                <div class="badge badge-outline badge-primary">
-                  {{ formatCampaignSessionDate(sessionItem.date) }}
+                <div class="badge badge-outline badge-primary text-xs sm:hidden">
+                  {{ formatCampaignSessionDateCompact(sessionItem.date) }}
                 </div>
-                <div class="badge badge-sm font-semibold" :class="getSessionStatusClass(sessionItem.date)">
-                  {{ getSessionStatusLabel(sessionItem.date) }}
+                <div class="badge badge-outline badge-primary hidden sm:inline-flex">
+                  {{ formatCampaignSessionDate(sessionItem.date) }}
                 </div>
               </div>
             </div>
             <div class="timeline-middle">
-              <span class="status status-primary" />
+              <Hourglass
+                v-if="getSessionDateStatus(sessionItem.date) !== 'past'"
+                class="h-4 w-4 text-info rounded-full bg-info/10 ring-1 ring-info/30 shadow-sm"
+                aria-hidden="true"
+              />
+              <CircleCheck
+                v-else
+                class="h-4 w-4 text-secondary rounded-full bg-secondary/10 ring-1 ring-secondary/30 shadow-sm"
+                aria-hidden="true"
+              />
             </div>
             <div class="timeline-end timeline-box w-full space-y-3 p-4 sm:p-5">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="space-y-1 pr-2">
-                  <h3 class="font-semibold leading-snug">{{ formatCampaignSessionTitle(sessionItem) }}</h3>
+              <div class="space-y-2">
+                <div class="pr-1">
+                  <h3 class="block max-w-full truncate text-xs sm:text-sm md:text-base font-semibold leading-snug" :title="formatCampaignSessionTitle(sessionItem)">
+                    {{ formatCampaignSessionTitle(sessionItem) }}
+                  </h3>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                   <router-link class="btn btn-xs" :to="buildCampaignSessionDetailLink(sessionItem.id)">
-                    Ouvrir
+                    <Eye class="h-3.5 w-3.5" aria-hidden="true" />
+                    <span class="sr-only sm:not-sr-only sm:inline">Ouvrir</span>
                   </router-link>
                   <button
                     v-if="isMj"
@@ -144,7 +165,8 @@
                     :disabled="sessionEditBusyId === sessionItem.id"
                     @click="startSessionEdit(sessionItem)"
                   >
-                    Modifier
+                    <Pencil class="h-3.5 w-3.5" aria-hidden="true" />
+                    <span class="sr-only sm:not-sr-only sm:inline">Modifier</span>
                   </button>
                   <button
                     v-if="isMj"
@@ -157,7 +179,8 @@
                       class="loading loading-spinner loading-xs"
                       aria-hidden="true"
                     />
-                    Supprimer
+                    <Trash2 v-else class="h-3.5 w-3.5" aria-hidden="true" />
+                    <span class="sr-only sm:not-sr-only sm:inline">Supprimer</span>
                   </button>
                 </div>
               </div>
@@ -414,7 +437,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronLeft, Copy } from '@lucide/vue'
+import { CalendarDays, ChevronLeft, CircleCheck, Copy, Eye, Hourglass, List, Pencil, Trash2 } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { listCharactersByCampaign } from '../../repositories/charactersRepository'
@@ -553,28 +576,6 @@ function getSessionDateStatus(value: string): 'today' | 'upcoming' | 'past' {
   return parsed > todayParsed ? 'upcoming' : 'past'
 }
 
-function getSessionStatusLabel(value: string): string {
-  const status = getSessionDateStatus(value)
-  if (status === 'today') {
-    return 'Aujourd hui'
-  }
-
-  if (status === 'upcoming') {
-    return 'A venir'
-  }
-
-  return 'Passée'
-}
-
-function getSessionStatusClass(value: string): string {
-  const status = getSessionDateStatus(value)
-  if (status === 'past') {
-    return 'badge-secondary border border-secondary-content/30 text-secondary-content shadow-sm'
-  }
-
-  return 'badge-info border border-info-content/30 text-info-content'
-}
-
 function mapCreateSessionError(error: unknown): string {
   if (!(error instanceof Error)) {
     return 'Creation de session impossible.'
@@ -609,13 +610,25 @@ function formatCampaignSessionDate(value: string): string {
   }).format(parsed)
 }
 
+function formatCampaignSessionDateCompact(value: string): string {
+  const parsed = new Date(`${value}T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'short',
+  }).format(parsed)
+}
+
 function formatCampaignSessionTitle(sessionItem: SessionSummary): string {
   const trimmedTitle = sessionItem.name?.trim()
   return trimmedTitle ? trimmedTitle : `Session du ${formatCampaignSessionDate(sessionItem.date)}`
 }
 
 function buildCampaignSessionDetailLink(targetSessionId: string): string {
-  return `/campaigns/${campaignId.value}/timeline/${targetSessionId}`
+  const identifier = session.value?.id ?? campaignId.value
+  return `/campaigns/${identifier}/timeline/${targetSessionId}`
 }
 
 function resetSessionCreateForm(): void {
@@ -752,22 +765,26 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
     joinRequestError.value = null
   }
   try {
-    const [sessionData, characterData] = await Promise.all([
-      getCampaignById(campaignId.value),
-      listCharactersByCampaign(campaignId.value),
-    ])
-
+    const sessionData = await getCampaignById(campaignId.value)
     session.value = sessionData
-    characters.value = sessionData ? characterData : []
 
     if (!session.value) {
+      characters.value = []
       joinRequests.value = []
       sessions.value = []
       return
     }
 
+    const resolvedCampaignId = session.value.id
+
     try {
-      sessions.value = await listSessionsForCampaign(campaignId.value)
+      characters.value = await listCharactersByCampaign(resolvedCampaignId)
+    } catch {
+      characters.value = []
+    }
+
+    try {
+      sessions.value = await listSessionsForCampaign(resolvedCampaignId)
     } catch {
       sessions.value = []
     }
@@ -959,12 +976,12 @@ async function onCharacterCreated(characterId: string): Promise<void> {
   await router.push(`/characters/${characterId}`)
 }
 
-function buildSessionLink(id: string): string {
+function buildSessionLink(code: string): string {
   if (typeof window === 'undefined') {
-    return `/campaigns/${id}`
+    return `/campaigns/${code}`
   }
 
-  return `${window.location.origin}/campaigns/${id}`
+  return `${window.location.origin}/campaigns/${code}`
 }
 
 async function copySessionLink(): Promise<void> {
@@ -972,7 +989,7 @@ async function copySessionLink(): Promise<void> {
     return
   }
 
-  const link = buildSessionLink(session.value.id)
+  const link = buildSessionLink(session.value.code)
 
   try {
     if (navigator.clipboard?.writeText) {
@@ -1029,8 +1046,15 @@ watch(
       return
     }
 
-    void loadSessionDetail()
-    subscribeRealtime(value)
+    void (async () => {
+      await loadSessionDetail()
+      const resolvedCampaignId = session.value?.id
+      if (resolvedCampaignId) {
+        subscribeRealtime(resolvedCampaignId)
+      } else {
+        unsubscribe()
+      }
+    })()
   },
   { immediate: true }
 )

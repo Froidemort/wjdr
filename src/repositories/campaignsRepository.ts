@@ -8,6 +8,13 @@ export interface PaginatedCampaigns {
   total: number
 }
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function isUuidLike(value: string): boolean {
+  return UUID_PATTERN.test(value)
+}
+
 function mapCampaign(row: CampaignRow): CampaignSummary {
   return {
     id: row.id,
@@ -124,11 +131,14 @@ export async function createCampaign(payload: {
 
 export async function getCampaignById(campaignId: string): Promise<CampaignSummary | null> {
   return withRetry(async () => {
-    const { data, error } = await supabase
+    const identifier = campaignId.trim()
+    const query = supabase
       .from('campaigns')
       .select('id, name, code, description, is_archived, mj_id, created_at')
-      .eq('id', campaignId)
-      .maybeSingle()
+
+    const { data, error } = isUuidLike(identifier)
+      ? await query.eq('id', identifier).maybeSingle()
+      : await query.eq('code', identifier.toUpperCase()).maybeSingle()
 
     if (error) {
       throw error
