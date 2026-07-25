@@ -133,8 +133,16 @@
           </li>
           <li>
             <button @click="handleMobileNotificationsClick" class="flex min-h-11 items-center gap-2">
-              <Bell class="h-5 w-5 text-primary" />
-              <span>Notifications {{ unreadCount > 0 ? `(${unreadCount})` : '' }}</span>
+              <div class="indicator">
+                <Bell class="h-5 w-5 text-primary" />
+                <span
+                  v-if="unreadCount > 0"
+                  class="badge badge-xs indicator-item badge-warning"
+                >
+                  {{ unreadCount > 99 ? '99+' : unreadCount }}
+                </span>
+              </div>
+              <span>Notifications</span>
             </button>
           </li>
           <li>

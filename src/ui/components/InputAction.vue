@@ -1,18 +1,22 @@
 <template>
 	<AppCard :title="title" :compact="compact">
+		<div v-if="helperMessage" class="alert alert-info alert-soft mb-3 text-sm" role="note">
+			<span>{{ helperMessage }}</span>
+		</div>
 		<form :class="compact ? 'flex flex-col items-center gap-2 sm:flex-row sm:items-end sm:justify-start' : 'flex flex-col gap-3 sm:flex-row'" @submit.prevent="$emit('submit')">
 			<input 
 				:value="modelValue"
 				type="text" 
 				:maxlength="maxLength"
-				:class="['input bg-base-100', inputClass]"
+				:class="['input bg-base-100 ui-critical-control', errorMessage ? 'input-error' : '', inputClass]"
 				:placeholder="placeholder"
 				:disabled="Boolean(disabled || loading)"
+				:aria-invalid="errorMessage ? 'true' : 'false'"
 				@input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
 			/>
 			<button 
 				type="submit"
-				:class="compact ? 'btn btn-sm w-full sm:w-auto' : 'btn btn-sm'"
+				:class="compact ? 'btn btn-sm ui-critical-action min-h-11 w-full sm:w-auto' : 'btn btn-sm ui-critical-action min-h-11'"
 				:disabled="Boolean(disabled || loading)"
 				:aria-busy="loading ? 'true' : 'false'"
 			>
@@ -45,6 +49,7 @@ defineProps<{
   maxLength?: number
   compact?: boolean
   inputClass?: string
+	helperMessage?: string | null
 }>()
 
 defineEmits<{
