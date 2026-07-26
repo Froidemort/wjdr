@@ -24,14 +24,6 @@ function getAuthToken(request: Request): string | null {
     return authorization.slice(7).trim() || null
   }
 
-  const cookieHeader = request.headers.get('cookie') ?? ''
-  for (const part of cookieHeader.split(';')) {
-    const [name, ...valueParts] = part.trim().split('=')
-    if (name === 'wjdr_auth_token') {
-      return decodeURIComponent(valueParts.join('=')) || null
-    }
-  }
-
   return null
 }
 

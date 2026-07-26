@@ -83,7 +83,7 @@ describe('campaign code api handler', () => {
 
     const mjResponse = await handler(
       new Request('https://app.test/campaigns/AB12CD', {
-        headers: { cookie: 'wjdr_auth_token=' + encodeURIComponent('token') },
+        headers: { authorization: 'Bearer token' },
       })
     )
 

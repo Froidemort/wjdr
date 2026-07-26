@@ -9,7 +9,7 @@ export function useCopyFeedback() {
         await navigator.clipboard.writeText(text)
       }
     } catch {
-      /* silently ignore */
+      console.warn('Clipboard API not available or failed to write text :', text)
     }
 
     feedbackMap.value = { ...feedbackMap.value, [id]: successMessage }

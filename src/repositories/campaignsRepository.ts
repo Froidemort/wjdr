@@ -2,17 +2,11 @@ import { supabase } from '../db/supabase'
 import type { CampaignRow } from '../types/db'
 import type { CampaignSummary } from '../types/domain'
 import { withRetry } from './shared/retry'
+import { isUuidLike } from '../utils/validation'
 
 export interface PaginatedCampaigns {
   items: CampaignSummary[]
   total: number
-}
-
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
-function isUuidLike(value: string): boolean {
-  return UUID_PATTERN.test(value)
 }
 
 function mapCampaign(row: CampaignRow): CampaignSummary {
@@ -38,14 +32,14 @@ function mapCampaignWriteError(error: unknown): Error {
       message.includes('permission denied')
     ) {
       return new Error(
-        'Acces refuse (403): verifiez la session auth, l existence du profil et les politiques RLS campaigns/users_campaigns.'
+        'Acces refuse (403): Vous n\'avez pas les droits en écriture sur cette campagne. Veuillez contacter l\'administrateur du serveur.'
       )
     }
 
     return error
   }
 
-  return new Error('Operation campagne impossible.')
+  return new Error('Operation sur la campagne impossible.')
 }
 
 export async function listCampaignsForUser(userId: string): Promise<CampaignSummary[]> {

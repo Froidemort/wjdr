@@ -1,3 +1,5 @@
+import { isUuidLike } from '../utils/validation'
+
 export type CampaignCodeLookup = {
   id: string
   mjId: string
@@ -24,13 +26,9 @@ export interface RateLimiter {
   consume: (ip: string) => boolean
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 const CODE_PATTERN = /^[A-Z0-9]{6}$/i
 
-export function isUuidIdentifier(identifier: string): boolean {
-  return UUID_PATTERN.test(identifier.trim())
-}
 
 export function isCampaignCodeIdentifier(identifier: string): boolean {
   return CODE_PATTERN.test(identifier.trim())
@@ -86,7 +84,7 @@ export async function resolveCampaignCodeRedirect(
 ): Promise<CampaignCodeResolutionResult> {
   const identifier = context.identifier.trim()
 
-  if (isUuidIdentifier(identifier)) {
+  if (isUuidLike(identifier)) {
     return { status: 200 }
   }
 

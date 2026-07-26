@@ -204,9 +204,6 @@
                     <Eye class="h-3.5 w-3.5" aria-hidden="true" />
                     <span class="sr-only sm:not-sr-only sm:inline">Ouvrir</span>
                   </router-link>
-                  <button class="btn btn-xs ui-critical-action" @click="focusNotesPanel(sessionItem)">
-                    <span class="sr-only sm:not-sr-only sm:inline">Notes</span>
-                  </button>
                   <button
                     v-if="isMj"
                     class="btn btn-xs ui-critical-action"
