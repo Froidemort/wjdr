@@ -60,43 +60,11 @@ export function createInMemoryRateLimiter(limit: number, windowMs: number): Rate
   }
 }
 
-export function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  if (forwardedFor) {
-    return forwardedFor
-  }
-
-  const realIp = request.headers.get('x-real-ip')?.trim()
-  if (realIp) {
-    return realIp
-  }
-
-  const cfConnectingIp = request.headers.get('cf-connecting-ip')?.trim()
-  if (cfConnectingIp) {
-    return cfConnectingIp
-  }
-
-  return 'unknown'
-}
-
-export async function resolveCampaignCodeRedirect(
-  context: CampaignCodeResolutionContext
-): Promise<CampaignCodeResolutionResult> {
-  const identifier = context.identifier.trim()
-
-  if (isUuidLike(identifier)) {
-    return { status: 200 }
-  }
-
-  if (!isCampaignCodeIdentifier(identifier)) {
-    return { status: 404, message: 'Campagne introuvable.' }
-  }
-
   const rateLimiter = context.rateLimiter
-  if (rateLimiter && !rateLimiter.consume(getClientIp(context.request))) {
+  const clientIp = getClientIp(context.request)
+  if (rateLimiter && clientIp !== 'unknown' && !rateLimiter.consume(clientIp)) {
     return { status: 429, message: 'Trop de requetes.' }
   }
-
   const campaign = await context.findCampaignByCode(normalizeCampaignCode(identifier))
   if (!campaign) {
     return { status: 404, message: 'Campagne introuvable.' }

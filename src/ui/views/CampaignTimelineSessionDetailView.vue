@@ -168,7 +168,7 @@ function getSessionDateStatus(value: string): 'today' | 'upcoming' | 'past' {
 
 function getSessionStatusLabel(value: string): string {
   const status = getSessionDateStatus(value)
-  if (status === 'today') return 'Aujourd hui'
+  if (status === 'today') return "Aujourd'hui"
   if (status === 'upcoming') return 'A venir'
   return 'Passée'
 }
