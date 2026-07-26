@@ -431,6 +431,13 @@ input[type="radio"]:focus-visible {
   background-color: color-mix(in oklab, var(--color-base-100) 86%, transparent);
 }
 
+.nav-icon-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--color-base-100) 92%, transparent),
+    0 0 0 4px color-mix(in oklab, var(--color-accent) 42%, transparent);
+}
+
 .nav-icon-btn.router-link-active,
 .nav-icon-btn.router-link-exact-active {
   color: var(--color-accent);
@@ -520,6 +527,79 @@ input[type="radio"]:focus-visible {
 #mobile-nav-menu::backdrop {
   background: color-mix(in oklab, var(--color-neutral) 38%, transparent);
   backdrop-filter: blur(1px);
+}
+
+/* ============================================================================
+   6. UX STATE MATRIX - CRITICAL FORMS & ACTIONS
+   ============================================================================ */
+
+.ui-critical-control {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.ui-critical-control:hover:not(:disabled):not([aria-invalid='true']) {
+  border-color: color-mix(in oklab, var(--color-base-content) 22%, transparent);
+}
+
+.ui-critical-control:focus-visible {
+  outline: none;
+  border-color: color-mix(in oklab, var(--color-accent) 42%, transparent);
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--color-base-100) 92%, transparent),
+    0 0 0 4px color-mix(in oklab, var(--color-accent) 38%, transparent);
+}
+
+.ui-critical-control[aria-invalid='true'],
+.ui-critical-control.input-error,
+.ui-critical-control.textarea-error,
+.ui-critical-control.select-error {
+  border-color: color-mix(in oklab, var(--color-error) 70%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-error) 24%, transparent);
+}
+
+.ui-critical-control:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.ui-critical-action {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.12s ease;
+}
+
+.ui-critical-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ui-critical-action:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+.ui-critical-action:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px color-mix(in oklab, var(--color-base-100) 92%, transparent),
+    0 0 0 4px color-mix(in oklab, var(--color-accent) 40%, transparent);
+}
+
+.ui-critical-action:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.ui-critical-action[aria-busy='true'] {
+  cursor: progress;
 }
 
 @media (max-width: 640px) {

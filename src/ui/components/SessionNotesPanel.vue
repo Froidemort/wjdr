@@ -97,6 +97,14 @@ const linkedSessionFilterOptions = computed(() => {
   return options
 })
 
+const createContentError = computed(() =>
+  createError.value === 'Ajoutez un contenu texte.' ? createError.value : null
+)
+
+const editContentError = computed(() =>
+  editError.value === 'Ajoutez un contenu texte.' ? editError.value : null
+)
+
 function countOccurrences(haystack: string, needle: string): number {
   if (!haystack || !needle) {
     return 0
@@ -444,21 +452,25 @@ watch(
 
         <label class="form-control w-full">
           <span class="label-text mb-2">Titre</span>
-          <input v-model="createForm.title" type="text" class="input input-bordered w-full" placeholder="Titre de la note" />
+          <input v-model="createForm.title" type="text" class="input input-bordered ui-critical-control w-full" :aria-invalid="createContentError ? 'true' : 'false'" placeholder="Titre de la note" />
         </label>
 
         <label class="form-control w-full">
           <span class="label-text mb-2">Contenu texte</span>
           <textarea
             v-model="createForm.contentText"
-            class="textarea textarea-bordered min-h-24 w-full"
+            class="textarea textarea-bordered ui-critical-control min-h-24 w-full"
+            :aria-invalid="createContentError ? 'true' : 'false'"
+            :aria-errormessage="createContentError ? 'notes-create-content-error' : undefined"
+            :aria-describedby="createContentError ? 'notes-create-content-error' : undefined"
             placeholder="Message, indice, contexte..."
           />
         </label>
+        <p v-if="createContentError" id="notes-create-content-error" class="label text-error text-xs">{{ createContentError }}</p>
 
         <label class="form-control w-full" v-if="sessions?.length && !selectedSessionId">
           <span class="label-text mb-2">Session liée</span>
-          <select v-model="createForm.sessionId" class="select select-bordered w-full">
+          <select v-model="createForm.sessionId" class="select select-bordered ui-critical-control w-full" :aria-invalid="createContentError ? 'true' : 'false'">
             <option value="">Sans session liée</option>
             <option v-for="session in sessions" :key="session.id" :value="session.id">
               {{ formatSessionLabel(session) }}
@@ -472,7 +484,7 @@ watch(
         </label>
 
         <div class="flex items-center gap-2">
-          <button class="btn btn-sm" :disabled="creating || isSessionArchived" @click="handleCreate">
+          <button class="btn btn-sm ui-critical-action" :disabled="creating || isSessionArchived" :aria-busy="creating ? 'true' : 'false'" @click="handleCreate">
             <span v-if="creating" class="loading loading-spinner loading-xs" aria-hidden="true" />
             Créer la note
           </button>
@@ -488,7 +500,7 @@ watch(
       <div class="mb-3 space-y-2">
         <label v-if="sessions?.length && !selectedSessionId" class="form-control w-full">
           <span class="label-text mb-2">Filtrer par session liée</span>
-          <select v-model="linkedSessionFilter" class="select select-bordered w-full">
+          <select v-model="linkedSessionFilter" class="select select-bordered ui-critical-control w-full">
             <option
               v-for="option in linkedSessionFilterOptions"
               :key="option.value"
@@ -519,7 +531,7 @@ watch(
               <div>
                 <h3 class="font-semibold">{{ note.title }}</h3>
                 <p class="text-xs opacity-70">
-                  Note texte · {{ formatDateTime(note.createdAt) }}
+                  {{ formatDateTime(note.createdAt) }}
                 </p>
                 <p class="mt-1 text-xs">
                   <span
@@ -544,30 +556,33 @@ watch(
               <div class="flex flex-wrap items-center gap-2">
                 <button
                   v-if="isMj"
-                  class="btn btn-xs"
+                  class="btn btn-xs ui-critical-action"
                   :disabled="isBusy(`visibility-${note.id}`) || note.isArchived"
+                  :aria-busy="isBusy(`visibility-${note.id}`) ? 'true' : 'false'"
                   @click="handleToggleVisibility(note)"
                 >
                   {{ note.isVisible ? 'Rendre privee' : 'Rendre visible' }}
                 </button>
                 <button
                   v-if="isMj"
-                  class="btn btn-xs"
+                  class="btn btn-xs ui-critical-action"
                   :disabled="isBusy(`archive-${note.id}`)"
+                  :aria-busy="isBusy(`archive-${note.id}`) ? 'true' : 'false'"
                   @click="handleToggleArchived(note)"
                 >
                   {{ note.isArchived ? 'Desarchiver' : 'Archiver' }}
                 </button>
                 <button
-                  class="btn btn-xs"
+                  class="btn btn-xs ui-critical-action"
                   :disabled="note.isArchived"
                   @click="startEdit(note)"
                 >
                   Modifier
                 </button>
                 <button
-                  class="btn btn-xs btn-error"
+                  class="btn btn-xs btn-error ui-critical-action"
                   :disabled="isBusy(`delete-${note.id}`)"
+                  :aria-busy="isBusy(`delete-${note.id}`) ? 'true' : 'false'"
                   @click="handleDelete(note.id)"
                 >
                   Supprimer
@@ -577,11 +592,11 @@ watch(
               <div v-if="editNoteId === note.id" class="rounded-box border border-base-300 bg-base-100 p-3 space-y-2">
                 <label class="form-control w-full">
                   <span class="label-text mb-2">Titre</span>
-                  <input v-model="editDraft.title" type="text" class="input input-bordered w-full" />
+                  <input v-model="editDraft.title" type="text" class="input input-bordered ui-critical-control w-full" :aria-invalid="editContentError ? 'true' : 'false'" />
                 </label>
                 <label v-if="sessions?.length && !selectedSessionId" class="form-control w-full">
                   <span class="label-text mb-2">Session liée</span>
-                  <select v-model="editDraft.sessionId" class="select select-bordered w-full">
+                  <select v-model="editDraft.sessionId" class="select select-bordered ui-critical-control w-full" :aria-invalid="editContentError ? 'true' : 'false'">
                     <option value="">Sans session liée</option>
                     <option v-for="session in sessions" :key="session.id" :value="session.id">
                       {{ formatSessionLabel(session) }}
@@ -590,13 +605,14 @@ watch(
                 </label>
                 <label class="form-control w-full">
                   <span class="label-text mb-2">Contenu texte</span>
-                  <textarea v-model="editDraft.contentText" class="textarea textarea-bordered min-h-20 w-full" />
+                  <textarea v-model="editDraft.contentText" class="textarea textarea-bordered ui-critical-control min-h-20 w-full" :aria-invalid="editContentError ? 'true' : 'false'" :aria-errormessage="editContentError ? 'notes-edit-content-error' : undefined" :aria-describedby="editContentError ? 'notes-edit-content-error' : undefined" />
                 </label>
+                <p v-if="editContentError" id="notes-edit-content-error" class="label text-error text-xs">{{ editContentError }}</p>
                 <div class="flex items-center gap-2">
-                  <button class="btn btn-xs" :disabled="isBusy(`save-${note.id}`)" @click="handleSaveEdit(note.id)">
+                  <button class="btn btn-xs ui-critical-action" :disabled="isBusy(`save-${note.id}`)" :aria-busy="isBusy(`save-${note.id}`) ? 'true' : 'false'" @click="handleSaveEdit(note.id)">
                     Enregistrer
                   </button>
-                  <button class="btn btn-xs" @click="cancelEdit">Annuler</button>
+                  <button class="btn btn-xs ui-critical-action" @click="cancelEdit">Annuler</button>
                 </div>
                 <div v-if="editError" role="alert" class="alert alert-error alert-soft text-xs">
                   <span>{{ editError }}</span>

@@ -12,12 +12,70 @@ const username = ref('')
 const password = ref('')
 const passwordConfirm = ref('')
 const localError = ref<string | null>(null)
+const formSubmitted = ref(false)
 
 const isLogin = computed(() => authFormStore.mode === 'login')
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+const identifierError = computed(() => {
+  if (!isLogin.value || !formSubmitted.value) {
+    return null
+  }
+
+  return identifier.value.trim() ? null : "Renseigne ton email ou nom d'utilisateur."
+})
+
+const usernameError = computed(() => {
+  if (isLogin.value || !formSubmitted.value) {
+    return null
+  }
+
+  return username.value.trim() ? null : "Renseigne ton nom d'utilisateur."
+})
+
+const emailError = computed(() => {
+  if (isLogin.value || !formSubmitted.value) {
+    return null
+  }
+
+  const value = email.value.trim()
+  if (!value) {
+    return 'Renseigne un email.'
+  }
+
+  return isValidEmail(value) ? null : 'Format email invalide.'
+})
+
+const passwordError = computed(() => {
+  if (!formSubmitted.value) {
+    return null
+  }
+
+  if (!password.value.trim()) {
+    return 'Renseigne un mot de passe.'
+  }
+
+  return password.value.length >= 6 ? null : 'Le mot de passe doit contenir au moins 6 caracteres.'
+})
+
+const passwordConfirmError = computed(() => {
+  if (isLogin.value || !formSubmitted.value) {
+    return null
+  }
+
+  if (!passwordConfirm.value.trim()) {
+    return 'Confirme ton mot de passe.'
+  }
+
+  return password.value === passwordConfirm.value ? null : 'Les mots de passe ne correspondent pas.'
+})
+
 const tabClass = (active: boolean) =>
   [
-    'cursor-pointer border-b-2 pb-3 font-[family-name:var(--font-grim-title)] text-sm uppercase tracking-wide transition-colors',
+    'cursor-pointer border-b-2 pb-3 font-[family-name:var(--font-grim-title)] text-sm uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-base-100',
     active
       ? 'border-primary text-base-content'
       : 'border-transparent text-base-content/45 hover:text-base-content/70',
@@ -27,15 +85,22 @@ watch(
   () => authFormStore.mode,
   () => {
     localError.value = null
+    formSubmitted.value = false
     passwordConfirm.value = ''
   },
 )
 
 async function onSubmit(): Promise<void> {
+  formSubmitted.value = true
   localError.value = null
 
-  if (!isLogin.value && password.value !== passwordConfirm.value) {
-    localError.value = 'Les mots de passe ne correspondent pas.'
+  if (
+    identifierError.value ||
+    usernameError.value ||
+    emailError.value ||
+    passwordError.value ||
+    passwordConfirmError.value
+  ) {
     return
   }
 
@@ -50,6 +115,7 @@ async function onSubmit(): Promise<void> {
     username.value = ''
     password.value = ''
     passwordConfirm.value = ''
+    formSubmitted.value = false
   } catch {
     localError.value = authStore.authError ?? 'Action impossible.'
   }
@@ -102,21 +168,24 @@ async function onSubmit(): Promise<void> {
         <label class="label py-1">
           <span class="label-text">Nom d'utilisateur</span>
         </label>
-        <input v-model="username" type="text" class="input w-full" required autocomplete="username" />
+        <input v-model="username" type="text" class="input w-full ui-critical-control" :aria-invalid="usernameError ? 'true' : 'false'" :aria-errormessage="usernameError ? 'auth-username-error' : undefined" :aria-describedby="usernameError ? 'auth-username-error' : undefined" required autocomplete="username" />
+        <p v-if="usernameError" id="auth-username-error" class="label text-error text-xs">{{ usernameError }}</p>
       </div>
 
       <div v-if="isLogin" class="form-control">
         <label class="label py-1">
           <span class="label-text">Email ou nom d'utilisateur</span>
         </label>
-        <input v-model="identifier" type="text" class="input w-full" required autocomplete="username" />
+        <input v-model="identifier" type="text" class="input w-full ui-critical-control" :aria-invalid="identifierError ? 'true' : 'false'" :aria-errormessage="identifierError ? 'auth-identifier-error' : undefined" :aria-describedby="identifierError ? 'auth-identifier-error' : undefined" required autocomplete="username" />
+        <p v-if="identifierError" id="auth-identifier-error" class="label text-error text-xs">{{ identifierError }}</p>
       </div>
 
       <div v-if="!isLogin" class="form-control">
         <label class="label py-1">
           <span class="label-text">Email</span>
         </label>
-        <input v-model="email" type="email" class="input w-full" required autocomplete="email" />
+        <input v-model="email" type="email" class="input w-full ui-critical-control" :aria-invalid="emailError ? 'true' : 'false'" :aria-errormessage="emailError ? 'auth-email-error' : undefined" :aria-describedby="emailError ? 'auth-email-error' : undefined" required autocomplete="email" />
+        <p v-if="emailError" id="auth-email-error" class="label text-error text-xs">{{ emailError }}</p>
       </div>
 
       <PasswordInput
@@ -126,7 +195,10 @@ async function onSubmit(): Promise<void> {
         :minlength="6"
         :autocomplete="isLogin ? 'current-password' : 'new-password'"
         :show-strength="!isLogin"
+        :invalid="Boolean(passwordError)"
+        :error-message-id="passwordError ? 'auth-password-error' : null"
       />
+      <p v-if="passwordError" id="auth-password-error" class="label text-error text-xs">{{ passwordError }}</p>
 
       <PasswordInput
         v-if="!isLogin"
@@ -135,13 +207,16 @@ async function onSubmit(): Promise<void> {
         required
         :minlength="6"
         autocomplete="new-password"
+        :invalid="Boolean(passwordConfirmError)"
+        :error-message-id="passwordConfirmError ? 'auth-password-confirm-error' : null"
       />
+      <p v-if="passwordConfirmError" id="auth-password-confirm-error" class="label text-error text-xs">{{ passwordConfirmError }}</p>
 
       <div v-if="localError" role="alert" class="alert alert-error alert-soft text-sm">
         <span>{{ localError }}</span>
       </div>
 
-      <button type="submit" class="btn btn-primary mt-2 min-h-11 w-full" :disabled="authStore.loading">
+      <button type="submit" class="btn btn-primary ui-critical-action mt-2 min-h-11 w-full" :disabled="authStore.loading" :aria-busy="authStore.loading ? 'true' : 'false'">
         <span v-if="authStore.loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
         <span>{{ isLogin ? 'Se connecter' : 'Créer le compte' }}</span>
       </button>

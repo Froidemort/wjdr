@@ -8,14 +8,15 @@
 
 			<div class="flex flex-wrap gap-2">
 				<button
-					class="btn btn-sm min-h-11"
+					class="btn btn-sm min-h-11 ui-critical-action"
 					:disabled="requesting || Boolean(successMessage)"
+					:aria-busy="requesting ? 'true' : 'false'"
 					@click="sendRequest"
 				>
 					<span v-if="requesting" class="loading loading-spinner loading-xs" aria-hidden="true" />
 					Demander à rejoindre
 				</button>
-				<router-link class="btn btn-sm btn-outline min-h-11" to="/">
+				<router-link class="btn btn-sm btn-outline min-h-11 ui-critical-action" to="/">
 					<ChevronLeft class="h-4 w-4" />
 					Revenir à l'accueil
 				</router-link>

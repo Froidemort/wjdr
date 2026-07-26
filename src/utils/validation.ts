@@ -96,3 +96,12 @@ export function getPasswordStrength(password: string): PasswordStrength {
   const { id } = passwordStrength(password, [...STRENGTH_OPTIONS])
   return STRENGTH_UI[id] ?? STRENGTH_UI[0]
 }
+
+/**
+ * Validates if a string is UUID-like (matches UUID pattern)
+ */
+const UUID_PATTERN = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i
+
+export function isUuidLike(value: string): boolean {
+  return UUID_PATTERN.test(value)
+}

@@ -1,5 +1,5 @@
 <template>
-	<label class="swap swap-rotate cursor-pointer btn btn-ghost btn-sm btn-square">
+	<label class="swap swap-rotate cursor-pointer btn btn-ghost btn-square min-h-11 min-w-11">
 		<input
 			type="checkbox"
 			class="theme-controller sr-only"

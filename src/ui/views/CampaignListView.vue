@@ -10,6 +10,7 @@
       title="Rejoindre une campagne"
       placeholder="A B C D E F"
       button-label="Rejoindre"
+      helper-message="Demande le code au Maitre du Jeu puis saisis 6 caracteres (lettres/chiffres). Exemple: A1B2C3."
       :loading="joining"
       :success-message="joinSuccess"
       :error-message="joinError"
@@ -34,19 +35,29 @@
 			<template #default="{ items }">
         <AppCard v-for="campaign in items" :key="campaign.id" :title="campaign.name">
           <p class="text-sm opacity-80 line-clamp-3">{{ campaign.description || 'Aucune description.' }}</p>
-					<div class="mt-3 flex items-center gap-2">
+          <div class="mt-3 flex flex-wrap items-center gap-2">
             <span class="badge badge-sm" :class="campaign.isArchived ? 'badge-warning' : 'badge-success'">
 							{{ campaign.isArchived ? 'Archivée' : 'Active' }}
 						</span>
+            <span class="badge badge-outline badge-sm font-mono">Code: {{ campaign.code }}</span>
 					</div>
-          <div class="card-actions mt-4 items-center justify-between">
-            <button
-              class="link link-hover text-sm"
-              :title="feedbackMap[campaign.id] || `Code : ${campaign.code}`"
-              @click="copyLink(campaign.id, `/campaigns/${campaign.code}`)"
-            >
-              Copier le lien de campagne
-            </button>
+          <div class="card-actions mt-4 flex-wrap items-center justify-between gap-2">
+            <div class="join">
+              <button
+                class="btn btn-xs join-item"
+                :title="feedbackMap[`${campaign.id}-code`] || `Code : ${campaign.code}`"
+                @click="copyText(`${campaign.id}-code`, campaign.code, 'Code copie !')"
+              >
+                Copier le code
+              </button>
+              <button
+                class="btn btn-xs join-item"
+                :title="feedbackMap[`${campaign.id}-link`] || `Lien : /campaigns/${campaign.code}`"
+                @click="copyLink(`${campaign.id}-link`, `/campaigns/${campaign.code}`)"
+              >
+                Copier le lien
+              </button>
+            </div>
 						<router-link class="btn btn-sm" :to="`/campaigns/${campaign.id}`">Ouvrir</router-link>
 					</div>
 				</AppCard>
@@ -86,7 +97,7 @@ const {
   previousPage,
   resetPage,
 } = usePagination({ pageSize })
-const { feedbackMap, copyLink } = useCopyFeedback()
+const { feedbackMap, copyText, copyLink } = useCopyFeedback()
 
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
@@ -160,7 +171,8 @@ async function joinWithCode(): Promise<void> {
   joinError.value = null
   joinSuccess.value = null
   try {
-    await requestCampaignJoinByCode(authStore.user.id, joinCode.value)
+    const normalizedCode = joinCode.value.replaceAll(/\s+/g, '').toUpperCase()
+    await requestCampaignJoinByCode(authStore.user.id, normalizedCode)
     joinCode.value = ''
     joinSuccess.value =
       "Ta demande a été envoyée au Maître du Jeu ! Que Sigmar t'accorde sa faveur."
