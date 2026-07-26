@@ -608,7 +608,7 @@
           <p class="text-xs opacity-70">Saisissez au moins 2 caractères.</p>
           <div v-if="careerSearchLoading" class="flex items-center gap-2 text-sm opacity-70">
             <span class="loading loading-spinner loading-xs" aria-hidden="true" />
-            Recherche des carriere...
+            Recherche des carrières...
           </div>
 
 					<div class="max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
