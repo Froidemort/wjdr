@@ -26,7 +26,6 @@ function createBuilder(
     name: string
     description?: string | null
     specialization?: string | null
-    quality?: string | null
     encumbrance?: number | null
     damage_formula?: string | null
     armor_points?: number | null
@@ -67,7 +66,6 @@ describe('searchCatalog', () => {
         id: 'w1',
         name: 'Epee',
         description: 'Lame',
-        quality: 'bonne',
         encumbrance: 1,
         damage_formula: 'BF+1',
       },
@@ -85,7 +83,6 @@ describe('searchCatalog', () => {
         name: 'Epee',
         specialization: null,
         description: 'Lame',
-        quality: 'bonne',
         encumbrance: 1,
         damageFormula: 'BF+1',
         armorPoints: null,
@@ -112,7 +109,6 @@ describe('searchCatalog', () => {
         id: 'a1',
         name: 'Armure de cuir',
         description: 'Protection legere',
-        quality: 'normal',
         encumbrance: 2,
         armor_points: 1,
       },
@@ -129,7 +125,6 @@ describe('searchCatalog', () => {
         name: 'Armure de cuir',
         specialization: null,
         description: 'Protection legere',
-        quality: 'normal',
         encumbrance: 2,
         damageFormula: null,
         armorPoints: 1,
