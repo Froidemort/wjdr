@@ -531,7 +531,7 @@ watch(
               <div>
                 <h3 class="font-semibold">{{ note.title }}</h3>
                 <p class="text-xs opacity-70">
-                  Note texte · {{ formatDateTime(note.createdAt) }}
+                  {{ formatDateTime(note.createdAt) }}
                 </p>
                 <p class="mt-1 text-xs">
                   <span
