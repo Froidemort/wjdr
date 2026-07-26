@@ -15,11 +15,15 @@ const props = withDefaults(
     autocomplete?: string
     bordered?: boolean
     showStrength?: boolean
+    invalid?: boolean
+    errorMessageId?: string | null
   }>(),
   {
     required: false,
     bordered: false,
     showStrength: false,
+    invalid: false,
+    errorMessageId: null,
   },
 )
 
@@ -34,7 +38,7 @@ const strength = computed(() =>
       <span class="label-text">{{ label }}</span>
     </label>
 
-    <div :class="['input w-full !pr-1.5', { 'input-bordered': bordered }]">
+    <div :class="['input w-full !pr-1.5 ui-critical-control', { 'input-bordered': bordered, 'input-error': invalid }]">
       <input
         :id="inputId"
         v-model="model"
@@ -44,6 +48,8 @@ const strength = computed(() =>
         :minlength="minlength"
         :autocomplete="autocomplete"
         :aria-label="label"
+        :aria-invalid="invalid ? 'true' : 'false'"
+        :aria-errormessage="errorMessageId ?? undefined"
       />
       <button
         type="button"

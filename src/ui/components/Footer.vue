@@ -2,10 +2,11 @@
 defineOptions({ name: 'AppFooter' })
 
 const appVersion = '0.0.8'
+const currentYear = new Date().getFullYear()
 </script>
 
 <template>
-<footer class="footer footer-horizontal hidden lg:flex w-full justify-between border-t border-base-300 bg-base-200 text-base-content items-center p-4">
+<footer class="footer w-full border-t border-base-300 bg-base-200 text-base-content p-4 footer-vertical sm:footer-horizontal sm:items-center sm:justify-between">
   <aside class="flex items-center gap-2">
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -29,17 +30,17 @@ const appVersion = '0.0.8'
     </div>
     <div>
       <p class="text-xs text-center opacity-70">
-        Copyright © {{new Date().getFullYear()}} - Sous licence MIT
+        Copyright © {{ currentYear }} - Sous licence MIT
       </p>
     </div>
   </aside>
 
-  <nav class="flex items-center gap-4" aria-label="Liens externes">
+  <nav class="flex items-center gap-4 self-end sm:self-auto" aria-label="Liens externes">
     <a 
       href="https://github.com/Froidemort/wjdr" 
       target="_blank" 
       rel="noopener noreferrer" 
-      class="btn btn-ghost btn-sm btn-circle"
+      class="btn btn-ghost btn-circle min-h-11 min-w-11"
       aria-label="GitHub Repository"
     >
       <svg

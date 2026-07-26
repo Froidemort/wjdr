@@ -7,24 +7,6 @@ type AuthIdentifier = {
   email: string
 }
 
-const AUTH_TOKEN_COOKIE_NAME = 'wjdr_auth_token'
-
-function syncAuthTokenCookie(session: Session | null): void {
-  if (typeof document === 'undefined') {
-    return
-  }
-
-  const secureFlag = window.location.protocol === 'https:' ? '; Secure' : ''
-  if (!session?.access_token) {
-    document.cookie = `${AUTH_TOKEN_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${secureFlag}`
-    return
-  }
-
-  const expires = session.expires_at ? new Date(session.expires_at * 1000) : null
-  const expiresClause = expires ? `; Expires=${expires.toUTCString()}` : ''
-  document.cookie = `${AUTH_TOKEN_COOKIE_NAME}=${encodeURIComponent(session.access_token)}; Path=/; SameSite=Lax${secureFlag}${expiresClause}`
-}
-
 async function resolveIdentifier(input: string): Promise<AuthIdentifier> {
   const identifier = input.trim().toLowerCase()
   if (identifier.includes('@')) {
@@ -61,6 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
     avatarUrl: null,
   })
   let identityLoadPromise: Promise<void> | null = null
+  let identityLoadUserId: string | null = null
 
   const isAuthenticated = computed(() => Boolean(user.value))
 
@@ -93,40 +76,51 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     if (!options.force && identityLoadPromise) {
+      if (identityLoadUserId === userId) {
+        await identityLoadPromise
+        return
+      }
+
       await identityLoadPromise
-      return
+      if (identityCache.value.userId === userId) {
+        displayName.value = identityCache.value.displayName
+        avatarUrl.value = identityCache.value.avatarUrl
+        return
+      }
     }
 
     identityLoadPromise = (async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('full_name, username, avatar_url')
-      .eq('id', userId)
-      .maybeSingle()
+      identityLoadUserId = userId
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, username, avatar_url')
+        .eq('id', userId)
+        .maybeSingle()
 
-    if (error) {
-      displayName.value = deriveFallbackDisplayName(user.value)
-      avatarUrl.value = null
-      return
-    }
+      if (error) {
+        displayName.value = deriveFallbackDisplayName(user.value)
+        avatarUrl.value = null
+        return
+      }
 
-    const fullName = data?.full_name?.trim() ?? ''
-    const username = data?.username?.trim() ?? ''
-    const nextDisplayName = fullName || username || deriveFallbackDisplayName(user.value)
-    const nextAvatarUrl = data?.avatar_url ?? null
-    displayName.value = nextDisplayName
-    avatarUrl.value = nextAvatarUrl
-    identityCache.value = {
-      userId,
-      displayName: nextDisplayName,
-      avatarUrl: nextAvatarUrl,
-    }
+      const fullName = data?.full_name?.trim() ?? ''
+      const username = data?.username?.trim() ?? ''
+      const nextDisplayName = fullName || username || deriveFallbackDisplayName(user.value)
+      const nextAvatarUrl = data?.avatar_url ?? null
+      displayName.value = nextDisplayName
+      avatarUrl.value = nextAvatarUrl
+      identityCache.value = {
+        userId,
+        displayName: nextDisplayName,
+        avatarUrl: nextAvatarUrl,
+      }
     })()
 
     try {
       await identityLoadPromise
     } finally {
       identityLoadPromise = null
+      identityLoadUserId = null
     }
   }
 
@@ -145,7 +139,6 @@ export const useAuthStore = defineStore('auth', () => {
 
       session.value = data.session
       user.value = data.session?.user ?? null
-      syncAuthTokenCookie(data.session)
       if (user.value?.id) {
         await loadIdentity(user.value.id)
       }
@@ -153,7 +146,6 @@ export const useAuthStore = defineStore('auth', () => {
       supabase.auth.onAuthStateChange((_event, nextSession) => {
         session.value = nextSession
         user.value = nextSession?.user ?? null
-        syncAuthTokenCookie(nextSession)
         if (user.value?.id) {
           void loadIdentity(user.value.id)
         } else {
@@ -236,7 +228,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
       displayName.value = ''
       avatarUrl.value = null
-      syncAuthTokenCookie(null)
       identityCache.value = {
         userId: null,
         displayName: '',

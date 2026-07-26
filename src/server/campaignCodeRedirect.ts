@@ -1,3 +1,5 @@
+import { isUuidLike } from '../utils/validation'
+
 export type CampaignCodeLookup = {
   id: string
   mjId: string
@@ -24,13 +26,13 @@ export interface RateLimiter {
   consume: (ip: string) => boolean
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 const CODE_PATTERN = /^[A-Z0-9]{6}$/i
 
 export function isUuidIdentifier(identifier: string): boolean {
-  return UUID_PATTERN.test(identifier.trim())
+  return isUuidLike(identifier.trim())
 }
+
 
 export function isCampaignCodeIdentifier(identifier: string): boolean {
   return CODE_PATTERN.test(identifier.trim())
@@ -62,20 +64,19 @@ export function createInMemoryRateLimiter(limit: number, windowMs: number): Rate
   }
 }
 
-export function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+function getClientIp(request: Request): string {
+  const forwardedFor = request.headers.get('x-forwarded-for')
   if (forwardedFor) {
-    return forwardedFor
+    const [firstIp] = forwardedFor.split(',')
+    const ip = firstIp?.trim()
+    if (ip) {
+      return ip
+    }
   }
 
   const realIp = request.headers.get('x-real-ip')?.trim()
   if (realIp) {
     return realIp
-  }
-
-  const cfConnectingIp = request.headers.get('cf-connecting-ip')?.trim()
-  if (cfConnectingIp) {
-    return cfConnectingIp
   }
 
   return 'unknown'
@@ -85,7 +86,6 @@ export async function resolveCampaignCodeRedirect(
   context: CampaignCodeResolutionContext
 ): Promise<CampaignCodeResolutionResult> {
   const identifier = context.identifier.trim()
-
   if (isUuidIdentifier(identifier)) {
     return { status: 200 }
   }
@@ -95,10 +95,10 @@ export async function resolveCampaignCodeRedirect(
   }
 
   const rateLimiter = context.rateLimiter
-  if (rateLimiter && !rateLimiter.consume(getClientIp(context.request))) {
+  const clientIp = getClientIp(context.request)
+  if (rateLimiter && clientIp !== 'unknown' && !rateLimiter.consume(clientIp)) {
     return { status: 429, message: 'Trop de requetes.' }
   }
-
   const campaign = await context.findCampaignByCode(normalizeCampaignCode(identifier))
   if (!campaign) {
     return { status: 404, message: 'Campagne introuvable.' }
