@@ -29,6 +29,10 @@ export interface RateLimiter {
 
 const CODE_PATTERN = /^[A-Z0-9]{6}$/i
 
+export function isUuidIdentifier(identifier: string): boolean {
+  return isUuidLike(identifier.trim())
+}
+
 
 export function isCampaignCodeIdentifier(identifier: string): boolean {
   return CODE_PATTERN.test(identifier.trim())
@@ -59,6 +63,36 @@ export function createInMemoryRateLimiter(limit: number, windowMs: number): Rate
     },
   }
 }
+
+function getClientIp(request: Request): string {
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  if (forwardedFor) {
+    const [firstIp] = forwardedFor.split(',')
+    const ip = firstIp?.trim()
+    if (ip) {
+      return ip
+    }
+  }
+
+  const realIp = request.headers.get('x-real-ip')?.trim()
+  if (realIp) {
+    return realIp
+  }
+
+  return 'unknown'
+}
+
+export async function resolveCampaignCodeRedirect(
+  context: CampaignCodeResolutionContext
+): Promise<CampaignCodeResolutionResult> {
+  const identifier = context.identifier.trim()
+  if (isUuidIdentifier(identifier)) {
+    return { status: 200 }
+  }
+
+  if (!isCampaignCodeIdentifier(identifier)) {
+    return { status: 404, message: 'Campagne introuvable.' }
+  }
 
   const rateLimiter = context.rateLimiter
   const clientIp = getClientIp(context.request)
