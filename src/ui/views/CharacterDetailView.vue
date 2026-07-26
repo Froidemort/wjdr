@@ -2636,6 +2636,10 @@ onBeforeUnmount(() => {
     clearTimeout(catalogSearchTimer)
     catalogSearchTimer = null
   }
+  if (sectionSuccessTimer) {
+    clearTimeout(sectionSuccessTimer)
+    sectionSuccessTimer = null
+  }
 
   if (actionSuccessTimer) {
     clearTimeout(actionSuccessTimer)
