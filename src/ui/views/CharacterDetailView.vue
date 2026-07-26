@@ -791,9 +791,9 @@
     <!-- Pied de page navigation -->
     <footer class="fixed inset-x-0 bottom-0 z-40 border-t border-base-300 bg-base-100/95 px-3 py-2 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
       <div class="mx-auto flex w-full max-w-6xl gap-2">
-        <router-link v-if="character" class="btn btn-sm min-h-11 flex-1" :to="`/sessions/${character.sessionId}`">
+        <router-link v-if="character" class="btn btn-sm min-h-11 flex-1" :to="`/campaigns/${character.campaignId}`">
           <ChevronLeft class="h-4 w-4" />
-          Retour à la session
+          Retour à la campagne
         </router-link>
         <router-link class="btn btn-sm min-h-11 flex-1" to="/">
           <ChevronLeft class="h-4 w-4" />

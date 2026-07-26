@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Kxh1dVmLtMY8honbAuKhvpb1a9hOLcDBelC2c4m1UOsaHKEvioq4DSzyXu3MtLa
+\restrict 7XzRydsqG5ddl9JCnrqylTHNeYNM5XApWn8KnGRharEQFIE2DTiqrVZ8EOridj5
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.10 (Debian 17.10-1.pgdg13+1)
@@ -51,60 +51,55 @@ $$;
 
 
 --
+-- Name: get_campaign_id_by_code(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_campaign_id_by_code(target_code text) RETURNS uuid
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select c.id
+  from public.campaigns c
+  where upper(c.code) = upper(target_code)
+    and c.is_archived = false
+  limit 1;
+$$;
+
+
+--
+-- Name: get_campaign_owner_for_request(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_campaign_owner_for_request(target_campaign_id uuid) RETURNS uuid
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select c.mj_id
+  from public.campaigns c
+  where c.id = target_campaign_id
+    and c.is_archived = false
+  limit 1;
+$$;
+
+
+--
 -- Name: get_email_by_username(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.get_email_by_username(search_username text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
+    SET search_path TO 'public'
     AS $$
 declare
   found_email text;
 begin
-  -- Empêche l'exposition d'emails aux appels anonymes.
-  if auth.uid() is null then
-    return null;
-  end if;
-
-  select p.email into found_email
-  from public.profiles p
-  where lower(p.username) = lower(search_username)
+  select email into found_email
+  from public.profiles
+  where lower(username) = lower(search_username)
   limit 1;
 
   return found_email;
 end;
-$$;
-
-
---
--- Name: get_session_id_by_code(text); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.get_session_id_by_code(target_code text) RETURNS uuid
-    LANGUAGE sql SECURITY DEFINER
-    SET search_path TO ''
-    AS $$
-  select s.id
-  from public.sessions s
-  where upper(s.code) = upper(target_code)
-    and s.is_archived = false
-  limit 1;
-$$;
-
-
---
--- Name: get_session_owner_for_request(uuid); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.get_session_owner_for_request(target_session_id uuid) RETURNS uuid
-    LANGUAGE sql SECURITY DEFINER
-    SET search_path TO ''
-    AS $$
-  select s.mj_id
-  from public.sessions s
-  where s.id = target_session_id
-    and s.is_archived = false
-  limit 1;
 $$;
 
 
@@ -146,10 +141,10 @@ CREATE FUNCTION public.is_character_visible(target_character_id uuid) RETURNS bo
         c.user_id = auth.uid()
         or exists (
           select 1
-          from public.users_session us
-          where us.session_id = c.session_id
-            and us.user_id = auth.uid()
-            and us.active = true
+          from public.users_campaigns uc
+          where uc.campaign_id = c.campaign_id
+            and uc.user_id = auth.uid()
+            and uc.active = true
         )
       )
   );
@@ -166,9 +161,9 @@ CREATE FUNCTION public.is_session_mj(target_session_id uuid) RETURNS boolean
     AS $$
   select exists (
     select 1
-    from public.sessions s
-    where s.id = target_session_id
-      and s.mj_id = auth.uid()
+    from public.campaigns c
+    where c.id = target_session_id
+      and c.mj_id = auth.uid()
   );
 $$;
 
@@ -177,7 +172,7 @@ $$;
 -- Name: search_session_notes(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_session_notes(target_session_id uuid, search_text text) RETURNS TABLE(id uuid, session_id uuid, author_user_id uuid, title character varying, content_text text, is_visible boolean, is_archived boolean, created_at timestamp with time zone, updated_at timestamp with time zone, rank real)
+CREATE FUNCTION public.search_session_notes(target_campaign_id uuid, search_text text) RETURNS TABLE(id uuid, campaign_id uuid, author_user_id uuid, title character varying, content_text text, is_visible boolean, is_archived boolean, created_at timestamp with time zone, updated_at timestamp with time zone, rank real)
     LANGUAGE sql STABLE
     SET search_path TO ''
     AS $$
@@ -186,7 +181,7 @@ CREATE FUNCTION public.search_session_notes(target_session_id uuid, search_text 
   )
   select
     sn.id,
-    sn.session_id,
+    sn.campaign_id,
     sn.author_user_id,
     sn.title,
     sn.content_text,
@@ -197,7 +192,7 @@ CREATE FUNCTION public.search_session_notes(target_session_id uuid, search_text 
     ts_rank('{0.0,0.2,0.6,1.0}'::real[], sn.fts_weighted, q.tsq, 32) as rank
   from public.session_notes sn
   cross join q
-  where sn.session_id = target_session_id
+  where sn.campaign_id = target_campaign_id
     and q.tsq <> ''::tsquery
     and sn.fts_weighted @@ q.tsq
   order by rank desc, sn.created_at desc;
@@ -221,6 +216,21 @@ CREATE TABLE public.armors (
     covered_locations text[] NOT NULL,
     CONSTRAINT armors_covered_locations_check CHECK (((cardinality(covered_locations) > 0) AND (covered_locations <@ ARRAY['tête'::text, 'corps'::text, 'bras'::text, 'jambes'::text]))),
     CONSTRAINT armors_encumbrance_check CHECK ((encumbrance >= 0))
+);
+
+
+--
+-- Name: campaigns; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.campaigns (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    mj_id uuid NOT NULL,
+    name character varying(100) NOT NULL,
+    code character varying(6) NOT NULL,
+    description text,
+    is_archived boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
 );
 
 
@@ -333,7 +343,7 @@ CREATE TABLE public.character_weapons (
 CREATE TABLE public.characters (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
-    session_id uuid NOT NULL,
+    campaign_id uuid NOT NULL,
     name character varying(100) NOT NULL,
     race character varying(20) NOT NULL,
     career_id uuid NOT NULL,
@@ -417,7 +427,7 @@ CREATE TABLE public.profiles (
 
 CREATE TABLE public.session_notes (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
-    session_id uuid NOT NULL,
+    campaign_id uuid NOT NULL,
     author_user_id uuid DEFAULT auth.uid() NOT NULL,
     title character varying(200) NOT NULL,
     content_text text,
@@ -426,6 +436,7 @@ CREATE TABLE public.session_notes (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     fts_weighted tsvector GENERATED ALWAYS AS ((setweight(to_tsvector('french'::regconfig, (COALESCE(title, ''::character varying))::text), 'A'::"char") || setweight(to_tsvector('french'::regconfig, COALESCE(content_text, ''::text)), 'B'::"char"))) STORED,
+    session_id uuid,
     CONSTRAINT session_notes_has_content CHECK ((COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0))
 );
 
@@ -438,12 +449,12 @@ ALTER TABLE ONLY public.session_notes REPLICA IDENTITY FULL;
 
 CREATE TABLE public.sessions (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
-    mj_id uuid NOT NULL,
-    name character varying(100) NOT NULL,
-    code character varying(6) NOT NULL,
+    campaign_id uuid NOT NULL,
+    date date NOT NULL,
+    name character varying(100),
     description text,
-    is_archived boolean DEFAULT false NOT NULL,
-    created_at timestamp with time zone DEFAULT now()
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -485,11 +496,11 @@ CREATE TABLE public.talents (
 
 
 --
--- Name: users_session; Type: TABLE; Schema: public; Owner: -
+-- Name: users_campaigns; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.users_session (
-    session_id uuid NOT NULL,
+CREATE TABLE public.users_campaigns (
+    campaign_id uuid NOT NULL,
     user_id uuid NOT NULL,
     active boolean DEFAULT true NOT NULL
 );
@@ -536,6 +547,22 @@ CREATE TABLE public.weapons (
 
 ALTER TABLE ONLY public.armors
     ADD CONSTRAINT armors_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: campaigns campaigns_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaigns
+    ADD CONSTRAINT campaigns_code_key UNIQUE (code);
+
+
+--
+-- Name: campaigns campaigns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaigns
+    ADD CONSTRAINT campaigns_pkey PRIMARY KEY (id);
 
 
 --
@@ -675,14 +702,6 @@ ALTER TABLE ONLY public.session_notes
 
 
 --
--- Name: sessions sessions_code_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT sessions_code_key UNIQUE (code);
-
-
---
 -- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -731,11 +750,11 @@ ALTER TABLE ONLY public.talents
 
 
 --
--- Name: users_session users_session_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users_campaigns users_campaigns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.users_session
-    ADD CONSTRAINT users_session_pkey PRIMARY KEY (session_id, user_id);
+ALTER TABLE ONLY public.users_campaigns
+    ADD CONSTRAINT users_campaigns_pkey PRIMARY KEY (campaign_id, user_id);
 
 
 --
@@ -778,6 +797,13 @@ CREATE UNIQUE INDEX armors_name_key ON public.armors USING btree (name);
 
 
 --
+-- Name: session_notes_campaign_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX session_notes_campaign_created_idx ON public.session_notes USING btree (campaign_id, created_at DESC);
+
+
+--
 -- Name: session_notes_fts_weighted_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -785,10 +811,17 @@ CREATE INDEX session_notes_fts_weighted_idx ON public.session_notes USING gin (f
 
 
 --
--- Name: session_notes_session_created_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: session_notes_session_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX session_notes_session_created_idx ON public.session_notes USING btree (session_id, created_at DESC);
+CREATE INDEX session_notes_session_idx ON public.session_notes USING btree (session_id);
+
+
+--
+-- Name: sessions_campaign_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX sessions_campaign_date_idx ON public.sessions USING btree (campaign_id, date DESC);
 
 
 --
@@ -803,6 +836,14 @@ CREATE UNIQUE INDEX weapons_name_key ON public.weapons USING btree (name);
 --
 
 CREATE TRIGGER delete_old_notifications_trigger AFTER INSERT ON public.notifications FOR EACH ROW EXECUTE FUNCTION public.delete_old_notifications();
+
+
+--
+-- Name: campaigns campaigns_mj_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaigns
+    ADD CONSTRAINT campaigns_mj_id_fkey FOREIGN KEY (mj_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -918,19 +959,19 @@ ALTER TABLE ONLY public.character_weapons
 
 
 --
+-- Name: characters characters_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT characters_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
+
+
+--
 -- Name: characters characters_career_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.characters
     ADD CONSTRAINT characters_career_id_fkey FOREIGN KEY (career_id) REFERENCES public.careers(id);
-
-
---
--- Name: characters characters_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.characters
-    ADD CONSTRAINT characters_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE CASCADE;
 
 
 --
@@ -974,19 +1015,27 @@ ALTER TABLE ONLY public.session_notes
 
 
 --
+-- Name: session_notes session_notes_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.session_notes
+    ADD CONSTRAINT session_notes_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
+
+
+--
 -- Name: session_notes session_notes_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.session_notes
-    ADD CONSTRAINT session_notes_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE CASCADE;
+    ADD CONSTRAINT session_notes_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE SET NULL;
 
 
 --
--- Name: sessions sessions_mj_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: sessions sessions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT sessions_mj_id_fkey FOREIGN KEY (mj_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+    ADD CONSTRAINT sessions_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
 
 
 --
@@ -998,19 +1047,19 @@ ALTER TABLE ONLY public.skills
 
 
 --
--- Name: users_session users_session_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: users_campaigns users_campaigns_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.users_session
-    ADD CONSTRAINT users_session_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.users_campaigns
+    ADD CONSTRAINT users_campaigns_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id) ON DELETE CASCADE;
 
 
 --
--- Name: users_session users_session_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: users_campaigns users_campaigns_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.users_session
-    ADD CONSTRAINT users_session_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.users_campaigns
+    ADD CONSTRAINT users_campaigns_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -1104,8 +1153,8 @@ CREATE POLICY "Authenticated can read items." ON public.items FOR SELECT TO auth
 --
 
 CREATE POLICY "Authors or MJ can delete session_notes" ON public.session_notes FOR DELETE TO authenticated USING (((author_user_id = auth.uid()) OR (EXISTS ( SELECT 1
-   FROM public.sessions s
-  WHERE ((s.id = session_notes.session_id) AND (s.mj_id = auth.uid()))))));
+   FROM public.campaigns c
+  WHERE ((c.id = session_notes.campaign_id) AND (c.mj_id = auth.uid()))))));
 
 
 --
@@ -1113,10 +1162,29 @@ CREATE POLICY "Authors or MJ can delete session_notes" ON public.session_notes F
 --
 
 CREATE POLICY "Authors or MJ can update session_notes" ON public.session_notes FOR UPDATE TO authenticated USING (((author_user_id = auth.uid()) OR (EXISTS ( SELECT 1
-   FROM public.sessions s
-  WHERE ((s.id = session_notes.session_id) AND (s.mj_id = auth.uid())))))) WITH CHECK (((COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0) AND ((author_user_id = auth.uid()) OR (EXISTS ( SELECT 1
-   FROM public.sessions s
-  WHERE ((s.id = session_notes.session_id) AND (s.mj_id = auth.uid())))))));
+   FROM public.campaigns c
+  WHERE ((c.id = session_notes.campaign_id) AND (c.mj_id = auth.uid())))))) WITH CHECK (((COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0) AND ((author_user_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM public.campaigns c
+  WHERE ((c.id = session_notes.campaign_id) AND (c.mj_id = auth.uid())))))));
+
+
+--
+-- Name: session_notes Campaign members can insert session_notes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Campaign members can insert session_notes" ON public.session_notes FOR INSERT TO authenticated WITH CHECK (((auth.uid() IS NOT NULL) AND (author_user_id = auth.uid()) AND (COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0) AND (EXISTS ( SELECT 1
+   FROM (public.users_campaigns uc
+     JOIN public.campaigns c ON ((c.id = uc.campaign_id)))
+  WHERE ((uc.campaign_id = session_notes.campaign_id) AND (uc.user_id = auth.uid()) AND (uc.active = true) AND (c.is_archived = false))))));
+
+
+--
+-- Name: sessions Campaign members can read sessions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Campaign members can read sessions" ON public.sessions FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.users_campaigns uc
+  WHERE ((uc.campaign_id = sessions.campaign_id) AND (uc.user_id = auth.uid()) AND (uc.active = true)))));
 
 
 --
@@ -1176,21 +1244,32 @@ CREATE POLICY "Everyone can read weapons." ON public.weapons FOR SELECT TO authe
 
 
 --
--- Name: users_session MJ can create users_session.; Type: POLICY; Schema: public; Owner: -
+-- Name: users_campaigns MJ can create users_campaigns.; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "MJ can create users_session." ON public.users_session FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
-   FROM public.sessions
-  WHERE ((sessions.id = users_session.session_id) AND (sessions.mj_id = auth.uid())))));
+CREATE POLICY "MJ can create users_campaigns." ON public.users_campaigns FOR INSERT TO authenticated WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.campaigns
+  WHERE ((campaigns.id = users_campaigns.campaign_id) AND (campaigns.mj_id = auth.uid())))));
 
 
 --
--- Name: users_session MJ can delete users_session.; Type: POLICY; Schema: public; Owner: -
+-- Name: users_campaigns MJ can delete users_campaigns.; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "MJ can delete users_session." ON public.users_session FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.sessions
-  WHERE ((sessions.id = users_session.session_id) AND (sessions.mj_id = auth.uid())))));
+CREATE POLICY "MJ can delete users_campaigns." ON public.users_campaigns FOR DELETE TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.campaigns
+  WHERE ((campaigns.id = users_campaigns.campaign_id) AND (campaigns.mj_id = auth.uid())))));
+
+
+--
+-- Name: sessions MJ can manage sessions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "MJ can manage sessions" ON public.sessions TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.campaigns c
+  WHERE ((c.id = sessions.campaign_id) AND (c.mj_id = auth.uid()))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.campaigns c
+  WHERE ((c.id = sessions.campaign_id) AND (c.mj_id = auth.uid())))));
 
 
 --
@@ -1198,40 +1277,40 @@ CREATE POLICY "MJ can delete users_session." ON public.users_session FOR DELETE 
 --
 
 CREATE POLICY "MJ can read session_notes" ON public.session_notes FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.sessions s
-  WHERE ((s.id = session_notes.session_id) AND (s.mj_id = auth.uid())))));
+   FROM public.campaigns c
+  WHERE ((c.id = session_notes.campaign_id) AND (c.mj_id = auth.uid())))));
 
 
 --
--- Name: users_session MJ can read users_session.; Type: POLICY; Schema: public; Owner: -
+-- Name: users_campaigns MJ can read users_campaigns.; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "MJ can read users_session." ON public.users_session FOR SELECT TO authenticated USING (public.is_session_mj(session_id));
-
-
---
--- Name: users_session MJ can update users_session.; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "MJ can update users_session." ON public.users_session FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.sessions
-  WHERE ((sessions.id = users_session.session_id) AND (sessions.mj_id = auth.uid())))));
+CREATE POLICY "MJ can read users_campaigns." ON public.users_campaigns FOR SELECT TO authenticated USING (public.is_session_mj(campaign_id));
 
 
 --
--- Name: sessions MJs can update own sessions.; Type: POLICY; Schema: public; Owner: -
+-- Name: users_campaigns MJ can update users_campaigns.; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "MJs can update own sessions." ON public.sessions FOR UPDATE TO authenticated USING ((auth.uid() = mj_id));
+CREATE POLICY "MJ can update users_campaigns." ON public.users_campaigns FOR UPDATE TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.campaigns
+  WHERE ((campaigns.id = users_campaigns.campaign_id) AND (campaigns.mj_id = auth.uid())))));
 
 
 --
--- Name: sessions Player can read own sessions.; Type: POLICY; Schema: public; Owner: -
+-- Name: campaigns MJs can update own campaigns.; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "Player can read own sessions." ON public.sessions FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+CREATE POLICY "MJs can update own campaigns." ON public.campaigns FOR UPDATE TO authenticated USING ((auth.uid() = mj_id));
+
+
+--
+-- Name: campaigns Player can read own campaigns.; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Player can read own campaigns." ON public.campaigns FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
    FROM public.characters
-  WHERE ((characters.session_id = sessions.id) AND (characters.user_id = auth.uid())))));
+  WHERE ((characters.campaign_id = campaigns.id) AND (characters.user_id = auth.uid())))));
 
 
 --
@@ -1239,41 +1318,38 @@ CREATE POLICY "Player can read own sessions." ON public.sessions FOR SELECT TO a
 --
 
 CREATE POLICY "Players can read visible session_notes" ON public.session_notes FOR SELECT TO authenticated USING (((is_visible = true) AND (EXISTS ( SELECT 1
-   FROM public.users_session us
-  WHERE ((us.session_id = session_notes.session_id) AND (us.user_id = auth.uid()) AND (us.active = true))))));
+   FROM public.users_campaigns uc
+  WHERE ((uc.campaign_id = session_notes.campaign_id) AND (uc.user_id = auth.uid()) AND (uc.active = true))))));
 
 
 --
--- Name: session_notes Session members can insert session_notes; Type: POLICY; Schema: public; Owner: -
+-- Name: users_campaigns User can create users_campaigns only when user is campaign MJ; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "Session members can insert session_notes" ON public.session_notes FOR INSERT TO authenticated WITH CHECK (((auth.uid() IS NOT NULL) AND (author_user_id = auth.uid()) AND (COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0) AND (EXISTS ( SELECT 1
-   FROM (public.users_session us
-     JOIN public.sessions s ON ((s.id = us.session_id)))
-  WHERE ((us.session_id = session_notes.session_id) AND (us.user_id = auth.uid()) AND (us.active = true) AND (s.is_archived = false))))));
-
-
---
--- Name: users_session User can create users_session only when user is session MJ; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "User can create users_session only when user is session MJ" ON public.users_session FOR INSERT TO authenticated WITH CHECK (((auth.uid() = user_id) AND (EXISTS ( SELECT 1
-   FROM public.sessions s
-  WHERE ((s.id = users_session.session_id) AND (s.mj_id = auth.uid()))))));
+CREATE POLICY "User can create users_campaigns only when user is campaign MJ" ON public.users_campaigns FOR INSERT TO authenticated WITH CHECK (((auth.uid() = user_id) AND (EXISTS ( SELECT 1
+   FROM public.campaigns c
+  WHERE ((c.id = users_campaigns.campaign_id) AND (c.mj_id = auth.uid()))))));
 
 
 --
--- Name: users_session User can delete own users_session.; Type: POLICY; Schema: public; Owner: -
+-- Name: users_campaigns User can delete own users_campaigns.; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "User can delete own users_session." ON public.users_session FOR DELETE TO authenticated USING ((auth.uid() = user_id));
+CREATE POLICY "User can delete own users_campaigns." ON public.users_campaigns FOR DELETE TO authenticated USING ((auth.uid() = user_id));
 
 
 --
--- Name: users_session User can read own users_session.; Type: POLICY; Schema: public; Owner: -
+-- Name: users_campaigns User can read own users_campaigns.; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "User can read own users_session." ON public.users_session FOR SELECT TO authenticated USING ((auth.uid() = user_id));
+CREATE POLICY "User can read own users_campaigns." ON public.users_campaigns FOR SELECT TO authenticated USING ((auth.uid() = user_id));
+
+
+--
+-- Name: campaigns Users can create campaigns.; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can create campaigns." ON public.campaigns FOR INSERT TO authenticated WITH CHECK ((auth.uid() = mj_id));
 
 
 --
@@ -1349,13 +1425,6 @@ CREATE POLICY "Users can create items." ON public.items FOR INSERT TO authentica
 --
 
 CREATE POLICY "Users can create notifications." ON public.notifications FOR INSERT TO authenticated WITH CHECK (((auth.uid() = sender_user_id) OR (sender_user_id IS NULL)));
-
-
---
--- Name: sessions Users can create sessions.; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Users can create sessions." ON public.sessions FOR INSERT TO authenticated WITH CHECK ((auth.uid() = mj_id));
 
 
 --
@@ -1473,17 +1542,17 @@ CREATE POLICY "Users can read character_weapons in accessible sessions" ON publi
 --
 
 CREATE POLICY "Users can read characters in joined sessions." ON public.characters FOR SELECT TO authenticated USING (((auth.uid() = user_id) OR (EXISTS ( SELECT 1
-   FROM public.users_session us
-  WHERE ((us.session_id = characters.session_id) AND (us.user_id = auth.uid()) AND (us.active = true))))));
+   FROM public.users_campaigns us
+  WHERE ((us.campaign_id = characters.campaign_id) AND (us.user_id = auth.uid()) AND (us.active = true))))));
 
 
 --
--- Name: sessions Users can read joined sessions via users_session.; Type: POLICY; Schema: public; Owner: -
+-- Name: campaigns Users can read joined sessions via users_session.; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "Users can read joined sessions via users_session." ON public.sessions FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
-   FROM public.users_session
-  WHERE ((users_session.session_id = sessions.id) AND (users_session.user_id = auth.uid()) AND (users_session.active = true)))));
+CREATE POLICY "Users can read joined sessions via users_session." ON public.campaigns FOR SELECT TO authenticated USING ((EXISTS ( SELECT 1
+   FROM public.users_campaigns
+  WHERE ((users_campaigns.campaign_id = campaigns.id) AND (users_campaigns.user_id = auth.uid()) AND (users_campaigns.active = true)))));
 
 
 --
@@ -1498,8 +1567,8 @@ CREATE POLICY "Users can read own notifications." ON public.notifications FOR SE
 --
 
 CREATE POLICY "Users can read profiles in shared sessions or self" ON public.profiles FOR SELECT TO authenticated USING (((id = auth.uid()) OR (EXISTS ( SELECT 1
-   FROM (public.users_session me
-     JOIN public.users_session other ON ((other.session_id = me.session_id)))
+   FROM (public.users_campaigns me
+     JOIN public.users_campaigns other ON ((other.campaign_id = me.campaign_id)))
   WHERE ((me.user_id = auth.uid()) AND (other.user_id = profiles.id) AND (me.active = true) AND (other.active = true))))));
 
 
@@ -1590,6 +1659,12 @@ CREATE POLICY "Users can update own profile." ON public.profiles FOR UPDATE USIN
 --
 
 ALTER TABLE public.armors ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: campaigns; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: career_paths; Type: ROW SECURITY; Schema: public; Owner: -
@@ -1694,10 +1769,10 @@ ALTER TABLE public.static_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.talents ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: users_session; Type: ROW SECURITY; Schema: public; Owner: -
+-- Name: users_campaigns; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
-ALTER TABLE public.users_session ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users_campaigns ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: weapon_attribute_mappings; Type: ROW SECURITY; Schema: public; Owner: -
@@ -1736,43 +1811,11 @@ GRANT ALL ON FUNCTION public.get_email_by_username(search_username text) TO auth
 
 
 --
--- Name: FUNCTION get_session_id_by_code(target_code text); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.get_session_id_by_code(target_code text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.get_session_id_by_code(target_code text) TO authenticated;
-
-
---
--- Name: FUNCTION get_session_owner_for_request(target_session_id uuid); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.get_session_owner_for_request(target_session_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.get_session_owner_for_request(target_session_id uuid) TO authenticated;
-
-
---
 -- Name: FUNCTION is_character_visible(target_character_id uuid); Type: ACL; Schema: public; Owner: -
 --
 
 REVOKE ALL ON FUNCTION public.is_character_visible(target_character_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.is_character_visible(target_character_id uuid) TO authenticated;
-
-
---
--- Name: FUNCTION is_session_mj(target_session_id uuid); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.is_session_mj(target_session_id uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.is_session_mj(target_session_id uuid) TO authenticated;
-
-
---
--- Name: FUNCTION search_session_notes(target_session_id uuid, search_text text); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.search_session_notes(target_session_id uuid, search_text text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.search_session_notes(target_session_id uuid, search_text text) TO authenticated;
 
 
 --
@@ -1782,6 +1825,15 @@ GRANT ALL ON FUNCTION public.search_session_notes(target_session_id uuid, search
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.armors TO anon;
 GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.armors TO authenticated;
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.armors TO service_role;
+
+
+--
+-- Name: TABLE campaigns; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.campaigns TO anon;
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.campaigns TO authenticated;
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.campaigns TO service_role;
 
 
 --
@@ -1906,7 +1958,7 @@ GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.session_notes TO serv
 --
 
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.sessions TO anon;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.sessions TO authenticated;
+GRANT ALL ON TABLE public.sessions TO authenticated;
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.sessions TO service_role;
 
 
@@ -1938,12 +1990,12 @@ GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.talents TO service_ro
 
 
 --
--- Name: TABLE users_session; Type: ACL; Schema: public; Owner: -
+-- Name: TABLE users_campaigns; Type: ACL; Schema: public; Owner: -
 --
 
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.users_session TO anon;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.users_session TO authenticated;
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.users_session TO service_role;
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.users_campaigns TO anon;
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.users_campaigns TO authenticated;
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.users_campaigns TO service_role;
 
 
 --
@@ -2031,4 +2083,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Kxh1dVmLtMY8honbAuKhvpb1a9hOLcDBelC2c4m1UOsaHKEvioq4DSzyXu3MtLa
+\unrestrict 7XzRydsqG5ddl9JCnrqylTHNeYNM5XApWn8KnGRharEQFIE2DTiqrVZ8EOridj5
+

@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import {
   buildSessionNotesChannelName,
   buildSessionNotesRealtimeSubscriptions,
   createSessionNote,
   deleteSessionNote,
-  listSessionNotesForSession,
+  listSessionNotesForCampaign,
   toggleSessionNoteArchivedState,
   toggleSessionNoteVisibility,
   updateSessionNote,
 } from '../../repositories/sessionNotesRepository'
-import type { SessionNote } from '../../types/domain'
+import type { SessionNote, SessionSummary } from '../../types/domain'
 import { useBusyOperations } from '../composables/useBusyOperations'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import AppCard from './AppCard.vue'
@@ -20,13 +20,17 @@ import SearchInput from './SearchInput.vue'
 interface SessionNoteDraft {
   title: string
   contentText: string
+  sessionId: string
 }
 
 const props = defineProps<{
-  sessionId: string
+  campaignId: string
   isMj: boolean
   currentUserId?: string | null
   isSessionArchived?: boolean
+  sessions?: SessionSummary[]
+  selectedSessionId?: string | null
+  selectedSessionLabel?: string | null
 }>()
 
 const loading = ref(false)
@@ -39,6 +43,7 @@ const createForm = reactive({
   title: '',
   contentText: '',
   isVisible: false,
+  sessionId: '',
 })
 
 const editNoteId = ref<string | null>(null)
@@ -46,6 +51,7 @@ const editError = ref<string | null>(null)
 const editDraft = reactive<SessionNoteDraft>({
   title: '',
   contentText: '',
+  sessionId: '',
 })
 
 const { isBusy, setBusy, clearBusy } = useBusyOperations()
@@ -61,6 +67,35 @@ const notesToDisplay = computed(() => (props.isMj ? notes.value : visibleNotes.v
 const canCreateNote = computed(
   () => Boolean(props.currentUserId && !props.isSessionArchived)
 )
+const effectiveSessionId = computed(() => props.selectedSessionId ?? null)
+const notesSectionTitle = computed(() =>
+  effectiveSessionId.value ? 'Notes de session' : 'Notes de campagne'
+)
+const createCardTitle = computed(() =>
+  effectiveSessionId.value ? 'Ajouter une note à cette session' : 'Ajouter une note à la campagne'
+)
+const listCardTitle = computed(() =>
+  effectiveSessionId.value ? 'Notes de la session' : 'Liste des notes'
+)
+const emptyMessage = computed(() =>
+  effectiveSessionId.value ? 'Aucune note pour cette session.' : 'Aucune note disponible.'
+)
+const linkedSessionFilter = ref<'all' | 'none' | string>('all')
+const linkedSessionFilterOptions = computed(() => {
+  const options: Array<{ value: 'all' | 'none' | string; label: string }> = [
+    { value: 'all', label: 'Toutes les sessions' },
+    { value: 'none', label: 'Sans session liée' },
+  ]
+
+  for (const session of props.sessions ?? []) {
+    options.push({
+      value: session.id,
+      label: formatSessionLabel(session),
+    })
+  }
+
+  return options
+})
 
 function countOccurrences(haystack: string, needle: string): number {
   if (!haystack || !needle) {
@@ -114,13 +149,29 @@ function computeSearchScore(note: SessionNote, query: string): number {
   return score
 }
 
-const filteredNotes = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase()
-  if (!query) {
+const notesFilteredBySession = computed(() => {
+  if (effectiveSessionId.value) {
     return notesToDisplay.value
   }
 
-  return notesToDisplay.value
+  if (linkedSessionFilter.value === 'all') {
+    return notesToDisplay.value
+  }
+
+  if (linkedSessionFilter.value === 'none') {
+    return notesToDisplay.value.filter((note) => !note.sessionId)
+  }
+
+  return notesToDisplay.value.filter((note) => note.sessionId === linkedSessionFilter.value)
+})
+
+const filteredNotes = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) {
+    return notesFilteredBySession.value
+  }
+
+  return notesFilteredBySession.value
     .map((note) => ({ note, score: computeSearchScore(note, query) }))
     .filter((entry) => entry.score > 0)
     .sort((left, right) => {
@@ -149,7 +200,7 @@ function resolveNoteMainContent(note: SessionNote): string {
   return 'Contenu indisponible.'
 }
 
-function formatDate(value: string): string {
+function formatDateTime(value: string): string {
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) {
     return value
@@ -161,10 +212,40 @@ function formatDate(value: string): string {
   }).format(parsed)
 }
 
+function formatSessionDate(value: string): string {
+  const parsed = new Date(`${value}T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'short',
+  }).format(parsed)
+}
+
 function resetCreateForm(): void {
   createForm.title = ''
   createForm.contentText = ''
   createForm.isVisible = false
+  createForm.sessionId = effectiveSessionId.value ?? ''
+  if (!effectiveSessionId.value) {
+    linkedSessionFilter.value = 'all'
+  }
+}
+
+function formatSessionLabel(session: SessionSummary): string {
+  const dateLabel = formatSessionDate(session.date)
+  const titleLabel = session.name?.trim() ? session.name.trim() : 'Sans titre'
+  return `${dateLabel} - ${titleLabel}`
+}
+
+function resolveSessionLabel(sessionId: string | null | undefined): string {
+  if (!sessionId) {
+    return 'Sans session liée'
+  }
+
+  const session = props.sessions?.find((entry) => entry.id === sessionId)
+  return session ? formatSessionLabel(session) : 'Session liée inconnue'
 }
 
 function startEdit(note: SessionNote): void {
@@ -172,11 +253,15 @@ function startEdit(note: SessionNote): void {
   editNoteId.value = note.id
   editDraft.title = note.title
   editDraft.contentText = note.contentText ?? ''
+  editDraft.sessionId = note.sessionId ?? ''
 }
 
 function cancelEdit(): void {
   editNoteId.value = null
   editError.value = null
+  editDraft.title = ''
+  editDraft.contentText = ''
+  editDraft.sessionId = ''
 }
 
 function validateContent(text: string): string | null {
@@ -190,7 +275,7 @@ function validateContent(text: string): string | null {
 }
 
 async function loadNotes(showLoading = true): Promise<void> {
-  if (!props.sessionId) {
+  if (!props.campaignId) {
     return
   }
 
@@ -200,10 +285,13 @@ async function loadNotes(showLoading = true): Promise<void> {
 
   errorMessage.value = null
   try {
-    notes.value = await listSessionNotesForSession(props.sessionId, { visibleOnly: !props.isMj })
+    notes.value = await listSessionNotesForCampaign(props.campaignId, {
+      visibleOnly: !props.isMj,
+      sessionId: effectiveSessionId.value,
+    })
   } catch (error) {
     errorMessage.value =
-      error instanceof Error ? error.message : 'Impossible de charger les notes de session.'
+      error instanceof Error ? error.message : 'Impossible de charger les notes de campagne.'
   } finally {
     if (showLoading) {
       loading.value = false
@@ -224,7 +312,8 @@ async function handleCreate(): Promise<void> {
   creating.value = true
   try {
     await createSessionNote({
-      sessionId: props.sessionId,
+      campaignId: props.campaignId,
+      sessionId: createForm.sessionId || null,
       title: createForm.title,
       contentText: createForm.contentText,
       isVisible: props.isMj ? createForm.isVisible : true,
@@ -246,7 +335,8 @@ async function handleSaveEdit(noteId: string): Promise<void> {
 
   const unchanged =
     currentNote.title.trim() === editDraft.title.trim() &&
-    (currentNote.contentText ?? '').trim() === editDraft.contentText.trim()
+    (currentNote.contentText ?? '').trim() === editDraft.contentText.trim() &&
+    (currentNote.sessionId ?? '') === editDraft.sessionId.trim()
 
   if (unchanged) {
     cancelEdit()
@@ -263,6 +353,7 @@ async function handleSaveEdit(noteId: string): Promise<void> {
     await updateSessionNote(noteId, {
       title: editDraft.title,
       contentText: editDraft.contentText,
+      sessionId: editDraft.sessionId.trim() || null,
     })
     cancelEdit()
     await loadNotes()
@@ -320,23 +411,35 @@ async function handleDelete(noteId: string): Promise<void> {
 }
 
 onMounted(() => {
+  resetCreateForm()
   void loadNotes()
   subscribe(
-    buildSessionNotesChannelName(props.sessionId),
-    buildSessionNotesRealtimeSubscriptions(props.sessionId)
+    buildSessionNotesChannelName(props.campaignId),
+    buildSessionNotesRealtimeSubscriptions(props.campaignId)
   )
 })
+
+watch(
+  () => [props.campaignId, props.selectedSessionId, props.isMj] as const,
+  () => {
+    resetCreateForm()
+    void loadNotes(false)
+  }
+)
 
 </script>
 
 <template>
   <section class="space-y-3">
-    <h2 class="text-xl font-semibold">Notes de session</h2>
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-xl font-semibold">{{ notesSectionTitle }}</h2>
+      <span v-if="selectedSessionLabel" class="badge badge-outline">{{ selectedSessionLabel }}</span>
+    </div>
 
-    <AppCard v-if="canCreateNote" title="Ajouter une note" compact>
+    <AppCard v-if="canCreateNote" :title="createCardTitle" compact>
       <div class="space-y-3">
         <div v-if="isSessionArchived" class="alert alert-warning alert-soft text-sm">
-          <span>Session archivée: ajout de note indisponible.</span>
+          <span>Campagne archivée: ajout de note indisponible.</span>
         </div>
 
         <label class="form-control w-full">
@@ -353,6 +456,16 @@ onMounted(() => {
           />
         </label>
 
+        <label class="form-control w-full" v-if="sessions?.length && !selectedSessionId">
+          <span class="label-text mb-2">Session liée</span>
+          <select v-model="createForm.sessionId" class="select select-bordered w-full">
+            <option value="">Sans session liée</option>
+            <option v-for="session in sessions" :key="session.id" :value="session.id">
+              {{ formatSessionLabel(session) }}
+            </option>
+          </select>
+        </label>
+
         <label v-if="isMj" class="label cursor-pointer justify-start gap-3">
           <input v-model="createForm.isVisible" type="checkbox" class="toggle toggle-sm" />
           <span class="label-text">Visible par les joueurs</span>
@@ -361,7 +474,7 @@ onMounted(() => {
         <div class="flex items-center gap-2">
           <button class="btn btn-sm" :disabled="creating || isSessionArchived" @click="handleCreate">
             <span v-if="creating" class="loading loading-spinner loading-xs" aria-hidden="true" />
-            Creer la note
+            Créer la note
           </button>
         </div>
 
@@ -371,8 +484,20 @@ onMounted(() => {
       </div>
     </AppCard>
 
-    <AppCard title="Liste des notes" compact>
+    <AppCard :title="listCardTitle" compact>
       <div class="mb-3 space-y-2">
+        <label v-if="sessions?.length && !selectedSessionId" class="form-control w-full">
+          <span class="label-text mb-2">Filtrer par session liée</span>
+          <select v-model="linkedSessionFilter" class="select select-bordered w-full">
+            <option
+              v-for="option in linkedSessionFilterOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
         <SearchInput v-model="searchQuery" placeholder="Rechercher dans le titre et le texte" />
         <p class="text-xs opacity-70">
           Priorite de tri: correspondances du titre, puis du texte.
@@ -383,7 +508,7 @@ onMounted(() => {
         :items="filteredNotes"
         :loading="loading"
         :error="errorMessage"
-        empty-message="Aucune note disponible."
+        :empty-message="emptyMessage"
         grid-class="grid gap-3"
         :skeleton-count="3"
         skeleton-height="10rem"
@@ -394,7 +519,15 @@ onMounted(() => {
               <div>
                 <h3 class="font-semibold">{{ note.title }}</h3>
                 <p class="text-xs opacity-70">
-                  Note texte · {{ formatDate(note.createdAt) }}
+                  Note texte · {{ formatDateTime(note.createdAt) }}
+                </p>
+                <p class="mt-1 text-xs">
+                  <span
+                    class="badge badge-outline badge-xs inline-block max-w-[11rem] overflow-hidden text-ellipsis whitespace-nowrap align-middle sm:max-w-none"
+                    :title="resolveSessionLabel(note.sessionId)"
+                  >
+                    {{ resolveSessionLabel(note.sessionId) }}
+                  </span>
                 </p>
               </div>
               <div class="flex items-center gap-2">
@@ -445,6 +578,15 @@ onMounted(() => {
                 <label class="form-control w-full">
                   <span class="label-text mb-2">Titre</span>
                   <input v-model="editDraft.title" type="text" class="input input-bordered w-full" />
+                </label>
+                <label v-if="sessions?.length && !selectedSessionId" class="form-control w-full">
+                  <span class="label-text mb-2">Session liée</span>
+                  <select v-model="editDraft.sessionId" class="select select-bordered w-full">
+                    <option value="">Sans session liée</option>
+                    <option v-for="session in sessions" :key="session.id" :value="session.id">
+                      {{ formatSessionLabel(session) }}
+                    </option>
+                  </select>
                 </label>
                 <label class="form-control w-full">
                   <span class="label-text mb-2">Contenu texte</span>

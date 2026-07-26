@@ -5,7 +5,7 @@ export interface CharacterRow {
   name: string
   race: string
   gender: CharacterGender | string
-  session_id: string
+  campaign_id: string
   user_id: string
   career_id: string
   pv_current: number
@@ -49,7 +49,7 @@ export interface StaticStatRow {
   is_secondary?: boolean
 }
 
-export interface SessionRow {
+export interface CampaignRow {
   id: string
   name: string
   code: string
@@ -57,6 +57,16 @@ export interface SessionRow {
   is_archived: boolean
   mj_id: string
   created_at: string | null
+}
+
+export interface SessionRow {
+  id: string
+  campaign_id: string
+  date: string
+  name: string | null
+  description: string | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface BasicProfileRow {

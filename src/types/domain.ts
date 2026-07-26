@@ -9,7 +9,7 @@ export interface Profile {
   avatarUrl?: string | null
 }
 
-export interface SessionSummary {
+export interface CampaignSummary {
   id: string
   name: string
   code: string
@@ -19,9 +19,20 @@ export interface SessionSummary {
   createdAt: string | null
 }
 
+export interface SessionSummary {
+  id: string
+  campaignId: string
+  date: string
+  name: string | null
+  description: string | null
+  createdAt: string | null
+  updatedAt: string | null
+}
+
 export interface SessionNote {
   id: string
-  sessionId: string
+  campaignId: string
+  sessionId?: string | null
   authorUserId: string | null
   title: string
   contentText: string | null
@@ -32,15 +43,24 @@ export interface SessionNote {
 }
 
 export interface CreateSessionNoteInput {
-  sessionId: string
+  campaignId: string
+  sessionId?: string | null
   title: string
   contentText?: string | null
   isVisible?: boolean
 }
 
+export interface CreateSessionInput {
+  campaignId: string
+  date: string
+  name?: string | null
+  description?: string | null
+}
+
 export interface UpdateSessionNoteInput {
   title?: string
   contentText?: string | null
+  sessionId?: string | null
   isVisible?: boolean
   isArchived?: boolean
 }

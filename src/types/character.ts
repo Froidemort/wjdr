@@ -4,7 +4,7 @@ export type CharacterGender = 'masculin' | 'féminin'
 
 export interface CreateCharacterPayload {
   userId: string
-  sessionId: string
+  campaignId: string
   name: string
   race: CharacterRace
   gender: CharacterGender
@@ -15,7 +15,7 @@ export interface CharacterCore {
   name: string
   race: string
   gender: CharacterGender
-  sessionId: string
+  campaignId: string
   userId: string
   careerId: string
   pvCurrent: number

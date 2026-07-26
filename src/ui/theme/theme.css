@@ -45,13 +45,13 @@ body,
   --color-neutral-content: oklch(75.0% 0.01 60.0);
   
   /* États (Adaptés au ton rude et pragmatique du Jdr) */
-  --color-info: oklch(62.3% 0.114 233.1);           /* Bleu nuit alchimique */
+  --color-info: oklch(62.5% 0.114 233.1);           /* Bleu nuit alchimique */
   --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(58.4% 0.134 148.2);        /* Vert de gris / bénédictions de Sigmar */
+  --color-success: oklch(58.5% 0.134 148.2);        /* Vert de gris / bénédictions de Sigmar */
   --color-success-content: oklch(15% 0.05 148.2);
   --color-warning: oklch(78.5% 0.155 75.6);         /* Ambre de mise en garde / Mutagène */
   --color-warning-content: oklch(20% 0.05 75.6);
-  --color-error: oklch(48.2% 0.181 18.5);           /* Corruption pure / Points de Folie */
+  --color-error: oklch(48.5% 0.181 18.5);           /* Corruption pure / Points de Folie */
   --color-error-content: oklch(95% 0.02 18.5);
 
   /* Structure gothique rigide, angles droits à la Warhammer */

@@ -6,7 +6,7 @@
     <header>
       <NavBar />
     </header>
-    <SessionCreateModal />
+    <CampaignCreateModal />
     <main id="main-content" class="flex-1" tabindex="-1">
       <router-view />
     </main>
@@ -20,7 +20,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import Footer from './ui/components/Footer.vue'
 import NavBar from './ui/components/NavBar.vue'
-import SessionCreateModal from './ui/components/SessionCreateModal.vue'
+import CampaignCreateModal from './ui/components/CampaignCreateModal.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()

@@ -43,7 +43,7 @@
             <button
               class="link link-hover text-sm"
               :title="feedbackMap[campaign.id] || `Code : ${campaign.code}`"
-              @click="copyLink(campaign.id, `/campaigns/${campaign.id}`)"
+              @click="copyLink(campaign.id, `/campaigns/${campaign.code}`)"
             >
               Copier le lien de campagne
             </button>

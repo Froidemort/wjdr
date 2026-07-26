@@ -1,52 +1,16 @@
 import { supabase } from '../db/supabase'
 import type { SessionRow } from '../types/db'
-import type { SessionSummary } from '../types/domain'
-import { listUserSessionIds } from './usersSessionRepository'
-
-export interface PaginatedSessions {
-  items: SessionSummary[]
-  total: number
-}
-
-function isTransientError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false
-  }
-
-  const maybeError = error as { status?: number; message?: string }
-  if (typeof maybeError.status === 'number' && maybeError.status >= 500) {
-    return true
-  }
-
-  const msg = (maybeError.message ?? '').toLowerCase()
-  return msg.includes('fetch') || msg.includes('network') || msg.includes('timeout')
-}
-
-async function withRetry<T>(operation: () => Promise<T>, maxAttempts = 2): Promise<T> {
-  let lastError: unknown = null
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      return await operation()
-    } catch (error) {
-      lastError = error
-      if (attempt >= maxAttempts || !isTransientError(error)) {
-        throw error
-      }
-    }
-  }
-
-  throw lastError
-}
+import type { SessionSummary, CreateSessionInput } from '../types/domain'
 
 function mapSession(row: SessionRow): SessionSummary {
   return {
     id: row.id,
+    campaignId: row.campaign_id,
+    date: row.date,
     name: row.name,
-    code: row.code,
     description: row.description,
-    isArchived: row.is_archived,
-    mjId: row.mj_id,
     createdAt: row.created_at,
+    updatedAt: row.updated_at,
   }
 }
 
@@ -60,9 +24,7 @@ function mapSessionWriteError(error: unknown): Error {
       message.includes('row-level security') ||
       message.includes('permission denied')
     ) {
-      return new Error(
-        'Acces refuse (403): verifiez la session auth, l existence du profil et les politiques RLS sessions/users_session.'
-      )
+      return new Error('Acces refuse (403): vous n\'etes pas le MJ de cette campagne.')
     }
 
     return error
@@ -71,84 +33,28 @@ function mapSessionWriteError(error: unknown): Error {
   return new Error('Operation session impossible.')
 }
 
-export async function listSessionsForUser(userId: string): Promise<SessionSummary[]> {
-  return withRetry(async () => {
-    const [ownedResult, membershipSessionIds] = await Promise.all([
-      supabase
-        .from('sessions')
-        .select('id, name, code, description, is_archived, mj_id, created_at')
-        .eq('mj_id', userId)
-        .order('created_at', { ascending: false }),
-      listUserSessionIds(userId),
-    ])
+export async function listSessionsForCampaign(campaignId: string): Promise<SessionSummary[]> {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('id, campaign_id, date, name, description, created_at, updated_at')
+    .eq('campaign_id', campaignId)
+    .order('date', { ascending: false })
 
-    if (ownedResult.error) {
-      throw ownedResult.error
-    }
-
-    const joinedSessionIds = membershipSessionIds
-
-    let joinedRows: SessionRow[] = []
-    if (joinedSessionIds.length > 0) {
-      const joinedResult = await supabase
-        .from('sessions')
-        .select('id, name, code, description, is_archived, mj_id, created_at')
-        .in('id', joinedSessionIds)
-
-      if (joinedResult.error) {
-        throw joinedResult.error
-      }
-
-      joinedRows = (joinedResult.data ?? []) as SessionRow[]
-    }
-
-    const merged = new Map<string, SessionSummary>()
-    for (const row of (ownedResult.data ?? []) as SessionRow[]) {
-      merged.set(row.id, mapSession(row))
-    }
-
-    for (const row of joinedRows) {
-      merged.set(row.id, mapSession(row))
-    }
-
-    return Array.from(merged.values()).sort((a, b) => {
-      const left = a.createdAt ?? ''
-      const right = b.createdAt ?? ''
-      return right.localeCompare(left)
-    })
-  })
-}
-
-export async function listSessionsForUserPaginated(
-  userId: string,
-  page: number,
-  pageSize: number
-): Promise<PaginatedSessions> {
-  const safePage = Math.max(1, Math.floor(page))
-  const safePageSize = Math.max(1, Math.min(24, Math.floor(pageSize)))
-  const allItems = await listSessionsForUser(userId)
-  const from = (safePage - 1) * safePageSize
-  const to = from + safePageSize
-
-  return {
-    items: allItems.slice(from, to),
-    total: allItems.length,
+  if (error) {
+    throw error
   }
+
+  return (data ?? []).map((row) => mapSession(row as SessionRow))
 }
 
-export async function createSession(payload: {
-  mjId: string
-  name: string
-  description: string
-  code: string
-}): Promise<string> {
+export async function createSession(payload: CreateSessionInput): Promise<string> {
   const { data, error } = await supabase
     .from('sessions')
     .insert({
-      mj_id: payload.mjId,
-      name: payload.name,
-      description: payload.description,
-      code: payload.code,
+      campaign_id: payload.campaignId,
+      date: payload.date,
+      name: payload.name || null,
+      description: payload.description || null,
     })
     .select('id')
     .single()
@@ -157,55 +63,50 @@ export async function createSession(payload: {
     throw mapSessionWriteError(error)
   }
 
-  const sessionId = data.id as string
-  const { error: membershipError } = await supabase.from('users_session').upsert(
-    {
-      session_id: sessionId,
-      user_id: payload.mjId,
-      active: true,
-    },
-    { onConflict: 'session_id,user_id' }
-  )
-
-  if (membershipError) {
-    const mappedError = mapSessionWriteError(membershipError)
-    if (mappedError.message.toLowerCase().includes('acces refuse (403)')) {
-      // The session is already created. Some RLS setups deny this redundant MJ membership write.
-      return sessionId
-    }
-
-    throw mappedError
-  }
-
-  return sessionId
+  return data.id as string
 }
 
-export async function getSessionById(sessionId: string): Promise<SessionSummary | null> {
-  return withRetry(async () => {
-    const { data, error } = await supabase
-      .from('sessions')
-      .select('id, name, code, description, is_archived, mj_id, created_at')
-      .eq('id', sessionId)
-      .maybeSingle()
-
-    if (error) {
-      throw error
-    }
-
-    return data ? mapSession(data as SessionRow) : null
-  })
-}
-
-export async function updateSessionArchivedState(
+export async function updateSession(
   sessionId: string,
-  isArchived: boolean
+  payload: Partial<CreateSessionInput>
 ): Promise<void> {
+  const updateData: Record<string, unknown> = {}
+  
+  if (payload.date !== undefined) updateData.date = payload.date
+  if (payload.name !== undefined) updateData.name = payload.name || null
+  if (payload.description !== undefined) updateData.description = payload.description || null
+
   const { error } = await supabase
     .from('sessions')
-    .update({ is_archived: isArchived })
+    .update({ ...updateData, updated_at: new Date().toISOString() })
     .eq('id', sessionId)
 
   if (error) {
     throw mapSessionWriteError(error)
   }
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  const { error } = await supabase
+    .from('sessions')
+    .delete()
+    .eq('id', sessionId)
+
+  if (error) {
+    throw mapSessionWriteError(error)
+  }
+}
+
+export async function getSessionById(sessionId: string): Promise<SessionSummary | null> {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('id, campaign_id, date, name, description, created_at, updated_at')
+    .eq('id', sessionId)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return data ? mapSession(data as SessionRow) : null
 }
