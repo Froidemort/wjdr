@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'AppFooter' })
 
-const appVersion = '0.0.8'
+const appVersion = '0.0.9'
 const currentYear = new Date().getFullYear()
 </script>
 
