@@ -547,6 +547,23 @@ input[type="radio"]:focus-visible {
   border-color: color-mix(in oklab, var(--color-base-content) 22%, transparent);
 }
 
+/* Magic UI — animated theme toggle (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-magicui-theme-vt='active']::view-transition-old(root) {
+  z-index: 1;
+}
+
+html[data-magicui-theme-vt='active']::view-transition-new(root) {
+  z-index: 9999;
+  clip-path: var(--magicui-theme-vt-clip-from);
+  animation: none;
+}
+
 .ui-critical-control:focus-visible {
   outline: none;
   border-color: color-mix(in oklab, var(--color-accent) 42%, transparent);
