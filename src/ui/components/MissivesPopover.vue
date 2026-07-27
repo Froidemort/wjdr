@@ -57,7 +57,7 @@ defineExpose({ close })
     <div
       v-if="isOpen"
       id="navbar-missives-panel"
-      class="absolute right-0 top-12 z-50 w-80 max-w-[calc(100vw-1rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow-lg md:w-96"
+      class="fixed inset-x-4 top-16 z-50 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-80 md:w-96"
       role="menu"
       aria-label="Aperçu des missives"
     >
