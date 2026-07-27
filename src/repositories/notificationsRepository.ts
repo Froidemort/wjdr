@@ -330,15 +330,15 @@ export async function listPendingJoinRequestsForCampaign(
     .map((row) => {
       const requesterId = row.sender_user_id as string
       const profile = row.requester?.[0]
-      if (!profile) {
-        return null
-      }
+      const fallbackSuffix = requesterId.slice(0, 8)
+      const username = profile?.username?.trim() || `Joueur ${fallbackSuffix}`
+      const email = profile?.email?.trim() || 'email non partage'
 
       return {
         notificationId: row.id,
         requesterId,
-        username: profile.username,
-        email: profile.email,
+        username,
+        email,
         createdAt: row.created_at,
       }
     })
