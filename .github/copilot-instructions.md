@@ -32,3 +32,11 @@ The following skills are available in `.github/skills/` and must be activated dy
 - `daisyui-ux`: Rules for Tailwind CSS and DaisyUI component structure.
 - `supabase-data`: Rules for Supabase client, auth, types, and database queries.
 - `vercel-serverless`: Rules for Vercel Edge/Serverless functions in `api/`.
+
+## Restrictions :
+
+**FORBIDDEN**: modify db files (`*.sql`, `*.prisma`, `*.supabase`), or any files in `migrations/`. You **CAN** only create new files.
+
+You can't modify the following files:
+  - .gitignore
+  - .github/copilot-instructions.md
