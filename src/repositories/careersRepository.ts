@@ -16,7 +16,7 @@ const FRENCH_SORT_OPTIONS: Intl.CollatorOptions = { sensitivity: 'base' }
 function normalizeCareerId(careerId: string): string {
   const trimmedCareerId = careerId.trim()
   if (!trimmedCareerId) {
-    throw new Error('Carriere invalide.')
+    throw new Error('Carrière invalide.')
   }
 
   return trimmedCareerId

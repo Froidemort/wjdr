@@ -604,11 +604,12 @@
         <h3 class="grim-modal-title mb-4 text-center text-3xl">Changer de carrière</h3>
 
 				<div class="space-y-3">
-          <div class="join">
+          <div class="join" role="group" aria-label="Filtre des carrieres">
             <button
               type="button"
               class="btn btn-sm join-item ui-critical-action"
               :class="careerFilterMode === 'paths' ? 'btn-active' : ''"
+              :aria-pressed="careerFilterMode === 'paths'"
               @click="careerFilterMode = 'paths'"
             >
               Débouchés
@@ -617,6 +618,7 @@
               type="button"
               class="btn btn-sm join-item ui-critical-action"
               :class="careerFilterMode === 'all' ? 'btn-active' : ''"
+              :aria-pressed="careerFilterMode === 'all'"
               @click="careerFilterMode = 'all'"
             >
               Toutes
