@@ -638,3 +638,51 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
     overscroll-behavior: contain;
   }
 }
+
+/* Grimorium title animation */
+.wrapper svg {
+    font-family: "IM Fell English", sans-serif;
+    width: 100%;
+    height: 100%;
+}
+
+.wrapper svg text {
+    animation: stroke 8s infinite;
+    stroke-width: 2;
+    stroke: var(--color-primary);
+    font-size: 4.5rem;
+}
+
+@keyframes stroke {
+    0% {
+        fill: var(--color-base-200);
+        stroke: var(--color-primary);
+        stroke-dashoffset: 25%;
+        stroke-dasharray: 0 50%;
+        stroke-width: 1;
+        stroke-opacity: 0.7;
+    }
+    70% {
+        fill: var(--color-base-200);
+        stroke: var(--color-primary);
+        stroke-opacity: 0.7;
+    }
+    80% {
+        fill: var(--color-base-200);
+        stroke: var(--color-primary);
+        stroke-width: 2;
+        stroke-opacity: 0.8;
+    }
+    100% {
+        fill: var(--color-base-200);
+        stroke: var(--color-primary);
+        stroke-dashoffset: -25%;
+        stroke-dasharray: 50% 0;
+        stroke-width: 0;
+        stroke-opacity: 0.6;
+    }
+}
+
+.wrapper {
+    background-color: #FFFFFF00;
+}
