@@ -1,5 +1,5 @@
--- Migration 006 :  Add career characteristics to the database
--- This migration adds a new table to store career characteristics and updates the existing careers table to include a foreign key reference to the new characteristics table.
+-- Migration 006 : Add career characteristics to the database
+-- This migration adds a new table to store career characteristics for each career.
 
 BEGIN;
 
