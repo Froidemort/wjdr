@@ -7,6 +7,83 @@
 		</div>
 
     <template v-else-if="session">
+      <div class="rounded-box border border-base-300 bg-base-100 p-3 sm:p-4">
+        <div class="sm:hidden">
+          <label class="form-control">
+            <span class="label-text mb-2">Section</span>
+            <select v-model="activeCampaignTab" class="select select-bordered ui-critical-control w-full">
+              <option value="overview">Aperçu</option>
+              <option v-if="isMj" value="management">Gestion MJ</option>
+              <option value="sessions">Sessions</option>
+              <option value="notes">Notes</option>
+            </select>
+          </label>
+        </div>
+
+        <div role="tablist" aria-label="Sections de campagne" class="hidden sm:flex flex-wrap items-center gap-2 border-b border-base-300 pb-3">
+          <button
+            id="campaign-tab-overview"
+            type="button"
+            role="tab"
+            :aria-selected="activeCampaignTab === 'overview' ? 'true' : 'false'"
+            aria-controls="campaign-panel-overview"
+            class="btn btn-sm ui-critical-action gap-2"
+            :class="activeCampaignTab === 'overview' ? 'btn-active' : ''"
+            @click="activeCampaignTab = 'overview'"
+          >
+            <Eye class="h-4 w-4" />
+            Aperçu
+          </button>
+          <button
+            v-if="isMj"
+            id="campaign-tab-management"
+            type="button"
+            role="tab"
+            :aria-selected="activeCampaignTab === 'management' ? 'true' : 'false'"
+            aria-controls="campaign-panel-management"
+            class="btn btn-sm ui-critical-action gap-2"
+            :class="activeCampaignTab === 'management' ? 'btn-active' : ''"
+            @click="activeCampaignTab = 'management'"
+          >
+            <Crown class="h-4 w-4" />
+            Gestion MJ
+            <span class="badge badge-outline badge-xs">spécial</span>
+          </button>
+          <button
+            id="campaign-tab-sessions"
+            type="button"
+            role="tab"
+            :aria-selected="activeCampaignTab === 'sessions' ? 'true' : 'false'"
+            aria-controls="campaign-panel-sessions"
+            class="btn btn-sm ui-critical-action gap-2"
+            :class="activeCampaignTab === 'sessions' ? 'btn-active' : ''"
+            @click="activeCampaignTab = 'sessions'"
+          >
+            <List class="h-4 w-4" />
+            Sessions
+          </button>
+          <button
+            id="campaign-tab-notes"
+            type="button"
+            role="tab"
+            :aria-selected="activeCampaignTab === 'notes' ? 'true' : 'false'"
+            aria-controls="campaign-panel-notes"
+            class="btn btn-sm ui-critical-action gap-2"
+            :class="activeCampaignTab === 'notes' ? 'btn-active' : ''"
+            @click="activeCampaignTab = 'notes'"
+          >
+            <FileText class="h-4 w-4" />
+            Notes
+          </button>
+        </div>
+      </div>
+
+      <section
+        v-show="activeCampaignTab === 'overview'"
+        id="campaign-panel-overview"
+        role="tabpanel"
+        aria-labelledby="campaign-tab-overview"
+      >
       <AppCard :title="session.name">
         <!-- En-tête : role + code de campagne avec copie -->
 				<div class="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -101,8 +178,14 @@
 					</div>
 				</div>
 			</AppCard>
+      </section>
 
-      <section id="campaign-sessions-section">
+      <section
+        v-show="activeCampaignTab === 'sessions'"
+        id="campaign-sessions-section"
+        role="tabpanel"
+        aria-labelledby="campaign-tab-sessions"
+      >
       <AppCard title="Sessions de campagne" class="space-y-4">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex flex-wrap items-center gap-2 text-sm">
@@ -350,7 +433,14 @@
       </AppCard>
       </section>
 
-      <section id="campaign-notes-section" ref="notesSectionRef" class="scroll-mt-20">
+      <section
+        v-show="activeCampaignTab === 'notes'"
+        id="campaign-notes-section"
+        ref="notesSectionRef"
+        role="tabpanel"
+        aria-labelledby="campaign-tab-notes"
+        class="scroll-mt-20"
+      >
 				<SessionNotesPanel
 					:campaign-id="session.id"
 					:is-mj="isMj"
@@ -362,7 +452,14 @@
 				/>
       </section>
 
-      <section v-if="isMj" class="space-y-3">
+      <section
+        v-if="isMj"
+        v-show="activeCampaignTab === 'management'"
+        id="campaign-panel-management"
+        role="tabpanel"
+        aria-labelledby="campaign-tab-management"
+        class="space-y-3"
+      >
         <h2 class="text-xl font-semibold">Gestion de campagne</h2>
         <div v-if="adminLoading" class="flex items-center gap-2 text-sm opacity-70">
           <span class="loading loading-spinner loading-xs" aria-hidden="true" />
@@ -553,8 +650,8 @@
 </template>
 
 <script setup lang="ts">
-import { CalendarDays, ChevronLeft, CircleCheck, Copy, Eye, Hourglass, List, Pencil, Trash2 } from '@lucide/vue'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { CalendarDays, ChevronLeft, CircleCheck, Copy, Crown, Eye, FileText, Hourglass, List, Pencil, Trash2 } from '@lucide/vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { listCharactersByCampaign } from '../../repositories/charactersRepository'
 import {
@@ -596,6 +693,7 @@ const authStore = useAuthStore()
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const session = ref<CampaignSummary | null>(null)
+const activeCampaignTab = ref<'overview' | 'management' | 'sessions' | 'notes'>('overview')
 const characters = ref<CharacterSummary[]>([])
 const sessions = ref<SessionSummary[]>([])
 const invitations = ref<SessionInvitation[]>([])
@@ -860,7 +958,7 @@ function formatSessionNoteLabel(sessionItem: SessionSummary): string {
   return `${formatCampaignSessionDateCompact(sessionItem.date)} - ${title}`
 }
 
-function focusNotesPanel(sessionItem?: SessionSummary): void {
+async function focusNotesPanel(sessionItem?: SessionSummary): Promise<void> {
   if (sessionItem) {
     notesFocusedSessionId.value = sessionItem.id
     notesFocusedSessionLabel.value = formatSessionNoteLabel(sessionItem)
@@ -868,6 +966,9 @@ function focusNotesPanel(sessionItem?: SessionSummary): void {
     notesFocusedSessionId.value = null
     notesFocusedSessionLabel.value = null
   }
+
+  activeCampaignTab.value = 'notes'
+  await nextTick()
 
   if (notesSectionRef.value) {
     notesSectionRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1331,6 +1432,10 @@ function subscribeRealtime(targetSessionId: string): void {
 watch(isMj, (value) => {
   if (value && !sessionCreateForm.value.date) {
     resetSessionCreateForm()
+  }
+
+  if (!value && activeCampaignTab.value === 'management') {
+    activeCampaignTab.value = 'overview'
   }
 })
 watch(

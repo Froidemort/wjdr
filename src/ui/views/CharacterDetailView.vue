@@ -126,11 +126,74 @@
         </div>
       </div>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
-				<summary class="collapse-title">
-					<h2 class="text-lg">Caractéristiques</h2>
-				</summary>
-				<div class="collapse-content">
+      <div class="rounded-box border border-base-300 bg-base-100 p-3 sm:p-4">
+        <div class="sm:hidden">
+          <label class="form-control">
+            <span class="label-text mb-2">Section</span>
+            <select v-model="activeCharacterTab" class="select select-bordered ui-critical-control w-full">
+              <option value="profile">Profil</option>
+              <option value="skillsTalents">Compétences/Talents</option>
+              <option value="inventory">Inventaire</option>
+            </select>
+          </label>
+        </div>
+
+        <div
+          role="tablist"
+          aria-label="Sections du personnage"
+          class="hidden sm:flex flex-wrap items-center gap-2 border-b border-base-300 pb-3"
+        >
+          <button
+            id="character-tab-profile"
+            type="button"
+            role="tab"
+            :aria-selected="activeCharacterTab === 'profile' ? 'true' : 'false'"
+            aria-controls="character-panel-profile"
+            class="btn btn-sm ui-critical-action gap-2"
+            :class="activeCharacterTab === 'profile' ? 'btn-active' : ''"
+            @click="activeCharacterTab = 'profile'"
+          >
+            <UserCog class="h-4 w-4" />
+            Profil
+          </button>
+          <button
+            id="character-tab-skills"
+            type="button"
+            role="tab"
+            :aria-selected="activeCharacterTab === 'skillsTalents' ? 'true' : 'false'"
+            aria-controls="character-panel-skills"
+            class="btn btn-sm ui-critical-action gap-2"
+            :class="activeCharacterTab === 'skillsTalents' ? 'btn-active' : ''"
+            @click="activeCharacterTab = 'skillsTalents'"
+          >
+            <ScrollText class="h-4 w-4" />
+            Compétences/Talents
+          </button>
+          <button
+            id="character-tab-inventory"
+            type="button"
+            role="tab"
+            :aria-selected="activeCharacterTab === 'inventory' ? 'true' : 'false'"
+            aria-controls="character-panel-inventory"
+            class="btn btn-sm ui-critical-action gap-2"
+            :class="activeCharacterTab === 'inventory' ? 'btn-active' : ''"
+            @click="activeCharacterTab = 'inventory'"
+          >
+            <Sword class="h-4 w-4" />
+            Inventaire
+          </button>
+        </div>
+      </div>
+
+			<section
+        v-show="activeCharacterTab === 'profile'"
+        id="character-panel-profile"
+        role="tabpanel"
+        aria-labelledby="character-tab-profile"
+        class="rounded-box border border-base-300 bg-base-100 p-4"
+      >
+        <h2 class="mb-3 text-lg font-semibold">Caractéristiques</h2>
+        <div>
           <div class="mb-3 flex flex-wrap items-center justify-start gap-3 border-b border-base-300 pb-3">
 						<StateCycleBadge
 							:value="characteristicsViewMode"
@@ -181,13 +244,17 @@
 						</div>
 					</div>
 				</div>
-			</details>
+			</section>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
-				<summary class="collapse-title">
-          <h2 class="text-lg">Compétences</h2>
-				</summary>
-				<div class="collapse-content">
+			<section
+        v-show="activeCharacterTab === 'skillsTalents'"
+        id="character-panel-skills"
+        role="tabpanel"
+        aria-labelledby="character-tab-skills"
+        class="rounded-box border border-base-300 bg-base-100 p-4"
+      >
+        <h2 class="mb-3 text-lg font-semibold">Compétences</h2>
+        <div>
           <div v-if="getSectionSuccessMessage('skills')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
             <span>{{ getSectionSuccessMessage('skills') }}</span>
           </div>
@@ -269,14 +336,10 @@
 							</div>
 						</article>
 					</div>
-				</div>
-			</details>
+        </div>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
-				<summary class="collapse-title">
-          <h2 class="text-lg">Talents</h2>
-				</summary>
-				<div class="collapse-content">
+        <h2 class="mb-3 mt-5 text-lg font-semibold">Talents</h2>
+        <div>
           <div v-if="getSectionSuccessMessage('talents')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
             <span>{{ getSectionSuccessMessage('talents') }}</span>
           </div>
@@ -285,31 +348,31 @@
               <Plus class="h-4 w-4" />
             </button>
           </div>
-					<div v-if="sortedCharacterTalents.length === 0" class="text-sm opacity-70">Aucun talent.</div>
-					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div v-if="sortedCharacterTalents.length === 0" class="text-sm opacity-70">Aucun talent.</div>
+          <div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <article v-for="talent in sortedCharacterTalents" :key="talent.talentId" v-memo="[talent.talentId, canEditQuickSection]" class="group card border border-base-300 bg-base-100">
-							<div class="card-body p-3 gap-2">
-								<div class="flex items-start justify-between gap-2">
-									<h4 class="font-semibold">{{ formatNamedWithSpecialization(talent.name, talent.specialization) }}</h4>
+              <div class="card-body p-3 gap-2">
+                <div class="flex items-start justify-between gap-2">
+                  <h4 class="font-semibold">{{ formatNamedWithSpecialization(talent.name, talent.specialization) }}</h4>
                   <div class="hover-actions flex items-center gap-1">
-										<button
-											v-if="talent.description"
+                    <button
+                      v-if="talent.description"
                       class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
-											aria-label="Afficher la description du talent"
-											@click="openDescriptionModal(formatNamedWithSpecialization(talent.name, talent.specialization), talent.description)"
-										>
-											<Info class="h-4 w-4" />
-										</button>
+                      aria-label="Afficher la description du talent"
+                      @click="openDescriptionModal(formatNamedWithSpecialization(talent.name, talent.specialization), talent.description)"
+                    >
+                      <Info class="h-4 w-4" />
+                    </button>
                     <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `talent-${talent.talentId}` ? 'true' : 'false'" @click="onDeleteTalent(talent.talentId)">
-											<Trash2 class="h-4 w-4" />
-										</button>
-									</div>
-								</div>
-							</div>
-						</article>
-					</div>
-				</div>
-			</details>
+                      <Trash2 class="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
 
 			<dialog ref="descriptionDialogRef" class="modal modal-top sm:modal-middle" @close="closeDescriptionModal">
         <div class="modal-box grim-modal-box p-6 max-w-lg">
@@ -322,11 +385,15 @@
 				</form>
 			</dialog>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
-				<summary class="collapse-title">
-          <h2 class="text-lg">Armes</h2>
-				</summary>
-				<div class="collapse-content">
+			<section
+        v-show="activeCharacterTab === 'inventory'"
+        id="character-panel-inventory"
+        role="tabpanel"
+        aria-labelledby="character-tab-inventory"
+        class="rounded-box border border-base-300 bg-base-100 p-4"
+      >
+        <h2 class="mb-3 text-lg font-semibold">Armes</h2>
+        <div>
           <div v-if="getSectionSuccessMessage('weapons')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
             <span>{{ getSectionSuccessMessage('weapons') }}</span>
           </div>
@@ -386,14 +453,10 @@
 							</div>
 						</article>
 					</div>
-				</div>
-			</details>
+        </div>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
-				<summary class="collapse-title">
-          <h2 class="text-lg">Armures</h2>
-				</summary>
-				<div class="collapse-content">
+        <h2 class="mb-3 mt-5 text-lg font-semibold">Armures</h2>
+        <div>
           <div v-if="getSectionSuccessMessage('armors')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
             <span>{{ getSectionSuccessMessage('armors') }}</span>
           </div>
@@ -454,14 +517,10 @@
 							</div>
 						</article>
 					</div>
-				</div>
-			</details>
+        </div>
 
-			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
-				<summary class="collapse-title">
-          <h2 class="text-lg">Équipements</h2>
-				</summary>
-				<div class="collapse-content">
+        <h2 class="mb-3 mt-5 text-lg font-semibold">Équipements</h2>
+        <div>
           <div v-if="getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
             <span>{{ getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog') }}</span>
           </div>
@@ -548,8 +607,8 @@
 							</div>
 						</article>
 					</div>
-				</div>
-			</details>
+        </div>
+      </section>
 
 			<dialog ref="statsImportDialogRef" class="modal modal-top sm:modal-middle" @close="closeStatsImportModal">
         <div class="modal-box grim-modal-box p-4 sm:p-6 max-w-3xl">
@@ -1054,6 +1113,7 @@ import {
 } from '../composables/useRealtimeChannels'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
+type CharacterDetailTab = 'profile' | 'skillsTalents' | 'inventory'
 
 const CHARACTERISTICS_ORDER = [
   'CC',
@@ -1097,6 +1157,7 @@ const CHARACTERISTICS_VIEW_OPTIONS = [
 ] as const
 
 const route = useRoute()
+const activeCharacterTab = ref<CharacterDetailTab>('profile')
 const authStore = useAuthStore()
 const { coerceMoney } = useMoneyCoercion()
 const loading = ref(false)
