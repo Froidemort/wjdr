@@ -35,8 +35,10 @@ The following skills are available in `.github/skills/` and must be activated dy
 
 ## Restrictions :
 
-**FORBIDDEN**: modify db files (`*.sql`, `*.prisma`, `*.supabase`), or any files in `migrations/`. You **CAN** only create new files.
+## Restrictions (Copilot agent)
 
-You can't modify the following files:
+**FORBIDDEN (Copilot agent)**: modify db files (`*.sql`, `*.prisma`, `*.supabase`), or any files in `migrations/`, unless explicitly requested by a human.
+
+Avoid modifying:
   - .gitignore
   - .github/copilot-instructions.md
