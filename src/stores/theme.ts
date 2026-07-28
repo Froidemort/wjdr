@@ -20,6 +20,10 @@ export const useThemeStore = defineStore('theme', () => {
     localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
   }
 
+  function toggleTheme(): void {
+    setTheme(theme.value === DARK_THEME ? LIGHT_THEME : DARK_THEME)
+  }
+
   function initTheme(): void {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY)
     const currentTheme = document.documentElement.getAttribute('data-theme')
@@ -41,6 +45,7 @@ export const useThemeStore = defineStore('theme', () => {
   return {
     theme,
     setTheme,
+    toggleTheme,
     initTheme,
   }
 })
