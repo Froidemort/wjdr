@@ -604,8 +604,32 @@
         <h3 class="grim-modal-title mb-4 text-center text-3xl">Changer de carrière</h3>
 
 				<div class="space-y-3">
+          <div class="join">
+            <button
+              type="button"
+              class="btn btn-sm join-item ui-critical-action"
+              :class="careerFilterMode === 'paths' ? 'btn-active' : ''"
+              @click="careerFilterMode = 'paths'"
+            >
+              Débouchés
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm join-item ui-critical-action"
+              :class="careerFilterMode === 'all' ? 'btn-active' : ''"
+              @click="careerFilterMode = 'all'"
+            >
+              Toutes
+            </button>
+          </div>
 					<SearchInput v-model="careerQuery" placeholder="Chercher une carrière" />
-          <p class="text-xs opacity-70">Saisissez au moins 2 caractères.</p>
+          <p class="text-xs opacity-70">
+            {{ careerFilterMode === 'all' ? 'Saisissez au moins 2 caractères.' : 'Filtre actif: débouchés de la carrière actuelle.' }}
+          </p>
+          <div v-if="careerPathLoading" class="flex items-center gap-2 text-sm opacity-70">
+            <span class="loading loading-spinner loading-xs" aria-hidden="true" />
+            Chargement des débouchés...
+          </div>
           <div v-if="careerSearchLoading" class="flex items-center gap-2 text-sm opacity-70">
             <span class="loading loading-spinner loading-xs" aria-hidden="true" />
             Recherche des carrières...
@@ -623,7 +647,17 @@
 								</button>
 							</li>
 						</ul>
-            <p v-else class="text-sm opacity-70 px-2 py-1">{{ careerQuery.trim().length < 2 ? 'Commencez a taper pour rechercher une carriere.' : 'Aucune carriere trouvee.' }}</p>
+            <p v-else class="text-sm opacity-70 px-2 py-1">
+              {{
+                careerFilterMode === 'all'
+                  ? careerQuery.trim().length < 2
+                    ? 'Commencez a taper pour rechercher une carriere.'
+                    : 'Aucune carriere trouvee.'
+                  : careerPathOptions.length === 0
+                    ? 'Aucun debouche disponible pour la carriere actuelle.'
+                    : 'Aucune carriere ne correspond a votre recherche.'
+              }}
+            </p>
 					</div>
 
 					<p v-if="selectedCareerName" class="text-sm opacity-80">Sélection: {{ selectedCareerName }}</p>
@@ -962,6 +996,7 @@ import { useRoute } from 'vue-router'
 import { createCatalogItem, searchCatalog } from '../../repositories/catalogRepository'
 import {
   listCareerCharacteristicsByCareerId,
+  listCareerPathCareersByFromCareerId,
   type CareerCharacteristic,
 } from '../../repositories/careersRepository'
 import {
@@ -1074,6 +1109,8 @@ const careerDialogRef = ref<HTMLDialogElement | null>(null)
 const careerConfirmDialogRef = ref<HTMLDialogElement | null>(null)
 const careerQuery = ref('')
 const careerOptions = ref<CatalogItem[]>([])
+const careerPathOptions = ref<CatalogItem[]>([])
+const careerFilterMode = ref<'paths' | 'all'>('paths')
 const selectedCareerId = ref<string | null>(null)
 const selectedCareerName = ref<string | null>(null)
 const pendingCareerId = ref<string | null>(null)
@@ -1132,6 +1169,7 @@ const armorFilter = ref<'all' | 'equipped' | 'inventory'>('all')
 const itemFilterQuality = ref<'all' | 'médiocre' | 'normal' | 'bonne' | 'exceptionelle'>('all')
 const itemFilterQuery = ref('')
 const careerSearchLoading = ref(false)
+const careerPathLoading = ref(false)
 const careerCharacteristicsLoading = ref(false)
 const catalogSearchLoading = ref(false)
 const actionBusyKey = ref<string | null>(null)
@@ -2191,6 +2229,20 @@ async function onItemQualityChange(
 async function refreshCareerOptions(): Promise<void> {
   const trimmed = careerQuery.value.trim()
 
+  if (careerFilterMode.value === 'paths') {
+    careerSearchLoading.value = false
+    const normalizedQuery = trimmed.toLocaleLowerCase('fr')
+    if (!normalizedQuery) {
+      careerOptions.value = [...careerPathOptions.value]
+      return
+    }
+
+    careerOptions.value = careerPathOptions.value.filter((option) =>
+      option.name.toLocaleLowerCase('fr').includes(normalizedQuery)
+    )
+    return
+  }
+
   if (trimmed.length < 2) {
     careerSearchLoading.value = false
     careerOptions.value = []
@@ -2207,15 +2259,49 @@ async function refreshCareerOptions(): Promise<void> {
   }
 }
 
+async function loadCareerPathOptions(): Promise<void> {
+  if (!character.value?.careerId) {
+    careerPathOptions.value = []
+    return
+  }
+
+  careerPathLoading.value = true
+  try {
+    const paths = await listCareerPathCareersByFromCareerId(character.value.careerId)
+    careerPathOptions.value = paths.map((path) => ({
+      id: path.id,
+      name: path.name,
+      description: null,
+      specialization: null,
+      encumbrance: null,
+      damageFormula: null,
+      armorPoints: null,
+    }))
+  } finally {
+    careerPathLoading.value = false
+  }
+}
+
 async function openCareerModal(): Promise<void> {
   careerError.value = null
   careerConfirmError.value = null
   selectedCareerId.value = null
   selectedCareerName.value = null
+  careerFilterMode.value = 'paths'
   careerQuery.value = ''
   careerOptions.value = []
+  careerPathOptions.value = []
   careerSearchLoading.value = false
+  careerPathLoading.value = false
   careerCharacteristicsLoading.value = false
+
+  try {
+    await loadCareerPathOptions()
+    await refreshCareerOptions()
+  } catch (error) {
+    careerError.value =
+      error instanceof Error ? error.message : 'Chargement des débouchés impossible.'
+  }
 
   if (!careerDialogRef.value) {
     return
@@ -2232,6 +2318,7 @@ function closeCareerModal(): void {
   selectedCareerName.value = null
   careerError.value = null
   careerSearchLoading.value = false
+  careerPathLoading.value = false
 }
 
 function selectCareer(id: string, name: string): void {
@@ -2501,6 +2588,13 @@ async function confirmItemCreate(): Promise<void> {
 }
 
 watch(careerQuery, async () => {
+  await refreshCareerOptions()
+})
+
+watch(careerFilterMode, async () => {
+  careerError.value = null
+  selectedCareerId.value = null
+  selectedCareerName.value = null
   await refreshCareerOptions()
 })
 
