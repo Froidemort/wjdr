@@ -378,6 +378,62 @@ export async function updateCharacterStatValues(
   }
 }
 
+export async function replaceCharacterTotalAdvancedValues(
+  characterId: string,
+  totalAdvancedByStatCode: Record<string, number>
+): Promise<void> {
+  const trimmedCharacterId = characterId.trim()
+  if (!trimmedCharacterId) {
+    throw new Error('Personnage invalide.')
+  }
+
+  await assertCharacterCampaignWritable(trimmedCharacterId)
+
+  const { data: existingRows, error: existingRowsError } = await supabase
+    .from('character_stat_values')
+    .select('stat_code, base_value, current_advanced, total_advanced')
+    .eq('character_id', trimmedCharacterId)
+
+  if (existingRowsError) {
+    throw existingRowsError
+  }
+
+  const existingByStatCode = new Map<string, CharacterStatRow>()
+  for (const row of (existingRows ?? []) as CharacterStatRow[]) {
+    existingByStatCode.set(row.stat_code, row)
+  }
+
+  const sanitizedByStatCode = new Map<string, number>()
+  for (const [statCode, value] of Object.entries(totalAdvancedByStatCode)) {
+    const normalizedStatCode = statCode.trim().toUpperCase()
+    if (!normalizedStatCode) {
+      continue
+    }
+
+    sanitizedByStatCode.set(normalizedStatCode, Math.max(0, Math.floor(value)))
+  }
+
+  const upsertRows = Array.from(existingByStatCode.values()).map((row) => ({
+    character_id: trimmedCharacterId,
+    stat_code: row.stat_code,
+    base_value: row.base_value,
+    current_advanced: row.current_advanced,
+    total_advanced: sanitizedByStatCode.get(row.stat_code) ?? 0,
+  }))
+
+  if (upsertRows.length === 0) {
+    return
+  }
+
+  const { error } = await supabase
+    .from('character_stat_values')
+    .upsert(upsertRows, { onConflict: 'character_id,stat_code' })
+
+  if (error) {
+    throw error
+  }
+}
+
 export async function createCharacterForCampaign(payload: CreateCharacterPayload): Promise<string> {
   const trimmedName = payload.name.trim()
   if (!trimmedName) {

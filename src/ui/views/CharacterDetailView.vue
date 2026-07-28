@@ -604,8 +604,34 @@
         <h3 class="grim-modal-title mb-4 text-center text-3xl">Changer de carrière</h3>
 
 				<div class="space-y-3">
+          <div class="join" role="group" aria-label="Filtre des carrieres">
+            <button
+              type="button"
+              class="btn btn-sm join-item ui-critical-action"
+              :class="careerFilterMode === 'paths' ? 'btn-active' : ''"
+              :aria-pressed="careerFilterMode === 'paths'"
+              @click="careerFilterMode = 'paths'"
+            >
+              Débouchés
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm join-item ui-critical-action"
+              :class="careerFilterMode === 'all' ? 'btn-active' : ''"
+              :aria-pressed="careerFilterMode === 'all'"
+              @click="careerFilterMode = 'all'"
+            >
+              Toutes
+            </button>
+          </div>
 					<SearchInput v-model="careerQuery" placeholder="Chercher une carrière" />
-          <p class="text-xs opacity-70">Saisissez au moins 2 caractères.</p>
+          <p class="text-xs opacity-70">
+            {{ careerFilterMode === 'all' ? 'Saisissez au moins 2 caractères.' : 'Filtre actif: débouchés de la carrière actuelle.' }}
+          </p>
+          <div v-if="careerPathLoading" class="flex items-center gap-2 text-sm opacity-70">
+            <span class="loading loading-spinner loading-xs" aria-hidden="true" />
+            Chargement des débouchés...
+          </div>
           <div v-if="careerSearchLoading" class="flex items-center gap-2 text-sm opacity-70">
             <span class="loading loading-spinner loading-xs" aria-hidden="true" />
             Recherche des carrières...
@@ -623,7 +649,17 @@
 								</button>
 							</li>
 						</ul>
-            <p v-else class="text-sm opacity-70 px-2 py-1">{{ careerQuery.trim().length < 2 ? 'Commencez a taper pour rechercher une carriere.' : 'Aucune carriere trouvee.' }}</p>
+            <p v-else class="text-sm opacity-70 px-2 py-1">
+              {{
+                careerFilterMode === 'all'
+                  ? careerQuery.trim().length < 2
+                    ? 'Commencez a taper pour rechercher une carriere.'
+                    : 'Aucune carriere trouvee.'
+                  : careerPathOptions.length === 0
+                    ? 'Aucun debouche disponible pour la carriere actuelle.'
+                    : 'Aucune carriere ne correspond a votre recherche.'
+              }}
+            </p>
 					</div>
 
 					<p v-if="selectedCareerName" class="text-sm opacity-80">Sélection: {{ selectedCareerName }}</p>
@@ -636,13 +672,57 @@
 
           <div class="grim-modal-actions flex items-center justify-end gap-2">
 						<button class="btn btn-sm ui-critical-action" @click="closeCareerModal">Annuler</button>
-            <button class="btn btn-sm ui-critical-action" :disabled="changingCareer" @click="confirmCareerChange">
-							<span v-if="changingCareer" class="loading loading-spinner loading-xs" aria-hidden="true" />
+            <button class="btn btn-sm ui-critical-action" :disabled="changingCareer || careerCharacteristicsLoading" @click="confirmCareerChange">
+              <span v-if="changingCareer || careerCharacteristicsLoading" class="loading loading-spinner loading-xs" aria-hidden="true" />
 							Valider
 						</button>
 					</div>
 				</div>
 			</div>
+
+			<form method="dialog" class="modal-backdrop">
+				<button>Fermer</button>
+			</form>
+		</dialog>
+
+		<dialog ref="careerConfirmDialogRef" class="modal modal-top sm:modal-middle" @close="closeCareerConfirmModal()">
+      <div class="modal-box grim-modal-box p-6">
+        <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeCareerConfirmModal()" aria-label="Fermer">✕</button>
+        <h3 class="grim-modal-title mb-2 text-center text-3xl">Appliquer le profil de carrière</h3>
+
+        <p class="text-sm opacity-80">
+          Nouvelle carrière: <span class="font-semibold">{{ pendingCareerName }}</span>
+        </p>
+        <p class="mt-1 text-sm opacity-80">
+          Choisissez si vous souhaitez remplacer les avancées totales du personnage avec le profil de cette carrière.
+        </p>
+
+        <div class="mt-4 rounded-box border border-base-300 bg-base-100 p-3">
+          <p class="mb-2 text-xs opacity-70">Profil de carrière proposé (avancées totales)</p>
+          <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+            <div v-for="entry in pendingCareerCharacteristicRows" :key="`career-profile-${entry.statCode}`" class="rounded-lg border border-base-300 bg-base-200 px-2 py-1 text-center">
+              <p class="text-xs font-semibold">{{ entry.statCode }}</p>
+              <p class="text-sm tabular-nums">{{ entry.value }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="careerConfirmError" role="alert" class="alert alert-error alert-soft mt-4 text-sm">
+          <span>{{ careerConfirmError }}</span>
+        </div>
+
+        <div class="grim-modal-actions mt-4 flex flex-wrap items-center justify-end gap-2">
+          <button class="btn btn-sm ui-critical-action" :disabled="changingCareer" @click="closeCareerConfirmModal()">Annuler</button>
+          <button class="btn btn-sm ui-critical-action" :disabled="changingCareer" @click="applyCareerChange(false)">
+            <span v-if="changingCareer" class="loading loading-spinner loading-xs" aria-hidden="true" />
+            Ne pas appliquer
+          </button>
+          <button class="btn btn-sm ui-critical-action" :disabled="changingCareer" @click="applyCareerChange(true)">
+            <span v-if="changingCareer" class="loading loading-spinner loading-xs" aria-hidden="true" />
+            Appliquer
+          </button>
+        </div>
+      </div>
 
 			<form method="dialog" class="modal-backdrop">
 				<button>Fermer</button>
@@ -917,6 +997,11 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { createCatalogItem, searchCatalog } from '../../repositories/catalogRepository'
 import {
+  listCareerCharacteristicsByCareerId,
+  listCareerPathCareersByFromCareerId,
+  type CareerCharacteristic,
+} from '../../repositories/careersRepository'
+import {
   addCharacterArmors,
   addCharacterItems,
   addCharacterSkills,
@@ -939,6 +1024,7 @@ import {
 } from '../../repositories/characterLinksRepository'
 import {
   getCharacterById,
+  replaceCharacterTotalAdvancedValues,
   updateCharacterCareer,
   updateCharacterCore,
   updateCharacterStatValues,
@@ -1022,11 +1108,18 @@ let deferredRealtimeReloadTimer: ReturnType<typeof setTimeout> | null = null
 let deferredLinksReloadTimer: ReturnType<typeof setTimeout> | null = null
 
 const careerDialogRef = ref<HTMLDialogElement | null>(null)
+const careerConfirmDialogRef = ref<HTMLDialogElement | null>(null)
 const careerQuery = ref('')
 const careerOptions = ref<CatalogItem[]>([])
+const careerPathOptions = ref<CatalogItem[]>([])
+const careerFilterMode = ref<'paths' | 'all'>('paths')
 const selectedCareerId = ref<string | null>(null)
 const selectedCareerName = ref<string | null>(null)
+const pendingCareerId = ref<string | null>(null)
+const pendingCareerName = ref<string | null>(null)
+const pendingCareerCharacteristics = ref<CareerCharacteristic[]>([])
 const careerError = ref<string | null>(null)
+const careerConfirmError = ref<string | null>(null)
 const changingCareer = ref(false)
 
 const catalogDialogRef = ref<HTMLDialogElement | null>(null)
@@ -1078,6 +1171,8 @@ const armorFilter = ref<'all' | 'equipped' | 'inventory'>('all')
 const itemFilterQuality = ref<'all' | 'médiocre' | 'normal' | 'bonne' | 'exceptionelle'>('all')
 const itemFilterQuery = ref('')
 const careerSearchLoading = ref(false)
+const careerPathLoading = ref(false)
+const careerCharacteristicsLoading = ref(false)
 const catalogSearchLoading = ref(false)
 const actionBusyKey = ref<string | null>(null)
 let actionSuccessTimer: ReturnType<typeof setTimeout> | null = null
@@ -1448,6 +1543,20 @@ const allStatsSorted = computed(() => {
 
     return leftIndex - rightIndex
   })
+})
+
+const pendingCareerCharacteristicRows = computed(() => {
+  const valuesByCode = new Map(
+    pendingCareerCharacteristics.value.map((entry) => [entry.statCode.toUpperCase(), entry.value])
+  )
+  const orderedCodes = allStatsSorted.value.map((entry) => entry.statCode.toUpperCase())
+  const unknownCodes = Array.from(valuesByCode.keys()).filter((code) => !orderedCodes.includes(code))
+  unknownCodes.sort((left, right) => left.localeCompare(right, 'fr', { sensitivity: 'base' }))
+
+  return [...orderedCodes, ...unknownCodes].map((statCode) => ({
+    statCode,
+    value: valuesByCode.get(statCode) ?? 0,
+  }))
 })
 
 const LINK_TABLES = new Set([
@@ -2119,13 +2228,83 @@ async function onItemQualityChange(
   })
 }
 
-function openCareerModal(): void {
+async function refreshCareerOptions(): Promise<void> {
+  const trimmed = careerQuery.value.trim()
+
+  if (careerFilterMode.value === 'paths') {
+    careerSearchLoading.value = false
+    const normalizedQuery = trimmed.toLocaleLowerCase('fr')
+    if (!normalizedQuery) {
+      careerOptions.value = [...careerPathOptions.value]
+      return
+    }
+
+    careerOptions.value = careerPathOptions.value.filter((option) =>
+      option.name.toLocaleLowerCase('fr').includes(normalizedQuery)
+    )
+    return
+  }
+
+  if (trimmed.length < 2) {
+    careerSearchLoading.value = false
+    careerOptions.value = []
+    return
+  }
+
+  careerSearchLoading.value = true
+  try {
+    careerOptions.value = await searchCatalog('careers', trimmed)
+  } catch {
+    careerOptions.value = []
+  } finally {
+    careerSearchLoading.value = false
+  }
+}
+
+async function loadCareerPathOptions(): Promise<void> {
+  if (!character.value?.careerId) {
+    careerPathOptions.value = []
+    return
+  }
+
+  careerPathLoading.value = true
+  try {
+    const paths = await listCareerPathCareersByFromCareerId(character.value.careerId)
+    careerPathOptions.value = paths.map((path) => ({
+      id: path.id,
+      name: path.name,
+      description: null,
+      specialization: null,
+      encumbrance: null,
+      damageFormula: null,
+      armorPoints: null,
+    }))
+  } finally {
+    careerPathLoading.value = false
+  }
+}
+
+async function openCareerModal(): Promise<void> {
   careerError.value = null
+  careerConfirmError.value = null
   selectedCareerId.value = null
   selectedCareerName.value = null
+  careerFilterMode.value = 'paths'
   careerQuery.value = ''
   careerOptions.value = []
+  careerPathOptions.value = []
   careerSearchLoading.value = false
+  careerPathLoading.value = false
+  careerCharacteristicsLoading.value = false
+
+  try {
+    await loadCareerPathOptions()
+    await refreshCareerOptions()
+  } catch (error) {
+    careerError.value =
+      error instanceof Error ? error.message : 'Chargement des débouchés impossible.'
+  }
+
   if (!careerDialogRef.value) {
     return
   }
@@ -2141,12 +2320,31 @@ function closeCareerModal(): void {
   selectedCareerName.value = null
   careerError.value = null
   careerSearchLoading.value = false
+  careerPathLoading.value = false
 }
 
 function selectCareer(id: string, name: string): void {
   selectedCareerId.value = id
   selectedCareerName.value = name
   careerError.value = null
+}
+
+function resetPendingCareerChange(): void {
+  pendingCareerId.value = null
+  pendingCareerName.value = null
+  pendingCareerCharacteristics.value = []
+  careerConfirmError.value = null
+}
+
+function closeCareerConfirmModal(resetPending = true): void {
+  if (careerConfirmDialogRef.value?.open) {
+    careerConfirmDialogRef.value.close()
+  }
+
+  careerCharacteristicsLoading.value = false
+  if (resetPending) {
+    resetPendingCareerChange()
+  }
 }
 
 async function confirmCareerChange(): Promise<void> {
@@ -2164,19 +2362,65 @@ async function confirmCareerChange(): Promise<void> {
     return
   }
 
-  if (!confirmDestructiveAction('Confirmer le changement de carriere ?')) {
+  careerError.value = null
+  careerConfirmError.value = null
+  careerCharacteristicsLoading.value = true
+  try {
+    pendingCareerId.value = selectedCareerId.value
+    pendingCareerName.value = selectedCareerName.value
+    pendingCareerCharacteristics.value = await listCareerCharacteristicsByCareerId(selectedCareerId.value)
+    closeCareerModal()
+    careerConfirmDialogRef.value?.showModal()
+  } catch (error) {
+    careerError.value =
+      error instanceof Error ? error.message : 'Modification de carrière impossible.'
+  } finally {
+    careerCharacteristicsLoading.value = false
+  }
+}
+
+async function applyCareerChange(applyCareerCharacteristics: boolean): Promise<void> {
+  if (!character.value || !pendingCareerId.value || changingCareer.value) {
     return
   }
 
   changingCareer.value = true
-  careerError.value = null
+  careerConfirmError.value = null
+  let careerUpdated = false
+
   try {
-    await updateCharacterCareer(character.value.id, selectedCareerId.value)
+    await updateCharacterCareer(character.value.id, pendingCareerId.value)
+    careerUpdated = true
+
+    if (applyCareerCharacteristics) {
+      const totalAdvancedByStatCode = pendingCareerCharacteristics.value.reduce<
+        Record<string, number>
+      >((accumulator, entry) => {
+        accumulator[entry.statCode] = entry.value
+        return accumulator
+      }, {})
+      await replaceCharacterTotalAdvancedValues(character.value.id, totalAdvancedByStatCode)
+    }
+
     await loadCharacter()
-    setSectionSuccess('career', 'Carriere mise a jour.')
-    closeCareerModal()
+    setSectionSuccess(
+      'career',
+      applyCareerCharacteristics
+        ? 'Carriere et caracteristiques mises a jour.'
+        : 'Carriere mise a jour.'
+    )
+    closeCareerConfirmModal()
   } catch (error) {
-    careerError.value =
+    if (careerUpdated) {
+      await loadCharacter().catch(() => undefined)
+      careerConfirmError.value =
+        error instanceof Error
+          ? `Carriere mise a jour, mais profil de carriere non applique: ${error.message}`
+          : 'Carriere mise a jour, mais profil de carriere non applique.'
+      return
+    }
+
+    careerConfirmError.value =
       error instanceof Error ? error.message : 'Modification de carrière impossible.'
   } finally {
     changingCareer.value = false
@@ -2345,22 +2589,15 @@ async function confirmItemCreate(): Promise<void> {
   }
 }
 
-watch(careerQuery, async (value) => {
-  const trimmed = value.trim()
-  if (trimmed.length < 2) {
-    careerOptions.value = []
-    careerSearchLoading.value = false
-    return
-  }
+watch(careerQuery, async () => {
+  await refreshCareerOptions()
+})
 
-  careerSearchLoading.value = true
-  try {
-    careerOptions.value = await searchCatalog('careers', trimmed)
-  } catch {
-    careerOptions.value = []
-  } finally {
-    careerSearchLoading.value = false
-  }
+watch(careerFilterMode, async () => {
+  careerError.value = null
+  selectedCareerId.value = null
+  selectedCareerName.value = null
+  await refreshCareerOptions()
 })
 
 watch(catalogQuery, async (value) => {
