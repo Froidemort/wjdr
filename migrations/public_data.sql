@@ -691,3 +691,26 @@ FROM (
     ('Plastron', 75, 2, ARRAY['corps']::TEXT[])
 ) AS base(name, encumbrance, armor_points, covered_locations)
 ON CONFLICT DO NOTHING;
+
+-- Attributs des armes
+
+INSERT INTO weapon_attributes (name, description)
+SELECT base.name, base.description
+FROM (
+    VALUES
+    ('Assomante', 'Les armes dotées de cet attribut sont capable de faire perdre connaissance à l''adversaire. Vous bénéficiez d''un bonus de +10% en Force lorsque vous utilisez le talent Coup assomant.'),
+    ('Défensive', 'Les armes dotées de cet attribut sont conçues pour la parade. Vous bénéficiez d''un bonus de +10% aux tentatives de parade avec une telle arme en main.'),
+    ('Épuisante', 'Les armes dotées de cet attribut sont fatigantes à utiliser. Si elles sont également dotées de l''attribut percutante, celui-ci ne s''applique que pendant le premier round de combat au corps à corps.'),
+    ('Immobilisante', 'Les armes dotées de cet attribut sont conçues pour enchevêtrer l''ennemi. En cas de réussite, la cible est immobilisée et ne peut tenter aucune action à part celle de se libérer de ses liens. La victime peut essayer de rompre ses liens (test de Force) ou de s''en dégager en se contorsionnant (test d''Agilité). Jusqu''à ce qu''elle réussisse à s''échapper, la cible est considérée comme étant sans défense.'),
+    ('Lente', 'Les armes dotées de cet attribut sont lourdes et encombrantes, peu faciles à manier, ce qui les rend plus faciles à éviter. L''adversaire bénéficie d''un bonus de +10% lorsqu''il essaie de parer ou d''esquiver une telle arme.'),
+    ('Percutante', 'Les armes dotées de cet attribut frappent avec une force exceptionnelle. Lorsque vous touchez l''adversaire avec une telle arme, lancez 2410 pour les dégâts et conservez le meilleur résultat.'),
+    ('Perforante', 'Les armes dotées de cet attribut sont particulièrement efficaces pour transpercer les armures. Les attaques portées au moyen de ces armes ignorent 1 point d''Armure. Si la cible ne possède pas d''armure, cet attribut reste sans effet. Vous pouvez combiner ce bonus à celui qui est associé au talent Tir de précision.'),
+    ('Précise', 'Les armes dotées de cet attribut sont d''une précision mortelle. Quand vous utilisez une telle arme, la valeur critique de tout coup critique augmente de 1. Vous pouvez combiner ce bonus avec celui qui est associé au talent Coups précis.'),
+    ('Rapide', 'Les armes dotées de cet attribut frappent rapidement car elles sont particulièrement longues ou maniables. Les adversaires subissent un malus de -10% quand ils tentent de parer ou d''esquiver les attaques de ces armes.'),
+    ('Spéciale', 'Reportez-vous à la description de l''arme pour les règles particulières qui la concernent.'),
+    ('A mitraille', 'Les armes dotées de cet attribut projettent de la grenaille, des éclats de métal, des clous, du verre pilé ou toutes sortes de projectiles de petite taille. Ce ne sont pas des armes de tireur d''élite ; elles ne font que cracher un éventail de mort sur une large étendue. Vous n''avez pas besoin d''effectuer un test de CT pour toucher l''ennemi lorsque vous tirez avec une arme à mitraille. Il suffit de tracer une ligne aussi longue que la portée maximum de l''arme (32 mètres/16 cases dans le cas d''un tromblon) et de 2 mètres (1 case) de large. Quiconque se trouve dans cette zone doit réussir un test d''Agilité sous peine de subir les dégâts de l''arme.'),
+    ('Expérimentale', 'Les armes dotées de cet attribut bénéficient des derniers progrès technologiques et sont donc plus enclines aux dysfonctionnements. Sur jet d''attaque de 96-98, l''arme s''enraye et ne peut plus tirer jusqu''à ce qu''un test de Métier (arquebusier) soit réussi. Sur un jet d''attaque de 99-00, l''arme explose en infligeant une valeur de dégâts de 7 à son porteur et est détruite du même coup.'),
+    ('Peu fiable', 'Les armes dotées de cet attribut ne fonctionnent pas toujours parfaitement. Sur un jet d''attaque de 96-99, l''arme s''enraye et ne peut plus tirer jusqu''à ce qu''un test de Métier (arquebusier) soit réussi. Sur un jet d''attaque de 00, l''arme explose en infligeant ses dégâts normaux à son porteur et est détruite du même coup.')
+) AS base(name, description)
+ON CONFLICT DO NOTHING;
+
