@@ -641,16 +641,15 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
 
 /* Grimorium title animation */
 .wrapper svg {
-    font-family: "IM Fell English", sans-serif;
-    width: 100%;
-    height: 100%;
+  font-family: var(--font-grim-title);
+  width: 100%;
+  height: 100%;
 }
 
 .wrapper svg text {
     animation: stroke 8s infinite;
     stroke-width: 2;
     stroke: var(--color-primary);
-    font-size: 4.5rem;
 }
 
 @keyframes stroke {
@@ -685,4 +684,10 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
 
 .wrapper {
     background-color: #FFFFFF00;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapper svg text {
+    animation: none;
+  }
 }

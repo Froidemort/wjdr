@@ -54,9 +54,9 @@
 					aria-labelledby="home-brand"
 				>
 					<p class="text-xs font-bold uppercase tracking-[0.2em] text-primary">Warhammer JDR V2</p>
-					<div class="wrapper">
+					<div class="title wrapper">
 						<svg>
-							<text x="50%" y="50%" dy=".35em" text-anchor="middle" id="home-brand" class="grim-modal-title mt-3 text-5xl sm:text-6xl">Grimorium</text>
+							<text x="50%" y="50%" dy=".35em" text-anchor="middle" id="home-brand" class="grim-modal-title mt-3 text-6xl sm:text-7xl">Grimorium</text>
 						</svg>
 					</div>
 						<p v-if="authStore.displayName" class="mt-4 text-base font-medium sm:text-lg">
