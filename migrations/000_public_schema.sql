@@ -23,7 +23,7 @@ SET row_security = off;
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA public;
+CREATE SCHEMA IF NOT EXISTS public;
 
 
 --
@@ -37,7 +37,7 @@ COMMENT ON SCHEMA public IS 'standard public schema';
 -- Name: delete_old_notifications(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.delete_old_notifications() RETURNS trigger
+CREATE OR REPLACE public.delete_old_notifications() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -54,7 +54,7 @@ $$;
 -- Name: get_campaign_id_by_code(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_campaign_id_by_code(target_code text) RETURNS uuid
+CREATE OR REPLACE public.get_campaign_id_by_code(target_code text) RETURNS uuid
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -70,7 +70,7 @@ $$;
 -- Name: get_campaign_owner_for_request(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_campaign_owner_for_request(target_campaign_id uuid) RETURNS uuid
+CREATE OR REPLACE public.get_campaign_owner_for_request(target_campaign_id uuid) RETURNS uuid
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -86,7 +86,7 @@ $$;
 -- Name: get_email_by_username(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_email_by_username(search_username text) RETURNS text
+CREATE OR REPLACE public.get_email_by_username(search_username text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
@@ -107,7 +107,7 @@ $$;
 -- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.handle_new_user() RETURNS trigger
+CREATE OR REPLACE public.handle_new_user() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -129,7 +129,7 @@ $$;
 -- Name: is_character_visible(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_character_visible(target_character_id uuid) RETURNS boolean
+CREATE OR REPLACE public.is_character_visible(target_character_id uuid) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -155,7 +155,7 @@ $$;
 -- Name: is_session_mj(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.is_session_mj(target_session_id uuid) RETURNS boolean
+CREATE OR REPLACE public.is_session_mj(target_session_id uuid) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO ''
     AS $$
@@ -172,7 +172,7 @@ $$;
 -- Name: search_session_notes(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.search_session_notes(target_campaign_id uuid, search_text text) RETURNS TABLE(id uuid, campaign_id uuid, author_user_id uuid, title character varying, content_text text, is_visible boolean, is_archived boolean, created_at timestamp with time zone, updated_at timestamp with time zone, rank real)
+CREATE OR REPLACE public.search_session_notes(target_campaign_id uuid, search_text text) RETURNS TABLE(id uuid, campaign_id uuid, author_user_id uuid, title character varying, content_text text, is_visible boolean, is_archived boolean, created_at timestamp with time zone, updated_at timestamp with time zone, rank real)
     LANGUAGE sql STABLE
     SET search_path TO ''
     AS $$
@@ -207,7 +207,7 @@ SET default_table_access_method = heap;
 -- Name: armors; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.armors (
+CREATE TABLE IF NOT EXISTS public.armors (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(100) NOT NULL,
     description text,
@@ -223,7 +223,7 @@ CREATE TABLE public.armors (
 -- Name: campaigns; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.campaigns (
+CREATE TABLE IF NOT EXISTS public.campaigns (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     mj_id uuid NOT NULL,
     name character varying(100) NOT NULL,
@@ -238,7 +238,7 @@ CREATE TABLE public.campaigns (
 -- Name: career_paths; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.career_paths (
+CREATE TABLE IF NOT EXISTS public.career_paths (
     from_career_id uuid NOT NULL,
     to_career_id uuid NOT NULL
 );
@@ -248,7 +248,7 @@ CREATE TABLE public.career_paths (
 -- Name: careers; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.careers (
+CREATE TABLE IF NOT EXISTS public.careers (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(100) NOT NULL
 );
@@ -258,7 +258,7 @@ CREATE TABLE public.careers (
 -- Name: character_armors; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.character_armors (
+CREATE TABLE IF NOT EXISTS public.character_armors (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     character_id uuid,
     armor_id uuid,
@@ -272,7 +272,7 @@ CREATE TABLE public.character_armors (
 -- Name: character_items; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.character_items (
+CREATE TABLE IF NOT EXISTS public.character_items (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     character_id uuid,
     item_id uuid,
@@ -287,7 +287,7 @@ CREATE TABLE public.character_items (
 -- Name: character_skills; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.character_skills (
+CREATE TABLE IF NOT EXISTS public.character_skills (
     character_id uuid NOT NULL,
     skill_id uuid NOT NULL,
     mastery_level integer DEFAULT 1 NOT NULL,
@@ -299,7 +299,7 @@ CREATE TABLE public.character_skills (
 -- Name: character_stat_values; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.character_stat_values (
+CREATE TABLE IF NOT EXISTS public.character_stat_values (
     character_id uuid NOT NULL,
     stat_code character varying(3) NOT NULL,
     base_value integer NOT NULL,
@@ -315,7 +315,7 @@ CREATE TABLE public.character_stat_values (
 -- Name: character_talents; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.character_talents (
+CREATE TABLE IF NOT EXISTS public.character_talents (
     character_id uuid NOT NULL,
     talent_id uuid NOT NULL
 );
@@ -325,7 +325,7 @@ CREATE TABLE public.character_talents (
 -- Name: character_weapons; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.character_weapons (
+CREATE TABLE IF NOT EXISTS public.character_weapons (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     character_id uuid,
     weapon_id uuid,
@@ -340,7 +340,7 @@ CREATE TABLE public.character_weapons (
 -- Name: characters; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.characters (
+CREATE TABLE IF NOT EXISTS public.characters (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     user_id uuid NOT NULL,
     campaign_id uuid NOT NULL,
@@ -383,7 +383,7 @@ CREATE TABLE public.characters (
 -- Name: items; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.items (
+CREATE TABLE IF NOT EXISTS public.items (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(100) NOT NULL,
     description text,
@@ -396,7 +396,7 @@ CREATE TABLE public.items (
 -- Name: notifications; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.notifications (
+CREATE TABLE IF NOT EXISTS public.notifications (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     sender_user_id uuid,
     receiver_user_id uuid NOT NULL,
@@ -411,7 +411,7 @@ CREATE TABLE public.notifications (
 -- Name: profiles; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
     id uuid NOT NULL,
     username character varying(50) NOT NULL,
     email character varying(255) NOT NULL,
@@ -425,7 +425,7 @@ CREATE TABLE public.profiles (
 -- Name: session_notes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.session_notes (
+CREATE TABLE IF NOT EXISTS public.session_notes (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     campaign_id uuid NOT NULL,
     author_user_id uuid DEFAULT auth.uid() NOT NULL,
@@ -447,7 +447,7 @@ ALTER TABLE ONLY public.session_notes REPLICA IDENTITY FULL;
 -- Name: sessions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.sessions (
+CREATE TABLE IF NOT EXISTS public.sessions (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     campaign_id uuid NOT NULL,
     date date NOT NULL,
@@ -462,7 +462,7 @@ CREATE TABLE public.sessions (
 -- Name: skills; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.skills (
+CREATE TABLE IF NOT EXISTS public.skills (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(100) NOT NULL,
     specialization character varying(100),
@@ -476,7 +476,7 @@ CREATE TABLE public.skills (
 -- Name: static_stats; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.static_stats (
+CREATE TABLE IF NOT EXISTS public.static_stats (
     code character varying(3) NOT NULL,
     name character varying(50) NOT NULL,
     is_secondary boolean DEFAULT false NOT NULL
@@ -487,7 +487,7 @@ CREATE TABLE public.static_stats (
 -- Name: talents; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.talents (
+CREATE TABLE IF NOT EXISTS public.talents (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(100) NOT NULL,
     description text,
@@ -499,7 +499,7 @@ CREATE TABLE public.talents (
 -- Name: users_campaigns; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.users_campaigns (
+CREATE TABLE IF NOT EXISTS public.users_campaigns (
     campaign_id uuid NOT NULL,
     user_id uuid NOT NULL,
     active boolean DEFAULT true NOT NULL
@@ -510,7 +510,7 @@ CREATE TABLE public.users_campaigns (
 -- Name: weapon_attribute_mappings; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.weapon_attribute_mappings (
+CREATE TABLE IF NOT EXISTS public.weapon_attribute_mappings (
     weapon_id uuid NOT NULL,
     attribute_id uuid NOT NULL
 );
@@ -520,7 +520,7 @@ CREATE TABLE public.weapon_attribute_mappings (
 -- Name: weapon_attributes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.weapon_attributes (
+CREATE TABLE IF NOT EXISTS public.weapon_attributes (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(50) NOT NULL,
     description text
@@ -531,7 +531,7 @@ CREATE TABLE public.weapon_attributes (
 -- Name: weapons; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.weapons (
+CREATE TABLE IF NOT EXISTS public.weapons (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(100) NOT NULL,
     description text,
