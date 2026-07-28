@@ -17,7 +17,7 @@ describe('replaceCharacterTotalAdvancedValues', () => {
     fromMock.mockReset()
   })
 
-  it('resets all total_advanced and applies provided values by stat code', async () => {
+  it('applies total_advanced values in one atomic upsert operation', async () => {
     const characterMetaBuilder = {
       select: vi.fn(),
       eq: vi.fn(),
@@ -42,27 +42,25 @@ describe('replaceCharacterTotalAdvancedValues', () => {
       error: null,
     })
 
-    const eqCalls: Array<{ payload: { total_advanced: number }; column: string; value: string }> = []
-    let currentPayload = { total_advanced: 0 }
-    const updateFilterBuilder: {
+    const statValuesFilterBuilder: {
       eq: ReturnType<typeof vi.fn>
-      error: null
     } = {
       eq: vi.fn(),
-      error: null,
     }
-
-    updateFilterBuilder.eq.mockImplementation((column: string, value: string) => {
-      eqCalls.push({ payload: currentPayload, column, value })
-      return updateFilterBuilder
-    })
 
     const statValuesBuilder = {
-      update: vi.fn((payload: { total_advanced: number }) => {
-        currentPayload = payload
-        return updateFilterBuilder
-      }),
+      select: vi.fn(() => statValuesFilterBuilder),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     }
+
+    statValuesFilterBuilder.eq.mockResolvedValue({
+      data: [
+        { stat_code: 'CC', base_value: 10, current_advanced: 1, total_advanced: 2 },
+        { stat_code: 'AG', base_value: 20, current_advanced: 3, total_advanced: 4 },
+        { stat_code: 'INT', base_value: 30, current_advanced: 5, total_advanced: 6 },
+      ],
+      error: null,
+    })
 
     fromMock.mockImplementation((table: string) => {
       if (table === 'characters') {
@@ -82,15 +80,35 @@ describe('replaceCharacterTotalAdvancedValues', () => {
       ag: 10,
     })
 
-    expect(statValuesBuilder.update).toHaveBeenNthCalledWith(1, { total_advanced: 0 })
-    expect(statValuesBuilder.update).toHaveBeenNthCalledWith(2, { total_advanced: 5 })
-    expect(statValuesBuilder.update).toHaveBeenNthCalledWith(3, { total_advanced: 10 })
-    expect(eqCalls).toEqual([
-      { payload: { total_advanced: 0 }, column: 'character_id', value: 'character-1' },
-      { payload: { total_advanced: 5 }, column: 'character_id', value: 'character-1' },
-      { payload: { total_advanced: 5 }, column: 'stat_code', value: 'CC' },
-      { payload: { total_advanced: 10 }, column: 'character_id', value: 'character-1' },
-      { payload: { total_advanced: 10 }, column: 'stat_code', value: 'AG' },
-    ])
+    expect(statValuesBuilder.select).toHaveBeenCalledWith(
+      'stat_code, base_value, current_advanced, total_advanced'
+    )
+    expect(statValuesFilterBuilder.eq).toHaveBeenCalledWith('character_id', 'character-1')
+    expect(statValuesBuilder.upsert).toHaveBeenCalledWith(
+      [
+        {
+          character_id: 'character-1',
+          stat_code: 'CC',
+          base_value: 10,
+          current_advanced: 1,
+          total_advanced: 5,
+        },
+        {
+          character_id: 'character-1',
+          stat_code: 'AG',
+          base_value: 20,
+          current_advanced: 3,
+          total_advanced: 10,
+        },
+        {
+          character_id: 'character-1',
+          stat_code: 'INT',
+          base_value: 30,
+          current_advanced: 5,
+          total_advanced: 0,
+        },
+      ],
+      { onConflict: 'character_id,stat_code' }
+    )
   })
 })

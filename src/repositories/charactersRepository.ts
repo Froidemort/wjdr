@@ -389,32 +389,48 @@ export async function replaceCharacterTotalAdvancedValues(
 
   await assertCharacterCampaignWritable(trimmedCharacterId)
 
-  const { error: resetError } = await supabase
+  const { data: existingRows, error: existingRowsError } = await supabase
     .from('character_stat_values')
-    .update({ total_advanced: 0 })
+    .select('stat_code, base_value, current_advanced, total_advanced')
     .eq('character_id', trimmedCharacterId)
 
-  if (resetError) {
-    throw resetError
+  if (existingRowsError) {
+    throw existingRowsError
   }
 
-  const entries = Object.entries(totalAdvancedByStatCode)
-    .map(([statCode, value]) => ({
-      statCode: statCode.trim().toUpperCase(),
-      value: Math.max(0, Math.floor(value)),
-    }))
-    .filter(({ statCode }) => Boolean(statCode))
+  const existingByStatCode = new Map<string, CharacterStatRow>()
+  for (const row of (existingRows ?? []) as CharacterStatRow[]) {
+    existingByStatCode.set(row.stat_code, row)
+  }
 
-  for (const entry of entries) {
-    const { error } = await supabase
-      .from('character_stat_values')
-      .update({ total_advanced: entry.value })
-      .eq('character_id', trimmedCharacterId)
-      .eq('stat_code', entry.statCode)
-
-    if (error) {
-      throw error
+  const sanitizedByStatCode = new Map<string, number>()
+  for (const [statCode, value] of Object.entries(totalAdvancedByStatCode)) {
+    const normalizedStatCode = statCode.trim().toUpperCase()
+    if (!normalizedStatCode) {
+      continue
     }
+
+    sanitizedByStatCode.set(normalizedStatCode, Math.max(0, Math.floor(value)))
+  }
+
+  const upsertRows = Array.from(existingByStatCode.values()).map((row) => ({
+    character_id: trimmedCharacterId,
+    stat_code: row.stat_code,
+    base_value: row.base_value,
+    current_advanced: row.current_advanced,
+    total_advanced: sanitizedByStatCode.get(row.stat_code) ?? 0,
+  }))
+
+  if (upsertRows.length === 0) {
+    return
+  }
+
+  const { error } = await supabase
+    .from('character_stat_values')
+    .upsert(upsertRows, { onConflict: 'character_id,stat_code' })
+
+  if (error) {
+    throw error
   }
 }
 
