@@ -692,7 +692,7 @@ FROM (
 ) AS base(name, encumbrance, armor_points, covered_locations)
 ON CONFLICT DO NOTHING;
 
-// Attributs des armes
+-- Attributs des armes
 
 INSERT INTO weapon_attributes (name, description)
 SELECT base.name, base.description
