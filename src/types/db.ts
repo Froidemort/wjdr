@@ -39,6 +39,15 @@ export interface CareerRow {
   name?: string
 }
 
+export interface CareerCharacteristicRow {
+  stat_code: string
+  value: number
+}
+
+export interface CareerPathRow {
+  to_career_id: string
+}
+
 export interface ProfileAvatarRow {
   id: string
   avatar_url?: string | null

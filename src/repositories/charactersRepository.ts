@@ -378,6 +378,46 @@ export async function updateCharacterStatValues(
   }
 }
 
+export async function replaceCharacterTotalAdvancedValues(
+  characterId: string,
+  totalAdvancedByStatCode: Record<string, number>
+): Promise<void> {
+  const trimmedCharacterId = characterId.trim()
+  if (!trimmedCharacterId) {
+    throw new Error('Personnage invalide.')
+  }
+
+  await assertCharacterCampaignWritable(trimmedCharacterId)
+
+  const { error: resetError } = await supabase
+    .from('character_stat_values')
+    .update({ total_advanced: 0 })
+    .eq('character_id', trimmedCharacterId)
+
+  if (resetError) {
+    throw resetError
+  }
+
+  const entries = Object.entries(totalAdvancedByStatCode)
+    .map(([statCode, value]) => ({
+      statCode: statCode.trim().toUpperCase(),
+      value: Math.max(0, Math.floor(value)),
+    }))
+    .filter(({ statCode }) => Boolean(statCode))
+
+  for (const entry of entries) {
+    const { error } = await supabase
+      .from('character_stat_values')
+      .update({ total_advanced: entry.value })
+      .eq('character_id', trimmedCharacterId)
+      .eq('stat_code', entry.statCode)
+
+    if (error) {
+      throw error
+    }
+  }
+}
+
 export async function createCharacterForCampaign(payload: CreateCharacterPayload): Promise<string> {
   const trimmedName = payload.name.trim()
   if (!trimmedName) {
