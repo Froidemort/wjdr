@@ -147,7 +147,7 @@
             id="character-tab-profile"
             type="button"
             role="tab"
-            :aria-selected="activeCharacterTab === 'profile' ? 'true' : 'false'"
+            :aria-selected="activeCharacterTab === 'profile'"
             aria-controls="character-panel-profile"
             class="btn btn-sm ui-critical-action gap-2"
             :class="activeCharacterTab === 'profile' ? 'btn-active' : ''"
@@ -160,10 +160,10 @@
             id="character-tab-skills"
             type="button"
             role="tab"
-            :aria-selected="activeCharacterTab === 'skillsTalents' ? 'true' : 'false'"
+            :aria-selected="activeCharacterTab === 'skillsTalents'"
             aria-controls="character-panel-skills"
             class="btn btn-sm ui-critical-action gap-2"
-            :class="activeCharacterTab === 'skillsTalents' ? 'btn-active' : ''"
+            :class="{ 'btn-active': activeCharacterTab === 'skillsTalents' }"
             @click="activeCharacterTab = 'skillsTalents'"
           >
             <ScrollText class="h-4 w-4" />
@@ -173,10 +173,10 @@
             id="character-tab-inventory"
             type="button"
             role="tab"
-            :aria-selected="activeCharacterTab === 'inventory' ? 'true' : 'false'"
+            :aria-selected="activeCharacterTab === 'inventory'"
             aria-controls="character-panel-inventory"
             class="btn btn-sm ui-critical-action gap-2"
-            :class="activeCharacterTab === 'inventory' ? 'btn-active' : ''"
+            :class="{ 'btn-active': activeCharacterTab === 'inventory' }"
             @click="activeCharacterTab = 'inventory'"
           >
             <Sword class="h-4 w-4" />
