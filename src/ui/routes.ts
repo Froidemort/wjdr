@@ -5,6 +5,8 @@ import {
   LEGACY_SESSIONS_INDEX_REDIRECT,
 } from './legacySessionRedirects'
 import HomeView from './views/HomeView.vue'
+import CareerGraphView from './views/CareerGraphView.vue'
+
 
 const CharacterDetailView = () => import('./views/CharacterDetailView.vue')
 const CampaignTimelineSessionDetailView = () => import('./views/CampaignTimelineSessionDetailView.vue')
@@ -80,4 +82,9 @@ export const appRoutes: RouteRecordRaw[] = [
     redirect: (to) =>
       buildLegacySessionTimelineRedirect(to.params.campaignId, to.params.sessionEntryId),
   },
+  {
+    path: '/career-graph',
+    component: CareerGraphView,
+    meta: { requiresAuth: true },
+  }
 ]

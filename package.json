@@ -17,12 +17,19 @@
     "test:e2e:deploy": "playwright test -c playwright.deploy.config.ts"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@lucide/vue": "^1.18.0",
     "@supabase/supabase-js": "^2.108.2",
     "@tailwindcss/vite": "^4.3.1",
+    "@vue-flow/background": "^1.3.2",
+    "@vue-flow/controls": "^1.1.3",
+    "@vue-flow/core": "^1.48.2",
     "browser-image-compression": "^2.0.2",
     "check-password-strength": "^3.0.0",
     "dexie": "^4.4.3",
+    "graphology": "^0.26.0",
+    "graphology-shortest-path": "^2.1.0",
+    "graphology-traversal": "^0.3.1",
     "nanoid": "^5.1.11",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.3.1",
@@ -32,6 +39,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
+    "@types/dagre": "^0.7.54",
     "@types/node": "^24.12.3",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",
@@ -40,11 +48,12 @@
     "eslint-plugin-vue": "^10.10.0",
     "fake-indexeddb": "^6.2.5",
     "globals": "^17.7.0",
+    "graphology-types": "^0.24.8",
+    "jiti": "^2.7.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",
     "vite": "^8.0.12",
     "vitest": "^4.1.8",
-    "jiti": "^2.7.0",
     "vue-tsc": "^3.2.8"
   }
 }
