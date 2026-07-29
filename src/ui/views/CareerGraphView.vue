@@ -38,7 +38,7 @@ const clickedNodeId = ref<string | null>(null)
 let graph = new Graph({ multi: false, type: 'directed' })
 const { fitView, onNodeClick } = useVueFlow()
 
-const getLayoutedElements = (inputNodes: Node[], inputEdges: Edge[]): { nodes: Node[], edges: Node[] } => {
+const getLayoutedElements = (inputNodes: Node[], inputEdges: Edge[]): { nodes: Node[], edges: Edge[] } => {
   const dagreGraph = new dagre.graphlib.Graph()
   dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({ rankdir: 'TB', nodesep: 50, ranksep: 70 })
@@ -59,18 +59,15 @@ const getLayoutedElements = (inputNodes: Node[], inputEdges: Edge[]): { nodes: N
   return { nodes: layoutedNodes, edges: inputEdges }
 }
 
-// Fonction pour trouver TOUS les plus courts chemins entre start et end
 const findAllShortestPaths = (start: string, end: string): string[][] => {
-  // 1. Trouver la longueur du plus court chemin via bidirectional
   const shortest = bidirectional(graph, start, end, () => 1)
   if (!shortest || shortest.length === 0) return []
   const minLength = shortest.length
 
   const allPaths: string[][] = []
 
-  // 2. Exploration DFS pour collecter tous les chemins de cette longueur exacte
   const dfs = (current: string, target: string, currentPath: string[]) => {
-    if (currentPath.length > minLength) return // Dépasse la longueur minimale
+    if (currentPath.length > minLength) return
     if (current === target) {
       if (currentPath.length === minLength) {
         allPaths.push([...currentPath])
@@ -79,7 +76,6 @@ const findAllShortestPaths = (start: string, end: string): string[][] => {
     }
 
     graph.forEachOutboundNeighbor(current, (neighbor) => {
-      // Éviter les boucles dans le même chemin
       if (!currentPath.includes(neighbor)) {
         currentPath.push(neighbor)
         dfs(neighbor, target, currentPath)
@@ -112,7 +108,6 @@ const updateGraphView = () => {
     }
 
     try {
-      // Récupérer TOUS les plus courts chemins équivalents
       const allPaths = findAllShortestPaths(selectedStart.value, selectedEnd.value)
 
       if (allPaths.length === 0) {
@@ -122,7 +117,6 @@ const updateGraphView = () => {
         return
       }
 
-      // Ajouter tous les nœuds et toutes les arêtes de tous les chemins trouvés
       allPaths.forEach(pathNodes => {
         pathNodes.forEach(id => activeNodeIds.add(id))
         for (let i = 0; i < pathNodes.length - 1; i++) {
