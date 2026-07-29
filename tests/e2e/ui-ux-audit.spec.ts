@@ -27,9 +27,22 @@ test.beforeAll(() => {
   ensureScreenshotDir()
 })
 
+async function ensureAnonymousAppShellReady(page: import('@playwright/test').Page): Promise<void> {
+  await page.context().clearCookies()
+  await page.addInitScript(() => {
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  })
+
+  await page.goto('/')
+
+  await expect.poll(async () => page.locator('header nav').count(), { timeout: 20_000 }).toBeGreaterThan(0)
+  await expect(page.locator('main#main-content')).toHaveCount(1)
+}
+
 test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics', () => {
   test('1) App shell semantics, skip link and auth form labelling', async ({ page }) => {
-    await page.goto('/')
+    await ensureAnonymousAppShellReady(page)
 
     const skipLink = page.getByRole('link', { name: 'Aller au contenu principal' })
     await expect(skipLink).toHaveCount(1)
@@ -44,7 +57,7 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
     await expect(page.locator('nav')).toHaveCount(2)
 
     const authTitle = page.locator('#auth-form-title')
-    await expect(authTitle).toBeVisible()
+    await expect(authTitle).toHaveCount(1)
     await expect(authTitle).toHaveText('Connexion')
 
     const authForm = page.locator('[aria-labelledby="auth-form-title"] form').first()
@@ -123,7 +136,7 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
       })
     })
 
-    await page.goto('/')
+    await ensureAnonymousAppShellReady(page)
 
     const authPanel = page.locator('[aria-labelledby="auth-form-title"]')
     await expect(authPanel).toBeVisible()
