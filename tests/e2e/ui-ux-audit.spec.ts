@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 type RequestCounter = Map<string, number>
 
@@ -27,17 +27,21 @@ test.beforeAll(() => {
   ensureScreenshotDir()
 })
 
-async function ensureAnonymousAppShellReady(page: import('@playwright/test').Page): Promise<void> {
+async function ensureAnonymousAppShellReady(page: Page): Promise<void> {
   await page.context().clearCookies()
-  await page.addInitScript(() => {
+
+  await page.goto('/')
+  await page.evaluate(() => {
     window.localStorage.clear()
     window.sessionStorage.clear()
   })
+  await page.reload()
 
-  await page.goto('/')
-
-  await expect.poll(async () => page.locator('header nav').count(), { timeout: 20_000 }).toBeGreaterThan(0)
-  await expect(page.locator('main#main-content')).toHaveCount(1)
+  // First CI boot can be slow because Vite compiles dependencies on demand.
+  await expect
+    .poll(async () => page.locator('#app > *').count(), { timeout: 60_000 })
+    .toBeGreaterThan(0)
+  await expect(page.locator('main#main-content')).toHaveCount(1, { timeout: 60_000 })
 }
 
 test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics', () => {
