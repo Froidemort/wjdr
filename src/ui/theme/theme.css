@@ -678,21 +678,13 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
   stroke: var(--color-primary);
   stroke-width: 2;
   fill: var(--color-base-200);
-}
-
-.grim-title-stroke--splash .grim-title-stroke__text {
   font-size: var(--app-splash-title-font-size);
   letter-spacing: var(--app-splash-title-letter-spacing);
 }
 
-/* APP_SPLASH.layout.mobileBreakpointPx */
+/* mobile: max-width 640px */
 @media (max-width: 640px) {
-  .grim-title-stroke--splash {
-    width: 100%;
-    margin-inline: 0;
-  }
-
-  .grim-title-stroke--splash .grim-title-stroke__text {
+  .grim-title-stroke__text {
     font-size: var(--app-splash-title-font-size-mobile);
     letter-spacing: var(--app-splash-title-letter-spacing-mobile);
   }
@@ -702,7 +694,7 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
   animation: grim-title-stroke var(--app-splash-animation-duration) var(--app-splash-motion-easing) forwards;
 }
 
-.grim-title-stroke--splash.grim-title-stroke--once {
+.grim-title-stroke--once {
   animation: grim-title-stroke-reveal var(--app-splash-animation-duration) var(--app-splash-motion-easing) forwards;
 }
 
@@ -772,7 +764,7 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
     fill: var(--color-base-content);
   }
 
-  .grim-title-stroke--splash.grim-title-stroke--once {
+  .grim-title-stroke--once {
     animation: none;
     opacity: 1;
     transform: none;

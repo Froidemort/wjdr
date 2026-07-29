@@ -10,7 +10,6 @@
 		<div class="app-splash__glow" aria-hidden="true" />
 		<div class="app-splash__content">
 			<GrimoriumStrokeTitle
-				size="splash"
 				:animate="!prefersReducedMotion"
 				@animation-end="onAnimationEnd"
 			/>
@@ -107,7 +106,7 @@ const { exiting, prefersReducedMotion, onAnimationEnd } = useAppSplashDismiss({
 		opacity var(--app-splash-content-fade-duration) ease;
 }
 
-/* APP_SPLASH.layout.mobileBreakpointPx */
+/* mobile: max-width 640px */
 @media (max-width: 640px) {
 	.app-splash__content {
 		width: min(var(--app-splash-content-width-mobile), var(--app-splash-content-max-width));

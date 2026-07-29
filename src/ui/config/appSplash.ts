@@ -20,8 +20,6 @@ export const APP_SPLASH = {
 		letterSpacingMobile: '0.02em',
 	},
 	layout: {
-		/** Keep in sync with @media rules in theme.css and AppSplash.vue */
-		mobileBreakpointPx: 640,
 		contentMaxWidth: '56rem',
 		contentWidthDesktop: '99vw',
 		contentWidthMobile: '94vw',
