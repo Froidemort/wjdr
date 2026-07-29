@@ -1172,6 +1172,7 @@ import {
 import { canEquipArmorStack, findConflictingWeapons, isTwoHandedWeapon, resolveWeaponEquipHand } from '../utils/equipmentSlots'
 import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
 import { isTransientError } from '../services/shared/networkErrors'
+import { canEquipArmorStack, findConflictingWeapons, isTwoHandedWeapon, resolveWeaponEquipHand } from '../../utils/equipmentSlots'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
 type CharacterDetailTab = 'profile' | 'skillsTalents' | 'inventory'
