@@ -16,6 +16,7 @@ const authStore = useAuthStore(pinia)
 const themeStore = useThemeStore(pinia)
 
 themeStore.initTheme()
-authStore.initAuth().finally(() => {
-  app.mount('#app')
+app.mount('#app')
+void authStore.initAuth().catch(() => {
+  // Router guards and UI can continue without a warm auth cache.
 })

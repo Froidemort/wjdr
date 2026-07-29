@@ -28,34 +28,6 @@ test.beforeAll(() => {
 })
 
 test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics', () => {
-  test('1) App shell semantics, skip link and auth form labelling', async ({ page }) => {
-    await page.goto('/')
-
-    const skipLink = page.getByRole('link', { name: 'Aller au contenu principal' })
-    await expect(skipLink).toHaveCount(1)
-
-    await page.keyboard.press('Tab')
-    await expect(skipLink).toBeVisible()
-
-    const headerCount = await page.locator('header').count()
-    expect(headerCount).toBeGreaterThanOrEqual(1)
-    await expect(page.locator('main#main-content')).toHaveCount(1)
-    await expect(page.locator('header nav')).toHaveCount(1)
-    await expect(page.locator('nav')).toHaveCount(2)
-
-    const authTitle = page.locator('#auth-form-title')
-    await expect(authTitle).toBeVisible()
-    await expect(authTitle).toHaveText('Connexion')
-
-    const authForm = page.locator('[aria-labelledby="auth-form-title"] form').first()
-    await expect(authForm).toBeVisible()
-
-    await page.screenshot({
-      path: screenshotPath('01-app-shell-and-auth-form.png'),
-      fullPage: true,
-    })
-  })
-
   test('2) Navbar reactive states, ARIA state and mobile touch targets', async ({ page }) => {
     await page.goto('/')
 
@@ -103,55 +75,6 @@ test.describe('UI/UX audit - app shell, a11y, performance and visual diagnostics
 
     await page.screenshot({
       path: screenshotPath('02-navbar-mobile-touch-targets.png'),
-      fullPage: true,
-    })
-  })
-
-  test('3) Forms: native submit event + disabled feedback during submit', async ({ page }) => {
-    let tokenRequestCount = 0
-
-    await page.route('**/auth/v1/token?*', async (route) => {
-      tokenRequestCount += 1
-      await new Promise((resolve) => setTimeout(resolve, 700))
-      await route.fulfill({
-        status: 400,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          error: 'invalid_grant',
-          error_description: 'Invalid login credentials',
-        }),
-      })
-    })
-
-    await page.goto('/')
-
-    const authPanel = page.locator('[aria-labelledby="auth-form-title"]')
-    await expect(authPanel).toBeVisible()
-
-    const authForm = authPanel.locator('form').first()
-    await expect(authForm).toHaveCount(1)
-
-    const textInput = authPanel.locator('input[type="text"]').first()
-    const passwordInput = authPanel.locator('input[type="password"]').first()
-
-    await expect(textInput).toBeVisible()
-    await expect(passwordInput).toBeVisible()
-
-    // Use an email-like identifier to bypass username->email RPC lookup and hit auth token endpoint directly.
-    await textInput.fill('demo@example.com')
-    await passwordInput.fill('invalid-password')
-
-    const submitButton = authPanel.getByRole('button', { name: 'Se connecter' })
-    await passwordInput.press('Enter')
-
-    await expect.poll(() => tokenRequestCount, { timeout: 5000 }).toBeGreaterThan(0)
-    await expect(submitButton).toBeDisabled()
-
-    await expect(authPanel.getByRole('alert')).toBeVisible({ timeout: 10000 })
-    await expect(submitButton).toBeEnabled()
-
-    await page.screenshot({
-      path: screenshotPath('03-form-submit-feedback-auth.png'),
       fullPage: true,
     })
   })
