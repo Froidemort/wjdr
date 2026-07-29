@@ -639,55 +639,139 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
   }
 }
 
-/* Grimorium title animation */
-.wrapper svg {
-  font-family: var(--font-grim-title);
+/* Grimorium title stroke animation */
+:root {
+  /* Defaults — overridden at runtime by applyAppSplashCssVars() in main.ts */
+  --app-splash-fade-duration: 520ms;
+  --app-splash-content-fade-duration: 480ms;
+  --app-splash-animation-duration: 3200ms;
+  --app-splash-title-font-size: 108px;
+  --app-splash-title-font-size-mobile: 104px;
+  --app-splash-title-letter-spacing: 0.03em;
+  --app-splash-title-letter-spacing-mobile: 0.02em;
+  --app-splash-content-max-width: 56rem;
+  --app-splash-content-width: 99vw;
+  --app-splash-content-width-mobile: 94vw;
+  --app-splash-content-padding-inline: clamp(0.35rem, 2vw, 2.5rem);
+  --app-splash-content-padding-inline-mobile: 0.75rem;
+  --app-splash-glow-width: 92vw;
+  --app-splash-glow-max-width: 40rem;
+  --app-splash-glow-blur: 28px;
+  --app-splash-motion-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --app-splash-glow-easing: ease;
+}
+
+.grim-title-stroke {
   width: 100%;
-  height: 100%;
+  background-color: transparent;
 }
 
-.wrapper svg text {
-    animation: stroke 8s infinite;
-    stroke-width: 2;
+.grim-title-stroke svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--font-grim-title);
+  overflow: visible;
+}
+
+.grim-title-stroke__text {
+  stroke: var(--color-primary);
+  stroke-width: 2;
+  fill: var(--color-base-200);
+  font-size: var(--app-splash-title-font-size);
+  letter-spacing: var(--app-splash-title-letter-spacing);
+}
+
+/* mobile: max-width 640px */
+@media (max-width: 640px) {
+  .grim-title-stroke__text {
+    font-size: var(--app-splash-title-font-size-mobile);
+    letter-spacing: var(--app-splash-title-letter-spacing-mobile);
+  }
+}
+
+.grim-title-stroke--once .grim-title-stroke__text {
+  animation: grim-title-stroke var(--app-splash-animation-duration) var(--app-splash-motion-easing) forwards;
+}
+
+.grim-title-stroke--once {
+  animation: grim-title-stroke-reveal var(--app-splash-animation-duration) var(--app-splash-motion-easing) forwards;
+}
+
+.grim-title-stroke--static .grim-title-stroke__text {
+  stroke-width: 0;
+  fill: var(--color-base-content);
+}
+
+@keyframes grim-title-stroke-reveal {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.92);
+  }
+
+  18% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes grim-title-stroke {
+  0% {
+    fill: transparent;
     stroke: var(--color-primary);
-}
+    stroke-dashoffset: 25%;
+    stroke-dasharray: 0 50%;
+    stroke-width: 1.5;
+    stroke-opacity: 0.85;
+    filter: drop-shadow(0 0 0 transparent);
+  }
 
-@keyframes stroke {
-    0% {
-        fill: var(--color-base-200);
-        stroke: var(--color-primary);
-        stroke-dashoffset: 25%;
-        stroke-dasharray: 0 50%;
-        stroke-width: 1;
-        stroke-opacity: 0.7;
-    }
-    70% {
-        fill: var(--color-base-200);
-        stroke: var(--color-primary);
-        stroke-opacity: 0.7;
-    }
-    80% {
-        fill: var(--color-base-200);
-        stroke: var(--color-primary);
-        stroke-width: 2;
-        stroke-opacity: 0.8;
-    }
-    100% {
-        fill: var(--color-base-200);
-        stroke: var(--color-primary);
-        stroke-dashoffset: -25%;
-        stroke-dasharray: 50% 0;
-        stroke-width: 0;
-        stroke-opacity: 0.6;
-    }
-}
+  65% {
+    fill: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+    stroke: var(--color-primary);
+    stroke-opacity: 0.9;
+    filter: drop-shadow(0 0 6px color-mix(in oklab, var(--color-primary) 25%, transparent));
+  }
 
-.wrapper {
-    background-color: #FFFFFF00;
+  82% {
+    fill: color-mix(in oklab, var(--color-base-content) 55%, var(--color-base-200));
+    stroke: color-mix(in oklab, var(--color-accent) 70%, var(--color-primary));
+    stroke-width: 2;
+    stroke-opacity: 0.95;
+    filter: drop-shadow(0 0 14px color-mix(in oklab, var(--color-accent) 35%, transparent));
+  }
+
+  100% {
+    fill: var(--color-base-content);
+    stroke: var(--color-primary);
+    stroke-dashoffset: -25%;
+    stroke-dasharray: 50% 0;
+    stroke-width: 0;
+    stroke-opacity: 0;
+    filter: drop-shadow(0 0 20px color-mix(in oklab, var(--color-primary) 30%, transparent));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wrapper svg text {
+  .grim-title-stroke--once .grim-title-stroke__text {
     animation: none;
+    stroke-width: 0;
+    fill: var(--color-base-content);
   }
+
+  .grim-title-stroke--once {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html.app-splash-active,
+html.app-splash-active body {
+  overflow: hidden;
 }
