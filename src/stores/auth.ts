@@ -44,6 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
   })
   let identityLoadPromise: Promise<void> | null = null
   let identityLoadUserId: string | null = null
+  let initAuthPromise: Promise<void> | null = null
 
   const isAuthenticated = computed(() => Boolean(user.value))
 
@@ -129,42 +130,55 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
-    loading.value = true
-    authError.value = null
-    try {
-      const { data, error } = await supabase.auth.getSession()
-      if (error) {
-        throw error
-      }
+    if (initAuthPromise) {
+      await initAuthPromise
+      return
+    }
 
-      session.value = data.session
-      user.value = data.session?.user ?? null
-      if (user.value?.id) {
-        await loadIdentity(user.value.id)
-      }
-
-      supabase.auth.onAuthStateChange((_event, nextSession) => {
-        session.value = nextSession
-        user.value = nextSession?.user ?? null
-        if (user.value?.id) {
-          void loadIdentity(user.value.id)
-        } else {
-          displayName.value = ''
-          avatarUrl.value = null
-          identityCache.value = {
-            userId: null,
-            displayName: '',
-            avatarUrl: null,
-          }
+    initAuthPromise = (async () => {
+      loading.value = true
+      authError.value = null
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        if (error) {
+          throw error
         }
-      })
 
-      initialized.value = true
-    } catch (error) {
-      authError.value = error instanceof Error ? error.message : 'Erreur auth.'
-      throw error
+        session.value = data.session
+        user.value = data.session?.user ?? null
+        if (user.value?.id) {
+          await loadIdentity(user.value.id)
+        }
+
+        supabase.auth.onAuthStateChange((_event, nextSession) => {
+          session.value = nextSession
+          user.value = nextSession?.user ?? null
+          if (user.value?.id) {
+            void loadIdentity(user.value.id)
+          } else {
+            displayName.value = ''
+            avatarUrl.value = null
+            identityCache.value = {
+              userId: null,
+              displayName: '',
+              avatarUrl: null,
+            }
+          }
+        })
+
+        initialized.value = true
+      } catch (error) {
+        authError.value = error instanceof Error ? error.message : 'Erreur auth.'
+        throw error
+      } finally {
+        loading.value = false
+      }
+    })()
+
+    try {
+      await initAuthPromise
     } finally {
-      loading.value = false
+      initAuthPromise = null
     }
   }
 

@@ -1,5 +1,5 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import { onBeforeUnmount } from 'vue'
+import { getCurrentInstance, onBeforeUnmount } from 'vue'
 import { supabase } from '../../db/supabase'
 
 type RealtimeEvent = '*' | 'INSERT' | 'UPDATE' | 'DELETE'
@@ -93,7 +93,11 @@ export function useRealtimeChannels(
     }
   }
 
-  onBeforeUnmount(unsubscribe)
+  // Some shared composables instantiate realtime channels at module scope.
+  // Register lifecycle cleanup only when used inside an active component setup.
+  if (getCurrentInstance()) {
+    onBeforeUnmount(unsubscribe)
+  }
 
   return {
     subscribe,
