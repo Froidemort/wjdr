@@ -20,9 +20,15 @@ set category = case
 end
 where category is null;
 
---- Étape 3 (Sécurité) : S'assurer qu'aucune ligne n'a une catégorie vide/null 
--- Si certaines armures ne matchent aucun nom, vous pouvez définir une valeur par défaut ici :
--- update public.armors set category = 'cuir' where category is null;
+--- Étape 3 (Sécurité) : Message explicite si une armure n'a pas de catégorie après la mise à jour
+
+ do $$
+ begin
+   if exists (select 1 from public.armors where category is null) then
+     raise exception 'Migration 007_add_armors_category: some armors are missing a category; add mappings or set a default before setting NOT NULL.';
+   end if;
+ end $$;
+
 
 --- Étape 4 : Rendre la colonne non-nullable maintenant qu'elle est remplie
 alter table public.armors
