@@ -1,35 +1,26 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-  "name": "Node.js & TypeScript",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:4-24-trixie",
+  "name": "WJDR",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node",
 
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
-
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
-
-  // Use 'postCreateCommand' to run commands after the container is created.
+  // Ensures npm dependencies install cleanly after build
   "postCreateCommand": "npm install",
 
-  // Configure tool-specific properties.
+  // Explicitly set non-root user for security and permissions
+  "remoteUser": "node",
+
   "customizations": {
-    "extensions": [
-      "Vue.volar",
-      "dbaeumer.vscode-eslint",
-      "esbenp.prettier-vscode",
-      "github.copilot",
-      "github.copilot-chat"
-    ],
     "vscode": {
+      "settings": {
+        // Fixes line-ending issues when switching between Windows and Linux
+        "files.eol": "\n"
+      },
       "extensions": [
-        "ms-python.python"
+        "Vue.volar",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "github.copilot",
+        "github.copilot-chat"
       ]
     }
   }
-
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
 }
