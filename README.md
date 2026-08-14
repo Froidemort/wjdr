@@ -29,10 +29,15 @@ Creer `.env` a la racine:
 
 ```bash
 VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY # ou VITE_SUPABASE_PUBLISHABLE_KEY
 ```
 
 ## Base de donnees
+
+Reference schema/data publique pour initialiser la base de données :
+
+- `migrations/public_schema.sql` : schéma initial
+- `migrations/public_data.sql` : données initiales du livre de règles
 
 Executer les scripts SQL dans l'ordre:
 
@@ -41,10 +46,6 @@ Executer les scripts SQL dans l'ordre:
 3. `migrations/003_update_rls_policies.sql`
 4. `migrations/004_unique_campaign_code.sql`
 
-Reference schema/data publique:
-
-- `migrations/public_schema.sql`
-- `migrations/public_data.sql`
 
 ## Developpement
 
