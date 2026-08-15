@@ -653,38 +653,38 @@
 import { CalendarDays, ChevronLeft, CircleCheck, Copy, Crown, Eye, FileText, Hourglass, List, Pencil, Trash2 } from '@lucide/vue'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { listCharactersByCampaign } from '../../repositories/charactersRepository'
+import { listCharactersByCampaign } from '../services/charactersRepository'
 import {
   createCampaignInvitations,
   listCampaignInvitations,
   type SessionInvitation,
-} from '../../repositories/invitationsRepository'
+} from '../services/invitationsRepository'
 import {
   createSession,
   deleteSession,
   listSessionsForCampaign,
   updateSession,
-} from '../../repositories/sessionsRepository'
+} from '../services/sessionsRepository'
 import {
   type JoinRequestItem,
   listPendingJoinRequestsForCampaign,
   markNotificationRead,
   notifyJoinRequestAccepted,
   notifyJoinRequestRejected,
-} from '../../repositories/notificationsRepository'
-import { getCampaignById, updateCampaignArchivedState } from '../../repositories/campaignsRepository'
+} from '../services/notificationsRepository'
+import { getCampaignById, updateCampaignArchivedState } from '../services/campaignsRepository'
 import {
   addUsersToCampaign,
   searchInvitableProfilesByMembership,
-} from '../../repositories/usersCampaignsRepository'
-import { useAuthStore } from '../../stores/auth'
-import type { CharacterSummary, Profile, CampaignSummary, SessionSummary } from '../../types/domain'
-import AppCard from '../components/AppCard.vue'
-import CharacterCreateModal from '../components/CharacterCreateModal.vue'
-import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
-import SearchInput from '../components/SearchInput.vue'
-import SessionAccessRequest from '../components/SessionAccessRequest.vue'
-import SessionNotesPanel from '../components/SessionNotesPanel.vue'
+} from '../services/usersCampaignsRepository'
+import { useAuthStore } from '../stores/auth'
+import type { CharacterSummary, Profile, CampaignSummary, SessionSummary } from '../types/domain'
+import AppCard from '../components/ui/AppCard.vue'
+import CharacterCreateModal from '../components/ui/CharacterCreateModal.vue'
+import CharacterSummaryCard from '../components/ui/CharacterSummaryCard.vue'
+import SearchInput from '../components/ui/SearchInput.vue'
+import SessionAccessRequest from '../components/ui/SessionAccessRequest.vue'
+import SessionNotesPanel from '../components/ui/SessionNotesPanel.vue'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 

@@ -4,15 +4,15 @@ import { watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   deleteNotification,
-	extractNotificationSessionId,
+  extractNotificationSessionId,
   getNotificationDisplayMessage,
   getNotificationDisplayTitle,
   markAllNotificationsRead,
   markNotificationRead,
   type NotificationItem,
-} from '../../repositories/notificationsRepository'
-import { useAuthStore } from '../../stores/auth'
-import AppCard from '../components/AppCard.vue'
+} from '../services/notificationsRepository'
+import { useAuthStore } from '../stores/auth'
+import AppCard from '../components/ui/AppCard.vue'
 import { useBusyOperations } from '../composables/useBusyOperations'
 import { useNotificationsLoad } from '../composables/useNotificationsLoad'
 import { usePaginatedNavigation } from '../composables/usePaginatedNavigation'

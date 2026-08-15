@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { ChevronLeft } from '@lucide/vue'
 import { ref } from 'vue'
-import { requestJoinCampaign } from '../../repositories/notificationsRepository'
+import { requestJoinCampaign } from '../../services/notificationsRepository'
 import AppCard from './AppCard.vue'
 
 const props = defineProps<{ sessionId: string; userId: string }>()

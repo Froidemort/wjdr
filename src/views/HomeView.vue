@@ -97,10 +97,10 @@
 
 <script setup lang="ts">
 import { NotebookPen, Plus, Scroll, Hammer } from '@lucide/vue'
-import { useAuthStore } from '../../stores/auth'
-import { useCampaignCreateModalStore } from '../../stores/campaignCreateModal'
-import AuthForm from '../components/AuthForm.vue'
-import HomePillarCard from '../components/HomePillarCard.vue'
+import { useAuthStore } from '../stores/auth'
+import { useCampaignCreateModalStore } from '../stores/campaignCreateModal'
+import AuthForm from '../components/ui/AuthForm.vue'
+import HomePillarCard from '../components/ui/HomePillarCard.vue'
 
 const authStore = useAuthStore()
 const campaignCreateModalStore = useCampaignCreateModalStore()

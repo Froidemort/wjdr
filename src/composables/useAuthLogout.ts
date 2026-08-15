@@ -1,5 +1,5 @@
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
+import { useAuthStore } from '../stores/auth'
 
 /** Signs out and redirects to the home page. Used by account popover and mobile menu. */
 export function useAuthLogout() {

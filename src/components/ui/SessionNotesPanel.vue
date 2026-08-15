@@ -9,10 +9,10 @@ import {
   toggleSessionNoteArchivedState,
   toggleSessionNoteVisibility,
   updateSessionNote,
-} from '../../repositories/sessionNotesRepository'
+} from '../../services/sessionNotesRepository'
 import type { SessionNote, SessionSummary } from '../../types/domain'
-import { useBusyOperations } from '../composables/useBusyOperations'
-import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import { useBusyOperations } from '../../composables/useBusyOperations'
+import { useRealtimeChannels } from '../../composables/useRealtimeChannels'
 import AppCard from './AppCard.vue'
 import DataGrid from './DataGrid.vue'
 import SearchInput from './SearchInput.vue'
