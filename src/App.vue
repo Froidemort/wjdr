@@ -11,7 +11,10 @@
     <main id="main-content" class="flex-1" tabindex="-1">
       <router-view />
     </main>
-    <Footer />
+    <!--Footer is displayed only Login/Sign and home page-->
+    <template v-if="!route.meta.hideFooter">
+      <Footer />
+    </template>
   </div>
 </template>
 
@@ -54,6 +57,3 @@ watch(
   }
 )
 </script>
-
-<style scoped>
-</style>
