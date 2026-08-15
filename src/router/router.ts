@@ -12,9 +12,9 @@ function prefetchFrequentAuthenticatedViews(): void {
 
   didPrefetchFrequentViews = true
   void Promise.allSettled([
-    import('./views/CampaignListView.vue'),
-    import('./views/CampaignDetailView.vue'),
-    import('./views/CharacterDetailView.vue'),
+    import('../views/CampaignListView.vue'),
+    import('../views/CampaignDetailView.vue'),
+    import('../views/CharacterDetailView.vue'),
   ])
 }
 

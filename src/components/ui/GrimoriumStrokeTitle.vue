@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { getAppSplashViewBox } from '../config/appSplash'
+import { getAppSplashViewBox } from '../../config/appSplash'
 
 withDefaults(
 	defineProps<{

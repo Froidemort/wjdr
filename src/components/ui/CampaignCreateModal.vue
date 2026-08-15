@@ -2,7 +2,7 @@
 import { customAlphabet } from 'nanoid'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { createCampaign } from '../../repositories/campaignsRepository'
+import { createCampaign } from '../../services/campaignsRepository'
 import { useAuthStore } from '../../stores/auth'
 import { useCampaignCreateModalStore } from '../../stores/campaignCreateModal'
 

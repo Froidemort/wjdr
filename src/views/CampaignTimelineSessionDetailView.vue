@@ -78,13 +78,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getCampaignById } from '../../repositories/campaignsRepository'
-import { getSessionById } from '../../repositories/sessionsRepository'
-import { useAuthStore } from '../../stores/auth'
-import type { CampaignSummary, SessionSummary } from '../../types/domain'
-import AppCard from '../components/AppCard.vue'
-import PageFooter from '../components/PageFooter.vue'
-import SessionNotesPanel from '../components/SessionNotesPanel.vue'
+import { getCampaignById } from '../services/campaignsRepository'
+import { getSessionById } from '../services/sessionsRepository'
+import { useAuthStore } from '../stores/auth'
+import type { CampaignSummary, SessionSummary } from '../types/domain'
+import AppCard from '../components/ui/AppCard.vue'
+import PageFooter from '../components/ui/PageFooter.vue'
+import SessionNotesPanel from '../components/ui/SessionNotesPanel.vue'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 
 const route = useRoute()

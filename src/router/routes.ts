@@ -4,15 +4,15 @@ import {
   buildLegacySessionTimelineRedirect,
   LEGACY_SESSIONS_INDEX_REDIRECT,
 } from './legacySessionRedirects'
-import HomeView from './views/HomeView.vue'
+import HomeView from '../views/HomeView.vue'
 
-const CharacterDetailView = () => import('./views/CharacterDetailView.vue')
-const CampaignTimelineSessionDetailView = () => import('./views/CampaignTimelineSessionDetailView.vue')
-const CharacterListView = () => import('./views/CharacterListView.vue')
-const NotificationsView = () => import('./views/NotificationsView.vue')
-const ProfileView = () => import('./views/ProfileView.vue')
-const CampaignDetailView = () => import('./views/CampaignDetailView.vue')
-const CampaignListView = () => import('./views/CampaignListView.vue')
+const CharacterDetailView = () => import('../views/CharacterDetailView.vue')
+const CampaignTimelineSessionDetailView = () => import('../views/CampaignTimelineSessionDetailView.vue')
+const CharacterListView = () => import('../views/CharacterListView.vue')
+const NotificationsView = () => import('../views/NotificationsView.vue')
+const ProfileView = () => import('../views/ProfileView.vue')
+const CampaignDetailView = () => import('../views/CampaignDetailView.vue')
+const CampaignListView = () => import('../views/CampaignListView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
   // Page d'accueil

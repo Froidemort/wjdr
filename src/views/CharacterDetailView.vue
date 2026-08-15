@@ -1054,12 +1054,12 @@ import {
 } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { createCatalogItem, searchCatalog } from '../../repositories/catalogRepository'
+import { createCatalogItem, searchCatalog } from '../services/catalogRepository'
 import {
   listCareerCharacteristicsByCareerId,
   listCareerPathCareersByFromCareerId,
   type CareerCharacteristic,
-} from '../../repositories/careersRepository'
+} from '../services/careersRepository'
 import {
   addCharacterArmors,
   addCharacterItems,
@@ -1080,15 +1080,15 @@ import {
   updateCharacterSkillMastery,
   updateCharacterWeaponEquipped,
   updateCharacterWeaponQuality,
-} from '../../repositories/characterLinksRepository'
+} from '../services/characterLinksRepository'
 import {
   getCharacterById,
   replaceCharacterTotalAdvancedValues,
   updateCharacterCareer,
   updateCharacterCore,
   updateCharacterStatValues,
-} from '../../repositories/charactersRepository'
-import { useAuthStore } from '../../stores/auth'
+} from '../services/charactersRepository'
+import { useAuthStore } from '../stores/auth'
 import type {
   CatalogItem,
   CharacterArmor,
@@ -1097,14 +1097,14 @@ import type {
   CharacterSkill,
   CharacterTalent,
   CharacterWeapon,
-} from '../../types/domain'
-import AppCard from '../components/AppCard.vue'
-import CharacterDerivedStatsCard from '../components/CharacterDerivedStatsCard.vue'
-import CharacteristicCard from '../components/CharacteristicCard.vue'
-import CharacterMoneyCard from '../components/CharacterMoneyCard.vue'
-import CharacterValueCard from '../components/CharacterValueCard.vue'
-import SearchInput from '../components/SearchInput.vue'
-import StateCycleBadge from '../components/StateCycleBadge.vue'
+} from '../types/domain'
+import AppCard from '../components/ui/AppCard.vue'
+import CharacterDerivedStatsCard from '../components/ui/CharacterDerivedStatsCard.vue'
+import CharacteristicCard from '../components/ui/CharacteristicCard.vue'
+import CharacterMoneyCard from '../components/ui/CharacterMoneyCard.vue'
+import CharacterValueCard from '../components/ui/CharacterValueCard.vue'
+import SearchInput from '../components/ui/SearchInput.vue'
+import StateCycleBadge from '../components/ui/StateCycleBadge.vue'
 import { useLiveSave } from '../composables/useLiveSave'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
 import {
