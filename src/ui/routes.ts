@@ -19,36 +19,36 @@ export const appRoutes: RouteRecordRaw[] = [
   {
     path: '/',
     component: HomeView,
-    meta: { requiresAuth: false },
+    meta: { requiresAuth: false, hideFooter: false},
   },
   // Liste des personnages avec quelques détails
   {
     path: '/characters',
     component: CharacterListView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideFooter: true},
   },
   // Liste des campagnes
   {
     path: '/campaigns',
     component: CampaignListView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideFooter: true},
   },
   // Page de détail d'un personnage, surtout utile pour un joueur qui veut gérer sa fiche pendant une partie
   {
     path: '/characters/:id',
     component: CharacterDetailView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideFooter: true },
   },
   {
     path: '/notifications',
     component: NotificationsView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideFooter: true },
   },
   {
     path: '/profile',
     component: ProfileView,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideFooter: true },
   },
   // Page de détail d'une campagne, avec timeline des sessions datées.
   // La page permet de voir rapidement :
@@ -58,13 +58,13 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/campaigns/:id',
     component: CampaignDetailView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideFooter: true },
   },
   {
     path: '/campaigns/:campaignId/timeline/:sessionEntryId',
     component: CampaignTimelineSessionDetailView,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hideFooter: true },
   },
   // Redirect for legacy routes, will be removed in the future
   {

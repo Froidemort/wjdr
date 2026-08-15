@@ -10,17 +10,10 @@
 			>
 				<div class="mx-auto max-w-md lg:mx-0 lg:max-w-lg">
 					<header class="space-y-3">
-						<p class="text-xs font-bold uppercase tracking-[0.2em] text-primary">Warhammer JDR V2</p>
 						<h1 id="home-brand" class="grim-modal-title text-4xl sm:text-5xl">Grimorium</h1>
 						<div class="h-px w-16 bg-primary/40" aria-hidden="true" />
 						<p class="text-sm leading-relaxed text-base-content/80 sm:text-base">
-							GRIMORIUM est un outil de gestion de parties pour le jeu de rôle Warhammer JDR V2. Il
-							permet aux joueurs et maîtres de jeu de créer et gérer des campagnes, des sessions
-							(datées), des personnages et des notes.
-						</p>
-						<p class="flex gap-2 text-sm text-base-content/60">
-							<Scroll class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-							<span>Ressources à venir pour préparer vos parties et personnages.</span>
+							GRIMORIUM est une interface pour gérer les campagnes, sessions de jeu, personnages et notes pour le jeux de rôles Warhammer "The Old World" en version 2.
 						</p>
 					</header>
 
@@ -35,6 +28,7 @@
 							:title="pillar.title"
 							:description="pillar.description"
 							:icon="pillar.icon"
+							:to-be-done="pillar.toBeDone"
 						/>
 					</ul>
 				</div>
@@ -102,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { NotebookPen, Plus, Scroll, Users } from '@lucide/vue'
+import { NotebookPen, Plus, Scroll, Hammer } from '@lucide/vue'
 import { useAuthStore } from '../../stores/auth'
 import { useCampaignCreateModalStore } from '../../stores/campaignCreateModal'
 import AuthForm from '../components/AuthForm.vue'
@@ -115,20 +109,23 @@ const pillars = [
   {
     numeral: 'I',
     title: 'Campagnes',
-		description: 'Créez une table, invitez vos joueurs et suivez la campagne au travers de sessions datées.',
+		description: 'Gestion des campagnes, sessions et personnages pour le MJ et les joueurs. Création de notes de campagnes.',
     icon: Scroll,
+	toBeDone: false
   },
   {
     numeral: 'II',
-    title: 'Personnages',
-    description: 'Feuilles V2 : caractéristiques, carrières et équipement.',
-    icon: Users,
+    title: 'Outils de jeu',
+    description: 'Outils pour le MJ et les joueurs : diagramme de carrières, carte du Vieux Monde interactive, ...',
+    icon: Hammer,
+	toBeDone: true
   },
   {
     numeral: 'III',
-    title: 'Notes',
-		description: 'Notes de campagne, accès et progression pour le MJ et les joueurs.',
+    title: 'Règles et ressources',
+		description: 'Base de connaissance et de ressources : talents, compétences, objets, sorts...',
     icon: NotebookPen,
+	toBeDone: true
   },
 ] as const
 
