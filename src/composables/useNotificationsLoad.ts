@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import {
   listNotificationsForUserPaginated,
   type NotificationItem,
-} from '../../repositories/notificationsRepository'
+} from '../services/notificationsRepository'
 import { useRealtimeChannels } from './useRealtimeChannels'
 
 interface UseNotificationsLoadOptions {

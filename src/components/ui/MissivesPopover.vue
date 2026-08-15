@@ -5,9 +5,9 @@ import { useRoute } from 'vue-router'
 import {
   getNotificationDisplayMessage,
   getNotificationDisplayTitle,
-} from '../../repositories/notificationsRepository'
-import { useMissivesInbox } from '../composables/useMissivesInbox'
-import { usePopoverPanel } from '../composables/usePopoverPanel'
+} from '../../services/notificationsRepository'
+import { useMissivesInbox } from '../../composables/useMissivesInbox'
+import { usePopoverPanel } from '../../composables/usePopoverPanel'
 
 // Notification inbox preview — full list lives on /notifications.
 const emit = defineEmits<{

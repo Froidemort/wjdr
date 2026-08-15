@@ -2,8 +2,8 @@
 import { UserCircle } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import { useAuthStore } from '../../stores/auth'
-import { useAuthLogout } from '../composables/useAuthLogout'
-import { usePopoverPanel } from '../composables/usePopoverPanel'
+import { useAuthLogout } from '../../composables/useAuthLogout'
+import { usePopoverPanel } from '../../composables/usePopoverPanel'
 
 // Desktop-only account menu: display name on the trigger, actions only in the dropdown.
 const emit = defineEmits<{

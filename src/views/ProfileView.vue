@@ -158,7 +158,7 @@
 
 <script setup lang="ts">
 import { ChevronLeft, UserCircle } from '@lucide/vue'
-import PasswordInput from '../components/PasswordInput.vue'
+import PasswordInput from '../components/ui/PasswordInput.vue'
 import imageCompression from 'browser-image-compression'
 import { onMounted, ref } from 'vue'
 import {
@@ -168,9 +168,9 @@ import {
   updateProfileEmail,
   updateProfileUsername,
   uploadProfileAvatar,
-} from '../../repositories/profileRepository'
-import { useAuthStore } from '../../stores/auth'
-import AppCard from '../components/AppCard.vue'
+} from '../services/profileRepository'
+import { useAuthStore } from '../stores/auth'
+import AppCard from '../components/ui/AppCard.vue'
 
 const authStore = useAuthStore()
 

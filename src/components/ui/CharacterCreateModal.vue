@@ -49,7 +49,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { CharacterGender, CharacterRace } from '../../types/character'
-import { createCharacterForCampaign } from '../../repositories/charactersRepository'
+import { createCharacterForCampaign } from '../../services/charactersRepository'
 
 const props = defineProps<{ campaignId: string; userId: string }>()
 const emit = defineEmits<{ created: [characterId: string] }>()

@@ -4,8 +4,8 @@ import {
   listNotificationsForUser,
   markNotificationRead,
   type NotificationItem,
-} from '../../repositories/notificationsRepository'
-import { useAuthStore } from '../../stores/auth'
+} from '../services/notificationsRepository'
+import { useAuthStore } from '../stores/auth'
 import { useRealtimeChannels } from './useRealtimeChannels'
 
 const PREVIEW_LIMIT = 5

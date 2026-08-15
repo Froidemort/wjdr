@@ -47,13 +47,13 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { listCharactersForUser } from '../../repositories/charactersRepository'
-import { useAuthStore } from '../../stores/auth'
-import type { CharacterSummary } from '../../types/domain'
-import CharacterSummaryCard from '../components/CharacterSummaryCard.vue'
-import DataGrid from '../components/DataGrid.vue'
-import PageFooter from '../components/PageFooter.vue'
-import SearchInput from '../components/SearchInput.vue'
+import { listCharactersForUser } from '../services/charactersRepository'
+import { useAuthStore } from '../stores/auth'
+import type { CharacterSummary } from '../types/domain'
+import CharacterSummaryCard from '../components/ui/CharacterSummaryCard.vue'
+import DataGrid from '../components/ui/DataGrid.vue'
+import PageFooter from '../components/ui/PageFooter.vue'
+import SearchInput from '../components/ui/SearchInput.vue'
 import { useLoadingState } from '../composables/useLoadingState'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 

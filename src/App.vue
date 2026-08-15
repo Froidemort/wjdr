@@ -22,11 +22,11 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import { APP_SPLASH } from './ui/config/appSplash'
-import AppSplash from './ui/components/AppSplash.vue'
-import Footer from './ui/components/Footer.vue'
-import NavBar from './ui/components/NavBar.vue'
-import CampaignCreateModal from './ui/components/CampaignCreateModal.vue'
+import { APP_SPLASH } from './config/appSplash'
+import AppSplash from './components/ui/AppSplash.vue'
+import Footer from './components/ui/Footer.vue'
+import NavBar from './components/ui/NavBar.vue'
+import CampaignCreateModal from './components/ui/CampaignCreateModal.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()

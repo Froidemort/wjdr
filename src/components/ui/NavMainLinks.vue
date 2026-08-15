@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mainNavLinks } from '../config/navLinks'
+import { mainNavLinks } from '../../config/navLinks'
 
 // Centered desktop nav links — data lives in config/navLinks.ts
 const linkClass =

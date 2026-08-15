@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { toRef } from 'vue'
-import { useAppSplashDismiss } from '../composables/useAppSplashDismiss'
+import { useAppSplashDismiss } from '../../composables/useAppSplashDismiss'
 import GrimoriumStrokeTitle from './GrimoriumStrokeTitle.vue'
 
 const props = defineProps<{

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Bell, LogOut, UserCircle } from '@lucide/vue'
-import { useAuthLogout } from '../composables/useAuthLogout'
-import { useMissivesInbox } from '../composables/useMissivesInbox'
-import { mainNavLinks } from '../config/navLinks'
+import { useAuthLogout } from '../../composables/useAuthLogout'
+import { useMissivesInbox } from '../../composables/useMissivesInbox'
+import { mainNavLinks } from '../../config/navLinks'
 
 // Collapsible drawer for authenticated users on small screens (sm and below).
 const open = defineModel<boolean>('open', { required: true })
