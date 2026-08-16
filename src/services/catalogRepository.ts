@@ -1,21 +1,12 @@
 import { supabase } from '../db/supabase'
-import type { CatalogItem } from '../types/domain'
+import type {
+  CatalogItem,
+  CatalogRow,
+  CatalogTableName,
+  CreateCatalogItemInput,
+} from '../types/catalog'
 
-export interface CreateCatalogItemInput {
-  name: string
-  description: string | null
-  encumbrance: number
-}
-
-interface CatalogRow {
-  id: string
-  name: string
-  specialization?: string | null
-  description?: string | null
-  encumbrance?: number | null
-  damage_formula?: string | null
-  armor_points?: number | null
-}
+export type { CatalogItem, CatalogRow, CatalogTableName, CreateCatalogItemInput } from '../types/catalog'
 
 function mapCatalogItem(row: CatalogRow): CatalogItem {
   return {
@@ -29,10 +20,7 @@ function mapCatalogItem(row: CatalogRow): CatalogItem {
   }
 }
 
-const CATALOG_SELECT_BY_TABLE: Record<
-  'careers' | 'skills' | 'talents' | 'weapons' | 'armors' | 'items',
-  string
-> = {
+const CATALOG_SELECT_BY_TABLE: Record<CatalogTableName, string> = {
   careers: 'id, name',
   skills: 'id, name, specialization, description',
   talents: 'id, name, specialization, description',
