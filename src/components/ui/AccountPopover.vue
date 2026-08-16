@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { UserCircle } from '@lucide/vue'
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { useAuthLogout } from '../../composables/useAuthLogout'
 import { usePopoverPanel } from '../../composables/usePopoverPanel'
 
 // Desktop-only account menu: display name on the trigger, actions only in the dropdown.
@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const logout = useAuthLogout()
+const router = useRouter()
 const rootRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
 const { isOpen, close, toggle } = usePopoverPanel({
@@ -28,7 +28,8 @@ const ariaLabel = computed(() =>
 
 async function onLogout(): Promise<void> {
   close()
-  await logout()
+  await authStore.signOut()
+  await router.replace('/')
 }
 
 defineExpose({ close })

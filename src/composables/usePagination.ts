@@ -1,8 +1,14 @@
 import { computed, ref } from 'vue'
+import type { Ref } from 'vue'
 
 interface PaginationOptions {
   pageSize: number
   initialPage?: number
+}
+
+interface PaginationNavigateOptions {
+  loading: Ref<boolean>
+  onNavigate?: () => void | Promise<void>
 }
 
 export function usePagination(options: PaginationOptions) {
@@ -26,6 +32,24 @@ export function usePagination(options: PaginationOptions) {
     page.value = options.initialPage ?? 1
   }
 
+  async function goToPreviousPage(options: PaginationNavigateOptions): Promise<void> {
+    if (!canGoPrevious.value || options.loading.value) {
+      return
+    }
+
+    previousPage()
+    await options.onNavigate?.()
+  }
+
+  async function goToNextPage(options: PaginationNavigateOptions): Promise<void> {
+    if (!canGoNext.value || options.loading.value) {
+      return
+    }
+
+    nextPage()
+    await options.onNavigate?.()
+  }
+
   return {
     page,
     totalItems,
@@ -36,5 +60,7 @@ export function usePagination(options: PaginationOptions) {
     nextPage,
     previousPage,
     resetPage,
+    goToPreviousPage,
+    goToNextPage,
   }
 }

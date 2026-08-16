@@ -15,14 +15,22 @@ import { useAuthStore } from '../stores/auth'
 import AppCard from '../components/ui/AppCard.vue'
 import { useBusyOperations } from '../composables/useBusyOperations'
 import { useNotificationsLoad } from '../composables/useNotificationsLoad'
-import { usePaginatedNavigation } from '../composables/usePaginatedNavigation'
 import { usePagination } from '../composables/usePagination'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const pageSize = 12
-const { page, totalItems, totalPages, canGoPrevious, canGoNext, nextPage, previousPage } =
-  usePagination({ pageSize })
+const {
+	page,
+	totalItems,
+	totalPages,
+	canGoPrevious,
+	canGoNext,
+	nextPage,
+	previousPage,
+	goToPreviousPage: goToPreviousPageBase,
+	goToNextPage: goToNextPageBase,
+} = usePagination({ pageSize })
 const { busyIds, isBusy, setBusy, clearBusy, clearAllBusy } = useBusyOperations()
 const { notifications, totalNotifications, loading, error, load, subscribe, unsubscribe } =
   useNotificationsLoad({
@@ -30,16 +38,16 @@ const { notifications, totalNotifications, loading, error, load, subscribe, unsu
     pageSize,
     page: () => page.value,
   })
-const { goToPreviousPage, goToNextPage } = usePaginatedNavigation({
-	canGoPrevious,
-	canGoNext,
-	loading,
-	previousPage,
-	nextPage,
-	onNavigate: load,
-})
 
 totalItems.value = totalNotifications.value
+
+async function goToPreviousPage(): Promise<void> {
+	await goToPreviousPageBase({ loading, onNavigate: load })
+}
+
+async function goToNextPage(): Promise<void> {
+	await goToNextPageBase({ loading, onNavigate: load })
+}
 
 async function openCampaignFromNotification(notif: NotificationItem): Promise<void> {
 	const campaignId = extractNotificationSessionId(notif)

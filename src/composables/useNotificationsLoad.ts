@@ -3,7 +3,7 @@ import {
   listNotificationsForUserPaginated,
   type NotificationItem,
 } from '../services/notificationsRepository'
-import { useRealtimeChannels } from './useRealtimeChannels'
+import { useRealtimeSync } from './useRealtimeSync'
 
 interface UseNotificationsLoadOptions {
   userId: () => string | undefined
@@ -16,12 +16,10 @@ export function useNotificationsLoad(options: UseNotificationsLoadOptions) {
   const totalNotifications = ref(0)
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const { subscribe, unsubscribe } = useRealtimeChannels(
-    () => {
-      void load()
-    },
-    { debounceMs: 300 }
-  )
+  const realtimeSync = useRealtimeSync({
+    debounceMs: 300,
+    onUpdate: load,
+  })
 
   async function load(): Promise<void> {
     const userId = options.userId()
@@ -49,7 +47,7 @@ export function useNotificationsLoad(options: UseNotificationsLoadOptions) {
   }
 
   function subscribeToNotifications(userId: string): void {
-    subscribe(`notifications-${userId}`, [
+    realtimeSync.start(`notifications-${userId}`, [
       { table: 'notifications', filter: `receiver_user_id=eq.${userId}` },
     ])
   }
@@ -61,6 +59,6 @@ export function useNotificationsLoad(options: UseNotificationsLoadOptions) {
     error,
     load,
     subscribe: subscribeToNotifications,
-    unsubscribe,
+    unsubscribe: realtimeSync.stop,
   }
 }
