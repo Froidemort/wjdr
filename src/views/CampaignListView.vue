@@ -80,7 +80,6 @@ import DataGrid from '../components/ui/DataGrid.vue'
 import InputAction from '../components/ui/InputAction.vue'
 import PageFooter from '../components/ui/PageFooter.vue'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
-import { usePaginatedNavigation } from '../composables/usePaginatedNavigation'
 import { usePagination } from '../composables/usePagination'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 
@@ -96,6 +95,8 @@ const {
   nextPage,
   previousPage,
   resetPage,
+  goToPreviousPage: goToPreviousPageBase,
+  goToNextPage: goToNextPageBase,
 } = usePagination({ pageSize })
 const { feedbackMap, copyText, copyLink } = useCopyFeedback()
 
@@ -112,14 +113,6 @@ const { subscribe, unsubscribe } = useRealtimeChannels(
   },
   { debounceMs: 500 }
 )
-const { goToPreviousPage, goToNextPage } = usePaginatedNavigation({
-  canGoPrevious,
-  canGoNext,
-  loading,
-  previousPage,
-  nextPage,
-  onNavigate: loadCampaigns,
-})
 
 const campaignsList = computed(() => campaigns.value)
 const showBlockingLoading = computed(() => loading.value && campaigns.value.length === 0)
@@ -151,6 +144,14 @@ async function loadCampaigns(options: { background?: boolean } = {}): Promise<vo
       loading.value = false
     }
   }
+}
+
+async function goToPreviousPage(): Promise<void> {
+  await goToPreviousPageBase({ loading, onNavigate: loadCampaigns })
+}
+
+async function goToNextPage(): Promise<void> {
+  await goToNextPageBase({ loading, onNavigate: loadCampaigns })
 }
 
 function subscribeRealtime(userId: string): void {
