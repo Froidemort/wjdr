@@ -11,6 +11,7 @@ INSERT INTO static_stats (code, name, is_secondary) VALUES
     ('FM', 'Force Mentale', FALSE),
     ('Soc', 'Sociabilité', FALSE),
     ('A', 'Attaque', TRUE),
+    ('B', 'Blessures', TRUE),
     ('M', 'Mouvement', TRUE),
     ('Mag', 'Magie', TRUE)
     ON CONFLICT DO NOTHING;

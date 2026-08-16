@@ -14,7 +14,8 @@ import { withRetry } from './shared/retry'
 export type { CharacterGender, CharacterRace, CreateCharacterPayload } from '../types/character'
 
 const DEFAULT_CHARACTER_CAREER_NAME = 'Serviteur'
-const EXCLUDED_TOTAL_ADVANCED_STAT_CODES = new Set(['B'])
+const WOUNDS_STAT_CODE = 'B'
+const DEFAULT_WOUNDS_MAX = 10
 
 function mapCharacter(
   row: CharacterRow,
@@ -97,6 +98,87 @@ function mapCharacterStat(row: CharacterStatRow): CharacterStatValue {
     currentAdvanced: row.current_advanced,
     totalAdvanced: row.total_advanced,
     isSecondary: false,
+  }
+}
+
+function normalizeNonNegativeInteger(value: number): number {
+  return Math.max(0, Math.floor(value))
+}
+
+async function syncCharacterWoundsCore(characterId: string, woundsMax: number): Promise<void> {
+  const normalizedWoundsMax = normalizeNonNegativeInteger(woundsMax)
+
+  const { data: characterRow, error: characterError } = await supabase
+    .from('characters')
+    .select('pv_current')
+    .eq('id', characterId)
+    .maybeSingle()
+
+  if (characterError) {
+    throw characterError
+  }
+
+  if (!characterRow) {
+    throw new Error('Personnage introuvable.')
+  }
+
+  const currentPvCurrent = Number((characterRow as { pv_current: number }).pv_current)
+  const normalizedPvCurrent = Math.min(normalizeNonNegativeInteger(currentPvCurrent), normalizedWoundsMax)
+
+  const { error: updateError } = await supabase
+    .from('characters')
+    .update({
+      pv_max: normalizedWoundsMax,
+      pv_current: normalizedPvCurrent,
+    })
+    .eq('id', characterId)
+
+  if (updateError) {
+    throw updateError
+  }
+}
+
+async function syncWoundsStatFromCharacterPvMax(
+  characterId: string,
+  woundsMax: number
+): Promise<void> {
+  const normalizedWoundsMax = normalizeNonNegativeInteger(woundsMax)
+
+  const { data: existingRow, error: existingRowError } = await supabase
+    .from('character_stat_values')
+    .select('base_value, current_advanced')
+    .eq('character_id', characterId)
+    .eq('stat_code', WOUNDS_STAT_CODE)
+    .maybeSingle()
+
+  if (existingRowError) {
+    throw existingRowError
+  }
+
+  const baseValue = normalizeNonNegativeInteger(
+    Number((existingRow as { base_value: number } | null)?.base_value ?? 0)
+  )
+  const currentAdvanced = normalizeNonNegativeInteger(
+    Number((existingRow as { current_advanced: number } | null)?.current_advanced ?? 0)
+  )
+
+  const { error: upsertError } = await supabase
+    .from('character_stat_values')
+    .upsert(
+      [
+        {
+          character_id: characterId,
+          stat_code: WOUNDS_STAT_CODE,
+          base_value: baseValue,
+          current_advanced: currentAdvanced,
+          total_advanced: normalizedWoundsMax,
+        },
+      ],
+      { onConflict: 'character_id,stat_code' }
+    )
+
+  if (upsertError) {
+    throw upsertError
   }
 }
 
@@ -308,6 +390,10 @@ export async function updateCharacterCore(
   if (error) {
     throw error
   }
+
+  if (typeof payload.pv_max === 'number') {
+    await syncWoundsStatFromCharacterPvMax(characterId, payload.pv_max)
+  }
 }
 
 export async function updateCharacterCareer(characterId: string, careerId: string): Promise<void> {
@@ -377,6 +463,13 @@ export async function updateCharacterStatValues(
   if (error) {
     throw error
   }
+
+  if (
+    trimmedStatCode.trim().toUpperCase() === WOUNDS_STAT_CODE &&
+    typeof updatePayload.total_advanced === 'number'
+  ) {
+    await syncCharacterWoundsCore(characterId, updatePayload.total_advanced)
+  }
 }
 
 export async function replaceCharacterTotalAdvancedValues(
@@ -411,16 +504,10 @@ export async function replaceCharacterTotalAdvancedValues(
       continue
     }
 
-    if (EXCLUDED_TOTAL_ADVANCED_STAT_CODES.has(normalizedStatCode)) {
-      continue
-    }
-
     sanitizedByStatCode.set(normalizedStatCode, Math.max(0, Math.floor(value)))
   }
 
-  const upsertRows = Array.from(existingByStatCode.values())
-    .filter((row) => !EXCLUDED_TOTAL_ADVANCED_STAT_CODES.has(row.stat_code.trim().toUpperCase()))
-    .map((row) => ({
+  const upsertRows = Array.from(existingByStatCode.values()).map((row) => ({
     character_id: trimmedCharacterId,
     stat_code: row.stat_code,
     base_value: row.base_value,
@@ -438,6 +525,10 @@ export async function replaceCharacterTotalAdvancedValues(
 
   if (error) {
     throw error
+  }
+
+  if (sanitizedByStatCode.has(WOUNDS_STAT_CODE)) {
+    await syncCharacterWoundsCore(trimmedCharacterId, sanitizedByStatCode.get(WOUNDS_STAT_CODE) ?? 0)
   }
 }
 
@@ -472,8 +563,8 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
       name: trimmedName,
       race: payload.race,
       career_id: careerId,
-      pv_max: 10,
-      pv_current: 10,
+      pv_max: DEFAULT_WOUNDS_MAX,
+      pv_current: DEFAULT_WOUNDS_MAX,
       destiny_current: 2,
       fortune_max: 2,
       fortune_current: 2,
@@ -493,5 +584,6 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
 
   const characterId = String((data as { id: string }).id)
   await createInitialStats(characterId)
+  await syncWoundsStatFromCharacterPvMax(characterId, DEFAULT_WOUNDS_MAX)
   return characterId
 }
