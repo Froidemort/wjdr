@@ -19,6 +19,7 @@ const DEFAULT_WOUNDS_MAX = 10
 
 function mapCharacter(
   row: CharacterRow,
+  woundsMax: number,
   careerName: string | null = null,
   ownerAvatarUrl: string | null = null
 ): CharacterSummary {
@@ -32,7 +33,7 @@ function mapCharacter(
     careerId: row.career_id,
     careerName,
     pvCurrent: row.pv_current,
-    pvMax: row.pv_max,
+    pvMax: woundsMax,
     fortuneCurrent: row.fortune_current,
     fortuneMax: row.fortune_max,
     destinyCurrent: row.destiny_current,
@@ -91,6 +92,32 @@ async function resolveOwnerAvatars(userIds: string[]): Promise<Map<string, strin
   return byId
 }
 
+async function resolveWoundsMaxByCharacterIds(
+  characterIds: string[]
+): Promise<Map<string, number>> {
+  const uniqueIds = Array.from(new Set(characterIds.filter(Boolean)))
+  if (uniqueIds.length === 0) {
+    return new Map()
+  }
+
+  const { data, error } = await supabase
+    .from('character_stat_values')
+    .select('character_id, total_advanced')
+    .eq('stat_code', WOUNDS_STAT_CODE)
+    .in('character_id', uniqueIds)
+
+  if (error) {
+    throw error
+  }
+
+  const byCharacterId = new Map<string, number>()
+  for (const row of (data ?? []) as Array<{ character_id: string; total_advanced: number }>) {
+    byCharacterId.set(row.character_id, normalizeNonNegativeInteger(Number(row.total_advanced)))
+  }
+
+  return byCharacterId
+}
+
 function mapCharacterStat(row: CharacterStatRow): CharacterStatValue {
   return {
     statCode: row.stat_code,
@@ -128,7 +155,6 @@ async function syncCharacterWoundsCore(characterId: string, woundsMax: number): 
   const { error: updateError } = await supabase
     .from('characters')
     .update({
-      pv_max: normalizedWoundsMax,
       pv_current: normalizedPvCurrent,
     })
     .eq('id', characterId)
@@ -138,7 +164,7 @@ async function syncCharacterWoundsCore(characterId: string, woundsMax: number): 
   }
 }
 
-async function syncWoundsStatFromCharacterPvMax(
+async function setCharacterWoundsStatTotalAdvanced(
   characterId: string,
   woundsMax: number
 ): Promise<void> {
@@ -265,7 +291,7 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
     const { data, error } = await supabase
       .from('characters')
       .select(
-        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
       )
       .eq('user_id', userId)
       .order('name', { ascending: true })
@@ -275,12 +301,18 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
     }
 
     const rows = (data ?? []) as CharacterRow[]
-    const [careerNames, avatars] = await Promise.all([
+    const [careerNames, avatars, woundsByCharacterId] = await Promise.all([
       resolveCareerNames(rows.map((row) => row.career_id)),
       resolveOwnerAvatars(rows.map((row) => row.user_id)),
+      resolveWoundsMaxByCharacterIds(rows.map((row) => row.id)),
     ])
     return rows.map((row) =>
-      mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null)
+      mapCharacter(
+        row,
+        woundsByCharacterId.get(row.id) ?? normalizeNonNegativeInteger(row.pv_current),
+        careerNames.get(row.career_id) ?? null,
+        avatars.get(row.user_id) ?? null
+      )
     )
   })
 }
@@ -290,7 +322,7 @@ export async function listCharactersByCampaign(campaignId: string): Promise<Char
     const { data, error } = await supabase
       .from('characters')
       .select(
-        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
       )
       .eq('campaign_id', campaignId)
       .order('name', { ascending: true })
@@ -300,12 +332,18 @@ export async function listCharactersByCampaign(campaignId: string): Promise<Char
     }
 
     const rows = (data ?? []) as CharacterRow[]
-    const [careerNames, avatars] = await Promise.all([
+    const [careerNames, avatars, woundsByCharacterId] = await Promise.all([
       resolveCareerNames(rows.map((row) => row.career_id)),
       resolveOwnerAvatars(rows.map((row) => row.user_id)),
+      resolveWoundsMaxByCharacterIds(rows.map((row) => row.id)),
     ])
     return rows.map((row) =>
-      mapCharacter(row, careerNames.get(row.career_id) ?? null, avatars.get(row.user_id) ?? null)
+      mapCharacter(
+        row,
+        woundsByCharacterId.get(row.id) ?? normalizeNonNegativeInteger(row.pv_current),
+        careerNames.get(row.career_id) ?? null,
+        avatars.get(row.user_id) ?? null
+      )
     )
   })
 }
@@ -316,7 +354,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
       supabase
         .from('characters')
         .select(
-          'id, name, race, gender, campaign_id, user_id, career_id, pv_current, pv_max, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper, career:careers!characters_career_id_fkey(name)'
+          'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper, career:careers!characters_career_id_fkey(name)'
         )
         .eq('id', characterId)
         .maybeSingle(),
@@ -350,16 +388,23 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
     }
 
     const characterRow = characterResult.data as CharacterWithCareerRow
+    const statsRows = (statsResult.data ?? []) as CharacterStatRow[]
     const secondaryByCode = new Map<string, boolean>(
       ((staticStatsResult.data ?? []) as StaticStatRow[]).map((row) => [
         row.code,
         Boolean(row.is_secondary),
       ])
     )
+    const woundsStat = statsRows.find(
+      (row) => row.stat_code.trim().toUpperCase() === WOUNDS_STAT_CODE
+    )
+    const woundsMax = normalizeNonNegativeInteger(
+      Number(woundsStat?.total_advanced ?? characterRow.pv_current)
+    )
 
     return {
-      ...mapCharacter(characterRow, characterRow.career?.name ?? null, null),
-      stats: ((statsResult.data ?? []) as CharacterStatRow[]).map((row) => ({
+      ...mapCharacter(characterRow, woundsMax, characterRow.career?.name ?? null, null),
+      stats: statsRows.map((row) => ({
         ...mapCharacterStat(row),
         isSecondary: secondaryByCode.get(row.stat_code) ?? false,
       })),
@@ -370,7 +415,6 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
 export async function updateCharacterCore(
   characterId: string,
   payload: Partial<{
-    pv_max: number
     pv_current: number
     fortune_max: number
     fortune_current: number
@@ -385,14 +429,32 @@ export async function updateCharacterCore(
 ): Promise<void> {
   await assertCharacterCampaignWritable(characterId)
 
-  const { error } = await supabase.from('characters').update(payload).eq('id', characterId)
+  const updatePayload: typeof payload = {
+    ...payload,
+  }
+
+  if (typeof payload.pv_current === 'number') {
+    const { data: woundsRow, error: woundsError } = await supabase
+      .from('character_stat_values')
+      .select('total_advanced')
+      .eq('character_id', characterId)
+      .eq('stat_code', WOUNDS_STAT_CODE)
+      .maybeSingle()
+
+    if (woundsError) {
+      throw woundsError
+    }
+
+    const woundsMax = normalizeNonNegativeInteger(
+      Number((woundsRow as { total_advanced: number } | null)?.total_advanced ?? DEFAULT_WOUNDS_MAX)
+    )
+    updatePayload.pv_current = Math.min(normalizeNonNegativeInteger(payload.pv_current), woundsMax)
+  }
+
+  const { error } = await supabase.from('characters').update(updatePayload).eq('id', characterId)
 
   if (error) {
     throw error
-  }
-
-  if (typeof payload.pv_max === 'number') {
-    await syncWoundsStatFromCharacterPvMax(characterId, payload.pv_max)
   }
 }
 
@@ -528,6 +590,10 @@ export async function replaceCharacterTotalAdvancedValues(
   }
 
   if (sanitizedByStatCode.has(WOUNDS_STAT_CODE)) {
+    await setCharacterWoundsStatTotalAdvanced(
+      trimmedCharacterId,
+      sanitizedByStatCode.get(WOUNDS_STAT_CODE) ?? 0
+    )
     await syncCharacterWoundsCore(trimmedCharacterId, sanitizedByStatCode.get(WOUNDS_STAT_CODE) ?? 0)
   }
 }
@@ -563,7 +629,6 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
       name: trimmedName,
       race: payload.race,
       career_id: careerId,
-      pv_max: DEFAULT_WOUNDS_MAX,
       pv_current: DEFAULT_WOUNDS_MAX,
       destiny_current: 2,
       fortune_max: 2,
@@ -584,6 +649,6 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
 
   const characterId = String((data as { id: string }).id)
   await createInitialStats(characterId)
-  await syncWoundsStatFromCharacterPvMax(characterId, DEFAULT_WOUNDS_MAX)
+  await setCharacterWoundsStatTotalAdvanced(characterId, DEFAULT_WOUNDS_MAX)
   return characterId
 }

@@ -40,10 +40,10 @@
               :current="editable.pvCurrent"
               :max="editable.pvMax"
               :editable="canEditQuickSection"
+              :max-editable="false"
               current-aria-label="Valeur courante de vie"
               max-aria-label="Valeur maximale de vie"
               @update:current="onQuickValueChange('pvCurrent', $event)"
-              @update:max="onQuickValueChange('pvMax', $event)"
             />
             <CharacterValueCard
               label="Fortune"
@@ -1514,7 +1514,6 @@ const { status, triggerSave, triggerSaveNow } = useLiveSave(
     }
 
     await updateCharacterCore(character.value.id, {
-      pv_max: payload.pvMax,
       pv_current: payload.pvCurrent,
       fortune_max: payload.fortuneMax,
       fortune_current: payload.fortuneCurrent,

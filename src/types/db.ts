@@ -9,7 +9,6 @@ export interface CharacterRow {
   user_id: string
   career_id: string
   pv_current: number
-  pv_max: number
   fortune_current: number
   fortune_max: number
   destiny_current: number

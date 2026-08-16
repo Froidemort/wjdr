@@ -7,6 +7,7 @@ const props = withDefaults(
     current: number
     max?: number
     editable?: boolean
+    maxEditable?: boolean
     icon: Component
     iconClass: string
     currentAriaLabel: string
@@ -14,6 +15,7 @@ const props = withDefaults(
   }>(),
   {
     editable: false,
+    maxEditable: true,
   }
 )
 
@@ -64,7 +66,7 @@ function onMaxInput(event: Event): void {
             />
             <span v-if="hasMax" class="text-base opacity-60 sm:text-lg">/</span>
             <input
-              v-if="hasMax"
+              v-if="hasMax && maxEditable"
               :value="max"
               type="number"
               min="0"
@@ -73,6 +75,7 @@ function onMaxInput(event: Event): void {
               :aria-label="maxAriaLabel || label"
               @change="onMaxInput"
             />
+            <span v-else-if="hasMax" class="text-base font-bold sm:text-lg">{{ max }}</span>
           </template>
 
           <template v-else>
