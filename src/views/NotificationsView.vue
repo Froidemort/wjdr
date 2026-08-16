@@ -26,8 +26,6 @@ const {
 	totalPages,
 	canGoPrevious,
 	canGoNext,
-	nextPage,
-	previousPage,
 	goToPreviousPage: goToPreviousPageBase,
 	goToNextPage: goToNextPageBase,
 } = usePagination({ pageSize })

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Crown, Eye, FileText, List } from '@lucide/vue'
+import { useVModel } from '@vueuse/core'
 
 type CampaignTab = 'overview' | 'management' | 'sessions' | 'notes'
 
@@ -13,9 +14,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: CampaignTab]
 }>()
 
-function updateTab(value: CampaignTab): void {
-  emit('update:modelValue', value)
-}
+const model = useVModel(props, 'modelValue', emit)
 </script>
 
 <template>
@@ -24,9 +23,8 @@ function updateTab(value: CampaignTab): void {
       <label class="form-control">
         <span class="label-text mb-2">Section</span>
         <select
-          :value="modelValue"
+          v-model="model"
           class="select select-bordered ui-critical-control w-full"
-          @change="updateTab(($event.target as HTMLSelectElement).value as CampaignTab)"
         >
           <option value="overview">Aperçu</option>
           <option v-if="isMj" value="management">Gestion MJ</option>
@@ -46,11 +44,11 @@ function updateTab(value: CampaignTab): void {
         id="campaign-tab-overview"
         type="button"
         role="tab"
-        :aria-selected="modelValue === 'overview' ? 'true' : 'false'"
+        :aria-selected="model === 'overview' ? 'true' : 'false'"
         aria-controls="campaign-panel-overview"
         class="btn btn-sm ui-critical-action gap-2"
-        :class="modelValue === 'overview' ? 'btn-active' : ''"
-        @click="updateTab('overview')"
+        :class="model === 'overview' ? 'btn-active' : ''"
+        @click="model = 'overview'"
       >
         <Eye class="h-4 w-4" />
         Aperçu
@@ -60,11 +58,11 @@ function updateTab(value: CampaignTab): void {
         id="campaign-tab-management"
         type="button"
         role="tab"
-        :aria-selected="modelValue === 'management' ? 'true' : 'false'"
+        :aria-selected="model === 'management' ? 'true' : 'false'"
         aria-controls="campaign-panel-management"
         class="btn btn-sm ui-critical-action gap-2"
-        :class="modelValue === 'management' ? 'btn-active' : ''"
-        @click="updateTab('management')"
+        :class="model === 'management' ? 'btn-active' : ''"
+        @click="model = 'management'"
       >
         <Crown class="h-4 w-4" />
         Gestion MJ
@@ -74,11 +72,11 @@ function updateTab(value: CampaignTab): void {
         id="campaign-tab-sessions"
         type="button"
         role="tab"
-        :aria-selected="modelValue === 'sessions' ? 'true' : 'false'"
+        :aria-selected="model === 'sessions' ? 'true' : 'false'"
         aria-controls="campaign-panel-sessions"
         class="btn btn-sm ui-critical-action gap-2"
-        :class="modelValue === 'sessions' ? 'btn-active' : ''"
-        @click="updateTab('sessions')"
+        :class="model === 'sessions' ? 'btn-active' : ''"
+        @click="model = 'sessions'"
       >
         <List class="h-4 w-4" />
         Sessions
@@ -87,11 +85,11 @@ function updateTab(value: CampaignTab): void {
         id="campaign-tab-notes"
         type="button"
         role="tab"
-        :aria-selected="modelValue === 'notes' ? 'true' : 'false'"
+        :aria-selected="model === 'notes' ? 'true' : 'false'"
         aria-controls="campaign-panel-notes"
         class="btn btn-sm ui-critical-action gap-2"
-        :class="modelValue === 'notes' ? 'btn-active' : ''"
-        @click="updateTab('notes')"
+        :class="model === 'notes' ? 'btn-active' : ''"
+        @click="model = 'notes'"
       >
         <FileText class="h-4 w-4" />
         Notes

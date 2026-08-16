@@ -1,3 +1,4 @@
+import { useAsyncState } from '@vueuse/core'
 import { type Ref, ref } from 'vue'
 
 interface LoadingStateOptions<T> {
@@ -23,16 +24,26 @@ export interface LoadingState<T> {
  */
 export function useLoadingState<T>(options: LoadingStateOptions<T> = {}): LoadingState<T> {
   const initialValue: T | null = options.fallbackValue ?? null
-  const data = ref<T | null>(initialValue)
   const loading = ref(options.defaultLoading ?? false)
   const error = ref<string | null>(null)
+  const { state, execute: runOperation } = useAsyncState<T | null, [() => Promise<T>]>(
+    async (operation) => operation(),
+    initialValue,
+    {
+      immediate: false,
+      resetOnExecute: false,
+      throwError: true,
+    }
+  )
+
+  const data = state as Ref<T | null>
 
   async function execute(operation: () => Promise<T>): Promise<void> {
     loading.value = true
     error.value = null
 
     try {
-      data.value = await operation()
+      data.value = (await runOperation(0, operation)) ?? (options.fallbackValue ?? null)
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Une erreur est survenue'
       data.value = options.fallbackValue ?? null

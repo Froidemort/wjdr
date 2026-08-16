@@ -1,4 +1,5 @@
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { useDebounceFn } from '@vueuse/core'
 import { getCurrentInstance, onBeforeUnmount } from 'vue'
 import { supabase } from '../db/supabase'
 
@@ -26,8 +27,11 @@ export function useRealtimeChannels(
 ) {
   const debounceMs = options.debounceMs ?? 0
   let channel: RealtimeChannel | null = null
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null
   let latestPayload: RealtimeUpdatePayload | undefined
+  const emitDebouncedUpdate = useDebounceFn(() => {
+    onUpdate(latestPayload)
+    latestPayload = undefined
+  }, debounceMs)
 
   function dispatchUpdate(payload?: RealtimeUpdatePayload): void {
     if (debounceMs <= 0) {
@@ -36,15 +40,7 @@ export function useRealtimeChannels(
     }
 
     latestPayload = payload
-
-    if (debounceTimer) {
-      clearTimeout(debounceTimer)
-    }
-
-    debounceTimer = setTimeout(() => {
-      onUpdate(latestPayload)
-      latestPayload = undefined
-    }, debounceMs)
+    void emitDebouncedUpdate()
   }
 
   function subscribe(channelName: string, subscriptions: RealtimeTableSubscription[]): void {
@@ -80,10 +76,7 @@ export function useRealtimeChannels(
   }
 
   function unsubscribe(): void {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
-    }
+    emitDebouncedUpdate.cancel()
 
     latestPayload = undefined
 

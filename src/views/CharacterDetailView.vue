@@ -1052,8 +1052,9 @@ import {
   Venus,
   Weight,
 } from '@lucide/vue'
+import { useDebounceFn, useTimeoutFn } from '@vueuse/core'
+import { useRouteParams } from '@vueuse/router'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import { createCatalogItem, searchCatalog } from '../services/catalogRepository'
 import {
   listCareerCharacteristicsByCareerId,
@@ -1105,6 +1106,7 @@ import CharacterMoneyCard from '../components/ui/CharacterMoneyCard.vue'
 import CharacterValueCard from '../components/ui/CharacterValueCard.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import StateCycleBadge from '../components/ui/StateCycleBadge.vue'
+import { useConfirmAction } from '../composables/useConfirmAction'
 import { useLiveSave } from '../composables/useLiveSave'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
 import {
@@ -1156,17 +1158,17 @@ const CHARACTERISTICS_VIEW_OPTIONS = [
   { value: 'normal', label: 'Détaillé', badgeClass: 'btn-outline' },
 ] as const
 
-const route = useRoute()
 const activeCharacterTab = ref<CharacterDetailTab>('profile')
 const authStore = useAuthStore()
+const { confirmAction } = useConfirmAction()
 const { coerceMoney } = useMoneyCoercion()
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const character = ref<CharacterDetail | null>(null)
-const characterId = computed(() => String(route.params.id ?? ''))
+const characterId = useRouteParams('id', '', {
+  transform: (value) => String(value ?? ''),
+})
 const isMoneyEditing = ref(false)
-let deferredRealtimeReloadTimer: ReturnType<typeof setTimeout> | null = null
-let deferredLinksReloadTimer: ReturnType<typeof setTimeout> | null = null
 
 const careerDialogRef = ref<HTMLDialogElement | null>(null)
 const careerConfirmDialogRef = ref<HTMLDialogElement | null>(null)
@@ -1196,7 +1198,6 @@ const addingCatalog = ref(false)
 const itemCatalogMode = ref<'search' | 'create'>('search')
 const creatingItem = ref(false)
 const MAX_CATALOG_RESULTS = 8
-let catalogSearchTimer: ReturnType<typeof setTimeout> | null = null
 let catalogSearchSequence = 0
 const ITEM_QUALITY_OPTIONS = ['médiocre', 'normal', 'bonne', 'exceptionelle'] as const
 const ITEM_QUALITY_STATE_OPTIONS = ITEM_QUALITY_OPTIONS.map((quality) => ({
@@ -1236,8 +1237,6 @@ const careerPathLoading = ref(false)
 const careerCharacteristicsLoading = ref(false)
 const catalogSearchLoading = ref(false)
 const actionBusyKey = ref<string | null>(null)
-let actionSuccessTimer: ReturnType<typeof setTimeout> | null = null
-let sectionSuccessTimer: ReturnType<typeof setTimeout> | null = null
 
 const editable = ref({
   pvMax: 0,
@@ -1273,6 +1272,50 @@ const canEditQuickSection = computed(() =>
 )
 const characteristicsViewMode = ref<'normal' | 'compact'>('compact')
 const modalSectionLabel = computed(() => CATALOG_LABELS[catalogSection.value])
+const scheduleDeferredLinksReload = useDebounceFn((currentCharacterId: string) => {
+  void loadCharacterLinks(currentCharacterId, { force: true })
+}, 700)
+const scheduleDeferredRealtimeReload = useDebounceFn(() => {
+  void loadCharacter({ background: true })
+}, 700)
+const scheduleCatalogSearch = useDebounceFn(
+  async (trimmed: string, requestId: number, section: CatalogSection) => {
+    catalogSearchLoading.value = true
+    try {
+      const results = await searchCatalog(section, trimmed)
+      if (requestId !== catalogSearchSequence) {
+        return
+      }
+
+      catalogOptions.value = results
+    } catch {
+      if (requestId !== catalogSearchSequence) {
+        return
+      }
+
+      catalogOptions.value = []
+    } finally {
+      if (requestId === catalogSearchSequence) {
+        catalogSearchLoading.value = false
+      }
+    }
+  },
+  180
+)
+const { start: startActionSuccessReset, stop: stopActionSuccessReset } = useTimeoutFn(
+  () => {
+    actionSuccessMessage.value = null
+  },
+  4000,
+  { immediate: false }
+)
+const { start: startSectionSuccessReset, stop: stopSectionSuccessReset } = useTimeoutFn(
+  () => {
+    sectionSuccess.value = null
+  },
+  4500,
+  { immediate: false }
+)
 
 function sortByName<T extends { name: string }>(entries: T[]): T[] {
   return [...entries].sort((left, right) =>
@@ -1639,13 +1682,7 @@ function requestExternalCharacterRefresh(update?: RealtimeUpdatePayload): void {
     invalidateCharacterLinksCache(currentCharacterId)
 
     if (isSavingInProgress()) {
-      if (deferredLinksReloadTimer) {
-        clearTimeout(deferredLinksReloadTimer)
-      }
-
-      deferredLinksReloadTimer = setTimeout(() => {
-        void loadCharacterLinks(currentCharacterId, { force: true })
-      }, 700)
+      void scheduleDeferredLinksReload(currentCharacterId)
       return
     }
 
@@ -1654,13 +1691,7 @@ function requestExternalCharacterRefresh(update?: RealtimeUpdatePayload): void {
   }
 
   if (isSavingInProgress()) {
-    if (deferredRealtimeReloadTimer) {
-      clearTimeout(deferredRealtimeReloadTimer)
-    }
-
-    deferredRealtimeReloadTimer = setTimeout(() => {
-      void loadCharacter({ background: true })
-    }, 700)
+    void scheduleDeferredRealtimeReload()
     return
   }
 
@@ -1687,8 +1718,8 @@ async function loadCharacterLinks(
 }
 
 async function loadCharacter(options: { background?: boolean } = {}): Promise<void> {
-  const characterId = String(route.params.id ?? '')
-  if (!characterId) {
+  const currentCharacterId = characterId.value
+  if (!currentCharacterId) {
     errorMessage.value = 'Personnage invalide.'
     return
   }
@@ -1699,7 +1730,7 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
     errorMessage.value = null
   }
   try {
-    const data = await getCharacterById(characterId)
+    const data = await getCharacterById(currentCharacterId)
     character.value = data
 
     if (!data) {
@@ -1968,7 +1999,7 @@ async function onDeleteSkill(skillId: string): Promise<void> {
     return
   }
 
-  if (!confirmDestructiveAction('Supprimer cette competence ?')) {
+  if (!(await confirmDestructiveAction('Supprimer cette competence ?'))) {
     return
   }
 
@@ -1990,7 +2021,7 @@ async function onDeleteTalent(talentId: string): Promise<void> {
     return
   }
 
-  if (!confirmDestructiveAction('Supprimer ce talent ?')) {
+  if (!(await confirmDestructiveAction('Supprimer ce talent ?'))) {
     return
   }
 
@@ -2012,7 +2043,7 @@ async function onDeleteWeapon(linkId: string): Promise<void> {
     return
   }
 
-  if (!confirmDestructiveAction('Supprimer cette arme ?')) {
+  if (!(await confirmDestructiveAction('Supprimer cette arme ?'))) {
     return
   }
 
@@ -2109,7 +2140,7 @@ async function onDeleteArmor(linkId: string): Promise<void> {
     return
   }
 
-  if (!confirmDestructiveAction('Supprimer cette armure ?')) {
+  if (!(await confirmDestructiveAction('Supprimer cette armure ?'))) {
     return
   }
 
@@ -2218,7 +2249,7 @@ async function onDeleteItem(linkId: string): Promise<void> {
     return
   }
 
-  if (!confirmDestructiveAction('Supprimer cet equipement ?')) {
+  if (!(await confirmDestructiveAction('Supprimer cet equipement ?'))) {
     return
   }
 
@@ -2571,7 +2602,11 @@ async function confirmCatalogAdd(): Promise<void> {
     return
   }
 
-  if (!confirmDestructiveAction(`Ajouter ${selectedCatalogIds.value.length} element(s) a la fiche ?`)) {
+  if (
+    !(await confirmDestructiveAction(
+      `Ajouter ${selectedCatalogIds.value.length} element(s) a la fiche ?`
+    ))
+  ) {
     return
   }
 
@@ -2620,7 +2655,7 @@ async function confirmItemCreate(): Promise<void> {
   const normalizedEncumbrance = Math.max(0, Math.floor(newItemForm.value.encumbrance || 0))
   const normalizedQuantity = Math.max(1, Math.floor(newItemForm.value.quantity || 1))
 
-  if (!confirmDestructiveAction('Creer puis ajouter cet equipement a la fiche ?')) {
+  if (!(await confirmDestructiveAction('Creer puis ajouter cet equipement a la fiche ?'))) {
     return
   }
 
@@ -2662,10 +2697,7 @@ watch(careerFilterMode, async () => {
 })
 
 watch(catalogQuery, async (value) => {
-  if (catalogSearchTimer) {
-    clearTimeout(catalogSearchTimer)
-    catalogSearchTimer = null
-  }
+  scheduleCatalogSearch.cancel()
 
   if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
     catalogOptions.value = []
@@ -2681,27 +2713,7 @@ watch(catalogQuery, async (value) => {
   }
 
   const requestId = ++catalogSearchSequence
-  catalogSearchTimer = setTimeout(async () => {
-    catalogSearchLoading.value = true
-    try {
-      const results = await searchCatalog(catalogSection.value, trimmed)
-      if (requestId !== catalogSearchSequence) {
-        return
-      }
-
-      catalogOptions.value = results
-    } catch {
-      if (requestId !== catalogSearchSequence) {
-        return
-      }
-
-      catalogOptions.value = []
-    } finally {
-      if (requestId === catalogSearchSequence) {
-        catalogSearchLoading.value = false
-      }
-    }
-  }, 180)
+  void scheduleCatalogSearch(trimmed, requestId, catalogSection.value)
 })
 
 async function saveQuickFields(options: { immediate?: boolean } = {}): Promise<void> {
@@ -2827,24 +2839,14 @@ function qualityStateClass(quality: string | null): string {
 
 function setActionSuccess(message: string): void {
   actionSuccessMessage.value = message
-  if (actionSuccessTimer) {
-    clearTimeout(actionSuccessTimer)
-  }
-
-  actionSuccessTimer = setTimeout(() => {
-    actionSuccessMessage.value = null
-  }, 4000)
+  stopActionSuccessReset()
+  startActionSuccessReset()
 }
 
 function setSectionSuccess(section: FeedbackSection, message: string): void {
   sectionSuccess.value = { section, message }
-  if (sectionSuccessTimer) {
-    clearTimeout(sectionSuccessTimer)
-  }
-
-  sectionSuccessTimer = setTimeout(() => {
-    sectionSuccess.value = null
-  }, 4500)
+  stopSectionSuccessReset()
+  startSectionSuccessReset()
 
   setActionSuccess(message)
 }
@@ -2857,12 +2859,8 @@ function getSectionSuccessMessage(section: FeedbackSection): string | null {
   return sectionSuccess.value.message
 }
 
-function confirmDestructiveAction(message: string): boolean {
-  if (typeof window === 'undefined') {
-    return true
-  }
-
-  return window.confirm(message)
+async function confirmDestructiveAction(message: string): Promise<boolean> {
+  return confirmAction(message)
 }
 
 function beginAction(key: string): boolean {
@@ -2920,29 +2918,11 @@ watch(
 )
 
 onBeforeUnmount(() => {
-  if (deferredRealtimeReloadTimer) {
-    clearTimeout(deferredRealtimeReloadTimer)
-    deferredRealtimeReloadTimer = null
-  }
-
-  if (deferredLinksReloadTimer) {
-    clearTimeout(deferredLinksReloadTimer)
-    deferredLinksReloadTimer = null
-  }
-
-  if (catalogSearchTimer) {
-    clearTimeout(catalogSearchTimer)
-    catalogSearchTimer = null
-  }
-  if (sectionSuccessTimer) {
-    clearTimeout(sectionSuccessTimer)
-    sectionSuccessTimer = null
-  }
-
-  if (actionSuccessTimer) {
-    clearTimeout(actionSuccessTimer)
-    actionSuccessTimer = null
-  }
+  scheduleDeferredRealtimeReload.cancel()
+  scheduleDeferredLinksReload.cancel()
+  scheduleCatalogSearch.cancel()
+  stopSectionSuccessReset()
+  stopActionSuccessReset()
 })
 </script>
 

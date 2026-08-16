@@ -1,3 +1,4 @@
+import { useDebounceFn } from '@vueuse/core'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { CampaignSummary } from '../types/domain'
@@ -17,6 +18,7 @@ import {
   addUsersToCampaign,
   searchInvitableProfilesByMembership,
 } from '../services/usersCampaignsRepository'
+import { useConfirmAction } from './useConfirmAction'
 import type { Profile } from '../types/domain'
 
 interface UseCampaignManagementOptions {
@@ -26,6 +28,7 @@ interface UseCampaignManagementOptions {
 }
 
 export function useCampaignManagement(options: UseCampaignManagementOptions) {
+  const { confirmAction } = useConfirmAction()
   const invitations = ref<SessionInvitation[]>([])
   const inviteCandidates = ref<Profile[]>([])
   const inviteQuery = ref('')
@@ -198,13 +201,11 @@ export function useCampaignManagement(options: UseCampaignManagementOptions) {
     inviteSuccessMessage.value = null
     try {
       const inviteeIds = Array.from(selectedInvitees.value)
-      if (typeof window !== 'undefined') {
-        const confirmed = window.confirm(
-          `Envoyer ${inviteeIds.length} invitation${inviteeIds.length > 1 ? 's' : ''} ?`
-        )
-        if (!confirmed) {
-          return
-        }
+      const confirmed = await confirmAction(
+        `Envoyer ${inviteeIds.length} invitation${inviteeIds.length > 1 ? 's' : ''} ?`
+      )
+      if (!confirmed) {
+        return
       }
       await addUsersToCampaign(options.session.value.id, inviteeIds)
       await createCampaignInvitations(
@@ -235,13 +236,11 @@ export function useCampaignManagement(options: UseCampaignManagementOptions) {
       return
     }
 
-    if (typeof window !== 'undefined') {
-      const confirmed = window.confirm(
-        `Accepter la demande de ${requesterUsername} et l ajouter a la campagne ?`
-      )
-      if (!confirmed) {
-        return
-      }
+    const confirmed = await confirmAction(
+      `Accepter la demande de ${requesterUsername} et l ajouter a la campagne ?`
+    )
+    if (!confirmed) {
+      return
     }
 
     joinRequestBusyNotificationId.value = notificationId
@@ -269,11 +268,9 @@ export function useCampaignManagement(options: UseCampaignManagementOptions) {
       return
     }
 
-    if (typeof window !== 'undefined') {
-      const confirmed = window.confirm(`Refuser la demande de ${requesterUsername} ?`)
-      if (!confirmed) {
-        return
-      }
+    const confirmed = await confirmAction(`Refuser la demande de ${requesterUsername} ?`)
+    if (!confirmed) {
+      return
     }
 
     joinRequestBusyNotificationId.value = notificationId
@@ -291,26 +288,16 @@ export function useCampaignManagement(options: UseCampaignManagementOptions) {
     }
   }
 
-  let inviteSearchTimer: ReturnType<typeof setTimeout> | null = null
-
-  function scheduleInviteSearch(): void {
-    if (inviteSearchTimer) {
-      clearTimeout(inviteSearchTimer)
-    }
-
-    inviteSearchTimer = setTimeout(() => {
-      void loadInviteCandidates()
-    }, 250)
-  }
+  const scheduleInviteSearch = useDebounceFn(() => {
+    void loadInviteCandidates()
+  }, 250)
 
   watch(inviteQuery, () => {
-    scheduleInviteSearch()
+    void scheduleInviteSearch()
   })
 
   onBeforeUnmount(() => {
-    if (inviteSearchTimer) {
-      clearTimeout(inviteSearchTimer)
-    }
+    scheduleInviteSearch.cancel()
   })
 
   return {

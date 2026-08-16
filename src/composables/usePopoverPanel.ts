@@ -1,4 +1,5 @@
-import { type Ref, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onClickOutside, onKeyStroke } from '@vueuse/core'
+import { type Ref, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 interface PopoverPanelOptions {
@@ -28,30 +29,16 @@ export function usePopoverPanel({ onOpen, rootRef, triggerRef }: PopoverPanelOpt
     onOpen?.()
   }
 
-  function onOutsideClick(event: MouseEvent): void {
-    const target = event.target as Node | null
-    if (!isOpen.value || !target || rootRef.value?.contains(target)) {
-      return
-    }
-    close()
-  }
-
-  function onEscape(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && isOpen.value) {
+  watch(() => route.path, close)
+  onClickOutside(rootRef, () => {
+    if (isOpen.value) {
       close()
     }
-  }
-
-  watch(() => route.path, close)
-
-  onMounted(() => {
-    document.addEventListener('click', onOutsideClick)
-    document.addEventListener('keydown', onEscape)
   })
-
-  onBeforeUnmount(() => {
-    document.removeEventListener('click', onOutsideClick)
-    document.removeEventListener('keydown', onEscape)
+  onKeyStroke('Escape', () => {
+    if (isOpen.value) {
+      close()
+    }
   })
 
   return { isOpen, close, toggle }
