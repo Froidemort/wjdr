@@ -1,11 +1,12 @@
-import type { RealtimePostgresChangesFilter } from '@supabase/supabase-js'
 import { useRealtimeChannels } from './useRealtimeChannels'
+
+type RealtimeEvent = '*' | 'INSERT' | 'UPDATE' | 'DELETE'
 
 interface RealtimeSyncSubscription {
   table: string
   filter?: string
   schema?: string
-  event?: RealtimePostgresChangesFilter['event']
+  event?: RealtimeEvent
 }
 
 interface UseRealtimeSyncOptions {

@@ -1,43 +1,43 @@
 <template>
-	<AppCard :title="title" :compact="compact">
-		<div v-if="helperMessage" class="alert alert-info alert-soft mb-3 text-sm" role="note">
-			<span>{{ helperMessage }}</span>
+	<AppCard :title="props.title" :compact="props.compact">
+		<div v-if="props.helperMessage" class="alert alert-info alert-soft mb-3 text-sm" role="note">
+			<span>{{ props.helperMessage }}</span>
 		</div>
-		<form :class="compact ? 'flex flex-col items-center gap-2 sm:flex-row sm:items-end sm:justify-start' : 'flex flex-col gap-3 sm:flex-row'" @submit.prevent="$emit('submit')">
+		<form :class="props.compact ? 'flex flex-col items-center gap-2 sm:flex-row sm:items-end sm:justify-start' : 'flex flex-col gap-3 sm:flex-row'" @submit.prevent="emit('submit')">
 			<input 
-				:value="modelValue"
+				v-model="model"
 				type="text" 
-				:maxlength="maxLength"
-				:class="['input bg-base-100 ui-critical-control', errorMessage ? 'input-error' : '', inputClass]"
-				:placeholder="placeholder"
-				:disabled="Boolean(disabled || loading)"
-				:aria-invalid="errorMessage ? 'true' : 'false'"
-				@input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+				:maxlength="props.maxLength"
+				:class="['input bg-base-100 ui-critical-control', props.errorMessage ? 'input-error' : '', props.inputClass]"
+				:placeholder="props.placeholder"
+				:disabled="Boolean(props.disabled || props.loading)"
+				:aria-invalid="props.errorMessage ? 'true' : 'false'"
 			/>
 			<button 
 				type="submit"
-				:class="compact ? 'btn btn-sm ui-critical-action min-h-11 w-full sm:w-auto' : 'btn btn-sm ui-critical-action min-h-11'"
-				:disabled="Boolean(disabled || loading)"
-				:aria-busy="loading ? 'true' : 'false'"
+				:class="props.compact ? 'btn btn-sm ui-critical-action min-h-11 w-full sm:w-auto' : 'btn btn-sm ui-critical-action min-h-11'"
+				:disabled="Boolean(props.disabled || props.loading)"
+				:aria-busy="props.loading ? 'true' : 'false'"
 			>
-				<span v-if="loading" class="loading loading-spinner loading-xs" aria-hidden="true" />
-				{{ buttonLabel }}
+				<span v-if="props.loading" class="loading loading-spinner loading-xs" aria-hidden="true" />
+				{{ props.buttonLabel }}
 			</button>
 		</form>
 
-		<div v-if="successMessage" role="status" class="alert alert-success alert-soft text-sm mt-3">
-			<span>{{ successMessage }}</span>
+		<div v-if="props.successMessage" role="status" class="alert alert-success alert-soft text-sm mt-3">
+			<span>{{ props.successMessage }}</span>
 		</div>
-		<div v-if="errorMessage" role="alert" class="alert alert-error alert-soft text-sm mt-3">
-			<span>{{ errorMessage }}</span>
+		<div v-if="props.errorMessage" role="alert" class="alert alert-error alert-soft text-sm mt-3">
+			<span>{{ props.errorMessage }}</span>
 		</div>
 	</AppCard>
 </template>
 
 <script setup lang="ts">
+import { useVModel } from '@vueuse/core'
 import AppCard from './AppCard.vue'
 
-defineProps<{
+const props = defineProps<{
   modelValue: string
   title: string
   placeholder: string
@@ -52,8 +52,10 @@ defineProps<{
 	helperMessage?: string | null
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'update:modelValue': [value: string]
   submit: []
 }>()
+
+const model = useVModel(props, 'modelValue', emit)
 </script>

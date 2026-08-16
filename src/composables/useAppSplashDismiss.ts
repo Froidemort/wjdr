@@ -1,3 +1,4 @@
+import { useMediaQuery, useTimeoutFn } from '@vueuse/core'
 import { onMounted, onUnmounted, ref, watch, type Ref } from 'vue'
 import { APP_SPLASH } from '../config/appSplash'
 
@@ -9,21 +10,33 @@ type UseAppSplashDismissOptions = {
 export function useAppSplashDismiss({ ready, onDismissed }: UseAppSplashDismissOptions) {
 	const { timing } = APP_SPLASH
 
-	const prefersReducedMotion = ref(false)
+	const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 	const animationDone = ref(false)
 	const minTimeDone = ref(false)
 	const exiting = ref(false)
-
-	let dismissTimer: ReturnType<typeof setTimeout> | null = null
-	let minTimer: ReturnType<typeof setTimeout> | null = null
-	let maxTimer: ReturnType<typeof setTimeout> | null = null
-
-	function clearDismissTimer(): void {
-		if (dismissTimer) {
-			clearTimeout(dismissTimer)
-			dismissTimer = null
-		}
-	}
+	const minDurationMs = ref<number>(timing.minMs)
+	const { start: startDismissTimer, stop: stopDismissTimer } = useTimeoutFn(
+		onDismissed,
+		timing.fadeMs,
+		{ immediate: false }
+	)
+	const { start: startMinTimer, stop: stopMinTimer } = useTimeoutFn(
+		() => {
+			minTimeDone.value = true
+			tryDismiss()
+		},
+		minDurationMs,
+		{ immediate: false }
+	)
+	const { start: startMaxTimer, stop: stopMaxTimer } = useTimeoutFn(
+		() => {
+			animationDone.value = true
+			minTimeDone.value = true
+			dismiss()
+		},
+		timing.maxMs,
+		{ immediate: false }
+	)
 
 	function dismiss(): void {
 		if (exiting.value) {
@@ -31,7 +44,8 @@ export function useAppSplashDismiss({ ready, onDismissed }: UseAppSplashDismissO
 		}
 
 		exiting.value = true
-		dismissTimer = setTimeout(onDismissed, timing.fadeMs)
+		stopDismissTimer()
+		startDismissTimer()
 	}
 
 	function tryDismiss(): void {
@@ -48,24 +62,13 @@ export function useAppSplashDismiss({ ready, onDismissed }: UseAppSplashDismissO
 	}
 
 	onMounted(() => {
-		prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
 		if (prefersReducedMotion.value) {
 			animationDone.value = true
 		}
 
-		const minDuration = prefersReducedMotion.value ? timing.minReducedMs : timing.minMs
-
-		minTimer = setTimeout(() => {
-			minTimeDone.value = true
-			tryDismiss()
-		}, minDuration)
-
-		maxTimer = setTimeout(() => {
-			animationDone.value = true
-			minTimeDone.value = true
-			dismiss()
-		}, timing.maxMs)
+		minDurationMs.value = prefersReducedMotion.value ? timing.minReducedMs : timing.minMs
+		startMinTimer()
+		startMaxTimer()
 	})
 
 	watch(ready, tryDismiss)
@@ -73,13 +76,9 @@ export function useAppSplashDismiss({ ready, onDismissed }: UseAppSplashDismissO
 	watch(minTimeDone, tryDismiss)
 
 	onUnmounted(() => {
-		clearDismissTimer()
-		if (minTimer) {
-			clearTimeout(minTimer)
-		}
-		if (maxTimer) {
-			clearTimeout(maxTimer)
-		}
+		stopDismissTimer()
+		stopMinTimer()
+		stopMaxTimer()
 	})
 
 	return {

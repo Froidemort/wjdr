@@ -1,3 +1,4 @@
+import { useAsyncState } from '@vueuse/core'
 import { ref } from 'vue'
 
 interface UseAsyncListOptions<TItem> {
@@ -7,23 +8,28 @@ interface UseAsyncListOptions<TItem> {
 }
 
 export function useAsyncList<TItem>(options: UseAsyncListOptions<TItem>) {
-  const items = ref<TItem[]>(options.fallbackItems ?? [])
-  const loading = ref(false)
+  const { state: items, isLoading, execute: runLoad } = useAsyncState<TItem[]>(
+    options.loadItems,
+    options.fallbackItems ?? [],
+    {
+      immediate: false,
+      resetOnExecute: false,
+      throwError: true,
+    }
+  )
+  const loading = isLoading
   const error = ref<string | null>(null)
 
   async function load(): Promise<TItem[]> {
-    loading.value = true
     error.value = null
 
     try {
-      const result = await options.loadItems()
+      const result = (await runLoad(0)) ?? options.fallbackItems ?? []
       items.value = result
       return result
     } catch (loadError) {
       error.value = loadError instanceof Error ? loadError.message : options.errorMessage
       throw loadError
-    } finally {
-      loading.value = false
     }
   }
 
