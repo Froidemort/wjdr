@@ -14,6 +14,7 @@ import { withRetry } from './shared/retry'
 export type { CharacterGender, CharacterRace, CreateCharacterPayload } from '../types/character'
 
 const DEFAULT_CHARACTER_CAREER_NAME = 'Serviteur'
+const EXCLUDED_TOTAL_ADVANCED_STAT_CODES = new Set(['B'])
 
 function mapCharacter(
   row: CharacterRow,
@@ -410,10 +411,16 @@ export async function replaceCharacterTotalAdvancedValues(
       continue
     }
 
+    if (EXCLUDED_TOTAL_ADVANCED_STAT_CODES.has(normalizedStatCode)) {
+      continue
+    }
+
     sanitizedByStatCode.set(normalizedStatCode, Math.max(0, Math.floor(value)))
   }
 
-  const upsertRows = Array.from(existingByStatCode.values()).map((row) => ({
+  const upsertRows = Array.from(existingByStatCode.values())
+    .filter((row) => !EXCLUDED_TOTAL_ADVANCED_STAT_CODES.has(row.stat_code.trim().toUpperCase()))
+    .map((row) => ({
     character_id: trimmedCharacterId,
     stat_code: row.stat_code,
     base_value: row.base_value,
