@@ -1576,6 +1576,10 @@ const {
       return
     }
 
+    if (!payload.statCode) {
+      return
+    }
+
     try {
       await updateCharacterStatValues(character.value.id, payload.statCode, {
         current_advanced: payload.currentAdvanced,
