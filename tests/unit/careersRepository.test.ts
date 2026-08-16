@@ -13,7 +13,7 @@ vi.mock('../../src/db/supabase', () => ({
 import {
   listCareerCharacteristicsByCareerId,
   listCareerPathCareersByFromCareerId,
-} from '../../src/repositories/careersRepository'
+} from '../../src/services/careersRepository'
 
 describe('careersRepository', () => {
   beforeEach(() => {
