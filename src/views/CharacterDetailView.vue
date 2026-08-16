@@ -1130,7 +1130,7 @@ import {
   type RealtimeUpdatePayload,
   useRealtimeChannels,
 } from '../composables/useRealtimeChannels'
-import { canEquipArmorStack, findConflictingWeapons, isTwoHandedWeapon, resolveWeaponEquipHand } from '../../utils/equipmentSlots'
+import { canEquipArmorStack, findConflictingWeapons, isTwoHandedWeapon, resolveWeaponEquipHand } from '../utils/equipmentSlots'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
 type CharacterDetailTab = 'profile' | 'skillsTalents' | 'inventory'
