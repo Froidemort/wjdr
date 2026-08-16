@@ -1108,6 +1108,7 @@ import SearchInput from '../components/ui/SearchInput.vue'
 import StateCycleBadge from '../components/ui/StateCycleBadge.vue'
 import { useConfirmAction } from '../composables/useConfirmAction'
 import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
+import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
 import {
   type RealtimeUpdatePayload,
