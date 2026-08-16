@@ -37,6 +37,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:linkedSessionFilter': [value: 'all' | 'none' | string]
   'update:searchQuery': [value: string]
+  'patch:editDraft': [patch: Partial<SessionNoteEditDraft>]
   'toggle-visibility': [note: SessionNote]
   'toggle-archived': [note: SessionNote]
   'start-edit': [note: SessionNote]
@@ -52,6 +53,14 @@ function onLinkedSessionFilterChange(event: Event): void {
 
 function onSearchQueryUpdate(value: string): void {
   emit('update:searchQuery', value)
+}
+
+function onEditDraftFieldInput(
+  key: keyof SessionNoteEditDraft,
+  event: Event
+): void {
+  const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  emit('patch:editDraft', { [key]: target.value })
 }
 </script>
 
@@ -168,18 +177,20 @@ function onSearchQueryUpdate(value: string): void {
               <label class="form-control w-full">
                 <span class="label-text mb-2">Titre</span>
                 <input
-                  v-model="props.editDraft.title"
+                  :value="props.editDraft.title"
                   type="text"
                   class="input input-bordered ui-critical-control w-full"
                   :aria-invalid="editContentError ? 'true' : 'false'"
+                  @input="onEditDraftFieldInput('title', $event)"
                 />
               </label>
               <label v-if="sessions.length && !selectedSessionId" class="form-control w-full">
                 <span class="label-text mb-2">Session liée</span>
                 <select
-                  v-model="props.editDraft.sessionId"
+                  :value="props.editDraft.sessionId"
                   class="select select-bordered ui-critical-control w-full"
                   :aria-invalid="editContentError ? 'true' : 'false'"
+                  @change="onEditDraftFieldInput('sessionId', $event)"
                 >
                   <option value="">Sans session liée</option>
                   <option v-for="session in sessions" :key="session.id" :value="session.id">
@@ -190,11 +201,12 @@ function onSearchQueryUpdate(value: string): void {
               <label class="form-control w-full">
                 <span class="label-text mb-2">Contenu texte</span>
                 <textarea
-                  v-model="props.editDraft.contentText"
+                  :value="props.editDraft.contentText"
                   class="textarea textarea-bordered ui-critical-control min-h-20 w-full"
                   :aria-invalid="editContentError ? 'true' : 'false'"
                   :aria-errormessage="editContentError ? 'notes-edit-content-error' : undefined"
                   :aria-describedby="editContentError ? 'notes-edit-content-error' : undefined"
+                  @input="onEditDraftFieldInput('contentText', $event)"
                 />
               </label>
               <p v-if="editContentError" id="notes-edit-content-error" class="label text-error text-xs">

@@ -48,6 +48,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:sessionTimelineFilter': [value: SessionTimelineFilter]
+  'patch:sessionEditForm': [patch: Partial<SessionEditForm>]
+  'patch:sessionCreateForm': [patch: Partial<SessionCreateForm>]
   'focus-notes': []
   'start-session-edit': [sessionItem: SessionSummary]
   'delete-session': [sessionItem: SessionSummary]
@@ -55,6 +57,22 @@ const emit = defineEmits<{
   'cancel-session-edit': []
   'create-session': []
 }>()
+
+function onSessionEditFieldInput(
+  key: keyof SessionEditForm,
+  event: Event
+): void {
+  const target = event.target as HTMLInputElement | HTMLTextAreaElement
+  emit('patch:sessionEditForm', { [key]: target.value })
+}
+
+function onSessionCreateFieldInput(
+  key: keyof SessionCreateForm,
+  event: Event
+): void {
+  const target = event.target as HTMLInputElement | HTMLTextAreaElement
+  emit('patch:sessionCreateForm', { [key]: target.value })
+}
 </script>
 
 <template>
@@ -201,12 +219,13 @@ const emit = defineEmits<{
                 <label class="form-control">
                   <span class="label-text mb-2">Date</span>
                   <input
-                    v-model="props.sessionEditForm.date"
+                    :value="props.sessionEditForm.date"
                     type="date"
                     class="input input-bordered ui-critical-control"
                     :aria-invalid="sessionEditDateError ? 'true' : 'false'"
                     :aria-errormessage="sessionEditDateError ? 'session-edit-date-error' : undefined"
                     :aria-describedby="sessionEditDateError ? 'session-edit-date-error' : undefined"
+                    @input="onSessionEditFieldInput('date', $event)"
                   />
                   <p v-if="sessionEditDateError" id="session-edit-date-error" class="label text-error text-xs">
                     {{ sessionEditDateError }}
@@ -215,22 +234,24 @@ const emit = defineEmits<{
                 <label class="form-control">
                   <span class="label-text mb-2">Titre</span>
                   <input
-                    v-model="props.sessionEditForm.name"
+                    :value="props.sessionEditForm.name"
                     type="text"
                     class="input input-bordered ui-critical-control"
                     :aria-invalid="sessionEditError ? 'true' : 'false'"
                     maxlength="100"
                     placeholder="Titre optionnel"
+                    @input="onSessionEditFieldInput('name', $event)"
                   />
                 </label>
                 <label class="form-control lg:col-span-2">
                   <span class="label-text mb-2">Description</span>
                   <textarea
-                    v-model="props.sessionEditForm.description"
+                    :value="props.sessionEditForm.description"
                     class="textarea textarea-bordered ui-critical-control min-h-24"
                     :aria-invalid="sessionEditError ? 'true' : 'false'"
                     maxlength="500"
                     placeholder="Résumé, enjeux, conséquences..."
+                    @input="onSessionEditFieldInput('description', $event)"
                   />
                 </label>
               </div>
@@ -276,13 +297,14 @@ const emit = defineEmits<{
             <label class="form-control">
               <span class="label-text mb-2">Date</span>
               <input
-                v-model="props.sessionCreateForm.date"
+                :value="props.sessionCreateForm.date"
                 type="date"
                 class="input input-bordered ui-critical-control"
                 :aria-invalid="sessionCreateDateError ? 'true' : 'false'"
                 :aria-errormessage="sessionCreateDateError ? 'session-create-date-error' : undefined"
                 :aria-describedby="sessionCreateDateError ? 'session-create-date-error' : undefined"
                 required
+                @input="onSessionCreateFieldInput('date', $event)"
               />
               <p v-if="sessionCreateDateError" id="session-create-date-error" class="label text-error text-xs">
                 {{ sessionCreateDateError }}
@@ -291,22 +313,24 @@ const emit = defineEmits<{
             <label class="form-control">
               <span class="label-text mb-2">Titre optionnel</span>
               <input
-                v-model="props.sessionCreateForm.name"
+                :value="props.sessionCreateForm.name"
                 type="text"
                 class="input input-bordered ui-critical-control"
                 :aria-invalid="sessionCreateError ? 'true' : 'false'"
                 maxlength="100"
                 placeholder="Ex. Arrivée à Middenheim"
+                @input="onSessionCreateFieldInput('name', $event)"
               />
             </label>
             <label class="form-control md:col-span-2">
               <span class="label-text mb-2">Description optionnelle</span>
               <textarea
-                v-model="props.sessionCreateForm.description"
+                :value="props.sessionCreateForm.description"
                 class="textarea textarea-bordered ui-critical-control min-h-24"
                 :aria-invalid="sessionCreateError ? 'true' : 'false'"
                 maxlength="500"
                 placeholder="Résumé, objectifs, conséquences..."
+                @input="onSessionCreateFieldInput('description', $event)"
               />
             </label>
           </div>
