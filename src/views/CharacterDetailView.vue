@@ -1107,7 +1107,7 @@ import CharacterValueCard from '../components/ui/CharacterValueCard.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import StateCycleBadge from '../components/ui/StateCycleBadge.vue'
 import { useConfirmAction } from '../composables/useConfirmAction'
-import { useLiveSave } from '../composables/useLiveSave'
+import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
 import {
   type RealtimeUpdatePayload,
@@ -1507,43 +1507,54 @@ const armorByLocation = computed(() => {
   return totals
 })
 
-const { status, triggerSave, triggerSaveNow } = useLiveSave(
-  async (payload: typeof editable.value) => {
+const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpdate<
+  typeof editable.value
+>({
+  onSave: async (payload) => {
     if (!character.value) {
       return
     }
 
+    const normalizedPayload = {
+      ...editable.value,
+      ...payload,
+    }
+
     await updateCharacterCore(character.value.id, {
-      pv_max: payload.pvMax,
-      pv_current: payload.pvCurrent,
-      fortune_max: payload.fortuneMax,
-      fortune_current: payload.fortuneCurrent,
-      destiny_current: payload.destinyCurrent,
-      xp_total: payload.xpTotal,
-      xp_available: Math.min(payload.xpAvailable, payload.xpTotal),
-      insanity_points: Math.max(0, payload.insanityPoints),
-      money_gold: payload.moneyGold,
-      money_silver: payload.moneySilver,
-      money_copper: payload.moneyCopper,
+      pv_max: normalizedPayload.pvMax,
+      pv_current: normalizedPayload.pvCurrent,
+      fortune_max: normalizedPayload.fortuneMax,
+      fortune_current: normalizedPayload.fortuneCurrent,
+      destiny_current: normalizedPayload.destinyCurrent,
+      xp_total: normalizedPayload.xpTotal,
+      xp_available: Math.min(normalizedPayload.xpAvailable, normalizedPayload.xpTotal),
+      insanity_points: Math.max(0, normalizedPayload.insanityPoints),
+      money_gold: normalizedPayload.moneyGold,
+      money_silver: normalizedPayload.moneySilver,
+      money_copper: normalizedPayload.moneyCopper,
     })
 
-    markSavedEditable(payload)
+    markSavedEditable(normalizedPayload)
   },
-  500
-)
+  debounceMs: 500,
+})
 
 const {
   status: statSaveStatus,
-  triggerSave: triggerStatSave,
-  triggerSaveNow: triggerStatSaveNow,
-} = useLiveSave(
-  async (payload: {
+  update: triggerStatSave,
+  flush: triggerStatSaveNow,
+} = useOptimisticUpdate<{
     statCode: string
     currentAdvanced?: number
     baseValue?: number
     totalAdvanced?: number
-  }) => {
+  }>({
+  onSave: async (payload) => {
     if (!character.value) {
+      return
+    }
+
+    if (!payload.statCode) {
       return
     }
 
@@ -1553,8 +1564,8 @@ const {
       total_advanced: payload.totalAdvanced,
     })
   },
-  350
-)
+  debounceMs: 350,
+})
 
 const globalState = computed<'ok' | 'loading' | 'error'>(() => {
   if (status.value === 'error' || statSaveStatus.value === 'error') {
