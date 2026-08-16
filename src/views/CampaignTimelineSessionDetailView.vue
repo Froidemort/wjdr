@@ -76,8 +76,8 @@
 </template>
 
 <script setup lang="ts">
+import { useRouteParams } from '@vueuse/router'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import { getCampaignById } from '../services/campaignsRepository'
 import { getSessionById } from '../services/sessionsRepository'
 import { useAuthStore } from '../stores/auth'
@@ -87,15 +87,18 @@ import PageFooter from '../components/ui/PageFooter.vue'
 import SessionNotesPanel from '../components/ui/SessionNotesPanel.vue'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 
-const route = useRoute()
 const authStore = useAuthStore()
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const campaign = ref<CampaignSummary | null>(null)
 const sessionItem = ref<SessionSummary | null>(null)
 
-const campaignId = computed(() => String(route.params.campaignId ?? ''))
-const sessionEntryId = computed(() => String(route.params.sessionEntryId ?? ''))
+const campaignId = useRouteParams('campaignId', '', {
+  transform: (value) => String(value ?? ''),
+})
+const sessionEntryId = useRouteParams('sessionEntryId', '', {
+  transform: (value) => String(value ?? ''),
+})
 const isMj = computed(() => Boolean(campaign.value && authStore.user?.id === campaign.value.mjId))
 const sessionDisplayTitle = computed(() => {
   if (!sessionItem.value) {

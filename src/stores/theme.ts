@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { usePreferredDark, useStorage } from '@vueuse/core'
 import { ref } from 'vue'
 
 export type ThemeName = 'grimorium-light' | 'grimorium-dark'
@@ -8,6 +9,8 @@ const DARK_THEME: ThemeName = 'grimorium-dark'
 const LIGHT_THEME: ThemeName = 'grimorium-light'
 
 export const useThemeStore = defineStore('theme', () => {
+  const prefersDark = usePreferredDark()
+  const storedTheme = useStorage<ThemeName | null>(THEME_STORAGE_KEY, null)
   const theme = ref<ThemeName>(LIGHT_THEME)
 
   function setTheme(nextTheme: ThemeName): void {
@@ -17,7 +20,7 @@ export const useThemeStore = defineStore('theme', () => {
 
     theme.value = nextTheme
     document.documentElement.setAttribute('data-theme', nextTheme)
-    localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
+    storedTheme.value = nextTheme
   }
 
   function toggleTheme(): void {
@@ -25,11 +28,10 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   function initTheme(): void {
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY)
     const currentTheme = document.documentElement.getAttribute('data-theme')
 
-    if (storedTheme === DARK_THEME || storedTheme === LIGHT_THEME) {
-      setTheme(storedTheme)
+    if (storedTheme.value === DARK_THEME || storedTheme.value === LIGHT_THEME) {
+      setTheme(storedTheme.value)
       return
     }
 
@@ -38,8 +40,7 @@ export const useThemeStore = defineStore('theme', () => {
       return
     }
 
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    setTheme(prefersDark ? DARK_THEME : LIGHT_THEME)
+    setTheme(prefersDark.value ? DARK_THEME : LIGHT_THEME)
   }
 
   return {

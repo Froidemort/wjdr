@@ -1,7 +1,9 @@
+import { useTimeoutFn } from '@vueuse/core'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { CampaignSummary, SessionSummary } from '../types/domain'
 import { createSession, deleteSession, updateSession } from '../services/sessionsRepository'
+import { useConfirmAction } from './useConfirmAction'
 
 interface SessionEditForm {
   date: string
@@ -25,6 +27,7 @@ interface UseCampaignSessionsOptions {
 }
 
 export function useCampaignSessions(options: UseCampaignSessionsOptions) {
+  const { confirmAction } = useConfirmAction()
   const sessionCreateLoading = ref(false)
   const sessionCreateError = ref<string | null>(null)
   const sessionCreateDateError = ref<string | null>(null)
@@ -47,7 +50,14 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
   })
 
   const sessionActionSuccessMessage = ref<string | null>(null)
-  let sessionActionFeedbackTimer: ReturnType<typeof setTimeout> | null = null
+  const { start: startSessionActionFeedbackReset, stop: stopSessionActionFeedbackReset } =
+    useTimeoutFn(
+      () => {
+        sessionActionSuccessMessage.value = null
+      },
+      4500,
+      { immediate: false }
+    )
 
   const todaySessionDate = computed(() => new Date().toISOString().slice(0, 10))
 
@@ -162,13 +172,8 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
 
   function setSessionActionSuccess(message: string): void {
     sessionActionSuccessMessage.value = message
-    if (sessionActionFeedbackTimer) {
-      clearTimeout(sessionActionFeedbackTimer)
-    }
-
-    sessionActionFeedbackTimer = setTimeout(() => {
-      sessionActionSuccessMessage.value = null
-    }, 4500)
+    stopSessionActionFeedbackReset()
+    startSessionActionFeedbackReset()
   }
 
   function resetSessionCreateForm(): void {
@@ -276,13 +281,11 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
       return
     }
 
-    if (typeof window !== 'undefined') {
-      const confirmed = window.confirm(
-        `Supprimer la session du ${formatCampaignSessionDate(sessionItem.date)} ?`
-      )
-      if (!confirmed) {
-        return
-      }
+    const confirmed = await confirmAction(
+      `Supprimer la session du ${formatCampaignSessionDate(sessionItem.date)} ?`
+    )
+    if (!confirmed) {
+      return
     }
 
     try {
@@ -309,9 +312,7 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
   })
 
   onBeforeUnmount(() => {
-    if (sessionActionFeedbackTimer) {
-      clearTimeout(sessionActionFeedbackTimer)
-    }
+    stopSessionActionFeedbackReset()
   })
 
   return {

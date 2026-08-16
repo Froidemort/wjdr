@@ -1,12 +1,14 @@
+import { useClipboard } from '@vueuse/core'
 import { ref } from 'vue'
 
 export function useCopyFeedback() {
   const feedbackMap = ref<Record<string, string>>({})
+  const { copy: copyToClipboard, isSupported } = useClipboard()
 
   async function copy(id: string, text: string, successMessage = 'Copie reussie !'): Promise<void> {
     try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text)
+      if (isSupported.value) {
+        await copyToClipboard(text)
       }
     } catch {
       console.warn('Clipboard API not available or failed to write text :', text)

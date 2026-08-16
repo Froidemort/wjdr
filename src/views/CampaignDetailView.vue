@@ -158,15 +158,11 @@
 
 <script setup lang="ts">
 import { ChevronLeft } from '@lucide/vue'
+import { useTimeoutFn } from '@vueuse/core'
+import { useRouteParams } from '@vueuse/router'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import { listCharactersByCampaign } from '../services/charactersRepository'
-import {
-  createSession,
-  deleteSession,
-  listSessionsForCampaign,
-  updateSession,
-} from '../services/sessionsRepository'
+import { listSessionsForCampaign } from '../services/sessionsRepository'
 import { getCampaignById, updateCampaignArchivedState } from '../services/campaignsRepository'
 import { useAuthStore } from '../stores/auth'
 import type { CharacterSummary, CampaignSummary, SessionSummary } from '../types/domain'
@@ -180,12 +176,13 @@ import { useCampaignSessions } from '../composables/useCampaignSessions'
 import SessionAccessRequest from '../components/ui/SessionAccessRequest.vue'
 import SessionNotesPanel from '../components/ui/SessionNotesPanel.vue'
 import { useCampaignManagement } from '../composables/useCampaignManagement'
+import { useConfirmAction } from '../composables/useConfirmAction'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
 import { useDeviceBreakpoint } from '../composables/useDeviceBreakpoint'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 
-const route = useRoute()
 const authStore = useAuthStore()
+const { confirmAction } = useConfirmAction()
 const { isMobile } = useDeviceBreakpoint()
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
@@ -203,9 +200,18 @@ const notesFocusedSessionLabel = ref<string | null>(null)
 const characterCreateSuccess = ref<string | null>(null)
 const highlightedCharacterId = ref<string | null>(null)
 const characterListFilter = ref<'all' | 'mine' | 'others'>('all')
-let characterFeedbackTimer: ReturnType<typeof setTimeout> | null = null
+const { start: startCharacterFeedbackReset, stop: stopCharacterFeedbackReset } = useTimeoutFn(
+  () => {
+    characterCreateSuccess.value = null
+    highlightedCharacterId.value = null
+  },
+  5000,
+  { immediate: false }
+)
 
-const campaignId = computed(() => String(route.params.id ?? ''))
+const campaignId = useRouteParams('id', '', {
+  transform: (value) => String(value ?? ''),
+})
 const isMj = computed(() => Boolean(session.value && authStore.user?.id === session.value.mjId))
 const managementUserId = computed(() => authStore.user?.id ?? null)
 const {
@@ -323,12 +329,9 @@ const characterStats = computed(() => {
 })
 
 function resetCharacterCreationFeedback(): void {
+  stopCharacterFeedbackReset()
   characterCreateSuccess.value = null
   highlightedCharacterId.value = null
-  if (characterFeedbackTimer) {
-    clearTimeout(characterFeedbackTimer)
-    characterFeedbackTimer = null
-  }
 }
 
 function formatSessionNoteLabel(sessionItem: SessionSummary): string {
@@ -426,14 +429,12 @@ async function toggleSessionArchivedState(): Promise<void> {
     return
   }
 
-  if (typeof window !== 'undefined') {
-    const confirmationMessage = session.value.isArchived
-      ? 'Restaurer cette campagne ? Les invitations et ajouts redeviendront disponibles.'
-      : 'Archiver cette campagne ? Les invitations et ajouts seront bloques.'
-    const confirmed = window.confirm(confirmationMessage)
-    if (!confirmed) {
-      return
-    }
+  const confirmationMessage = session.value.isArchived
+    ? 'Restaurer cette campagne ? Les invitations et ajouts redeviendront disponibles.'
+    : 'Archiver cette campagne ? Les invitations et ajouts seront bloques.'
+  const confirmed = await confirmAction(confirmationMessage)
+  if (!confirmed) {
+    return
   }
 
   archiveBusy.value = true
@@ -459,14 +460,8 @@ async function onCharacterCreated(characterId: string): Promise<void> {
     block: 'start',
   })
 
-  if (characterFeedbackTimer) {
-    clearTimeout(characterFeedbackTimer)
-  }
-
-  characterFeedbackTimer = setTimeout(() => {
-    characterCreateSuccess.value = null
-    highlightedCharacterId.value = null
-  }, 5000)
+  stopCharacterFeedbackReset()
+  startCharacterFeedbackReset()
 }
 
 async function copyCampaignCode(): Promise<void> {
