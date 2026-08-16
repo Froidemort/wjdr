@@ -524,6 +524,64 @@ input[type="radio"]:focus-visible {
   backdrop-filter: blur(2px);
 }
 
+/*
+  Native <dialog> UA stylesheet uses a white canvas background.
+  DaisyUI also fades the full-screen overlay (opacity + @starting-style),
+  which reads as a white flash on open. Kill both.
+*/
+dialog.modal {
+  border: none;
+  color: inherit;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  background-color: transparent !important;
+  transition: none !important;
+}
+
+dialog.modal[open] {
+  display: grid !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  background-color: color-mix(in oklab, var(--color-neutral) 52%, transparent) !important;
+  transition: none !important;
+}
+
+dialog.modal[open] .modal-box {
+  opacity: 1;
+  translate: 0;
+  scale: 1;
+  transition:
+    translate 0.18s ease-out,
+    scale 0.18s ease-out,
+    opacity 0.14s ease-out;
+}
+
+/* Closed: hard hide (avoids empty-content flash during DaisyUI visibility delay) */
+dialog.modal:not([open]) {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  background-color: transparent !important;
+}
+
+dialog.modal:not([open]) .modal-box {
+  opacity: 0 !important;
+  translate: none !important;
+  scale: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.modal,
+  dialog.modal[open],
+  dialog.modal[open] .modal-box {
+    transition: none !important;
+  }
+}
+
 #mobile-nav-menu::backdrop {
   background: color-mix(in oklab, var(--color-neutral) 38%, transparent);
   backdrop-filter: blur(1px);
