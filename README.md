@@ -2,13 +2,13 @@
 
 Companion app pour Warhammer Fantasy Roleplay 2e, construite avec Vue 3 + TypeScript + Supabase.
 
-## Fonctionnalites
+## Fonctionnalités
 
 - Auth Supabase (email + username), profil et avatar
 - Gestion des campagnes, sessions et notes de session
-- Invitations, demandes d'acces et notifications
+- Invitations, demandes d'accès et notifications
 - Gestion des personnages et feuille rapide (stats, XP, ressources, inventaire)
-- Mises a jour realtime (sessions, personnages, notifications)
+- Mises à jour realtime (sessions, personnages, notifications)
 
 ## Stack
 
@@ -17,7 +17,7 @@ Companion app pour Warhammer Fantasy Roleplay 2e, construite avec Vue 3 + TypeSc
 - Supabase (Auth, Postgres, Realtime)
 - Vite, Vitest, Playwright
 
-## Prerequis
+## Prérequis
 
 - Node.js 22+
 - npm 10+
@@ -25,21 +25,21 @@ Companion app pour Warhammer Fantasy Roleplay 2e, construite avec Vue 3 + TypeSc
 
 ## Variables d'environnement
 
-Creer `.env` a la racine:
+Créer `.env` à la racine:
 
 ```bash
 VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY # ou VITE_SUPABASE_PUBLISHABLE_KEY
 ```
 
-## Base de donnees
+## Base de données
 
-Reference schema/data publique pour initialiser la base de données :
+Référence schema/data publique pour initialiser la base de données :
 
 - `migrations/public_schema.sql` : schéma initial
 - `migrations/public_data.sql` : données initiales du livre de règles
 
-Executer les scripts SQL dans l'ordre:
+Exécuter les scripts SQL dans l'ordre:
 
 1. `migrations/001_rename_sessions_to_campaigns.sql`
 2. `migrations/002_create_sessions_table.sql`
@@ -47,7 +47,7 @@ Executer les scripts SQL dans l'ordre:
 4. `migrations/004_unique_campaign_code.sql`
 
 
-## Developpement
+## Développement
 
 ```bash
 npm install
@@ -72,5 +72,5 @@ PLAYWRIGHT_BASE_URL=https://your-preview-url.vercel.app npm run test:e2e:deploy
 
 ## Notes
 
-- UI en francais
+- UI en français
 - Identifiants/structure de code en anglais

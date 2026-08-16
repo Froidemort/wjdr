@@ -89,7 +89,7 @@ function onEditDraftFieldInput(
         @update:model-value="onSearchQueryUpdate"
       />
       <p class="text-xs opacity-70">
-        Priorite de tri: correspondances du titre, puis du texte.
+        Priorité de tri: correspondances du titre, puis du texte.
       </p>
     </div>
 
@@ -125,9 +125,9 @@ function onEditDraftFieldInput(
             </div>
             <div class="flex items-center gap-2">
               <span class="badge" :class="note.isVisible ? 'badge-success' : 'badge-neutral'">
-                {{ note.isVisible ? 'Visible' : 'Masquee' }}
+                {{ note.isVisible ? 'Visible' : 'Masquée' }}
               </span>
-              <span v-if="note.isArchived" class="badge badge-warning">Archivee</span>
+              <span v-if="note.isArchived" class="badge badge-warning">Archivée</span>
             </div>
           </div>
 
@@ -142,7 +142,7 @@ function onEditDraftFieldInput(
                 :aria-busy="isBusy(`visibility-${note.id}`) ? 'true' : 'false'"
                 @click="emit('toggle-visibility', note)"
               >
-                {{ note.isVisible ? 'Rendre privee' : 'Rendre visible' }}
+                {{ note.isVisible ? 'Rendre privée' : 'Rendre visible' }}
               </button>
               <button
                 v-if="isMj"
@@ -151,7 +151,7 @@ function onEditDraftFieldInput(
                 :aria-busy="isBusy(`archive-${note.id}`) ? 'true' : 'false'"
                 @click="emit('toggle-archived', note)"
               >
-                {{ note.isArchived ? 'Desarchiver' : 'Archiver' }}
+                {{ note.isArchived ? 'Désarchiver' : 'Archiver' }}
               </button>
               <button
                 class="btn btn-xs ui-critical-action"

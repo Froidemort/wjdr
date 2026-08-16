@@ -85,10 +85,10 @@ function onSessionCreateFieldInput(
             <span class="hidden sm:inline">{{ sessions.length }} sessions</span>
           </span>
           <span class="badge badge-outline badge-sm whitespace-nowrap">
-            A venir: {{ timelineStats.upcoming }}
+            À venir: {{ timelineStats.upcoming }}
           </span>
           <span class="badge badge-outline badge-sm whitespace-nowrap">
-            Passees: {{ timelineStats.past }}
+            Passées: {{ timelineStats.past }}
           </span>
           <span v-if="nextSession" class="badge badge-soft badge-success badge-sm whitespace-nowrap">
             <CalendarDays class="h-3.5 w-3.5" aria-hidden="true" />
@@ -111,14 +111,14 @@ function onSessionCreateFieldInput(
               :class="sessionTimelineFilter === 'upcoming' ? 'btn-active' : ''"
               @click="emit('update:sessionTimelineFilter', 'upcoming')"
             >
-              A venir
+              À venir
             </button>
             <button
               class="btn btn-xs ui-critical-action join-item"
               :class="sessionTimelineFilter === 'past' ? 'btn-active' : ''"
               @click="emit('update:sessionTimelineFilter', 'past')"
             >
-              Passees
+              Passées
             </button>
           </div>
           <button class="btn btn-xs ui-critical-action" @click="emit('focus-notes')">Aller aux notes</button>

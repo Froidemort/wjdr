@@ -15,25 +15,25 @@ const CampaignDetailView = () => import('../views/CampaignDetailView.vue')
 const CampaignListView = () => import('../views/CampaignListView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
-  // Page d'accueil
+  // Home page
   {
     path: '/',
     component: HomeView,
     meta: { requiresAuth: false, hideFooter: false},
   },
-  // Liste des personnages avec quelques détails
+  // Character list with summary details
   {
     path: '/characters',
     component: CharacterListView,
     meta: { requiresAuth: true, hideFooter: true},
   },
-  // Liste des campagnes
+  // Campaign list
   {
     path: '/campaigns',
     component: CampaignListView,
     meta: { requiresAuth: true, hideFooter: true},
   },
-  // Page de détail d'un personnage, surtout utile pour un joueur qui veut gérer sa fiche pendant une partie
+  // Character detail page, mostly used by players during sessions
   {
     path: '/characters/:id',
     component: CharacterDetailView,
@@ -50,10 +50,10 @@ export const appRoutes: RouteRecordRaw[] = [
     component: ProfileView,
     meta: { requiresAuth: true, hideFooter: true },
   },
-  // Page de détail d'une campagne, avec timeline des sessions datées.
-  // La page permet de voir rapidement :
-  // - le rôle qu'a l'utilisateur dans la campagne (PJ ou MJ)
-  // - la liste des personnages avec leur nom, leur race et leur carrière actuelle.
+  // Campaign detail page with dated session timeline.
+  // Quick view includes:
+  // - current user role in campaign (player or game master)
+  // - character list with name, race, and current career.
   {
     path: '/campaigns/:id',
     component: CampaignDetailView,

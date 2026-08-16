@@ -66,11 +66,11 @@ const emit = defineEmits<{
             <SearchInput
               :model-value="inviteQuery"
               placeholder="Chercher un joueur (username ou email)"
-              aria-label="Recherche de joueur a inviter"
+              aria-label="Recherche de joueur à inviter"
               @update:model-value="emit('update:inviteQuery', $event)"
             />
 
-            <p class="text-xs opacity-70">Entrez au moins 2 caracteres pour rechercher un joueur.</p>
+            <p class="text-xs opacity-70">Entrez au moins 2 caractères pour rechercher un joueur.</p>
 
             <div v-if="inviteQueryError" role="alert" class="alert alert-error alert-soft text-sm">
               <span>{{ inviteQueryError }}</span>
@@ -82,7 +82,7 @@ const emit = defineEmits<{
             </div>
 
             <div v-if="showInviteNoResult" role="status" class="alert alert-info alert-soft text-sm">
-              <span>Aucun joueur trouve. Essayez un autre email ou nom d'utilisateur.</span>
+              <span>Aucun joueur trouvé. Essayez un autre email ou nom d'utilisateur.</span>
             </div>
 
             <div v-if="inviteCandidates.length > 0" class="max-h-56 overflow-y-auto rounded-box border border-base-300">
@@ -106,12 +106,12 @@ const emit = defineEmits<{
 
             <div v-if="inviteCandidates.length > 0 || selectedInviteeCount > 0" class="flex flex-wrap items-center gap-2">
               <button class="btn btn-xs ui-critical-action" :disabled="inviteCandidates.length === 0" @click="emit('select-all-invite-candidates')">
-                Tout selectionner
+                Tout sélectionner
               </button>
               <button class="btn btn-xs btn-ghost ui-critical-action" :disabled="selectedInviteeCount === 0" @click="emit('clear-invite-selection')">
-                Effacer la selection
+                Effacer la sélection
               </button>
-              <span class="badge badge-outline">Selection: {{ selectedInviteeCount }}</span>
+              <span class="badge badge-outline">Sélection: {{ selectedInviteeCount }}</span>
             </div>
 
             <div class="flex items-center gap-2">
@@ -146,7 +146,7 @@ const emit = defineEmits<{
               <button class="btn btn-xs join-item ui-critical-action" :class="invitationFilter === 'unread' ? 'btn-active' : ''" @click="emit('update:invitationFilter', 'unread')">Non lues</button>
               <button class="btn btn-xs join-item ui-critical-action" :class="invitationFilter === 'read' ? 'btn-active' : ''" @click="emit('update:invitationFilter', 'read')">Lues</button>
             </div>
-            <div v-if="invitations.length === 0" class="text-sm opacity-70">Aucun joueur invite.</div>
+            <div v-if="invitations.length === 0" class="text-sm opacity-70">Aucun joueur invité.</div>
             <div v-else-if="filteredInvitations.length === 0" class="text-sm opacity-70">Aucune invitation ne correspond au filtre actif.</div>
             <ul v-else class="list bg-base-200 rounded-box">
               <li v-for="invitation in filteredInvitations" :key="invitation.userId" class="list-row">
