@@ -53,7 +53,7 @@ describe('offlineSyncService', () => {
     const result = await replayOfflineQueue()
 
     expect(updateCharacterCoreMock).toHaveBeenCalledTimes(1)
-    expect(result).toEqual({ applied: 1, dropped: 0, pending: 0 })
+    expect(result).toEqual({ applied: 1, reconciled: 0, dropped: 0, pending: 0 })
   })
 
   it('keeps entry when replay fails with transient error', async () => {
@@ -72,7 +72,7 @@ describe('offlineSyncService', () => {
 
     const result = await replayOfflineQueue()
 
-    expect(result).toEqual({ applied: 0, dropped: 0, pending: 1 })
+    expect(result).toEqual({ applied: 0, reconciled: 0, dropped: 0, pending: 1 })
     expect((await listQueuedUpdates())[0]?.retryCount).toBe(1)
   })
 
@@ -93,7 +93,7 @@ describe('offlineSyncService', () => {
 
     const result = await replayOfflineQueue({ onDropped })
 
-    expect(result).toEqual({ applied: 0, dropped: 1, pending: 0 })
+    expect(result).toEqual({ applied: 0, reconciled: 0, dropped: 1, pending: 0 })
     expect(onDropped).toHaveBeenCalledTimes(1)
   })
 
@@ -122,9 +122,41 @@ describe('offlineSyncService', () => {
       localUpdatedAt: new Date('2025-01-02T11:30:00.000Z').getTime(),
     })
 
-    const result = await replayOfflineQueue()
+    const onReconciled = vi.fn()
+    const result = await replayOfflineQueue({ onReconciled })
 
     expect(updateSessionMock).not.toHaveBeenCalled()
-    expect(result).toEqual({ applied: 1, dropped: 0, pending: 0 })
+    expect(onReconciled).toHaveBeenCalledTimes(1)
+    expect(result).toEqual({ applied: 0, reconciled: 1, dropped: 0, pending: 0 })
+  })
+
+  it('applies local session patch when local update is newer than remote mutation', async () => {
+    getSessionByIdMock.mockResolvedValue({
+      id: 'session-2',
+      campaignId: 'camp-1',
+      date: '2025-01-03',
+      name: 'Session 2',
+      description: null,
+      createdAt: '2025-01-03T10:00:00.000Z',
+      updatedAt: '2025-01-03T12:00:00.000Z',
+    })
+
+    await enqueueOfflineUpdate({
+      entityType: 'session',
+      entityId: 'session-2',
+      payload: {
+        kind: 'session',
+        patch: {
+          name: 'Nom local récent',
+        },
+      },
+      baseUpdatedAt: '2025-01-03T11:00:00.000Z',
+      localUpdatedAt: new Date('2025-01-03T13:00:00.000Z').getTime(),
+    })
+
+    const result = await replayOfflineQueue()
+
+    expect(updateSessionMock).toHaveBeenCalledTimes(1)
+    expect(result).toEqual({ applied: 1, reconciled: 0, dropped: 0, pending: 0 })
   })
 })
