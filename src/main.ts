@@ -1,8 +1,8 @@
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
-import { applyAppSplashCssVars } from './ui/config/appSplash'
-import router from './ui/router'
-import './ui/theme/theme.css'
+import { applyAppSplashCssVars } from './config/appSplash'
+import router from './router/router'
+import './assets/css/theme.css'
 import App from './App.vue'
 import { useThemeStore } from './stores/theme'
 

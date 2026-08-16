@@ -1,11 +1,11 @@
-export interface PercentileCheckInput {
+export interface ResolvePercentileCheckInput {
   baseTarget: number
   difficulty?: number
   modifier?: number
-  roll?: number
+  roll: number
 }
 
-export interface PercentileCheckResult {
+export interface ResolvePercentileCheckResult {
   roll: number
   baseTarget: number
   effectiveTarget: number
@@ -15,69 +15,61 @@ export interface PercentileCheckResult {
   isDouble: boolean
 }
 
-export type BonusExpressionValues = Record<string, number>
-
-const BONUS_EXPRESSION_PATTERN = /^([A-Z]+)([+-]\d+)?$/
-
 function clampPercentileTarget(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0
-  }
-
-  return Math.min(99, Math.max(0, Math.trunc(value)))
+  return Math.max(1, Math.min(99, Math.floor(value)))
 }
 
-function normalizePercentileRoll(value: number): number {
-  if (!Number.isFinite(value)) {
-    throw new Error('Invalid percentile roll.')
+function isDoubleRoll(roll: number): boolean {
+  if (roll < 11 || roll > 99) {
+    return false
   }
 
-  const normalized = Math.trunc(value)
-  if (normalized < 1 || normalized > 100) {
-    throw new Error('Percentile roll must be between 1 and 100.')
-  }
-
-  return normalized
+  const tens = Math.floor(roll / 10)
+  const ones = roll % 10
+  return tens === ones
 }
 
-export function rollPercentile(random: () => number = Math.random): number {
-  const result = Math.floor(random() * 100) + 1
-  return normalizePercentileRoll(result)
-}
-
-export function resolvePercentileCheck(input: PercentileCheckInput): PercentileCheckResult {
-  const roll = normalizePercentileRoll(input.roll ?? rollPercentile())
+export function resolvePercentileCheck(
+  input: ResolvePercentileCheckInput
+): ResolvePercentileCheckResult {
+  const baseTarget = Math.floor(input.baseTarget)
   const effectiveTarget = clampPercentileTarget(
-    input.baseTarget + (input.difficulty ?? 0) + (input.modifier ?? 0)
+    baseTarget + (input.difficulty ?? 0) + (input.modifier ?? 0)
   )
+  const roll = Math.max(1, Math.min(100, Math.floor(input.roll)))
   const margin = effectiveTarget - roll
 
   return {
     roll,
-    baseTarget: Math.trunc(input.baseTarget),
+    baseTarget,
     effectiveTarget,
     success: roll <= effectiveTarget,
     margin,
-    tensMargin: Math.trunc(Math.abs(margin) / 10),
-    isDouble: roll >= 11 && roll < 100 && roll % 11 === 0,
+    tensMargin: Math.floor(Math.abs(margin) / 10),
+    isDouble: isDoubleRoll(roll),
   }
 }
 
-export function evaluateBonusExpression(expression: string, values: BonusExpressionValues): number {
+export function evaluateBonusExpression(
+  expression: string,
+  bonuses: Record<string, number>
+): number {
   const normalized = expression.trim().toUpperCase()
-  const match = BONUS_EXPRESSION_PATTERN.exec(normalized)
+  const match = normalized.match(/^([A-Z]+)([+-]\d+)?$/)
 
   if (!match) {
-    throw new Error('Invalid bonus expression.')
+    return 0
   }
 
-  const statKey = match[1]
+  const statCode = match[1]
   const modifier = match[2] ? Number(match[2]) : 0
-  const statValue = values[statKey]
+  const base = Number(bonuses[statCode] ?? 0)
 
-  if (!Number.isFinite(statValue)) {
-    throw new Error(`Missing value for ${statKey}.`)
-  }
+  return base + modifier
+}
 
-  return Math.trunc(statValue) + modifier
+export function rollPercentile(randomSource: () => number = Math.random): number {
+  const raw = randomSource()
+  const clamped = Math.max(0, Math.min(0.999999, raw))
+  return Math.floor(clamped * 100) + 1
 }
