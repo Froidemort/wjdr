@@ -4,6 +4,7 @@ import type { Ref } from 'vue'
 import type { CampaignSummary, SessionSummary } from '../types/domain'
 import { createSession, deleteSession, updateSession } from '../services/sessionsRepository'
 import { useConfirmAction } from './useConfirmAction'
+import { useOptimisticUpdate } from './useOptimisticUpdate'
 
 interface SessionEditForm {
   date: string
@@ -47,6 +48,28 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
     date: '',
     name: '',
     description: '',
+  })
+  const {
+    flush: flushSessionEditSave,
+    error: sessionEditSaveError,
+  } = useOptimisticUpdate<{
+    sessionId: string
+    date: string
+    name: string
+    description: string
+  }>({
+    onSave: async (payload) => {
+      if (!payload.sessionId || !payload.date) {
+        return
+      }
+
+      await updateSession(payload.sessionId, {
+        date: payload.date,
+        name: (payload.name ?? '').trim() || null,
+        description: (payload.description ?? '').trim() || null,
+      })
+    },
+    debounceMs: 500,
   })
 
   const sessionActionSuccessMessage = ref<string | null>(null)
@@ -224,11 +247,17 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
     sessionEditError.value = null
 
     try {
-      await updateSession(targetSessionId, {
+      await flushSessionEditSave({
+        sessionId: targetSessionId,
         date,
-        name: sessionEditForm.value.name.trim() || null,
-        description: sessionEditForm.value.description.trim() || null,
+        name: sessionEditForm.value.name,
+        description: sessionEditForm.value.description,
       })
+
+      if (sessionEditSaveError.value) {
+        throw sessionEditSaveError.value
+      }
+
       cancelSessionEdit()
       await options.refreshSessionDetail()
       setSessionActionSuccess('Session mise a jour.')
