@@ -8,6 +8,8 @@ import { isTransientError } from './shared/networkErrors'
 import { updateCharacterCore, updateCharacterStatValues } from './charactersRepository'
 import { getSessionById, updateSession } from './sessionsRepository'
 
+type ReplayOutcome = 'applied' | 'reconciled' | 'noop'
+
 function mapCharacterCorePatch(
   patch: Record<string, unknown>
 ): Partial<{
@@ -40,29 +42,29 @@ function mapCharacterCorePatch(
   return mapped
 }
 
-async function applyCharacterUpdate(entry: QueuedUpdate): Promise<void> {
+async function applyCharacterUpdate(entry: QueuedUpdate): Promise<ReplayOutcome> {
   const kind = String(entry.payload.kind ?? '')
 
   if (kind === 'character-core') {
     const patch = entry.payload.patch
     if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
-      return
+      return 'noop'
     }
 
     const mapped = mapCharacterCorePatch(patch as Record<string, unknown>)
     if (Object.keys(mapped).length === 0) {
-      return
+      return 'noop'
     }
 
     await updateCharacterCore(entry.entityId, mapped)
-    return
+    return 'applied'
   }
 
   if (kind === 'character-stat') {
     const statCode = entry.payload.statCode
     const patch = entry.payload.patch
     if (typeof statCode !== 'string' || !patch || typeof patch !== 'object' || Array.isArray(patch)) {
-      return
+      return 'noop'
     }
 
     const statPatch = patch as Record<string, unknown>
@@ -73,7 +75,10 @@ async function applyCharacterUpdate(entry: QueuedUpdate): Promise<void> {
       total_advanced:
         typeof statPatch.totalAdvanced === 'number' ? statPatch.totalAdvanced : undefined,
     })
+    return 'applied'
   }
+
+  return 'noop'
 }
 
 function isLocalMoreRecent(localUpdatedAt: number | null, remoteUpdatedAt: string | null): boolean {
@@ -89,15 +94,15 @@ function isLocalMoreRecent(localUpdatedAt: number | null, remoteUpdatedAt: strin
   return localUpdatedAt >= remoteTs
 }
 
-async function applySessionUpdate(entry: QueuedUpdate): Promise<void> {
+async function applySessionUpdate(entry: QueuedUpdate): Promise<ReplayOutcome> {
   const kind = String(entry.payload.kind ?? '')
   if (kind !== 'session') {
-    return
+    return 'noop'
   }
 
   const patch = entry.payload.patch
   if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
-    return
+    return 'noop'
   }
 
   const session = await getSessionById(entry.entityId)
@@ -111,7 +116,7 @@ async function applySessionUpdate(entry: QueuedUpdate): Promise<void> {
     new Date(session.updatedAt as string).getTime() > new Date(baseUpdatedAt as string).getTime()
 
   if (hasRemoteMutationSinceBase && !isLocalMoreRecent(entry.localUpdatedAt, session.updatedAt)) {
-    return
+    return 'reconciled'
   }
 
   const source = patch as Record<string, unknown>
@@ -123,33 +128,44 @@ async function applySessionUpdate(entry: QueuedUpdate): Promise<void> {
         ? (source.description as string | null)
         : undefined,
   })
+
+  return 'applied'
 }
 
-async function applyQueuedUpdate(entry: QueuedUpdate): Promise<void> {
+async function applyQueuedUpdate(entry: QueuedUpdate): Promise<ReplayOutcome> {
   if (entry.entityType === 'character') {
-    await applyCharacterUpdate(entry)
-    return
+    return applyCharacterUpdate(entry)
   }
 
   if (entry.entityType === 'session') {
-    await applySessionUpdate(entry)
+    return applySessionUpdate(entry)
   }
+
+  return 'noop'
 }
 
 export async function replayOfflineQueue(options?: {
   onDropped?: (entry: QueuedUpdate, error: unknown) => void
   onApplied?: (entry: QueuedUpdate) => void
-}): Promise<{ applied: number; dropped: number; pending: number }> {
+  onReconciled?: (entry: QueuedUpdate) => void
+}): Promise<{ applied: number; reconciled: number; dropped: number; pending: number }> {
   const entries = await listQueuedUpdates()
   let applied = 0
+  let reconciled = 0
   let dropped = 0
 
   for (const entry of entries) {
     try {
-      await applyQueuedUpdate(entry)
+      const outcome = await applyQueuedUpdate(entry)
       await removeQueuedUpdate(entry.id)
-      applied += 1
-      options?.onApplied?.(entry)
+
+      if (outcome === 'reconciled') {
+        reconciled += 1
+        options?.onReconciled?.(entry)
+      } else if (outcome === 'applied') {
+        applied += 1
+        options?.onApplied?.(entry)
+      }
     } catch (error) {
       if (isTransientError(error)) {
         await incrementQueuedRetry(entry.id)
@@ -163,5 +179,5 @@ export async function replayOfflineQueue(options?: {
   }
 
   const pending = (await listQueuedUpdates()).length
-  return { applied, dropped, pending }
+  return { applied, reconciled, dropped, pending }
 }
