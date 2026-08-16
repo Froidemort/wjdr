@@ -10,7 +10,7 @@ vi.mock('../../src/db/supabase', () => ({
   },
 }))
 
-import { replaceCharacterTotalAdvancedValues } from '../../src/repositories/charactersRepository'
+import { replaceCharacterTotalAdvancedValues } from '../../src/services/charactersRepository'
 
 describe('replaceCharacterTotalAdvancedValues', () => {
   beforeEach(() => {

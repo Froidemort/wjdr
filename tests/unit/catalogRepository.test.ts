@@ -10,7 +10,7 @@ vi.mock('../../src/db/supabase', () => ({
   },
 }))
 
-import { searchCatalog } from '../../src/repositories/catalogRepository'
+import { searchCatalog } from '../../src/services/catalogRepository'
 
 type QueryBuilder = {
   select: ReturnType<typeof vi.fn>
