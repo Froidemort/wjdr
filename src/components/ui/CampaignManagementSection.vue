@@ -7,7 +7,7 @@ import SearchInput from './SearchInput.vue'
 
 type InvitationFilter = 'all' | 'read' | 'unread'
 
-const props = defineProps<{
+defineProps<{
   session: CampaignSummary
   adminLoading: boolean
   inviteQuery: string

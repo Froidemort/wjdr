@@ -57,6 +57,8 @@
         :get-session-date-status="getSessionDateStatus"
         :build-campaign-session-detail-link="buildCampaignSessionDetailLink"
         @update:session-timeline-filter="sessionTimelineFilter = $event"
+        @patch:session-edit-form="patchSessionEditForm"
+        @patch:session-create-form="patchSessionCreateForm"
         @focus-notes="focusNotesPanel()"
         @start-session-edit="startSessionEdit"
         @delete-session="deleteCampaignSession"
@@ -337,6 +339,22 @@ function resetCharacterCreationFeedback(): void {
 function formatSessionNoteLabel(sessionItem: SessionSummary): string {
   const title = formatCampaignSessionTitle(sessionItem)
   return `${formatCampaignSessionDateCompact(sessionItem.date)} - ${title}`
+}
+
+function patchSessionEditForm(patch: {
+  date?: string
+  name?: string
+  description?: string
+}): void {
+  Object.assign(sessionEditForm.value, patch)
+}
+
+function patchSessionCreateForm(patch: {
+  date?: string
+  name?: string
+  description?: string
+}): void {
+  Object.assign(sessionCreateForm.value, patch)
 }
 
 async function focusNotesPanel(sessionItem?: SessionSummary): Promise<void> {

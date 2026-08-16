@@ -21,6 +21,19 @@ import { useSessionNoteEditor } from '../../composables/useSessionNoteEditor'
 import SessionNotesCreateCard from './SessionNotesCreateCard.vue'
 import SessionNotesListCard from './SessionNotesListCard.vue'
 
+interface SessionNoteCreateForm {
+  title: string
+  contentText: string
+  isVisible: boolean
+  sessionId: string
+}
+
+interface SessionNoteEditForm {
+  title: string
+  contentText: string
+  sessionId: string
+}
+
 const props = defineProps<{
   campaignId: string
   isMj: boolean
@@ -133,6 +146,14 @@ function resetCreateForm(): void {
   if (!effectiveSessionId.value) {
     resetLinkedSessionFilter()
   }
+}
+
+function patchCreateForm(patch: Partial<SessionNoteCreateForm>): void {
+  Object.assign(createForm, patch)
+}
+
+function patchEditDraft(patch: Partial<SessionNoteEditForm>): void {
+  Object.assign(editDraft, patch)
 }
 
 async function loadNotes(showLoading = true): Promise<void> {
@@ -309,6 +330,7 @@ watch(
       :sessions="sessions ?? []"
       :selected-session-id="selectedSessionId"
       :format-session-label="formatSessionLabel"
+      @patch:create-form="patchCreateForm"
       @create="handleCreate"
     />
 
@@ -336,6 +358,7 @@ watch(
       :format-session-label="formatSessionLabel"
       @update:linked-session-filter="linkedSessionFilter = $event"
       @update:search-query="searchQuery = $event"
+      @patch:edit-draft="patchEditDraft"
       @toggle-visibility="handleToggleVisibility"
       @toggle-archived="handleToggleArchived"
       @start-edit="startEdit"
