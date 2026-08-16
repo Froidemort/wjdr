@@ -1,32 +1,13 @@
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useCopyFeedback } from './useCopyFeedback'
 
 export function useCopyLink() {
-  const copyFeedback = ref('')
-  let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
-
-  function buildLink(path: string): string {
-    if (typeof window === 'undefined') return path
-    return `${window.location.origin}${path}`
-  }
+  const feedbackId = '__copy-link-feedback__'
+  const { feedbackMap, copyLink: copyLinkWithFeedback } = useCopyFeedback()
+  const copyFeedback = computed(() => feedbackMap.value[feedbackId] ?? '')
 
   async function copyLink(path: string): Promise<void> {
-    const url = buildLink(path)
-
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url)
-      } else {
-        throw new Error('Clipboard API indisponible')
-      }
-      copyFeedback.value = 'Lien copié !'
-    } catch {
-      copyFeedback.value = 'Copie impossible automatiquement.'
-    }
-
-    if (copyFeedbackTimer) clearTimeout(copyFeedbackTimer)
-    copyFeedbackTimer = setTimeout(() => {
-      copyFeedback.value = ''
-    }, 2500)
+    await copyLinkWithFeedback(feedbackId, path, 'Lien copie !')
   }
 
   return { copyFeedback, copyLink }

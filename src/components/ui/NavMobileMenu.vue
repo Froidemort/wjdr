@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Bell, LogOut, UserCircle } from '@lucide/vue'
-import { useAuthLogout } from '../../composables/useAuthLogout'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 import { useMissivesInbox } from '../../composables/useMissivesInbox'
 import { mainNavLinks } from '../../config/navLinks'
 
@@ -8,11 +9,13 @@ import { mainNavLinks } from '../../config/navLinks'
 const open = defineModel<boolean>('open', { required: true })
 
 const { unreadCount } = useMissivesInbox()
-const logout = useAuthLogout()
+const authStore = useAuthStore()
+const router = useRouter()
 
 async function onLogout(): Promise<void> {
   open.value = false
-  await logout()
+  await authStore.signOut()
+  await router.replace('/')
 }
 
 function close(): void {

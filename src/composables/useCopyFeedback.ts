@@ -3,7 +3,7 @@ import { ref } from 'vue'
 export function useCopyFeedback() {
   const feedbackMap = ref<Record<string, string>>({})
 
-  async function copyText(id: string, text: string, successMessage = 'Copie reussie !'): Promise<void> {
+  async function copy(id: string, text: string, successMessage = 'Copie reussie !'): Promise<void> {
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text)
@@ -20,10 +20,14 @@ export function useCopyFeedback() {
     }, 2500)
   }
 
-  async function copyLink(id: string, path: string, successMessage = 'Lien copie !'): Promise<void> {
-    const url = typeof window !== 'undefined' ? `${window.location.origin}${path}` : path
-    await copyText(id, url, successMessage)
+  async function copyText(id: string, text: string, successMessage = 'Copie reussie !'): Promise<void> {
+    await copy(id, text, successMessage)
   }
 
-  return { feedbackMap, copyText, copyLink }
+  async function copyLink(id: string, path: string, successMessage = 'Lien copie !'): Promise<void> {
+    const url = typeof window !== 'undefined' ? `${window.location.origin}${path}` : path
+    await copy(id, url, successMessage)
+  }
+
+  return { feedbackMap, copy, copyText, copyLink }
 }
