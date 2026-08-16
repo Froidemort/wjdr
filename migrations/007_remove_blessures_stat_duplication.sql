@@ -20,10 +20,12 @@ SELECT
 	c.id,
 	'B',
 	0,
-	0,
+	GREATEST(c.pv_max, 0),
 	GREATEST(c.pv_max, 0)
 FROM public.characters c
 ON CONFLICT (character_id, stat_code) DO UPDATE
-SET total_advanced = EXCLUDED.total_advanced;
+SET
+	current_advanced = EXCLUDED.current_advanced,
+	total_advanced = EXCLUDED.total_advanced;
 
 COMMIT;

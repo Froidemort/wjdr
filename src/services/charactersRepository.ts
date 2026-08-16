@@ -102,7 +102,7 @@ async function resolveWoundsMaxByCharacterIds(
 
   const { data, error } = await supabase
     .from('character_stat_values')
-    .select('character_id, total_advanced')
+    .select('character_id, base_value, current_advanced')
     .eq('stat_code', WOUNDS_STAT_CODE)
     .in('character_id', uniqueIds)
 
@@ -111,8 +111,15 @@ async function resolveWoundsMaxByCharacterIds(
   }
 
   const byCharacterId = new Map<string, number>()
-  for (const row of (data ?? []) as Array<{ character_id: string; total_advanced: number }>) {
-    byCharacterId.set(row.character_id, normalizeNonNegativeInteger(Number(row.total_advanced)))
+  for (const row of (data ?? []) as Array<{
+    character_id: string
+    base_value: number
+    current_advanced: number
+  }>) {
+    const woundsMax =
+      normalizeNonNegativeInteger(Number(row.base_value)) +
+      normalizeNonNegativeInteger(Number(row.current_advanced))
+    byCharacterId.set(row.character_id, woundsMax)
   }
 
   return byCharacterId
@@ -164,7 +171,7 @@ async function syncCharacterWoundsCore(characterId: string, woundsMax: number): 
   }
 }
 
-async function setCharacterWoundsStatTotalAdvanced(
+async function setCharacterWoundsStatCurrentAdvanced(
   characterId: string,
   woundsMax: number
 ): Promise<void> {
@@ -184,9 +191,6 @@ async function setCharacterWoundsStatTotalAdvanced(
   const baseValue = normalizeNonNegativeInteger(
     Number((existingRow as { base_value: number } | null)?.base_value ?? 0)
   )
-  const currentAdvanced = normalizeNonNegativeInteger(
-    Number((existingRow as { current_advanced: number } | null)?.current_advanced ?? 0)
-  )
 
   const { error: upsertError } = await supabase
     .from('character_stat_values')
@@ -196,7 +200,7 @@ async function setCharacterWoundsStatTotalAdvanced(
           character_id: characterId,
           stat_code: WOUNDS_STAT_CODE,
           base_value: baseValue,
-          current_advanced: currentAdvanced,
+          current_advanced: normalizedWoundsMax,
           total_advanced: normalizedWoundsMax,
         },
       ],
@@ -399,7 +403,10 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
       (row) => row.stat_code.trim().toUpperCase() === WOUNDS_STAT_CODE
     )
     const woundsMax = normalizeNonNegativeInteger(
-      Number(woundsStat?.total_advanced ?? characterRow.pv_current)
+      Number(woundsStat?.base_value ?? 0)
+    ) +
+    normalizeNonNegativeInteger(
+      Number(woundsStat?.current_advanced ?? characterRow.pv_current)
     )
 
     return {
@@ -436,7 +443,7 @@ export async function updateCharacterCore(
   if (typeof payload.pv_current === 'number') {
     const { data: woundsRow, error: woundsError } = await supabase
       .from('character_stat_values')
-      .select('total_advanced')
+      .select('base_value, current_advanced')
       .eq('character_id', characterId)
       .eq('stat_code', WOUNDS_STAT_CODE)
       .maybeSingle()
@@ -445,9 +452,14 @@ export async function updateCharacterCore(
       throw woundsError
     }
 
-    const woundsMax = normalizeNonNegativeInteger(
-      Number((woundsRow as { total_advanced: number } | null)?.total_advanced ?? DEFAULT_WOUNDS_MAX)
-    )
+    const normalizedWoundsRow = woundsRow as
+      | { base_value: number; current_advanced: number }
+      | null
+    const woundsMax =
+      normalizeNonNegativeInteger(Number(normalizedWoundsRow?.base_value ?? 0)) +
+      normalizeNonNegativeInteger(
+        Number(normalizedWoundsRow?.current_advanced ?? DEFAULT_WOUNDS_MAX)
+      )
     updatePayload.pv_current = Math.min(normalizeNonNegativeInteger(payload.pv_current), woundsMax)
   }
 
@@ -528,9 +540,28 @@ export async function updateCharacterStatValues(
 
   if (
     trimmedStatCode.trim().toUpperCase() === WOUNDS_STAT_CODE &&
-    typeof updatePayload.total_advanced === 'number'
+    (typeof updatePayload.base_value === 'number' ||
+      typeof updatePayload.current_advanced === 'number')
   ) {
-    await syncCharacterWoundsCore(characterId, updatePayload.total_advanced)
+    const { data: woundsRow, error: woundsError } = await supabase
+      .from('character_stat_values')
+      .select('base_value, current_advanced')
+      .eq('character_id', characterId)
+      .eq('stat_code', WOUNDS_STAT_CODE)
+      .maybeSingle()
+
+    if (woundsError) {
+      throw woundsError
+    }
+
+    const normalizedWoundsRow = woundsRow as
+      | { base_value: number; current_advanced: number }
+      | null
+    const woundsMax =
+      normalizeNonNegativeInteger(Number(normalizedWoundsRow?.base_value ?? 0)) +
+      normalizeNonNegativeInteger(Number(normalizedWoundsRow?.current_advanced ?? 0))
+
+    await syncCharacterWoundsCore(characterId, woundsMax)
   }
 }
 
@@ -589,13 +620,6 @@ export async function replaceCharacterTotalAdvancedValues(
     throw error
   }
 
-  if (sanitizedByStatCode.has(WOUNDS_STAT_CODE)) {
-    await setCharacterWoundsStatTotalAdvanced(
-      trimmedCharacterId,
-      sanitizedByStatCode.get(WOUNDS_STAT_CODE) ?? 0
-    )
-    await syncCharacterWoundsCore(trimmedCharacterId, sanitizedByStatCode.get(WOUNDS_STAT_CODE) ?? 0)
-  }
 }
 
 export async function createCharacterForCampaign(payload: CreateCharacterPayload): Promise<string> {
@@ -649,6 +673,6 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
 
   const characterId = String((data as { id: string }).id)
   await createInitialStats(characterId)
-  await setCharacterWoundsStatTotalAdvanced(characterId, DEFAULT_WOUNDS_MAX)
+  await setCharacterWoundsStatCurrentAdvanced(characterId, DEFAULT_WOUNDS_MAX)
   return characterId
 }
