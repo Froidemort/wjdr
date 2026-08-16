@@ -3,7 +3,7 @@ import {
   buildLegacySessionDetailRedirect,
   buildLegacySessionTimelineRedirect,
   LEGACY_SESSIONS_INDEX_REDIRECT,
-} from '../../src/ui/legacySessionRedirects'
+} from '../../src/router/legacySessionRedirects'
 
 describe('legacy sessions routes redirects', () => {
   it('redirects /sessions to /campaigns', async () => {
