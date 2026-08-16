@@ -1113,6 +1113,8 @@ import {
   type RealtimeUpdatePayload,
   useRealtimeChannels,
 } from '../composables/useRealtimeChannels'
+import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
+import { isTransientError } from '../services/shared/networkErrors'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
 type CharacterDetailTab = 'profile' | 'skillsTalents' | 'inventory'
@@ -1520,21 +1522,39 @@ const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpda
       ...payload,
     }
 
-    await updateCharacterCore(character.value.id, {
-      pv_max: normalizedPayload.pvMax,
-      pv_current: normalizedPayload.pvCurrent,
-      fortune_max: normalizedPayload.fortuneMax,
-      fortune_current: normalizedPayload.fortuneCurrent,
-      destiny_current: normalizedPayload.destinyCurrent,
-      xp_total: normalizedPayload.xpTotal,
-      xp_available: Math.min(normalizedPayload.xpAvailable, normalizedPayload.xpTotal),
-      insanity_points: Math.max(0, normalizedPayload.insanityPoints),
-      money_gold: normalizedPayload.moneyGold,
-      money_silver: normalizedPayload.moneySilver,
-      money_copper: normalizedPayload.moneyCopper,
-    })
+    try {
+      await updateCharacterCore(character.value.id, {
+        pv_max: normalizedPayload.pvMax,
+        pv_current: normalizedPayload.pvCurrent,
+        fortune_max: normalizedPayload.fortuneMax,
+        fortune_current: normalizedPayload.fortuneCurrent,
+        destiny_current: normalizedPayload.destinyCurrent,
+        xp_total: normalizedPayload.xpTotal,
+        xp_available: Math.min(normalizedPayload.xpAvailable, normalizedPayload.xpTotal),
+        insanity_points: Math.max(0, normalizedPayload.insanityPoints),
+        money_gold: normalizedPayload.moneyGold,
+        money_silver: normalizedPayload.moneySilver,
+        money_copper: normalizedPayload.moneyCopper,
+      })
 
-    markSavedEditable(normalizedPayload)
+      markSavedEditable(normalizedPayload)
+    } catch (error) {
+      if (!isTransientError(error)) {
+        throw error
+      }
+
+      await enqueueOfflineUpdate({
+        entityType: 'character',
+        entityId: character.value.id,
+        payload: {
+          kind: 'character-core',
+          patch: normalizedPayload,
+        },
+        baseUpdatedAt: null,
+        localUpdatedAt: Date.now(),
+      })
+      markSavedEditable(normalizedPayload)
+    }
   },
   debounceMs: 500,
 })
@@ -1558,11 +1578,33 @@ const {
       return
     }
 
-    await updateCharacterStatValues(character.value.id, payload.statCode, {
-      current_advanced: payload.currentAdvanced,
-      base_value: payload.baseValue,
-      total_advanced: payload.totalAdvanced,
-    })
+    try {
+      await updateCharacterStatValues(character.value.id, payload.statCode, {
+        current_advanced: payload.currentAdvanced,
+        base_value: payload.baseValue,
+        total_advanced: payload.totalAdvanced,
+      })
+    } catch (error) {
+      if (!isTransientError(error)) {
+        throw error
+      }
+
+      await enqueueOfflineUpdate({
+        entityType: 'character',
+        entityId: character.value.id,
+        payload: {
+          kind: 'character-stat',
+          statCode: payload.statCode,
+          patch: {
+            currentAdvanced: payload.currentAdvanced,
+            baseValue: payload.baseValue,
+            totalAdvanced: payload.totalAdvanced,
+          },
+        },
+        baseUpdatedAt: null,
+        localUpdatedAt: Date.now(),
+      })
+    }
   },
   debounceMs: 350,
 })

@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { CampaignSummary, SessionSummary } from '../types/domain'
 import { createSession, deleteSession, updateSession } from '../services/sessionsRepository'
+import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
+import { isTransientError } from '../services/shared/networkErrors'
 import { useConfirmAction } from './useConfirmAction'
 import { useOptimisticUpdate } from './useOptimisticUpdate'
 
@@ -63,11 +65,34 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
         return
       }
 
-      await updateSession(payload.sessionId, {
+      const normalizedPatch = {
         date: payload.date,
         name: (payload.name ?? '').trim() || null,
         description: (payload.description ?? '').trim() || null,
-      })
+      }
+
+      try {
+        await updateSession(payload.sessionId, normalizedPatch)
+      } catch (error) {
+        if (!isTransientError(error)) {
+          throw error
+        }
+
+        const sessionSnapshot = options.sessions.value.find(
+          (sessionItem) => sessionItem.id === payload.sessionId
+        )
+
+        await enqueueOfflineUpdate({
+          entityType: 'session',
+          entityId: payload.sessionId,
+          payload: {
+            kind: 'session',
+            patch: normalizedPatch,
+          },
+          baseUpdatedAt: sessionSnapshot?.updatedAt ?? null,
+          localUpdatedAt: Date.now(),
+        })
+      }
     },
     debounceMs: 500,
   })
