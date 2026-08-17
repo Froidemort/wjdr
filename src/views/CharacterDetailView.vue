@@ -1107,12 +1107,14 @@ import CharacterValueCard from '../components/ui/CharacterValueCard.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import StateCycleBadge from '../components/ui/StateCycleBadge.vue'
 import { useConfirmAction } from '../composables/useConfirmAction'
-import { useLiveSave } from '../composables/useLiveSave'
+import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
 import {
   type RealtimeUpdatePayload,
   useRealtimeChannels,
 } from '../composables/useRealtimeChannels'
+import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
+import { isTransientError } from '../services/shared/networkErrors'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
 type CharacterDetailTab = 'profile' | 'skillsTalents' | 'inventory'
@@ -1507,53 +1509,107 @@ const armorByLocation = computed(() => {
   return totals
 })
 
-const { status, triggerSave, triggerSaveNow } = useLiveSave(
-  async (payload: typeof editable.value) => {
+const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpdate<
+  typeof editable.value
+>({
+  onSave: async (payload) => {
     if (!character.value) {
       return
     }
 
-    await updateCharacterCore(character.value.id, {
-      pv_current: payload.pvCurrent,
-      fortune_max: payload.fortuneMax,
-      fortune_current: payload.fortuneCurrent,
-      destiny_current: payload.destinyCurrent,
-      xp_total: payload.xpTotal,
-      xp_available: Math.min(payload.xpAvailable, payload.xpTotal),
-      insanity_points: Math.max(0, payload.insanityPoints),
-      money_gold: payload.moneyGold,
-      money_silver: payload.moneySilver,
-      money_copper: payload.moneyCopper,
-    })
+    const normalizedPayload = {
+      ...editable.value,
+      ...payload,
+    }
 
-    markSavedEditable(payload)
+    await updateCharacterCore(character.value.id, {
+      pv_current: normalizedPayload.pvCurrent,
+      fortune_max: normalizedPayload.fortuneMax,
+      fortune_current: normalizedPayload.fortuneCurrent,
+      destiny_current: normalizedPayload.destinyCurrent,
+      xp_total: normalizedPayload.xpTotal,
+      xp_available: Math.min(normalizedPayload.xpAvailable, normalizedPayload.xpTotal),
+      insanity_points: Math.max(0, normalizedPayload.insanityPoints),
+      money_gold: normalizedPayload.moneyGold,
+      money_silver: normalizedPayload.moneySilver,
+      money_copper: normalizedPayload.moneyCopper
+    })
+    try {
+      markSavedEditable(normalizedPayload)
+    } catch (error) {
+      if (!isTransientError(error)) {
+        throw error
+      }
+
+      await enqueueOfflineUpdate({
+        entityType: 'character',
+        entityId: character.value.id,
+        payload: {
+          kind: 'character-core',
+          patch: normalizedPayload,
+        },
+        baseUpdatedAt: null,
+        localUpdatedAt: Date.now(),
+      })
+      markSavedEditable(normalizedPayload)
+    }
   },
-  500
-)
+  debounceMs: 500,
+})
 
 const {
   status: statSaveStatus,
-  triggerSave: triggerStatSave,
-  triggerSaveNow: triggerStatSaveNow,
-} = useLiveSave(
-  async (payload: {
+  update: triggerStatSave,
+  flush: triggerStatSaveNow,
+} = useOptimisticUpdate<{
     statCode: string
     currentAdvanced?: number
     baseValue?: number
     totalAdvanced?: number
-  }) => {
+  }>({
+  onSave: async (payload) => {
     if (!character.value) {
       return
     }
 
-    await updateCharacterStatValues(character.value.id, payload.statCode, {
-      current_advanced: payload.currentAdvanced,
-      base_value: payload.baseValue,
-      total_advanced: payload.totalAdvanced,
-    })
+    if (!payload.statCode) {
+      return
+    }
+
+    if (!payload.statCode) {
+      return
+    }
+
+    try {
+      await updateCharacterStatValues(character.value.id, payload.statCode, {
+        current_advanced: payload.currentAdvanced,
+        base_value: payload.baseValue,
+        total_advanced: payload.totalAdvanced,
+      })
+    } catch (error) {
+      if (!isTransientError(error)) {
+        throw error
+      }
+
+      await enqueueOfflineUpdate({
+        entityType: 'character',
+        entityId: character.value.id,
+        payload: {
+          kind: 'character-stat',
+          statCode: payload.statCode,
+          patch: {
+            currentAdvanced: payload.currentAdvanced,
+            baseValue: payload.baseValue,
+            totalAdvanced: payload.totalAdvanced,
+          },
+        },
+        baseUpdatedAt: null,
+        localUpdatedAt: Date.now(),
+      })
+    }
   },
-  350
-)
+  debounceMs: 350,
+})
 
 const globalState = computed<'ok' | 'loading' | 'error'>(() => {
   if (status.value === 'error' || statSaveStatus.value === 'error') {
