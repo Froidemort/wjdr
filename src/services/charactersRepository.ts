@@ -16,11 +16,6 @@ export type { CharacterGender, CharacterRace, CreateCharacterPayload } from '../
 const DEFAULT_CHARACTER_CAREER_NAME = 'Serviteur'
 const WOUNDS_STAT_CODE = 'B'
 const DEFAULT_WOUNDS_MAX = 10
-const NON_IMPROVABLE_STAT_CODES = new Set(['M'])
-
-function normalizeStatCode(value: string): string {
-  return value.trim().toUpperCase()
-}
 
 function mapCharacter(
   row: CharacterRow,
@@ -592,40 +587,25 @@ export async function replaceCharacterTotalAdvancedValues(
 
   const existingByStatCode = new Map<string, CharacterStatRow>()
   for (const row of (existingRows ?? []) as CharacterStatRow[]) {
-    existingByStatCode.set(normalizeStatCode(row.stat_code), row)
+    existingByStatCode.set(row.stat_code, row)
   }
 
   const sanitizedByStatCode = new Map<string, number>()
   for (const [statCode, value] of Object.entries(totalAdvancedByStatCode)) {
-    const normalizedStatCode = normalizeStatCode(statCode)
+    const normalizedStatCode = statCode.trim().toUpperCase()
     if (!normalizedStatCode) {
-      continue
-    }
-
-    if (
-      EXCLUDED_TOTAL_ADVANCED_STAT_CODES.has(normalizedStatCode) ||
-      NON_IMPROVABLE_STAT_CODES.has(normalizedStatCode)
-    ) {
       continue
     }
 
     sanitizedByStatCode.set(normalizedStatCode, Math.max(0, Math.floor(value)))
   }
 
-  const upsertRows = Array.from(existingByStatCode.values())
-    .filter((row) => {
-      const normalizedStatCode = normalizeStatCode(row.stat_code)
-      return (
-        !EXCLUDED_TOTAL_ADVANCED_STAT_CODES.has(normalizedStatCode) &&
-        !NON_IMPROVABLE_STAT_CODES.has(normalizedStatCode)
-      )
-    })
-    .map((row) => ({
+  const upsertRows = Array.from(existingByStatCode.values()).map((row) => ({
     character_id: trimmedCharacterId,
     stat_code: row.stat_code,
     base_value: row.base_value,
     current_advanced: row.current_advanced,
-    total_advanced: sanitizedByStatCode.get(normalizeStatCode(row.stat_code)) ?? 0,
+    total_advanced: sanitizedByStatCode.get(row.stat_code) ?? 0,
   }))
 
   if (upsertRows.length === 0) {
