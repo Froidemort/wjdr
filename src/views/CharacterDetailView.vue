@@ -1108,7 +1108,6 @@ import SearchInput from '../components/ui/SearchInput.vue'
 import StateCycleBadge from '../components/ui/StateCycleBadge.vue'
 import { useConfirmAction } from '../composables/useConfirmAction'
 import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
-import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
 import {
   type RealtimeUpdatePayload,
@@ -1533,9 +1532,9 @@ const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpda
       insanity_points: Math.max(0, normalizedPayload.insanityPoints),
       money_gold: normalizedPayload.moneyGold,
       money_silver: normalizedPayload.moneySilver,
-      money_copper: normalizedPayload.moneyCopper,
+      money_copper: normalizedPayload.moneyCopper
     })
-
+    try {
       markSavedEditable(normalizedPayload)
     } catch (error) {
       if (!isTransientError(error)) {
