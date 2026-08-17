@@ -98,8 +98,8 @@ def extract_career_data(pdf_file):
                 career_name = sanitize_text(table[0][0])
                 career_response = supabase.rpc("search_careers", {"search_term": career_name}).execute()
                 LOGGER.info(f"Carrière: {career_response.data[0]['name'] if career_response.data else career_name}")
-                career_characteristics: list[int] = sanitize_characteristics(table[3])
-                LOGGER.info(tabulate([career_characteristics], headers=CHARACTERISTIC_LABELS, tablefmt="grid"))
+                career_characteristics: dict[str, int] = dict(zip(CHARACTERISTIC_LABELS, sanitize_characteristics(table[3])))
+                LOGGER.info(tabulate([career_characteristics.values()], headers=list(career_characteristics.keys()), tablefmt="grid"))
                 i_paths = None
                 for i in range(4, len(table)):
                     if "Accès" in (table[i][0] or ""):
@@ -134,6 +134,7 @@ def extract_career_data(pdf_file):
                     "characteristics": career_characteristics,
                     "paths": paths
                 }
+                LOGGER.debug(f"Extracted data for career '{career_name}': {careers_data[career_response.data[0]['name'] if career_response.data else career_name]}")
     return careers_data, list(set(failed_careers))
 
 def insert_career_data_to_db(client: Client, careers: list[JSON], json_data: dict):
@@ -153,12 +154,12 @@ def insert_career_data_to_db(client: Client, careers: list[JSON], json_data: dic
             continue
 
         # Préparation des caractéristiques
-        char_values = data.get("characteristics", [])
-        for index, value in enumerate(char_values):
-            if value > 0 and index < len(stat_codes):
+        char_values = data.get("characteristics", {})
+        for stat_code, value in char_values.items():
+            if value > 0 and stat_code in stat_codes:
                 characteristics_to_insert.append({
                     "career_id": career_id,
-                    "stat_code": stat_codes[index],
+                    "stat_code": stat_code,
                     "value": value
                 })
 
@@ -195,7 +196,7 @@ if __name__ == "__main__":
 
     # Ajout du cenobite manuellement
     cenobite_career_name = "Cenobite"
-    cenobite_characteristics = [5, 0, 5, 10, 0, 5, 10, 5, 0, 2, 0, 0]
+    cenobite_characteristics = dict(zip(CHARACTERISTIC_LABELS, [5, 0, 5, 10, 0, 5, 10, 5, 0, 2, 0, 0]))
     cenobite_paths = [
         [get_id_from_name(careers, cenobite_career_name), get_id_from_name(careers, "Hors-la-loi")],
         [get_id_from_name(careers, cenobite_career_name), get_id_from_name(careers, "Mystique")],

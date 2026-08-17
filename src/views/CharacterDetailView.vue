@@ -40,10 +40,10 @@
               :current="editable.pvCurrent"
               :max="editable.pvMax"
               :editable="canEditQuickSection"
+              :max-editable="false"
               current-aria-label="Valeur courante de vie"
               max-aria-label="Valeur maximale de vie"
               @update:current="onQuickValueChange('pvCurrent', $event)"
-              @update:max="onQuickValueChange('pvMax', $event)"
             />
             <CharacterValueCard
               label="Fortune"
@@ -236,8 +236,8 @@
 								<div class="text-lg font-black tabular-nums">{{ stat.baseValue + stat.currentAdvanced }}</div>
 							</div>
 						</div>
-						<div class="grid grid-cols-3 gap-2">
-							<div v-for="stat in secondaryStats" :key="`compact-${stat.statCode}`" class="rounded-box border border-base-300 bg-base-100 px-2 py-1 text-center">
+            <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+              <div v-for="stat in secondaryStats" :key="`compact-${stat.statCode}`" class="rounded-box border border-base-300 bg-base-200 px-2 py-1 text-center">
 								<div class="text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</div>
 								<div class="text-lg font-black tabular-nums">{{ stat.baseValue + stat.currentAdvanced }}</div>
 							</div>
@@ -1386,7 +1386,7 @@ const visibleStats = computed(() => {
   return character.value.stats
     .filter((stat) => {
       const normalized = stat.statCode.trim().toUpperCase()
-      return normalized !== 'B' && normalized !== 'PD'
+      return normalized !== 'PD'
     })
     .sort((left, right) => {
       const leftCode = left.statCode.trim().toUpperCase()
@@ -1514,7 +1514,6 @@ const { status, triggerSave, triggerSaveNow } = useLiveSave(
     }
 
     await updateCharacterCore(character.value.id, {
-      pv_max: payload.pvMax,
       pv_current: payload.pvCurrent,
       fortune_max: payload.fortuneMax,
       fortune_current: payload.fortuneCurrent,
@@ -1613,6 +1612,29 @@ function isSavingInProgress(): boolean {
     statSaveStatus.value === 'pending' ||
     statSaveStatus.value === 'saving'
   )
+}
+
+function getWoundsValueFromCharacterStats(): number {
+  if (!character.value) {
+    return 0
+  }
+
+  const woundsStat = character.value.stats.find(
+    (stat) => stat.statCode.trim().toUpperCase() === 'B'
+  )
+
+  return Math.max(
+    0,
+    Math.floor((woundsStat?.baseValue ?? 0) + (woundsStat?.currentAdvanced ?? 0))
+  )
+}
+
+function syncEditablePvFromWoundsValue(): void {
+  const woundsMax = getWoundsValueFromCharacterStats()
+  editable.value.pvMax = woundsMax
+  if (editable.value.pvCurrent > woundsMax) {
+    editable.value.pvCurrent = woundsMax
+  }
 }
 
 function invalidateCurrentLinksCache(): void {
@@ -1759,7 +1781,8 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
     }
 
     editable.value = nextEditable
-    markSavedEditable(nextEditable)
+    syncEditablePvFromWoundsValue()
+    markSavedEditable({ ...editable.value })
 
     await loadCharacterLinks(data.id)
   } catch (error) {
@@ -1846,6 +1869,11 @@ function onStatTick(statCode: string, step: number): void {
 
   const nextAdvanced = Math.max(0, target.currentAdvanced + step)
   target.currentAdvanced = nextAdvanced
+
+  if (statCode.trim().toUpperCase() === 'B') {
+    syncEditablePvFromWoundsValue()
+  }
+
   triggerStatSave({ statCode, currentAdvanced: nextAdvanced })
 }
 
@@ -1865,6 +1893,11 @@ function onStatBaseChange(statCode: string, baseValue: number): void {
   }
 
   target.baseValue = nextBase
+
+  if (statCode.trim().toUpperCase() === 'B') {
+    syncEditablePvFromWoundsValue()
+  }
+
   triggerStatSave({ statCode, baseValue: nextBase })
 }
 
@@ -1884,6 +1917,7 @@ function onStatTotalAdvancedChange(statCode: string, totalAdvanced: number): voi
   }
 
   target.totalAdvanced = nextTotalAdvanced
+
   triggerStatSave({ statCode, totalAdvanced: nextTotalAdvanced })
 }
 
