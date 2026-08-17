@@ -134,12 +134,4 @@ export interface CharacterItem {
   quantity: number
 }
 
-export interface CatalogItem {
-  id: string
-  name: string
-  specialization?: string | null
-  description: string | null
-  encumbrance?: number | null
-  damageFormula?: string | null
-  armorPoints?: number | null
-}
+export type { CatalogItem } from './catalog'

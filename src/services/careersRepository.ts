@@ -1,15 +1,8 @@
 import { supabase } from '../db/supabase'
+import type { CareerCharacteristic, CareerPathCareer } from '../types/career'
 import type { CareerCharacteristicRow, CareerPathRow, CareerRow } from '../types/db'
 
-export interface CareerCharacteristic {
-  statCode: string
-  value: number
-}
-
-export interface CareerPathCareer {
-  id: string
-  name: string
-}
+export type { CareerCharacteristic, CareerPathCareer } from '../types/career'
 
 const FRENCH_SORT_OPTIONS: Intl.CollatorOptions = { sensitivity: 'base' }
 

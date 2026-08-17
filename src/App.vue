@@ -15,12 +15,14 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
+import { useReferenceDataStore } from './stores/referenceData'
 import { APP_SPLASH } from './config/appSplash'
 import AppSplash from './components/ui/AppSplash.vue'
 import CampaignCreateModal from './components/ui/CampaignCreateModal.vue'
 import AppLayout from './layouts/AppLayout.vue'
 
 const authStore = useAuthStore()
+const referenceDataStore = useReferenceDataStore()
 const router = useRouter()
 const route = useRoute()
 const showSplash = ref(true)
@@ -29,7 +31,7 @@ const authReady = ref(false)
 onMounted(() => {
   document.documentElement.classList.add(APP_SPLASH.classNames.activeHtmlClass)
 
-  void authStore.initAuth().finally(() => {
+  void Promise.all([authStore.initAuth(), referenceDataStore.init()]).finally(() => {
     authReady.value = true
   })
 })

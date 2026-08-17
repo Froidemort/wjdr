@@ -44,6 +44,7 @@ export interface CareerCharacteristicRow {
 }
 
 export interface CareerPathRow {
+  from_career_id: string
   to_career_id: string
 }
 
