@@ -34,3 +34,5 @@ bdd.db
 
 # tmp directory
 tmp
+*storybook.log
+storybook-static

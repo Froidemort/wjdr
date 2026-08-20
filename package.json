@@ -14,7 +14,9 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:deploy": "playwright test -c playwright.deploy.config.ts"
+    "test:e2e:deploy": "playwright test -c playwright.deploy.config.ts",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@lucide/vue": "^1.28.0",
@@ -48,6 +50,17 @@
     "typescript-eslint": "^8.65.0",
     "vite": "^8.2.0",
     "vitest": "^4.1.10",
-    "vue-tsc": "^3.3.9"
+    "vue-tsc": "^3.3.9",
+    "storybook": "^10.5.9",
+    "@storybook/vue3-vite": "^10.5.9",
+    "@chromatic-com/storybook": "latest",
+    "@storybook/addon-vitest": "^10.5.9",
+    "@storybook/addon-a11y": "^10.5.9",
+    "@storybook/addon-docs": "^10.5.9",
+    "@storybook/addon-onboarding": "^10.5.9",
+    "eslint-plugin-storybook": "^10.5.9",
+    "@vitest/browser-playwright": "4.1.10",
+    "@vitest/coverage-v8": "4.1.10",
+    "playwright": "latest"
   }
 }
