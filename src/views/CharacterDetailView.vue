@@ -333,9 +333,26 @@
 										+20%
 									</button>
 								</div>
-							</div>
-						</article>
-					</div>
+
+                <div v-if="skill.linkedTalents?.length" class="mt-3 space-y-1.5">
+                  <div class="text-[10px] font-semibold uppercase tracking-wide opacity-60">
+                    Talents liés
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="talent in skill.linkedTalents"
+                      :key="`${skill.skillId}-${talent.talentId}`"
+                      type="button"
+                      class="btn btn-xs btn-outline h-8 min-h-8 px-2"
+                      @click="openDescriptionModal(formatNamedWithSpecialization(talent.name, talent.specialization), talent.description)"
+                    >
+                      {{ formatNamedWithSpecialization(talent.name, talent.specialization) }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
         </div>
 
         <h2 class="mb-3 mt-5 text-lg font-semibold">Talents</h2>

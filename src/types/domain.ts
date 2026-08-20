@@ -92,6 +92,7 @@ export interface CharacterSkill {
   description: string | null
   masteryLevel: 1 | 2 | 3
   isBasic: boolean
+  linkedTalents?: CharacterTalent[]
 }
 
 export interface CharacterTalent {

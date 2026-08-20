@@ -150,6 +150,11 @@ export interface CharacterLinksBundle {
   items: CharacterItem[]
 }
 
+interface SkillTalentLinkRow {
+  skill_id: string
+  talent_id: string
+}
+
 const characterLinksCache = new Map<string, CharacterLinksBundle>()
 
 function unwrapRelated<T>(value: T | T[] | null | undefined): T | undefined {
@@ -198,8 +203,24 @@ export async function listCharacterLinksBundle(
     listCharacterItems(characterId),
   ])
 
+  const linkedTalentIdsBySkillId = await loadSkillTalentRelations(skills.map((skill) => skill.skillId))
+  const talentsById = new Map(talents.map((talent) => [talent.talentId, talent]))
+
+  const enrichedSkills = skills.map((skill) => {
+    const linkedTalentIds = linkedTalentIdsBySkillId.get(skill.skillId) ?? new Set<string>()
+    const linkedTalents = [...linkedTalentIds]
+      .map((talentId) => talentsById.get(talentId))
+      .filter((talent): talent is CharacterTalent => Boolean(talent))
+      .sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' }))
+
+    return {
+      ...skill,
+      linkedTalents,
+    }
+  })
+
   const bundle: CharacterLinksBundle = {
-    skills,
+    skills: enrichedSkills,
     talents,
     weapons,
     armors,
@@ -208,6 +229,30 @@ export async function listCharacterLinksBundle(
 
   characterLinksCache.set(characterId, cloneLinksBundle(bundle))
   return cloneLinksBundle(bundle)
+}
+
+async function loadSkillTalentRelations(skillIds: string[]): Promise<Map<string, Set<string>>> {
+  if (skillIds.length === 0) {
+    return new Map()
+  }
+  const { data, error } = await supabase
+    .from('skills_talents')
+    .select('skill_id, talent_id')
+    .in('skill_id', skillIds)
+  
+
+  if (error) {
+    throw error
+  }
+
+  const mapped = new Map<string, Set<string>>()
+  for (const row of (data ?? []) as SkillTalentLinkRow[]) {
+    const skillSet = mapped.get(row.skill_id) ?? new Set<string>()
+    skillSet.add(row.talent_id)
+    mapped.set(row.skill_id, skillSet)
+  }
+
+  return mapped
 }
 
 export async function listCharacterSkills(characterId: string): Promise<CharacterSkill[]> {
