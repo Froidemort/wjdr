@@ -102,6 +102,12 @@ export interface CharacterTalent {
   description: string | null
 }
 
+export interface WeaponAttribute {
+  id: string
+  name: string
+  description: string | null
+}
+
 export interface CharacterWeapon {
   id: string
   weaponId: string
@@ -111,6 +117,7 @@ export interface CharacterWeapon {
   quality: InventoryQuality
   encumbrance: number
   damageFormula: string | null
+  attributes: WeaponAttribute[]
 }
 
 export interface CharacterArmor {

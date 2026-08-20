@@ -6,6 +6,7 @@ import type {
   CharacterTalent,
   CharacterWeapon,
   InventoryQuality,
+  WeaponAttribute,
 } from '../types/domain'
 
 function normalizeQuality(value: string | null | undefined): InventoryQuality {
@@ -85,6 +86,21 @@ interface WeaponLinkRow {
         description: string | null
         encumbrance: number
         damage_formula: string
+        weapon_attribute_mappings?: Array<{
+          attribute_id: string
+          weapon_attributes?:
+            | {
+                id: string
+                name: string
+                description: string | null
+              }
+            | Array<{
+                id: string
+                name: string
+                description: string | null
+              }>
+            | null
+        }> | null
       }
     | Array<{
         id: string
@@ -92,6 +108,21 @@ interface WeaponLinkRow {
         description: string | null
         encumbrance: number
         damage_formula: string
+        weapon_attribute_mappings?: Array<{
+          attribute_id: string
+          weapon_attributes?:
+            | {
+                id: string
+                name: string
+                description: string | null
+              }
+            | Array<{
+                id: string
+                name: string
+                description: string | null
+              }>
+            | null
+        }> | null
       }>
     | null
 }
@@ -389,7 +420,7 @@ export async function listCharacterWeapons(characterId: string): Promise<Charact
   const { data, error } = await supabase
     .from('character_weapons')
     .select(
-      'id, weapon_id, quality, equiped, weapons!inner(id, name, description, encumbrance, damage_formula)'
+      'id, weapon_id, quality, equiped, weapons!inner(id, name, description, encumbrance, damage_formula, weapon_attribute_mappings(attribute_id, weapon_attributes(id, name, description)))'
     )
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'weapons' })
@@ -400,6 +431,24 @@ export async function listCharacterWeapons(characterId: string): Promise<Charact
 
   return ((data ?? []) as WeaponLinkRow[]).map((row) => {
     const weapon = unwrapRelated(row.weapons)
+    const mappedAttributes = (weapon?.weapon_attribute_mappings ?? [])
+      .map((mapping) => unwrapRelated(mapping.weapon_attributes))
+      .filter((attribute): attribute is WeaponAttribute => Boolean(attribute?.id && attribute.name))
+      .map((attribute) => ({
+        id: attribute.id,
+        name: attribute.name,
+        description: attribute.description ?? null,
+      }))
+
+    const dedupedAttributesById = new Map<string, WeaponAttribute>()
+    for (const attribute of mappedAttributes) {
+      dedupedAttributesById.set(attribute.id, attribute)
+    }
+
+    const attributes = [...dedupedAttributesById.values()].sort((left, right) =>
+      left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })
+    )
+
     const quality = normalizeQuality(row.quality)
     return {
       id: row.id,
@@ -410,6 +459,7 @@ export async function listCharacterWeapons(characterId: string): Promise<Charact
       quality,
       encumbrance: getWeaponEncumbrance(weapon?.encumbrance ?? 0, quality),
       damageFormula: weapon?.damage_formula ?? null,
+      attributes,
     }
   })
 }

@@ -10,7 +10,7 @@ vi.mock('../../src/db/supabase', () => ({
   },
 }))
 
-import { listCharacterLinksBundle } from '../../src/services/characterLinksRepository'
+import { listCharacterLinksBundle, listCharacterWeapons } from '../../src/services/characterLinksRepository'
 
 describe('characterLinksRepository', () => {
   beforeEach(() => {
@@ -172,5 +172,88 @@ describe('characterLinksRepository', () => {
       'talent-3',
     ])
     expect(result.skills[1].linkedTalents?.map((talent) => talent.talentId)).toEqual(['talent-2'])
+  })
+
+  it('maps and sorts weapon attributes from weapon mappings', async () => {
+    const weaponsBuilder = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      order: vi.fn(),
+    }
+
+    weaponsBuilder.select.mockReturnValue(weaponsBuilder)
+    weaponsBuilder.eq.mockReturnValue(weaponsBuilder)
+    weaponsBuilder.order.mockResolvedValue({
+      data: [
+        {
+          id: 'link-1',
+          weapon_id: 'weapon-1',
+          quality: 'normal',
+          equiped: null,
+          weapons: {
+            id: 'weapon-1',
+            name: 'Épée longue',
+            description: null,
+            encumbrance: 2,
+            damage_formula: '+5',
+            weapon_attribute_mappings: [
+              {
+                attribute_id: 'attr-2',
+                weapon_attributes: {
+                  id: 'attr-2',
+                  name: 'Rapide',
+                  description: null,
+                },
+              },
+              {
+                attribute_id: 'attr-1',
+                weapon_attributes: {
+                  id: 'attr-1',
+                  name: 'Défensive',
+                  description: null,
+                },
+              },
+              {
+                attribute_id: 'attr-1',
+                weapon_attributes: {
+                  id: 'attr-1',
+                  name: 'Défensive',
+                  description: null,
+                },
+              },
+            ],
+          },
+        },
+        {
+          id: 'link-2',
+          weapon_id: 'weapon-2',
+          quality: 'bonne',
+          equiped: 'droite',
+          weapons: {
+            id: 'weapon-2',
+            name: 'Arc court',
+            description: null,
+            encumbrance: 1,
+            damage_formula: '+3',
+            weapon_attribute_mappings: null,
+          },
+        },
+      ],
+      error: null,
+    })
+
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'character_weapons') {
+        return weaponsBuilder
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const result = await listCharacterWeapons('character-1')
+
+    expect(result).toHaveLength(2)
+    expect(result[0].attributes.map((attribute) => attribute.name)).toEqual(['Défensive', 'Rapide'])
+    expect(result[1].attributes).toEqual([])
   })
 })
