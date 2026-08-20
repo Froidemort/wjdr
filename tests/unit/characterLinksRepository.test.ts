@@ -35,6 +35,24 @@ describe('characterLinksRepository', () => {
       in: vi.fn(),
     }
 
+    const weaponsBuilder = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      order: vi.fn(),
+    }
+
+    const armorsBuilder = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      order: vi.fn(),
+    }
+
+    const itemsBuilder = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      order: vi.fn(),
+    }
+
     skillsBuilder.select.mockReturnValue(skillsBuilder)
     skillsBuilder.eq.mockReturnValue(skillsBuilder)
     skillsBuilder.order.mockResolvedValue({
@@ -112,6 +130,18 @@ describe('characterLinksRepository', () => {
       error: null,
     })
 
+    weaponsBuilder.select.mockReturnValue(weaponsBuilder)
+    weaponsBuilder.eq.mockReturnValue(weaponsBuilder)
+    weaponsBuilder.order.mockResolvedValue({ data: [], error: null })
+
+    armorsBuilder.select.mockReturnValue(armorsBuilder)
+    armorsBuilder.eq.mockReturnValue(armorsBuilder)
+    armorsBuilder.order.mockResolvedValue({ data: [], error: null })
+
+    itemsBuilder.select.mockReturnValue(itemsBuilder)
+    itemsBuilder.eq.mockReturnValue(itemsBuilder)
+    itemsBuilder.order.mockResolvedValue({ data: [], error: null })
+
     fromMock.mockImplementation((table: string) => {
       if (table === 'character_skills') {
         return skillsBuilder
@@ -121,6 +151,15 @@ describe('characterLinksRepository', () => {
       }
       if (table === 'skills_talents') {
         return skillTalentBuilder
+      }
+      if (table === 'character_weapons') {
+        return weaponsBuilder
+      }
+      if (table === 'character_armors') {
+        return armorsBuilder
+      }
+      if (table === 'character_items') {
+        return itemsBuilder
       }
       throw new Error(`Unexpected table ${table}`)
     })
