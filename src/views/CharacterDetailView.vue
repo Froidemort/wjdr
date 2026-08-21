@@ -333,9 +333,26 @@
 										+20%
 									</button>
 								</div>
-							</div>
-						</article>
-					</div>
+
+                <div v-if="skill.linkedTalents?.length" class="mt-3 space-y-1.5">
+                  <div class="text-[10px] font-semibold uppercase tracking-wide opacity-60">
+                    Talents liés
+                  </div>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="talent in skill.linkedTalents"
+                      :key="`${skill.skillId}-${talent.talentId}`"
+                      type="button"
+                      class="btn btn-xs btn-outline h-8 min-h-8 px-2"
+                      @click="openDescriptionModal(formatNamedWithSpecialization(talent.name, talent.specialization), talent.description)"
+                    >
+                      {{ formatNamedWithSpecialization(talent.name, talent.specialization) }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
         </div>
 
         <h2 class="mb-3 mt-5 text-lg font-semibold">Talents</h2>
@@ -414,8 +431,8 @@
           </div>
 					<div v-if="sortedCharacterWeapons.length === 0" class="text-sm opacity-70">Aucune arme.</div>
           <div v-else-if="filteredCharacterWeapons.length === 0" class="text-sm opacity-70">Aucune arme pour ce filtre.</div>
-					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="weapon in filteredCharacterWeapons" :key="weapon.id" v-memo="[weapon.equipped, weapon.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
+          <div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <article v-for="weapon in filteredCharacterWeapons" :key="weapon.id" v-memo="[weapon.equipped, weapon.quality, weaponAttributesMemoKey(weapon), canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
 							<div class="card-body p-3 gap-2">
 								<div class="flex items-start justify-between gap-2">
 									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ weapon.name }}</h4>
@@ -450,6 +467,25 @@
 									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ weapon.encumbrance }}</span>
 									<span v-if="weapon.damageFormula" class="badge badge-sm badge-outline gap-1"><Sword class="h-3 w-3" /> {{ weapon.damageFormula }}</span>
 								</div>
+                <details
+                  v-if="weapon.attributes.length > 0"
+                  class="collapse collapse-arrow rounded-box border border-base-300 bg-base-200/40"
+                >
+                  <summary class="collapse-title min-h-11 py-2 text-sm font-medium">
+                    Attributs de l arme ({{ weapon.attributes.length }})
+                  </summary>
+                  <div class="collapse-content pt-1">
+                    <div class="flex flex-wrap gap-1.5">
+                      <span
+                        v-for="attribute in weapon.attributes"
+                        :key="attribute.id"
+                        class="badge badge-sm badge-outline"
+                      >
+                        {{ attribute.name }}
+                      </span>
+                    </div>
+                  </div>
+                </details>
 							</div>
 						</article>
 					</div>
@@ -2908,6 +2944,14 @@ function qualityBadgeClass(quality: string | null): string {
     return 'badge-success'
   }
   return 'badge-outline'
+}
+
+function weaponAttributesMemoKey(weapon: CharacterWeapon): string {
+  if (weapon.attributes.length === 0) {
+    return 'none'
+  }
+
+  return weapon.attributes.map((attribute) => attribute.id).join('|')
 }
 
 function qualityStateClass(quality: string | null): string {

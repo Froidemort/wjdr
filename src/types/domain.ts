@@ -92,12 +92,19 @@ export interface CharacterSkill {
   description: string | null
   masteryLevel: 1 | 2 | 3
   isBasic: boolean
+  linkedTalents?: CharacterTalent[]
 }
 
 export interface CharacterTalent {
   talentId: string
   name: string
   specialization: string | null
+  description: string | null
+}
+
+export interface WeaponAttribute {
+  id: string
+  name: string
   description: string | null
 }
 
@@ -110,6 +117,7 @@ export interface CharacterWeapon {
   quality: InventoryQuality
   encumbrance: number
   damageFormula: string | null
+  attributes: WeaponAttribute[]
 }
 
 export interface CharacterArmor {
