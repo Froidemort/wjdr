@@ -33,40 +33,34 @@
 				</div>
 
           <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-            <CharacterValueCard
-              label="Vie"
-              :icon="Heart"
-              icon-class="h-6 w-6 text-error"
-              :current="editable.pvCurrent"
-              :max="editable.pvMax"
+            <HealthHeart
+              :model-value="editable.pvCurrent"
+              :max-hp="editable.pvMax"
+              label="Blessures"
               :editable="canEditQuickSection"
-              :max-editable="false"
-              current-aria-label="Valeur courante de vie"
-              max-aria-label="Valeur maximale de vie"
-              @update:current="onQuickValueChange('pvCurrent', $event)"
+              @update:model-value="onQuickValueChange('pvCurrent', $event)"
             />
-            <CharacterValueCard
+            <FortuneClover
               label="Fortune"
-              :icon="Clover"
-              icon-class="h-6 w-6 text-success"
-              :current="editable.fortuneCurrent"
-              :max="editable.fortuneMax"
+              :model-value="editable.fortuneCurrent"
+              :max-points="editable.fortuneMax"
+              :max-points-editable="canEditQuickSection"
               :editable="canEditQuickSection"
-              current-aria-label="Valeur courante de fortune"
-              max-aria-label="Valeur maximale de fortune"
-              @update:current="onQuickValueChange('fortuneCurrent', $event)"
-              @update:max="onQuickValueChange('fortuneMax', $event)"
+              variant="fortune"
+              aria-label-prefix="Point de fortune"
+              @update:model-value="onQuickValueChange('fortuneCurrent', $event)"
+              @update:max-points="onQuickValueChange('fortuneMax', $event)"
             />
-            <CharacterValueCard
+            <FortuneClover
               label="Destin"
-              :icon="WandSparkles"
-              icon-class="h-6 w-6 text-accent"
-              :current="editable.destinyCurrent"
-              :max="editable.destinyCurrent"
+              :model-value="editable.destinyCurrent"
+              :max-points="destinyMaxPoints"
               :editable="canEditQuickSection"
-              current-aria-label="Valeur courante de destin"
-              max-aria-label="Valeur maximale de destin"
-              @update:current="onQuickValueChange('destinyCurrent', $event)"
+              variant="destin"
+              aria-label-prefix="Point de destin"
+              :icon-path="DESTINY_TOKEN_PATH"
+              icon-view-box="0 0 24 24"
+              @update:model-value="onQuickValueChange('destinyCurrent', $event)"
             />
             <CharacterValueCard
               label="Experience"
@@ -1073,8 +1067,6 @@ import {
   Import,
   Info,
   LoaderCircle,
-  Clover,
-  Heart,
   Mars,
   Pencil,
   Plus,
@@ -1084,7 +1076,6 @@ import {
   Sword,
   Trash2,
   UserCog,
-  WandSparkles,
   Venus,
   Weight,
 } from '@lucide/vue'
@@ -1137,6 +1128,8 @@ import type {
 } from '../types/domain'
 import AppCard from '../components/ui/AppCard.vue'
 import CharacterDerivedStatsCard from '../components/ui/CharacterDerivedStatsCard.vue'
+import FortuneClover from '../components/ui/FortuneClover.vue'
+import HealthHeart from '../components/ui/HealthHeart.vue'
 import CharacteristicCard from '../components/ui/CharacteristicCard.vue'
 import CharacterMoneyCard from '../components/ui/CharacterMoneyCard.vue'
 import CharacterValueCard from '../components/ui/CharacterValueCard.vue'
@@ -1304,6 +1297,12 @@ const lastSavedEditable = ref({
   moneySilver: 0,
   moneyCopper: 0,
 })
+
+const destinyMaxPoints = computed(() =>
+  Math.max(1, editable.value.destinyCurrent, editable.value.fortuneMax)
+)
+const DESTINY_TOKEN_PATH =
+  'M12 2l2.2 4.45 4.92.72-3.56 3.47.84 4.9L12 13.2l-4.4 2.34.84-4.9L4.88 7.17l4.92-.72L12 2z'
 
 const canEditQuickSection = computed(() =>
   Boolean(character.value && authStore.user?.id === character.value.userId)
