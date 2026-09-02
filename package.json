@@ -13,7 +13,6 @@
     "test": "npm run test:unit && npm run test:e2e && npm run test:storybook",
     "test:unit": "vitest run --project unit",
     "test:storybook": "vitest run --project storybook",
-    "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:deploy": "playwright test -c playwright.deploy.config.ts",
     "storybook": "storybook dev -p 6006",
