@@ -1,5 +1,8 @@
 <template>
-	<footer class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-base-300 mt-6">
+	<footer
+		class="flex flex-col items-start gap-3 border-t border-base-300 pt-4 mt-6 sm:flex-row sm:items-center sm:justify-between"
+		:class="mobileVisible ? '' : 'max-sm:hidden'"
+	>
 		<slot name="left">
 			<router-link v-if="backTo" class="btn btn-outline btn-sm min-h-11 px-4" :to="backTo">
 				{{ backLabel }}
@@ -16,5 +19,6 @@
 defineProps<{
   backTo?: string
   backLabel?: string
+	mobileVisible?: boolean
 }>()
 </script>

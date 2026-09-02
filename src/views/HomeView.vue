@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { NotebookPen, Plus, Scroll, Hammer } from '@lucide/vue'
+import { NotebookPen, Plus, Scroll, Hammer, Users } from '@lucide/vue'
 import { useAuthStore } from '../stores/auth'
 import { useCampaignCreateModalStore } from '../stores/campaignCreateModal'
 import AuthForm from '../components/ui/AuthForm.vue'

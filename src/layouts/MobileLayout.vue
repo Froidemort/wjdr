@@ -21,7 +21,8 @@ const navItems = computed(() => [
 ])
 
 function isRouteActive(path: string): boolean {
-  return route.path === path || route.path.startsWith(`${path}/`)
+  const section = path.slice(1)
+  return route.meta.navSection === section
 }
 </script>
 

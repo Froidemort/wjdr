@@ -38,16 +38,22 @@ const authStore = useAuthStore()
 const referenceDataStore = useReferenceDataStore()
 const router = useRouter()
 const route = useRoute()
-const showSplash = ref(true)
+const showSplash = ref(route.meta.skipSplash !== true)
 const authReady = ref(false)
 
 const { isOnline, pendingCount, isSyncing } = useOfflineQueueSync()
 const showSyncIndicator = computed(() => pendingCount.value > 0)
 
 onMounted(() => {
-  document.documentElement.classList.add(APP_SPLASH.classNames.activeHtmlClass)
+  if (showSplash.value) {
+    document.documentElement.classList.add(APP_SPLASH.classNames.activeHtmlClass)
+  }
 
-  void Promise.all([authStore.initAuth(), referenceDataStore.init()]).finally(() => {
+  const referenceInitialization = route.meta.skipSplash === true
+    ? Promise.resolve()
+    : referenceDataStore.init()
+
+  void Promise.all([authStore.initAuth(), referenceInitialization]).finally(() => {
     authReady.value = true
   })
 })

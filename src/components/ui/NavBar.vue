@@ -20,7 +20,11 @@
       >
         <template v-if="isAuthenticated">
           <!-- Only one navbar popover open at a time -->
-          <MissivesPopover ref="missivesRef" @open="accountRef?.close()" />
+          <MissivesPopover
+            ref="missivesRef"
+            @open="accountRef?.close()"
+            @update:unread-count="unreadCount = $event"
+          />
           <ThemeToggle />
           <AccountPopover ref="accountRef" @open="missivesRef?.close()" />
 
@@ -40,7 +44,11 @@
       </div>
     </div>
 
-    <NavMobileMenu v-if="isAuthenticated" v-model:open="mobileMenuOpen" />
+    <NavMobileMenu
+      v-if="isAuthenticated"
+      v-model:open="mobileMenuOpen"
+      :unread-count="unreadCount"
+    />
   </nav>
 </template>
 
@@ -61,6 +69,7 @@ const authStore = useAuthStore()
 const route = useRoute()
 
 const mobileMenuOpen = ref(false)
+const unreadCount = ref(0)
 const missivesRef = ref<InstanceType<typeof MissivesPopover> | null>(null)
 const accountRef = ref<InstanceType<typeof AccountPopover> | null>(null)
 

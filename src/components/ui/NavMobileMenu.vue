@@ -2,13 +2,14 @@
 import { Bell, LogOut, UserCircle } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { useMissivesInbox } from '../../composables/useMissivesInbox'
 import { mainNavLinks } from '../../config/navLinks'
 
 // Collapsible drawer for authenticated users on small screens (sm and below).
 const open = defineModel<boolean>('open', { required: true })
+defineProps<{
+  unreadCount: number
+}>()
 
-const { unreadCount } = useMissivesInbox()
 const authStore = useAuthStore()
 const router = useRouter()
 
