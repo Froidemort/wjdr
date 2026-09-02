@@ -1169,7 +1169,7 @@ import {
   type RealtimeUpdatePayload,
   useRealtimeChannels,
 } from '../composables/useRealtimeChannels'
-import { canEquipArmorStack, findConflictingWeapons, isTwoHandedWeapon, resolveWeaponEquipHand } from '../../utils/equipmentSlots'
+import { canEquipArmorStack, findConflictingWeapons, isTwoHandedWeapon, resolveWeaponEquipHand } from '../utils/equipmentSlots'
 import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
 import { isTransientError } from '../services/shared/networkErrors'
 
