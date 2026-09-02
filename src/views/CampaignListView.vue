@@ -5,21 +5,6 @@
     <button class="btn btn-sm w-full sm:w-auto" @click="openCampaignCreate">Créer une campagne</button>
 		</header>
 
-    <InputAction
-      v-model="joinCode"
-      title="Rejoindre une campagne"
-      placeholder="A B C D E F"
-      button-label="Rejoindre"
-      helper-message="Demande le code au Maitre du Jeu puis saisis 6 caracteres (lettres/chiffres). Exemple: A1B2C3."
-      :loading="joining"
-      :success-message="joinSuccess"
-      :error-message="joinError"
-      :max-length="6"
-      input-class="uppercase text-center font-semibold tracking-[0.35em] max-w-72"
-      compact
-      @submit="joinWithCode"
-    />
-
 		<DataGrid
       :items="campaignsList"
 			:loading="showBlockingLoading"
@@ -63,6 +48,22 @@
 				</AppCard>
 			</template>
 		</DataGrid>
+
+
+    <InputAction
+      v-model="joinCode"
+      title="Rejoindre une campagne"
+      placeholder="A B C D E F"
+      button-label="Rejoindre"
+      helper-message="Demande le code au Maitre du Jeu puis saisis 6 caracteres (lettres/chiffres). Exemple: A1B2C3."
+      :loading="joining"
+      :success-message="joinSuccess"
+      :error-message="joinError"
+      :max-length="6"
+      input-class="uppercase text-center font-semibold tracking-[0.35em] max-w-72"
+      compact
+      @submit="joinWithCode"
+    />
 
 		<PageFooter back-to="/" back-label="Menu principal" />
 	</main>
