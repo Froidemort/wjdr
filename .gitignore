@@ -36,3 +36,7 @@ bdd.db
 tmp
 *storybook.log
 storybook-static
+
+# Coverage and reports
+coverage
+reports
