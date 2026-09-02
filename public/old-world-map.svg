@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" role="img" aria-labelledby="title description">
+  <title id="title">Carte originale du Vieux Monde</title>
+  <desc id="description">Carte abstraite en tons de parchemin avec régions, mers et rose des vents.</desc>
+  <rect width="1400" height="900" fill="#e9d8ad"/>
+  <path d="M0 120C180 70 300 160 440 100S720 70 850 145s250 0 550 70v685H0Z" fill="#c5d0b1"/>
+  <path d="M0 0h1400v155c-170-35-285 40-430-10-170-60-295-45-425 5-170 66-315-50-545 12Z" fill="#9ab7bf"/>
+  <path d="M0 675c180-50 285 62 445 12 130-40 235-82 382-20 160 67 315-30 573 20v213H0Z" fill="#9ab7bf"/>
+  <path d="M380 168c110-45 245-15 326 60l105 25 64 108-72 79 25 120-109 103-146-40-110 38-93-95 25-121-65-80 50-111Z" fill="#aabf8e" stroke="#65775f" stroke-width="5"/>
+  <path d="m820 254 88-60 95 40 39 99-65 83 34 105-92 73-104-62-29-122 50-67Z" fill="#ceb27e" stroke="#75654e" stroke-width="5"/>
+  <path d="m1060 450 109-32 105 80-36 95 53 104-116 80-127-45-25-123Z" fill="#aabf8e" stroke="#65775f" stroke-width="5"/>
+  <path d="M300 520c90-90 175-15 225 55m-48-341 95 102-67 111m260-183 94 72-70 108m-4 85 90 50m205-261 75 63-36 86" fill="none" stroke="#7c8e72" stroke-width="4" stroke-dasharray="12 10"/>
+  <g fill="#3c4540" font-family="Georgia,serif" text-anchor="middle">
+    <text x="560" y="315" font-size="34">Les Royaumes du Nord</text>
+    <text x="930" y="355" font-size="30">Terres de l'Est</text>
+    <text x="1150" y="605" font-size="28">Marches australes</text>
+    <text x="705" y="740" font-size="22" letter-spacing="4">MER OCCIDENTALE</text>
+  </g>
+  <g transform="translate(1170 150)" fill="none" stroke="#3c4540" stroke-width="5">
+    <circle r="72" opacity=".65"/><path d="M0-95V95M-95 0H95M-67-67 67 67M67-67-67 67"/>
+    <path d="m0-95 12 95-12 95-12-95Z" fill="#a34b3f"/>
+    <path d="m-95 0 95-12 95 12-95 12Z" fill="#65775f"/>
+  </g>
+  <g fill="#3c4540" font-family="Georgia,serif" font-size="18" text-anchor="middle"><text x="1170" y="34">N</text><text x="1170" y="270">S</text><text x="1050" y="155">O</text><text x="1290" y="155">E</text></g>
+  <path d="M70 820h240m-240-12v24m240-12v24" stroke="#3c4540" stroke-width="5"/><text x="190" y="855" fill="#3c4540" font-family="Georgia,serif" font-size="18" text-anchor="middle">échelle symbolique</text>
+</svg>

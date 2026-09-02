@@ -13,6 +13,9 @@ const NotificationsView = () => import('../views/NotificationsView.vue')
 const ProfileView = () => import('../views/ProfileView.vue')
 const CampaignDetailView = () => import('../views/CampaignDetailView.vue')
 const CampaignListView = () => import('../views/CampaignListView.vue')
+const NotFoundView = () => import('../views/NotFoundView.vue')
+const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
+const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
   // Home page
@@ -21,17 +24,23 @@ export const appRoutes: RouteRecordRaw[] = [
     component: HomeView,
     meta: { requiresAuth: false, hideFooter: false},
   },
+  // Static Old World reference map
+  {
+    path: '/old-world',
+    component: OldWorldMapView,
+    meta: { requiresAuth: false, hideFooter: false },
+  },
   // Character list with summary details
   {
     path: '/characters',
     component: CharacterListView,
-    meta: { requiresAuth: true, hideFooter: true},
+    meta: { requiresAuth: true, hideFooter: true, navSection: 'characters' },
   },
   // Campaign list
   {
     path: '/campaigns',
     component: CampaignListView,
-    meta: { requiresAuth: true, hideFooter: true},
+    meta: { requiresAuth: true, hideFooter: true, navSection: 'campaigns' },
   },
   // Character detail page, mostly used by players during sessions
   {
@@ -43,12 +52,12 @@ export const appRoutes: RouteRecordRaw[] = [
   {
     path: '/notifications',
     component: NotificationsView,
-    meta: { requiresAuth: true, hideFooter: true },
+    meta: { requiresAuth: true, hideFooter: true, navSection: 'notifications' },
   },
   {
     path: '/profile',
     component: ProfileView,
-    meta: { requiresAuth: true, hideFooter: true },
+    meta: { requiresAuth: true, hideFooter: true, navSection: 'profile' },
   },
   // Campaign detail page with dated session timeline.
   // Quick view includes:
@@ -58,13 +67,19 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/campaigns/:id',
     component: CampaignDetailView,
     props: true,
-    meta: { requiresAuth: true, hideFooter: true },
+    meta: { requiresAuth: true, hideFooter: true, navSection: 'campaigns' },
   },
   {
     path: '/campaigns/:campaignId/timeline/:sessionEntryId',
     component: CampaignTimelineSessionDetailView,
     props: true,
-    meta: { requiresAuth: true, hideFooter: true },
+    meta: { requiresAuth: true, hideFooter: true, navSection: 'campaigns' },
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: ResetPasswordView,
+    meta: { requiresAuth: false, hideFooter: true, skipSplash: true },
   },
   // Redirect for legacy routes, will be removed in the future
   {
@@ -79,5 +94,11 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/sessions/:campaignId/timeline/:sessionEntryId',
     redirect: (to) =>
       buildLegacySessionTimelineRedirect(to.params.campaignId, to.params.sessionEntryId),
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: NotFoundView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
   },
 ]

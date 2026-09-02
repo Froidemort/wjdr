@@ -51,6 +51,7 @@
         :session-create-error="sessionCreateError"
         :session-create-date-error="sessionCreateDateError"
         :session-create-form="sessionCreateForm"
+        :is-mobile="isMobile"
         :format-campaign-session-date="formatCampaignSessionDate"
         :format-campaign-session-date-compact="formatCampaignSessionDateCompact"
         :format-campaign-session-title="formatCampaignSessionTitle"
@@ -141,7 +142,7 @@
 		</template>
 
 		<!-- Pied de page navigation -->
-		<footer class="flex justify-start pt-2">
+    <footer class="flex justify-start pt-2 max-sm:hidden">
       <router-link class="btn btn-sm btn-ghost ui-critical-action" to="/campaigns">
 				<ChevronLeft class="h-4 w-4" />
         Retour aux campagnes

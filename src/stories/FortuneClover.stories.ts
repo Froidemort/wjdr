@@ -10,6 +10,9 @@ const meta: Meta<typeof FortuneClover> = {
     label: { control: 'text' },
     modelValue: { control: 'number' },
     maxPoints: { control: 'number' },
+    maxPointsEditable: { control: 'boolean' },
+    editable: { control: 'boolean' },
+    variant: { control: 'radio', options: ['fortune', 'destin'] },
   },
 };
 
@@ -56,5 +59,56 @@ export const HighCapacity: Story = {
     label: 'Points de Fortune',
     modelValue: 5,
     maxPoints: 6,
+  },
+};
+
+export const ReadOnly: Story = {
+  args: {
+    label: 'Destin',
+    modelValue: 2,
+    maxPoints: 4,
+    editable: false,
+  },
+};
+
+export const FortuneEditableMax: Story = {
+  render: (args) => ({
+    components: { FortuneClover },
+    setup() {
+      const points = ref(args.modelValue);
+      const maxPoints = ref(args.maxPoints);
+      return { args, points, maxPoints };
+    },
+    template: '<div class="max-w-xs"><FortuneClover v-bind="args" v-model="points" :max-points="maxPoints" @update:max-points="maxPoints = $event" /></div>',
+  }),
+  args: {
+    label: 'Fortune',
+    modelValue: 4,
+    maxPoints: 6,
+    maxPointsEditable: true,
+  },
+};
+
+export const Destin: Story = {
+  args: {
+    label: 'Destin',
+    modelValue: 2,
+    maxPoints: 4,
+    variant: 'destin',
+  },
+};
+
+export const NarrowReadOnly: Story = {
+  render: (args) => ({
+    components: { FortuneClover },
+    setup: () => ({ args }),
+    template: '<div class="max-w-xs"><FortuneClover v-bind="args" /></div>',
+  }),
+  args: {
+    label: 'Destin',
+    modelValue: 99,
+    maxPoints: 4,
+    variant: 'destin',
+    editable: false,
   },
 };

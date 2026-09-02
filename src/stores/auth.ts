@@ -33,6 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
   const initialized = ref(false)
   const authError = ref<string | null>(null)
+  const isRecoverySession = ref(false)
   const identityCache = ref<{
     userId: string | null
     displayName: string
@@ -150,7 +151,8 @@ export const useAuthStore = defineStore('auth', () => {
           await loadIdentity(user.value.id)
         }
 
-        supabase.auth.onAuthStateChange((_event, nextSession) => {
+        supabase.auth.onAuthStateChange((event, nextSession) => {
+          isRecoverySession.value = event === 'PASSWORD_RECOVERY'
           session.value = nextSession
           user.value = nextSession?.user ?? null
           if (user.value?.id) {
@@ -232,6 +234,45 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function requestPasswordReset(email: string): Promise<void> {
+    loading.value = true
+    authError.value = null
+
+    try {
+      const redirectTo = `${window.location.origin}/reset-password`
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo,
+      })
+
+      if (error) {
+        throw error
+      }
+    } catch (error) {
+      authError.value = error instanceof Error ? error.message : 'Demande de reinitialisation impossible.'
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updatePassword(password: string): Promise<void> {
+    loading.value = true
+    authError.value = null
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password })
+      if (error) {
+        throw error
+      }
+      isRecoverySession.value = false
+    } catch (error) {
+      authError.value = error instanceof Error ? error.message : 'Mise a jour du mot de passe impossible.'
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function signOut(): Promise<void> {
     loading.value = true
     authError.value = null
@@ -273,11 +314,14 @@ export const useAuthStore = defineStore('auth', () => {
     loading,
     initialized,
     authError,
+    isRecoverySession,
     isAuthenticated,
     initAuth,
     refreshDisplayName,
     signIn,
     signUp,
+    requestPasswordReset,
+    updatePassword,
     signOut,
   }
 })

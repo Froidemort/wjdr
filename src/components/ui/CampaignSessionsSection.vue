@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { CalendarDays, CircleCheck, Eye, Hourglass, Pencil, Trash2 } from '@lucide/vue'
+import { CalendarDays } from '@lucide/vue'
 import type { CampaignSummary, SessionSummary } from '../../types/domain'
 import AppCard from './AppCard.vue'
+import CampaignSessionsCalendar from './CampaignSessionsCalendar.vue'
+import CampaignSessionsTimeline from './CampaignSessionsTimeline.vue'
 
 type SessionTimelineFilter = 'all' | 'upcoming' | 'past'
 
@@ -39,6 +41,7 @@ const props = defineProps<{
   sessionCreateError: string | null
   sessionCreateDateError: string | null
   sessionCreateForm: SessionCreateForm
+  isMobile: boolean
   formatCampaignSessionDate: (value: string) => string
   formatCampaignSessionDateCompact: (value: string) => string
   formatCampaignSessionTitle: (session: SessionSummary) => string
@@ -57,14 +60,6 @@ const emit = defineEmits<{
   'cancel-session-edit': []
   'create-session': []
 }>()
-
-function onSessionEditFieldInput(
-  key: keyof SessionEditForm,
-  event: Event
-): void {
-  const target = event.target as HTMLInputElement | HTMLTextAreaElement
-  emit('patch:sessionEditForm', { [key]: target.value })
-}
 
 function onSessionCreateFieldInput(
   key: keyof SessionCreateForm,
@@ -137,155 +132,35 @@ function onSessionCreateFieldInput(
         <span>Aucune session pour ce filtre.</span>
       </div>
 
-      <ul
+      <CampaignSessionsCalendar
+        v-if="isMobile"
+        :sessions="timelineSessions"
+        :format-campaign-session-title="formatCampaignSessionTitle"
+        :get-session-date-status="getSessionDateStatus"
+        :build-campaign-session-detail-link="buildCampaignSessionDetailLink"
+      />
+
+      <CampaignSessionsTimeline
         v-else
-        class="timeline timeline-snap-icon timeline-vertical relative pl-1 sm:pl-3 [--timeline-col-start:4.8rem] sm:[--timeline-col-start:minmax(0,1fr)] before:absolute before:top-0 before:bottom-0 before:w-px before:bg-base-300 before:left-[5.05rem] sm:before:left-1/2 sm:before:-translate-x-1/2"
-      >
-        <li v-for="sessionItem in timelineSessions" :key="sessionItem.id">
-          <hr class="hidden" />
-          <div class="timeline-start">
-            <div class="space-y-2 text-right">
-              <div class="badge badge-outline badge-primary text-xs sm:hidden">
-                {{ formatCampaignSessionDateCompact(sessionItem.date) }}
-              </div>
-              <div class="badge badge-outline badge-primary hidden sm:inline-flex">
-                {{ formatCampaignSessionDate(sessionItem.date) }}
-              </div>
-            </div>
-          </div>
-          <div class="timeline-middle">
-            <Hourglass
-              v-if="getSessionDateStatus(sessionItem.date) !== 'past'"
-              class="h-4 w-4 rounded-full bg-info/10 text-info ring-1 ring-info/30 shadow-sm"
-              aria-hidden="true"
-            />
-            <CircleCheck
-              v-else
-              class="h-4 w-4 rounded-full bg-secondary/10 text-secondary ring-1 ring-secondary/30 shadow-sm"
-              aria-hidden="true"
-            />
-          </div>
-          <div class="timeline-end timeline-box w-full space-y-3 p-4 sm:p-5">
-            <div class="space-y-2">
-              <div class="pr-1">
-                <h3
-                  class="block max-w-full truncate text-xs font-semibold leading-snug sm:text-sm md:text-base"
-                  :title="formatCampaignSessionTitle(sessionItem)"
-                >
-                  {{ formatCampaignSessionTitle(sessionItem) }}
-                </h3>
-              </div>
-              <div class="flex flex-wrap items-center gap-2">
-                <router-link class="btn btn-xs ui-critical-action" :to="buildCampaignSessionDetailLink(sessionItem.id)">
-                  <Eye class="h-3.5 w-3.5" aria-hidden="true" />
-                  <span class="sr-only sm:not-sr-only sm:inline">Ouvrir</span>
-                </router-link>
-                <button
-                  v-if="isMj"
-                  class="btn btn-xs ui-critical-action"
-                  :disabled="sessionEditBusyId === sessionItem.id"
-                  :aria-busy="sessionEditBusyId === sessionItem.id ? 'true' : 'false'"
-                  @click="emit('start-session-edit', sessionItem)"
-                >
-                  <Pencil class="h-3.5 w-3.5" aria-hidden="true" />
-                  <span class="sr-only sm:not-sr-only sm:inline">Modifier</span>
-                </button>
-                <button
-                  v-if="isMj"
-                  class="btn btn-xs btn-error ui-critical-action"
-                  :disabled="sessionDeleteBusyId === sessionItem.id || sessionEditBusyId === sessionItem.id"
-                  :aria-busy="sessionDeleteBusyId === sessionItem.id ? 'true' : 'false'"
-                  @click="emit('delete-session', sessionItem)"
-                >
-                  <span
-                    v-if="sessionDeleteBusyId === sessionItem.id"
-                    class="loading loading-spinner loading-xs"
-                    aria-hidden="true"
-                  />
-                  <Trash2 v-else class="h-3.5 w-3.5" aria-hidden="true" />
-                  <span class="sr-only sm:not-sr-only sm:inline">Supprimer</span>
-                </button>
-              </div>
-            </div>
-            <p v-if="sessionItem.description" class="text-sm whitespace-pre-line opacity-80">
-              {{ sessionItem.description }}
-            </p>
-
-            <div
-              v-if="sessionEditId === sessionItem.id"
-              class="rounded-box border border-base-300 bg-base-100 p-4 space-y-3"
-            >
-              <div class="grid gap-3 lg:grid-cols-2">
-                <label class="form-control">
-                  <span class="label-text mb-2">Date</span>
-                  <input
-                    :value="props.sessionEditForm.date"
-                    type="date"
-                    class="input input-bordered ui-critical-control"
-                    :aria-invalid="sessionEditDateError ? 'true' : 'false'"
-                    :aria-errormessage="sessionEditDateError ? 'session-edit-date-error' : undefined"
-                    :aria-describedby="sessionEditDateError ? 'session-edit-date-error' : undefined"
-                    @input="onSessionEditFieldInput('date', $event)"
-                  />
-                  <p v-if="sessionEditDateError" id="session-edit-date-error" class="label text-error text-xs">
-                    {{ sessionEditDateError }}
-                  </p>
-                </label>
-                <label class="form-control">
-                  <span class="label-text mb-2">Titre</span>
-                  <input
-                    :value="props.sessionEditForm.name"
-                    type="text"
-                    class="input input-bordered ui-critical-control"
-                    :aria-invalid="sessionEditError ? 'true' : 'false'"
-                    maxlength="100"
-                    placeholder="Titre optionnel"
-                    @input="onSessionEditFieldInput('name', $event)"
-                  />
-                </label>
-                <label class="form-control lg:col-span-2">
-                  <span class="label-text mb-2">Description</span>
-                  <textarea
-                    :value="props.sessionEditForm.description"
-                    class="textarea textarea-bordered ui-critical-control min-h-24"
-                    :aria-invalid="sessionEditError ? 'true' : 'false'"
-                    maxlength="500"
-                    placeholder="Résumé, enjeux, conséquences..."
-                    @input="onSessionEditFieldInput('description', $event)"
-                  />
-                </label>
-              </div>
-
-              <div class="flex flex-wrap items-center gap-2">
-                <button
-                  class="btn btn-xs ui-critical-action"
-                  :disabled="sessionEditBusyId === sessionItem.id"
-                  :aria-busy="sessionEditBusyId === sessionItem.id ? 'true' : 'false'"
-                  @click="emit('save-session-edit', sessionItem.id)"
-                >
-                  <span
-                    v-if="sessionEditBusyId === sessionItem.id"
-                    class="loading loading-spinner loading-xs"
-                    aria-hidden="true"
-                  />
-                  Enregistrer
-                </button>
-                <button
-                  class="btn btn-xs btn-ghost ui-critical-action"
-                  :disabled="sessionEditBusyId === sessionItem.id"
-                  @click="emit('cancel-session-edit')"
-                >
-                  Annuler
-                </button>
-              </div>
-
-              <div v-if="sessionEditError" role="alert" class="alert alert-error alert-soft text-sm">
-                <span>{{ sessionEditError }}</span>
-              </div>
-            </div>
-          </div>
-        </li>
-      </ul>
+        :sessions="timelineSessions"
+        :is-mj="isMj"
+        :session-delete-busy-id="sessionDeleteBusyId"
+        :session-edit-id="sessionEditId"
+        :session-edit-busy-id="sessionEditBusyId"
+        :session-edit-error="sessionEditError"
+        :session-edit-date-error="sessionEditDateError"
+        :session-edit-form="sessionEditForm"
+        :format-campaign-session-date="formatCampaignSessionDate"
+        :format-campaign-session-date-compact="formatCampaignSessionDateCompact"
+        :format-campaign-session-title="formatCampaignSessionTitle"
+        :get-session-date-status="getSessionDateStatus"
+        :build-campaign-session-detail-link="buildCampaignSessionDetailLink"
+        @patch:session-edit-form="emit('patch:sessionEditForm', $event)"
+        @start-session-edit="emit('start-session-edit', $event)"
+        @delete-session="emit('delete-session', $event)"
+        @save-session-edit="emit('save-session-edit', $event)"
+        @cancel-session-edit="emit('cancel-session-edit')"
+      />
 
       <div v-if="isMj" class="space-y-4 border-t border-base-300 pt-4">
         <h3 class="text-sm font-semibold uppercase tracking-[0.15em] opacity-70">Ajouter une session datée</h3>

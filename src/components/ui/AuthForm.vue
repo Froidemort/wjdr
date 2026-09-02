@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useAuthFormStore } from '../../stores/authForm'
 import PasswordInput from './PasswordInput.vue'
 
 const authFormStore = useAuthFormStore()
 const authStore = useAuthStore()
+const router = useRouter()
 const identifier = ref('')
 const email = ref('')
 const username = ref('')
@@ -13,6 +15,11 @@ const password = ref('')
 const passwordConfirm = ref('')
 const localError = ref<string | null>(null)
 const formSubmitted = ref(false)
+const isResetRequested = ref(false)
+const isResetFormOpen = ref(false)
+const resetEmail = ref('')
+const resetError = ref<string | null>(null)
+const resetEmailInput = ref<HTMLInputElement | null>(null)
 
 const isLogin = computed(() => authFormStore.mode === 'login')
 
@@ -87,8 +94,28 @@ watch(
     localError.value = null
     formSubmitted.value = false
     passwordConfirm.value = ''
+    isResetFormOpen.value = false
+    isResetRequested.value = false
+    resetError.value = null
   },
 )
+
+async function toggleResetForm(): Promise<void> {
+  isResetFormOpen.value = !isResetFormOpen.value
+  resetError.value = null
+  isResetRequested.value = false
+
+  if (isResetFormOpen.value) {
+    await nextTick()
+    resetEmailInput.value?.focus()
+  }
+}
+
+function closeResetForm(): void {
+  isResetFormOpen.value = false
+  resetError.value = null
+  isResetRequested.value = false
+}
 
 async function onSubmit(): Promise<void> {
   formSubmitted.value = true
@@ -107,6 +134,7 @@ async function onSubmit(): Promise<void> {
   try {
     if (isLogin.value) {
       await authStore.signIn(identifier.value, password.value)
+      await router.replace('/')
     } else {
       await authStore.signUp(username.value, email.value, password.value)
     }
@@ -120,11 +148,71 @@ async function onSubmit(): Promise<void> {
     localError.value = authStore.authError ?? 'Action impossible.'
   }
 }
+
+async function requestPasswordReset(): Promise<void> {
+  resetError.value = null
+  isResetRequested.value = false
+
+  const normalizedEmail = resetEmail.value.trim()
+  if (!isValidEmail(normalizedEmail)) {
+    resetError.value = 'Renseigne une adresse email valide.'
+    return
+  }
+
+  try {
+    await authStore.requestPasswordReset(normalizedEmail)
+    isResetRequested.value = true
+  } catch {
+    resetError.value = authStore.authError ?? 'Demande impossible.'
+  }
+}
 </script>
 
 <template>
-  <div class="w-full" aria-labelledby="auth-form-title">
+  <div class="w-full" :aria-labelledby="isResetFormOpen ? 'password-reset-title' : 'auth-form-title'">
+    <section v-if="isResetFormOpen" id="password-reset-panel" class="space-y-4" aria-labelledby="password-reset-title">
+      <header class="space-y-2 border-b border-base-300/70 pb-4 text-center">
+        <h2 id="password-reset-title" class="font-[family-name:var(--font-grim-title)] text-xl uppercase tracking-wide">
+          Récupération du mot de passe
+        </h2>
+        <p class="text-sm text-base-content/70">
+          Renseigne l'adresse email associée à ton compte.
+        </p>
+      </header>
+
+      <form class="space-y-4" @submit.prevent="requestPasswordReset">
+        <label class="form-control">
+          <span class="label py-1"><span class="label-text">Email de récupération</span></span>
+          <input
+            ref="resetEmailInput"
+            v-model="resetEmail"
+            type="email"
+            class="input w-full ui-critical-control"
+            required
+            autocomplete="email"
+            aria-describedby="password-reset-help"
+          />
+        </label>
+        <p id="password-reset-help" class="text-xs text-base-content/60 pt-2">
+          Un lien sera envoyé si cette adresse est associée à un compte.
+        </p>
+        <div v-if="resetError" role="alert" aria-live="assertive" class="alert alert-error alert-soft text-sm"><span>{{ resetError }}</span></div>
+        <div v-if="isResetRequested" role="status" aria-live="polite" class="alert alert-success alert-soft text-sm">
+          <span>Si cette adresse est associée à un compte, un email de récupération vient d'être envoyé.</span>
+        </div>
+        <button type="submit" class="btn btn-primary ui-critical-action min-h-11 w-full" :disabled="authStore.loading" :aria-busy="authStore.loading ? 'true' : 'false'">
+          <span v-if="authStore.loading" class="loading loading-spinner loading-sm" aria-hidden="true" />
+          Envoyer le lien de récupération
+        </button>
+      </form>
+
+      <button type="button" class="link link-primary block mx-auto text-sm font-semibold" @click="closeResetForm">
+        Retour à la connexion
+      </button>
+    </section>
+
     <div
+      v-else
       role="tablist"
       aria-label="Mode d'authentification"
       class="mb-6 flex justify-center gap-8 border-b border-base-300/70 sm:gap-12"
@@ -153,11 +241,12 @@ async function onSubmit(): Promise<void> {
       </button>
     </div>
 
-    <h2 id="auth-form-title" class="sr-only">
+    <h2 v-if="!isResetFormOpen" id="auth-form-title" class="sr-only">
       {{ isLogin ? 'Connexion' : 'Inscription' }}
     </h2>
 
     <form
+      v-if="!isResetFormOpen"
       id="auth-form-panel"
       role="tabpanel"
       :aria-labelledby="isLogin ? 'auth-tab-login' : 'auth-tab-signup'"
@@ -222,7 +311,19 @@ async function onSubmit(): Promise<void> {
       </button>
     </form>
 
-    <div class="mt-5 border-t border-base-300/50 pt-4 text-center text-sm leading-relaxed text-base-content/70">
+    <div v-if="isLogin && !isResetFormOpen" class="mt-4 border-t border-base-300/50 pt-4">
+      <button
+        type="button"
+        class="link link-primary block mx-auto text-sm font-semibold"
+        aria-controls="password-reset-panel"
+        :aria-expanded="isResetFormOpen ? 'true' : 'false'"
+        @click="toggleResetForm"
+      >
+        Mot de passe oublié ?
+      </button>
+    </div>
+
+    <div v-if="!isResetFormOpen" class="mt-5 border-t border-base-300/50 pt-4 text-center text-sm leading-relaxed text-base-content/70">
       <p v-if="isLogin">
         Nouveau dans l'Empire ?
         <button

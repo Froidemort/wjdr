@@ -18,3 +18,4 @@ describe('legacy sessions routes redirects', () => {
     expect(buildLegacySessionTimelineRedirect('c-01', 's-77')).toBe('/campaigns/c-01/timeline/s-77')
   })
 })
+

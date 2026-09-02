@@ -5,10 +5,15 @@ const props = withDefaults(
   defineProps<{
     modelValue: number;
     maxHp: number;
+    label?: string;
+    mobileLabel?: string;
+    editable?: boolean;
   }>(),
   {
     modelValue: 10,
     maxHp: 15,
+    label: 'Points de Blessures',
+    editable: true,
   }
 );
 
@@ -16,12 +21,17 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: number): void;
 }>();
 
+const resolvedMaxHp = computed(() => Math.max(0, Math.floor(props.maxHp)));
+const clampedCurrentHp = computed(() =>
+  Math.min(resolvedMaxHp.value, Math.max(0, Math.floor(props.modelValue)))
+);
+
 // Animation du battement de cœur
 const isBeating = ref(false);
 
 const heartBeatFrequency = computed(() => {
-  if (currentHp.value <= 3) return '200ms';
-  if (currentHp.value <= props.maxHp / 2) return '450ms';
+  if (clampedCurrentHp.value <= 3) return '200ms';
+  if (clampedCurrentHp.value <= resolvedMaxHp.value / 2) return '450ms';
   return '650ms';
 });
 
@@ -36,7 +46,9 @@ const triggerHeartbeat = () => {
 const currentHp = computed({
   get: () => props.modelValue,
   set: (val: number) => {
-    const sanitized = Math.min(props.maxHp, Math.max(0, Number(val) || 0));
+    if (!props.editable) return;
+
+    const sanitized = Math.min(resolvedMaxHp.value, Math.max(0, Math.floor(Number(val) || 0)));
     if (sanitized !== props.modelValue) {
       emit('update:modelValue', sanitized);
       triggerHeartbeat();
@@ -46,24 +58,24 @@ const currentHp = computed({
 
 // Calcul du pourcentage de remplissage
 const hpPercentage = computed(() => {
-  if (props.maxHp <= 0) return 0;
-  return Math.min(100, Math.max(0, (currentHp.value / props.maxHp) * 100));
+  if (resolvedMaxHp.value <= 0) return 0;
+  return Math.min(100, Math.max(0, (clampedCurrentHp.value / resolvedMaxHp.value) * 100));
 });
 
 // Code couleur dynamique : Vert > 50%, Orange entre 3PV et 50%, Rouge <= 3PV
 const hpColorClass = computed(() => {
-  if (currentHp.value <= 3) return 'text-error';
-  if (currentHp.value <= props.maxHp / 2) return 'text-warning';
+  if (clampedCurrentHp.value <= 3) return 'text-error';
+  if (clampedCurrentHp.value <= resolvedMaxHp.value / 2) return 'text-warning';
   return 'text-success';
 });
 
 // Incrémentation et décrémentation
 const decrease = () => {
-  if (currentHp.value > 0) currentHp.value--;
+  if (clampedCurrentHp.value > 0) currentHp.value--;
 };
 
 const increase = () => {
-  if (currentHp.value < props.maxHp) currentHp.value++;
+  if (clampedCurrentHp.value < resolvedMaxHp.value) currentHp.value++;
 };
 
 // Détection des changements externes pour déclencher l'animation
@@ -76,26 +88,39 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center text-2xl">
-    <span class="font-bold text-primary tracking-wider mb-2">PV</span>
+  <article class="card h-full min-w-0 border border-base-300 bg-base-100">
+    <div class="card-body gap-2 p-3 sm:gap-3 sm:p-4 md:min-h-64">
+      <div class="flex items-baseline justify-between gap-2">
+        <p class="text-sm font-semibold leading-tight text-base-content/85" :aria-label="label">
+          <span class="hidden sm:inline">{{ label }}</span>
+          <span class="sm:hidden">{{ mobileLabel || 'Blessures' }}</span>
+        </p>
+        <p class="text-sm font-semibold tabular-nums text-base-content/75">
+          {{ clampedCurrentHp }} / {{ resolvedMaxHp }}
+        </p>
+      </div>
 
-    <div class="flex items-center justify-center gap-4 sm:gap-6 p-4 select-none">
+      <div
+        class="select-none"
+        :class="editable ? 'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3' : 'flex justify-center'"
+      >
       <!-- Bouton - (Décrémenter) -->
       <button
+        v-if="editable"
         type="button"
         @click="decrease"
         :disabled="currentHp <= 0"
-        class="btn btn-circle btn-lg border-2 border-base-300 base-content-200 hover:base-content-300 hover:text-base-content shadow-md transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30 text-2xl font-bold"
-        aria-label="Diminuer les points de vie"
+        class="btn btn-circle btn-sm min-h-11 min-w-11 border border-base-300 bg-base-100 text-base-content transition-transform active:scale-95"
+        :aria-label="`Diminuer les ${label.toLowerCase()}`"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 stroke-current stroke-[3]" fill="none" viewBox="0 0 24 24">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 stroke-current" fill="none" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
         </svg>
       </button>
 
       <!-- Conteneur Cœur central agrandi -->
       <div
-        class="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center transition-transform duration-300"
+        class="relative mx-auto aspect-square w-full max-w-36 sm:max-w-44 md:max-w-48 transition-transform duration-300"
         :class="{ 'animate-heartbeat': isBeating }"
       >
         <!-- Cœur d'arrière-plan (Vide / Muted) -->
@@ -108,11 +133,11 @@ watch(
 
         <!-- Cœur de remplissage (Niveau dynamique de bas en haut) -->
         <div
-          class="absolute inset-x-0 bottom-0 overflow-hidden transition-all duration-500 ease-out flex items-end justify-center"
-          :style="{ height: `${hpPercentage}%` }"
+          class="absolute inset-0 overflow-hidden transition-[clip-path] duration-500 ease-out"
+          :style="{ clipPath: `inset(${100 - hpPercentage}% 0 0 0)` }"
         >
           <svg
-            class="w-56 h-56 sm:w-64 sm:h-64 fill-current transition-colors duration-300 drop-shadow-2xl absolute bottom-0"
+            class="absolute inset-0 h-full w-full fill-current transition-colors duration-300"
             :class="hpColorClass"
             viewBox="0 0 24 24"
           >
@@ -122,40 +147,45 @@ watch(
 
         <!-- Valeurs superposées exactement au centre du cœur -->
         <div
-          class="absolute inset-0 z-10 flex items-center justify-center text-white pointer-events-none"
+          class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
         >
-          <div class="flex items-baseline justify-center pointer-events-auto -mt-2">
+          <div class="flex flex-col items-center justify-center text-base-content leading-none">
             <!-- Champ éditable pour les PV actuels (centré au milieu du cœur) -->
             <input
+              v-if="editable"
               type="number"
               v-model.number="currentHp"
               min="0"
-              :max="maxHp"
+              :max="resolvedMaxHp"
               aria-label="Points de vie actuels"
-              class="w-20 sm:w-24 bg-transparent 
-              text-center text-5xl sm:text-6xl 
-              text-base-content p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-0 border-none"
+              class="w-16 bg-transparent text-center text-4xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none sm:w-20 sm:text-5xl"
             />
+            <span
+              v-else
+              class="w-16 text-center text-4xl font-black sm:w-20 sm:text-5xl"
+            >{{ clampedCurrentHp }}</span>
             <!-- Affichage secondaire des PV Max (placé à droite, légèrement plus petit) -->
-            <span class="text-xl text-base-content sm:text-2xl font-bold opacity-80 -ml-1">/ {{ maxHp }}</span>
+            <span class="mt-1 text-sm font-bold opacity-85 sm:text-base">/ {{ resolvedMaxHp }}</span>
           </div>
         </div>
       </div>
 
       <!-- Bouton + (Incrémenter) -->
       <button
+        v-if="editable"
         type="button"
         @click="increase"
         :disabled="currentHp >= maxHp"
-        class="btn btn-circle btn-lg border-2 border-base-300 base-content-200 hover:base-content-300 hover:text-base-content shadow-md transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30 text-2xl font-bold"
-        aria-label="Augmenter les points de vie"
+        class="btn btn-circle btn-sm min-h-11 min-w-11 border border-base-300 bg-base-100 text-base-content transition-transform active:scale-95"
+        :aria-label="`Augmenter les ${label.toLowerCase()}`"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 stroke-current stroke-[3]" fill="none" viewBox="0 0 24 24">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 stroke-current" fill="none" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
         </svg>
       </button>
+      </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <style scoped>

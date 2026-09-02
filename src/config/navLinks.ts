@@ -8,6 +8,6 @@ export interface NavLink {
 
 /** Centered navbar links — add entries here to extend main navigation. */
 export const mainNavLinks: readonly NavLink[] = [
-  { to: '/sessions', label: 'Campagnes', icon: Scroll },
+  { to: '/campaigns', label: 'Campagnes', icon: Scroll },
   { to: '/characters', label: 'Personnages', icon: Users },
 ]
