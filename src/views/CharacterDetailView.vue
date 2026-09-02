@@ -17,56 +17,47 @@
 						/>
 					</div>
 					<div class="flex flex-wrap items-center gap-2 text-sm opacity-90">
-						<UserCog class="h-5 w-5" />
-						<span class="text-xl">{{ character.careerName || 'Inconnue' }}</span>
 						<button
 							v-if="canEditQuickSection"
-              class="btn btn-sm btn-square min-h-11 min-w-11"
+              class="btn btn-accent min-h-11 min-w-11"
 							aria-label="Modifier la carrière"
 							@click="openCareerModal"
 						>
-							<Pencil class="h-4 w-4" />
+              <UserPen :size="24" stroke-width="1.5">
+              </UserPen>
 						</button>
-						<span class="badge">PJ</span>
+						<span class="text-xl">{{ character.careerName || 'Inconnue' }}</span>
 						<span v-if="!canEditQuickSection" class="badge badge-neutral">Lecture seule</span>
 					</div>
 				</div>
 
           <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-            <CharacterValueCard
-              label="Vie"
-              :icon="Heart"
-              icon-class="h-6 w-6 text-error"
-              :current="editable.pvCurrent"
-              :max="editable.pvMax"
+            <HealthHeart
+              :model-value="editable.pvCurrent"
+              :max-hp="editable.pvMax"
+              label="Points de Blessures"
+              mobile-label="Blessures"
               :editable="canEditQuickSection"
-              :max-editable="false"
-              current-aria-label="Valeur courante de vie"
-              max-aria-label="Valeur maximale de vie"
-              @update:current="onQuickValueChange('pvCurrent', $event)"
+              @update:model-value="onQuickValueChange('pvCurrent', $event)"
             />
-            <CharacterValueCard
+            <FortuneClover
               label="Fortune"
-              :icon="Clover"
-              icon-class="h-6 w-6 text-success"
-              :current="editable.fortuneCurrent"
-              :max="editable.fortuneMax"
+              :model-value="editable.fortuneCurrent"
+              :max-points="editable.fortuneMax"
+              max-points-editable
               :editable="canEditQuickSection"
-              current-aria-label="Valeur courante de fortune"
-              max-aria-label="Valeur maximale de fortune"
-              @update:current="onQuickValueChange('fortuneCurrent', $event)"
-              @update:max="onQuickValueChange('fortuneMax', $event)"
-            />
-            <CharacterValueCard
+              @update:model-value="onQuickValueChange('fortuneCurrent', $event)"
+              @update:max-points="onQuickValueChange('fortuneMax', $event)"
+              />
+              <FortuneClover
               label="Destin"
-              :icon="WandSparkles"
-              icon-class="h-6 w-6 text-accent"
-              :current="editable.destinyCurrent"
-              :max="editable.destinyCurrent"
+              :model-value="editable.destinyCurrent"
+              :max-points="editable.destinyMax"
+              max-points-editable
+              variant="destin"
               :editable="canEditQuickSection"
-              current-aria-label="Valeur courante de destin"
-              max-aria-label="Valeur maximale de destin"
-              @update:current="onQuickValueChange('destinyCurrent', $event)"
+              @update:model-value="onQuickValueChange('destinyCurrent', $event)"
+              @update:max-points="onQuickValueChange('destinyMax', $event)"
             />
             <CharacterValueCard
               label="Experience"
@@ -86,6 +77,7 @@
               icon-class="h-6 w-6 text-warning"
               :current="editable.insanityPoints"
               :editable="canEditQuickSection"
+              class="border-2"
               current-aria-label="Points de folie"
               @update:current="onQuickValueChange('insanityPoints', $event)"
             />
@@ -265,15 +257,17 @@
           </div>
 					<div v-if="sortedCharacterSkills.length === 0" class="text-sm opacity-70">Aucune compétence.</div>
 					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <article v-for="skill in sortedCharacterSkills" :key="skill.skillId" v-memo="[skill.masteryLevel, canEditQuickSection]" class="group card border border-base-300 bg-base-100">
-							<div class="card-body p-3 gap-3">
-								<div class="flex items-start justify-between gap-2">
-									<div class="flex items-start gap-2">
-                    <h4 class="font-semibold">{{ formatNamedWithSpecialization(skill.name, skill.specialization) }}</h4>
-                    <span class="badge badge-neutral badge-sm self-start">{{ skill.statCode }}</span>
+            <article v-for="skill in sortedCharacterSkills" :key="skill.skillId" class="group card border border-base-300 bg-base-100">
+              <div class="card-body min-w-0 p-3 gap-3">
+                <div class="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div class="flex min-w-0 flex-1 flex-wrap items-start gap-2">
+                    <h4 class="min-w-0 max-w-full break-words text-left [overflow-wrap:anywhere] font-semibold leading-snug">
+                      {{ formatNamedWithSpecialization(skill.name, skill.specialization) }}
+                    </h4>
+                    <span class="badge badge-neutral badge-sm shrink-0 self-start">{{ skill.statCode }}</span>
 										<div
 											v-if="!skill.isBasic"
-											class="tooltip self-start"
+											class="tooltip shrink-0 self-start"
 											data-tip="Compétence avancée"
 										>
 											<svg
@@ -290,7 +284,7 @@
 											</svg>
 										</div>
 									</div>
-                  <div class="hover-actions flex items-center gap-1">
+                  <div class="hover-actions ml-auto flex shrink-0 items-center gap-1 self-end sm:self-start">
 										<button
 											v-if="skill.description"
                       class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
@@ -304,46 +298,54 @@
 										</button>
 									</div>
 								</div>
-								<div class="join" role="radiogroup" aria-label="Niveau de maîtrise">
-									<button
-                    class="btn btn-sm h-11 min-h-11 join-item"
-										:class="skill.masteryLevel === 1 ? 'btn-active' : ''"
+								<div v-if="canEditQuickSection" class="relative w-full self-start sm:w-auto" data-skill-mastery-control>
+                  <button
+                    :ref="(element) => setSkillMasteryTrigger(skill.skillId, element)"
+                    type="button"
+                    class="btn btn-sm h-11 min-h-11 w-full sm:w-auto"
+                    :aria-expanded="activeSkillMasteryId === skill.skillId"
+                    :aria-controls="`skill-mastery-options-${skill.skillId}`"
                     :disabled="Boolean(actionBusyKey)"
                     :aria-busy="actionBusyKey === `mastery-${skill.skillId}` ? 'true' : 'false'"
-										@click="onChangeSkillMastery(skill.skillId, 1)"
-									>
-										Acquis
-									</button>
-									<button
-                    class="btn btn-sm h-11 min-h-11 join-item"
-										:class="skill.masteryLevel === 2 ? 'btn-active' : ''"
-                    :disabled="Boolean(actionBusyKey)"
-                    :aria-busy="actionBusyKey === `mastery-${skill.skillId}` ? 'true' : 'false'"
-										@click="onChangeSkillMastery(skill.skillId, 2)"
-									>
-										+10%
-									</button>
-									<button
-                    class="btn btn-sm h-11 min-h-11 join-item"
-										:class="skill.masteryLevel === 3 ? 'btn-active' : ''"
-                    :disabled="Boolean(actionBusyKey)"
-                    :aria-busy="actionBusyKey === `mastery-${skill.skillId}` ? 'true' : 'false'"
-										@click="onChangeSkillMastery(skill.skillId, 3)"
-									>
-										+20%
-									</button>
-								</div>
+                    @click="toggleSkillMastery(skill.skillId)"
+                  >
+                    {{ skillMasteryLabel(skill.masteryLevel) }}
+                  </button>
+                  <div
+                    v-if="activeSkillMasteryId === skill.skillId"
+                    :id="`skill-mastery-options-${skill.skillId}`"
+                    class="absolute left-0 top-full z-30 mt-1 w-40 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-1 shadow-xl"
+                    role="group"
+                    aria-label="Choisir le niveau de maîtrise"
+                  >
+                    <button
+                      v-for="level in SKILL_MASTERY_LEVELS"
+                      :key="level"
+                      type="button"
+                      class="btn btn-ghost btn-sm min-h-10 w-full justify-start"
+                      :class="skill.masteryLevel === level ? 'btn-active' : ''"
+                      :aria-pressed="skill.masteryLevel === level"
+                      :disabled="Boolean(actionBusyKey)"
+                      @click="selectSkillMastery(skill.skillId, level)"
+                    >
+                      {{ skillMasteryLabel(level) }}
+                    </button>
+                  </div>
+                </div>
+                <span v-else class="badge badge-neutral min-h-11 self-start px-3" aria-label="Niveau de maîtrise">
+                  {{ skillMasteryLabel(skill.masteryLevel) }}
+                </span>
 
                 <div v-if="skill.linkedTalents?.length" class="mt-3 space-y-1.5">
                   <div class="text-[10px] font-semibold uppercase tracking-wide opacity-60">
                     Talents liés
                   </div>
-                  <div class="flex flex-wrap gap-1.5">
+                  <div class="flex min-w-0 flex-wrap gap-1.5">
                     <button
                       v-for="talent in skill.linkedTalents"
                       :key="`${skill.skillId}-${talent.talentId}`"
                       type="button"
-                      class="btn btn-xs btn-outline h-8 min-h-8 px-2"
+                      class="btn btn-xs btn-outline h-auto min-h-8 max-w-full justify-start whitespace-normal break-words px-2 text-left [overflow-wrap:anywhere]"
                       @click="openDescriptionModal(formatNamedWithSpecialization(talent.name, talent.specialization), talent.description)"
                     >
                       {{ formatNamedWithSpecialization(talent.name, talent.specialization) }}
@@ -368,10 +370,12 @@
           <div v-if="sortedCharacterTalents.length === 0" class="text-sm opacity-70">Aucun talent.</div>
           <div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <article v-for="talent in sortedCharacterTalents" :key="talent.talentId" v-memo="[talent.talentId, canEditQuickSection]" class="group card border border-base-300 bg-base-100">
-              <div class="card-body p-3 gap-2">
-                <div class="flex items-start justify-between gap-2">
-                  <h4 class="font-semibold">{{ formatNamedWithSpecialization(talent.name, talent.specialization) }}</h4>
-                  <div class="hover-actions flex items-center gap-1">
+              <div class="card-body min-w-0 p-3 gap-2">
+                <div class="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <h4 class="min-w-0 max-w-full flex-1 break-words text-left [overflow-wrap:anywhere] font-semibold leading-snug">
+                    {{ formatNamedWithSpecialization(talent.name, talent.specialization) }}
+                  </h4>
+                  <div class="hover-actions ml-auto flex shrink-0 items-center gap-1 self-end sm:self-start">
                     <button
                       v-if="talent.description"
                       class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
@@ -1057,7 +1061,7 @@
           <ChevronLeft class="h-4 w-4" />
           Retour à la campagne
         </router-link>
-        <router-link class="btn btn-sm min-h-11 flex-1" to="/">
+        <router-link class="btn btn-sm min-h-11 flex-1 max-sm:hidden" to="/">
           <ChevronLeft class="h-4 w-4" />
           Menu principal
         </router-link>
@@ -1073,24 +1077,21 @@ import {
   Import,
   Info,
   LoaderCircle,
-  Clover,
-  Heart,
   Mars,
-  Pencil,
   Plus,
   ScrollText,
   Hospital,
   Shield,
   Sword,
   Trash2,
-  UserCog,
-  WandSparkles,
+  UserPen,
   Venus,
   Weight,
 } from '@lucide/vue'
 import { useDebounceFn, useTimeoutFn } from '@vueuse/core'
 import { useRouteParams } from '@vueuse/router'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { createCatalogItem, searchCatalog } from '../services/catalogRepository'
 import {
   listCareerCharacteristicsByCareerId,
@@ -1139,6 +1140,8 @@ import AppCard from '../components/ui/AppCard.vue'
 import CharacterDerivedStatsCard from '../components/ui/CharacterDerivedStatsCard.vue'
 import CharacteristicCard from '../components/ui/CharacteristicCard.vue'
 import CharacterMoneyCard from '../components/ui/CharacterMoneyCard.vue'
+import FortuneClover from '../components/ui/FortuneClover.vue'
+import HealthHeart from '../components/ui/HealthHeart.vue'
 import CharacterValueCard from '../components/ui/CharacterValueCard.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import StateCycleBadge from '../components/ui/StateCycleBadge.vue'
@@ -1197,6 +1200,7 @@ const CHARACTERISTICS_VIEW_OPTIONS = [
 ] as const
 
 const activeCharacterTab = ref<CharacterDetailTab>('profile')
+const SKILL_MASTERY_LEVELS = [1, 2, 3] as const
 const authStore = useAuthStore()
 const { confirmAction } = useConfirmAction()
 const { coerceMoney } = useMoneyCoercion()
@@ -1275,14 +1279,16 @@ const careerPathLoading = ref(false)
 const careerCharacteristicsLoading = ref(false)
 const catalogSearchLoading = ref(false)
 const actionBusyKey = ref<string | null>(null)
+const activeSkillMasteryId = ref<string | null>(null)
+const skillMasteryTriggers = new Map<string, HTMLElement>()
 
 const editable = ref({
   pvMax: 0,
   pvCurrent: 0,
   fortuneMax: 0,
   fortuneCurrent: 0,
-
   destinyCurrent: 0,
+  destinyMax: 0,
   xpTotal: 0,
   xpAvailable: 0,
   insanityPoints: 0,
@@ -1297,6 +1303,7 @@ const lastSavedEditable = ref({
   fortuneMax: 0,
   fortuneCurrent: 0,
   destinyCurrent: 0,
+  destinyMax: 0,
   xpTotal: 0,
   xpAvailable: 0,
   insanityPoints: 0,
@@ -1563,6 +1570,7 @@ const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpda
       fortune_max: normalizedPayload.fortuneMax,
       fortune_current: normalizedPayload.fortuneCurrent,
       destiny_current: normalizedPayload.destinyCurrent,
+      destiny_max: normalizedPayload.destinyMax,
       xp_total: normalizedPayload.xpTotal,
       xp_available: Math.min(normalizedPayload.xpAvailable, normalizedPayload.xpTotal),
       insanity_points: Math.max(0, normalizedPayload.insanityPoints),
@@ -1684,6 +1692,7 @@ function isEditableEqual(
     left.fortuneMax === right.fortuneMax &&
     left.fortuneCurrent === right.fortuneCurrent &&
     left.destinyCurrent === right.destinyCurrent &&
+    left.destinyMax === right.destinyMax &&
     left.xpTotal === right.xpTotal &&
     left.xpAvailable === right.xpAvailable &&
     left.insanityPoints === right.insanityPoints &&
@@ -1858,6 +1867,7 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
       fortuneMax: data.fortuneMax,
       fortuneCurrent: data.fortuneCurrent,
       destinyCurrent: data.destinyCurrent,
+      destinyMax: data.destinyMax,
       xpTotal: data.xpTotal,
       xpAvailable: data.xpAvailable,
       insanityPoints: data.insanityPoints,
@@ -1899,6 +1909,14 @@ function onQuickValueChange(field: keyof typeof editable.value, value: number): 
     editable.value[field] = Math.min(newValue, editable.value.pvMax) as never
   } else if (field === 'fortuneCurrent' && editable.value.fortuneMax !== undefined) {
     editable.value[field] = Math.min(newValue, editable.value.fortuneMax) as never
+  } else if (field === 'destinyCurrent' && editable.value.destinyMax !== undefined) {
+    editable.value[field] = Math.min(newValue, editable.value.destinyMax) as never
+  } else if (field === 'fortuneMax') {
+    editable.value[field] = newValue as never
+    editable.value.fortuneCurrent = Math.min(editable.value.fortuneCurrent, newValue)
+  } else if (field === 'destinyMax') {
+    editable.value[field] = newValue as never
+    editable.value.destinyCurrent = Math.min(editable.value.destinyCurrent, newValue)
   } else {
     editable.value[field] = newValue as never
   }
@@ -2670,6 +2688,60 @@ function openDescriptionModal(title: string, description: string | null): void {
   descriptionDialogRef.value?.showModal()
 }
 
+function skillMasteryLabel(level: (typeof SKILL_MASTERY_LEVELS)[number]): string {
+  return level === 1 ? 'Acquis' : `+${(level - 1) * 10}%`
+}
+
+function setSkillMasteryTrigger(
+  skillId: string,
+  element: Element | ComponentPublicInstance | null
+): void {
+  if (element instanceof HTMLElement) {
+    skillMasteryTriggers.set(skillId, element)
+  } else {
+    skillMasteryTriggers.delete(skillId)
+  }
+}
+
+function closeSkillMastery(): void {
+  const trigger = activeSkillMasteryId.value
+    ? skillMasteryTriggers.get(activeSkillMasteryId.value)
+    : null
+  activeSkillMasteryId.value = null
+  trigger?.focus()
+}
+
+function toggleSkillMastery(skillId: string): void {
+  if (activeSkillMasteryId.value === skillId) {
+    closeSkillMastery()
+    return
+  }
+
+  activeSkillMasteryId.value = skillId
+}
+
+async function selectSkillMastery(
+  skillId: string,
+  level: (typeof SKILL_MASTERY_LEVELS)[number]
+): Promise<void> {
+  await onChangeSkillMastery(skillId, level)
+  closeSkillMastery()
+}
+
+function onSkillMasteryPointerDown(event: PointerEvent): void {
+  const target = event.target
+  if (activeSkillMasteryId.value && target instanceof Element && !target.closest('[data-skill-mastery-control]')) {
+    closeSkillMastery()
+  }
+}
+
+function onSkillMasteryKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && activeSkillMasteryId.value) {
+    event.preventDefault()
+    closeSkillMastery()
+  }
+}
+
 function closeDescriptionModal(): void {
   if (descriptionDialogRef.value?.open) {
     descriptionDialogRef.value.close()
@@ -2853,6 +2925,10 @@ async function saveQuickFields(options: { immediate?: boolean } = {}): Promise<v
 
   if (editable.value.fortuneCurrent > editable.value.fortuneMax) {
     editable.value.fortuneCurrent = editable.value.fortuneMax
+  }
+
+  if (editable.value.destinyCurrent > editable.value.destinyMax) {
+    editable.value.destinyCurrent = editable.value.destinyMax
   }
 
   if (editable.value.xpAvailable > editable.value.xpTotal) {
@@ -3051,7 +3127,15 @@ watch(
   { immediate: true }
 )
 
+onMounted(() => {
+  document.addEventListener('pointerdown', onSkillMasteryPointerDown)
+  document.addEventListener('keydown', onSkillMasteryKeydown)
+})
+
 onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', onSkillMasteryPointerDown)
+  document.removeEventListener('keydown', onSkillMasteryKeydown)
+  skillMasteryTriggers.clear()
   scheduleDeferredRealtimeReload.cancel()
   scheduleDeferredLinksReload.cancel()
   scheduleCatalogSearch.cancel()

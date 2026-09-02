@@ -12,6 +12,7 @@ export interface CharacterRow {
   fortune_current: number
   fortune_max: number
   destiny_current: number
+  destiny_max: number
   xp_total: number
   xp_available: number
   insanity_points: number

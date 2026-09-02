@@ -37,6 +37,7 @@ function mapCharacter(
     fortuneCurrent: row.fortune_current,
     fortuneMax: row.fortune_max,
     destinyCurrent: row.destiny_current,
+    destinyMax: row.destiny_max,
     xpTotal: row.xp_total,
     xpAvailable: row.xp_available,
     insanityPoints: row.insanity_points,
@@ -295,7 +296,7 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
     const { data, error } = await supabase
       .from('characters')
       .select(
-        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, destiny_max, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
       )
       .eq('user_id', userId)
       .order('name', { ascending: true })
@@ -326,7 +327,7 @@ export async function listCharactersByCampaign(campaignId: string): Promise<Char
     const { data, error } = await supabase
       .from('characters')
       .select(
-        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
+        'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, destiny_max, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper'
       )
       .eq('campaign_id', campaignId)
       .order('name', { ascending: true })
@@ -358,7 +359,7 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
       supabase
         .from('characters')
         .select(
-          'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper, career:careers!characters_career_id_fkey(name)'
+          'id, name, race, gender, campaign_id, user_id, career_id, pv_current, fortune_current, fortune_max, destiny_current, destiny_max, xp_total, xp_available, insanity_points, money_gold, money_silver, money_copper, career:careers!characters_career_id_fkey(name)'
         )
         .eq('id', characterId)
         .maybeSingle(),
@@ -426,6 +427,7 @@ export async function updateCharacterCore(
     fortune_max: number
     fortune_current: number
     destiny_current: number
+    destiny_max: number
     xp_total: number
     xp_available: number
     insanity_points: number
@@ -655,6 +657,7 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
       career_id: careerId,
       pv_current: DEFAULT_WOUNDS_MAX,
       destiny_current: 2,
+      destiny_max: 2,
       fortune_max: 2,
       fortune_current: 2,
       xp_total: 0,

@@ -15,7 +15,7 @@ const props = withDefaults(
   }
 )
 
-const resolvedDestinyTotal = computed(() => props.destinyTotal ?? props.character.destinyCurrent)
+const resolvedDestinyTotal = computed(() => props.destinyTotal ?? props.character.destinyMax)
 
 function getProgress(current: number, max: number): number {
   if (max <= 0) {

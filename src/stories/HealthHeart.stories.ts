@@ -8,6 +8,9 @@ const meta: Meta<typeof HealthHeart> = {
   argTypes: {
     modelValue: { control: 'number' },
     maxHp: { control: 'number' },
+    label: { control: 'text' },
+    mobileLabel: { control: 'text' },
+    editable: { control: 'boolean' },
   },
 };
 
@@ -33,5 +36,35 @@ export const CriticalHealth: StoryObj<typeof HealthHeart> = {
   args: {
     modelValue: 2,
     maxHp: 15,
+  },
+};
+
+export const ReadOnly: StoryObj<typeof HealthHeart> = {
+  args: {
+    modelValue: 8,
+    maxHp: 15,
+    editable: false,
+  },
+};
+
+export const NarrowEditable: StoryObj<typeof HealthHeart> = {
+  render: (args) => ({
+    components: { HealthHeart },
+    setup: () => ({ args }),
+    template: '<div class="max-w-xs"><HealthHeart v-bind="args" /></div>',
+  }),
+  args: {
+    modelValue: 1,
+    maxHp: 15,
+    label: 'Points de Blessures',
+    mobileLabel: 'Blessures',
+  },
+};
+
+export const Empty: StoryObj<typeof HealthHeart> = {
+  args: {
+    modelValue: 0,
+    maxHp: 0,
+    editable: false,
   },
 };

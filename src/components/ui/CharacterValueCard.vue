@@ -8,6 +8,8 @@ const props = withDefaults(
     max?: number
     editable?: boolean
     maxEditable?: boolean
+    highlighted?: boolean
+    prominentMax?: boolean
     icon: Component
     iconClass: string
     currentAriaLabel: string
@@ -16,6 +18,8 @@ const props = withDefaults(
   {
     editable: false,
     maxEditable: true,
+    highlighted: false,
+    prominentMax: false,
   }
 )
 
@@ -43,7 +47,10 @@ function onMaxInput(event: Event): void {
 </script>
 
 <template>
-  <article class="card border border-base-300 bg-base-100 min-w-0">
+  <article
+    class="card min-w-0 border bg-base-100"
+    :class="highlighted ? 'border-2 border-primary/50 shadow-sm' : 'border-base-300'"
+  >
     <div class="card-body gap-2 p-3 sm:gap-3 sm:p-4">
       <div class="flex items-center justify-between gap-2">
         <div class="flex min-w-0 items-center gap-2">
@@ -79,9 +86,16 @@ function onMaxInput(event: Event): void {
           </template>
 
           <template v-else>
-            <span class="text-2xl font-black leading-none sm:text-4xl">{{ current }}</span>
+            <span
+              class="font-black leading-none"
+              :class="highlighted ? 'text-3xl sm:text-5xl' : 'text-2xl sm:text-4xl'"
+            >{{ current }}</span>
             <span v-if="hasMax" class="text-base opacity-50 sm:text-xl">/</span>
-            <span v-if="hasMax" class="text-xl font-bold leading-none opacity-80 sm:text-3xl">{{ max }}</span>
+            <span
+              v-if="hasMax"
+              class="font-bold leading-none opacity-80"
+              :class="prominentMax ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-3xl'"
+            >{{ max }}</span>
           </template>
         </div>
       </div>

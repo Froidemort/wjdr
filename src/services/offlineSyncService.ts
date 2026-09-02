@@ -18,6 +18,7 @@ function mapCharacterCorePatch(
   fortune_max: number
   fortune_current: number
   destiny_current: number
+  destiny_max: number
   xp_total: number
   xp_available: number
   insanity_points: number
@@ -32,6 +33,7 @@ function mapCharacterCorePatch(
   if (typeof patch.fortuneMax === 'number') mapped.fortune_max = patch.fortuneMax
   if (typeof patch.fortuneCurrent === 'number') mapped.fortune_current = patch.fortuneCurrent
   if (typeof patch.destinyCurrent === 'number') mapped.destiny_current = patch.destinyCurrent
+  if (typeof patch.destinyMax === 'number') mapped.destiny_max = patch.destinyMax
   if (typeof patch.xpTotal === 'number') mapped.xp_total = patch.xpTotal
   if (typeof patch.xpAvailable === 'number') mapped.xp_available = patch.xpAvailable
   if (typeof patch.insanityPoints === 'number') mapped.insanity_points = patch.insanityPoints

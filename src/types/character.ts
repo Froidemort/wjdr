@@ -23,6 +23,7 @@ export interface CharacterCore {
   fortuneCurrent: number
   fortuneMax: number
   destinyCurrent: number
+  destinyMax: number
   xpTotal: number
   xpAvailable: number
   insanityPoints: number
