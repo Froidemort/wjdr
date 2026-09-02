@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Bell } from '@lucide/vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   getNotificationDisplayMessage,
@@ -12,6 +12,7 @@ import { usePopoverPanel } from '../../composables/usePopoverPanel'
 // Notification inbox preview — full list lives on /notifications.
 const emit = defineEmits<{
   open: []
+  'update:unreadCount': [value: number]
 }>()
 
 const route = useRoute()
@@ -28,6 +29,10 @@ const { isOpen, close, toggle } = usePopoverPanel({
 })
 
 const isActive = computed(() => route.path.startsWith('/notifications'))
+
+watch(unreadCount, (value) => {
+  emit('update:unreadCount', value)
+}, { immediate: true })
 
 defineExpose({ close })
 </script>
@@ -81,10 +86,10 @@ defineExpose({ close })
             class="w-full rounded-box border border-base-300 bg-base-200 p-3 text-left transition hover:bg-base-300"
             @click="markMissiveAsRead(notification.id)"
           >
-            <p class="truncate text-sm font-medium">
+            <p class="break-words text-sm font-medium">
               {{ getNotificationDisplayTitle(notification.title) }}
             </p>
-            <p class="mt-1 truncate text-xs opacity-70">
+            <p class="mt-1 break-words text-xs opacity-70">
               {{ getNotificationDisplayMessage(notification.message) }}
             </p>
             <p class="mt-2 text-xs" :class="notification.isRead ? 'text-success' : 'text-warning'">

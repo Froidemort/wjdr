@@ -108,7 +108,7 @@ watch(
 				<h1 class="text-2xl font-semibold">Missives</h1>
 				<p class="text-sm opacity-70">Courriers de votre table et nouvelles du Vieux Monde.</p>
 			</div>
-			<button class="btn btn-sm" :disabled="loading || busyIds.size > 0" @click="handleMarkAllRead">
+			<button class="btn btn-sm w-full sm:w-auto" :disabled="loading || busyIds.size > 0" @click="handleMarkAllRead">
 				Tout marquer comme lu
 			</button>
 		</header>
@@ -134,9 +134,9 @@ watch(
 
 		<div v-else class="space-y-3">
 			<AppCard v-for="notif in notifications" :key="notif.id">
-				<div class="flex items-start justify-between gap-2">
+				<div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between">
 					<h3 class="text-lg font-semibold leading-tight">{{ getNotificationDisplayTitle(notif.title) }}</h3>
-					<div class="flex items-center gap-2">
+					<div class="flex flex-wrap items-center gap-2">
 						<span class="badge badge-sm" :class="notif.isRead ? 'badge-neutral badge-soft' : 'badge-warning'">
 							{{ notif.isRead ? 'Lue' : 'Non lue' }}
 						</span>
@@ -151,8 +151,8 @@ watch(
 					</div>
 				</div>
 				<p class="text-sm whitespace-pre-line opacity-80">{{ getNotificationDisplayMessage(notif.message) }}</p>
-				<div class="mt-3 flex items-center justify-between gap-2">
-					<div class="flex items-center gap-2">
+				<div class="mt-3 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+					<div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
 						<button
 							v-if="extractNotificationSessionId(notif)"
 							class="btn btn-sm"
