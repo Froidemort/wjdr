@@ -1,8 +1,8 @@
 <template>
 	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
-		<header class="flex items-center justify-between">
+		<header class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 class="text-2xl font-semibold">Campagnes</h1>
-    <button class="btn btn-sm" @click="openCampaignCreate">Créer une campagne</button>
+    <button class="btn btn-sm w-full sm:w-auto" @click="openCampaignCreate">Créer une campagne</button>
 		</header>
 
     <InputAction
@@ -41,17 +41,17 @@
 						</span>
             <span class="badge badge-outline badge-sm font-mono">Code: {{ campaign.code }}</span>
 					</div>
-          <div class="card-actions mt-4 flex-wrap items-center justify-between gap-2">
-            <div class="join">
+          <div class="card-actions mt-4 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div class="join w-full sm:w-auto">
               <button
-                class="btn btn-xs join-item"
+                class="btn btn-xs join-item min-w-0 flex-1 sm:flex-none"
                 :title="feedbackMap[`${campaign.id}-code`] || `Code : ${campaign.code}`"
                 @click="copyText(`${campaign.id}-code`, campaign.code, 'Code copie !')"
               >
                 Copier le code
               </button>
               <button
-                class="btn btn-xs join-item"
+                class="btn btn-xs join-item min-w-0 flex-1 sm:flex-none"
                 :title="feedbackMap[`${campaign.id}-link`] || `Lien : /campaigns/${campaign.code}`"
                 @click="copyLink(`${campaign.id}-link`, `/campaigns/${campaign.code}`)"
               >

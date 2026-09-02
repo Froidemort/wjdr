@@ -70,7 +70,7 @@
         :selected-session-label="sessionChipLabel"
       />
 
-      <PageFooter :back-to="`/campaigns/${campaign.id}`" back-label="Retour à la campagne" />
+      <PageFooter :back-to="`/campaigns/${campaign.id}`" back-label="Retour à la campagne" mobile-visible />
     </template>
   </main>
 </template>
@@ -86,6 +86,10 @@ import AppCard from '../components/ui/AppCard.vue'
 import PageFooter from '../components/ui/PageFooter.vue'
 import SessionNotesPanel from '../components/ui/SessionNotesPanel.vue'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import {
+  getCampaignSessionDateStatus,
+  parseCampaignSessionDate,
+} from '../utils/campaignSessions'
 
 const authStore = useAuthStore()
 const loading = ref(false)
@@ -115,8 +119,7 @@ const sessionDisplayTitle = computed(() => {
 const sessionChipLabel = computed(() => (sessionItem.value ? sessionDisplayTitle.value : null))
 
 function parseSessionDate(value: string): Date | null {
-  const parsed = new Date(`${value}T12:00:00`)
-  return Number.isNaN(parsed.getTime()) ? null : parsed
+  return parseCampaignSessionDate(value)
 }
 
 function formatCampaignSessionDate(value: string): string {
@@ -153,26 +156,13 @@ function formatTimestamp(value: string | null): string {
 }
 
 function getSessionDateStatus(value: string): 'today' | 'upcoming' | 'past' {
-  const parsed = parseSessionDate(value)
-  const today = parseSessionDate(new Date().toISOString().slice(0, 10))
-
-  if (!parsed || !today) {
-    return 'upcoming'
-  }
-
-  const parsedKey = parsed.toISOString().slice(0, 10)
-  const todayKey = today.toISOString().slice(0, 10)
-  if (parsedKey === todayKey) {
-    return 'today'
-  }
-
-  return parsed > today ? 'upcoming' : 'past'
+  return getCampaignSessionDateStatus(value)
 }
 
 function getSessionStatusLabel(value: string): string {
   const status = getSessionDateStatus(value)
   if (status === 'today') return "Aujourd'hui"
-  if (status === 'upcoming') return 'A venir'
+  if (status === 'upcoming') return 'À venir'
   return 'Passée'
 }
 

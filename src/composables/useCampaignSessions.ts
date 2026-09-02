@@ -7,6 +7,12 @@ import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
 import { isTransientError } from '../services/shared/networkErrors'
 import { useConfirmAction } from './useConfirmAction'
 import { useOptimisticUpdate } from './useOptimisticUpdate'
+import {
+  filterCampaignSessions,
+  getCampaignSessionDateStatus,
+  getCampaignSessionTodayKey,
+  sortCampaignSessionsByDate,
+} from '../utils/campaignSessions'
 
 interface SessionEditForm {
   date: string
@@ -107,42 +113,17 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
       { immediate: false }
     )
 
-  const todaySessionDate = computed(() => new Date().toISOString().slice(0, 10))
-
-  function parseSessionDate(value: string): Date | null {
-    const parsed = new Date(`${value}T12:00:00`)
-    return Number.isNaN(parsed.getTime()) ? null : parsed
-  }
+  const todaySessionDate = computed(() => getCampaignSessionTodayKey())
 
   function getSessionDateStatus(value: string): 'today' | 'upcoming' | 'past' {
-    const parsed = parseSessionDate(value)
-    const todayParsed = parseSessionDate(todaySessionDate.value)
-
-    if (!parsed || !todayParsed) {
-      return 'upcoming'
-    }
-
-    const parsedKey = parsed.toISOString().slice(0, 10)
-    const todayKey = todayParsed.toISOString().slice(0, 10)
-    if (parsedKey === todayKey) {
-      return 'today'
-    }
-
-    return parsed > todayParsed ? 'upcoming' : 'past'
+    return getCampaignSessionDateStatus(value, todaySessionDate.value)
   }
 
   const timelineSessions = computed(() => {
-    const source = [...options.sessions.value]
-    source.sort((left, right) => right.date.localeCompare(left.date))
-
-    if (sessionTimelineFilter.value === 'all') {
-      return source
-    }
-
-    return source.filter((sessionItem) => {
-      const status = getSessionDateStatus(sessionItem.date)
-      return sessionTimelineFilter.value === 'upcoming' ? status !== 'past' : status === 'past'
-    })
+    return filterCampaignSessions(
+      sortCampaignSessionsByDate(options.sessions.value),
+      sessionTimelineFilter.value
+    )
   })
 
   const nextSession = computed(() => {
@@ -214,8 +195,7 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
   }
 
   function buildCampaignSessionDetailLink(targetSessionId: string): string {
-    const identifier = options.session.value?.id ?? options.campaignId.value
-    return `/campaigns/${identifier}/timeline/${targetSessionId}`
+    return `/campaigns/${options.campaignId.value}/timeline/${targetSessionId}`
   }
 
   function setSessionActionSuccess(message: string): void {
@@ -231,6 +211,12 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
       name: '',
       description: '',
     }
+  }
+
+  function hasSessionDateConflict(date: string, excludedSessionId: string | null = null): boolean {
+    return options.sessions.value.some(
+      (sessionItem) => sessionItem.date === date && sessionItem.id !== excludedSessionId
+    )
   }
 
   function startSessionEdit(sessionItem: SessionSummary): void {
@@ -265,6 +251,10 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
     sessionEditDateError.value = null
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       sessionEditDateError.value = 'La date de session est requise.'
+      return
+    }
+    if (hasSessionDateConflict(date, targetSessionId)) {
+      sessionEditDateError.value = 'Une session existe déjà à cette date.'
       return
     }
 
@@ -309,6 +299,10 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
     const date = sessionCreateForm.value.date.trim()
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       sessionCreateDateError.value = 'La date de session est requise.'
+      return
+    }
+    if (hasSessionDateConflict(date)) {
+      sessionCreateDateError.value = 'Une session existe déjà à cette date.'
       return
     }
 
