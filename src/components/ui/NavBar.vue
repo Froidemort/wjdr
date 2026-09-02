@@ -1,12 +1,25 @@
 <template>
-  <nav class="navbar min-h-16 border-b border-base-300 bg-base-200 px-4 sm:px-6">
+  <nav
+    class="relative navbar min-h-16 border-b border-transparent px-4 transition-[background-color,border-color,box-shadow] duration-300 ease-out motion-reduce:transition-none sm:px-6"
+    :class="
+      isScrolled
+        ? 'border-base-content/8 bg-base-100/60 shadow-[0_6px_28px_-16px_color-mix(in_oklab,black_60%,transparent)] backdrop-blur-xl backdrop-saturate-150'
+        : 'bg-transparent'
+    "
+  >
+    <div
+      class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-primary/45 to-transparent transition-opacity duration-300"
+      :class="isScrolled ? 'opacity-100' : 'opacity-0'"
+      aria-hidden="true"
+    />
+
     <div
       class="flex w-full items-center"
       :class="isAuthenticated && 'sm:grid sm:grid-cols-[1fr_auto_1fr] sm:gap-4'"
     >
       <router-link
         to="/"
-        class="btn btn-ghost shrink-0 px-2 text-xl font-bold normal-case tracking-wide"
+        class="flex shrink-0 items-center px-1 font-grim-title text-xl tracking-[0.08em] transition-colors duration-300 hover:text-primary"
         :class="isAuthenticated && 'justify-self-start'"
       >
         GRIMORIUM
@@ -56,6 +69,7 @@
 import { Menu, X } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { usePageScrolled } from '../../composables/usePageScrolled'
 import { useAuthStore } from '../../stores/auth'
 import AccountPopover from './AccountPopover.vue'
 import MissivesPopover from './MissivesPopover.vue'
@@ -67,6 +81,7 @@ import ThemeToggle from './ThemeToggle.vue'
 // On sm+, a 3-column grid keeps center links visually centered regardless of right-side width.
 const authStore = useAuthStore()
 const route = useRoute()
+const { isScrolled } = usePageScrolled()
 
 const mobileMenuOpen = ref(false)
 const unreadCount = ref(0)

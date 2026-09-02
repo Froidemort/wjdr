@@ -30,11 +30,16 @@ function close(): void {
     class="fixed inset-x-0 top-16 z-40 border-b border-base-300 bg-base-200 p-3 shadow-lg sm:hidden"
   >
     <ul class="menu w-full p-0">
-      <li v-for="link in mainNavLinks" :key="link.to">
-        <router-link :to="link.to" class="min-h-11 gap-3" @click="close">
+      <li v-for="link in mainNavLinks" :key="link.label">
+        <router-link v-if="link.to" :to="link.to" class="min-h-11 gap-3" @click="close">
           <component :is="link.icon" class="size-5 text-primary" />
           {{ link.label }}
         </router-link>
+        <span v-else class="min-h-11 gap-3 text-base-content/40" aria-disabled="true">
+          <component :is="link.icon" class="size-5" />
+          {{ link.label }}
+          <span class="badge badge-xs badge-soft badge-info">Bientôt</span>
+        </span>
       </li>
       <li>
         <router-link to="/notifications" class="min-h-11 gap-3" @click="close">
