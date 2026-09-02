@@ -54,6 +54,8 @@ npm install
 npm run dev
 ```
 
+Pour la récupération de mot de passe, ajouter l'URL `https://VOTRE_DOMAINE/reset-password` dans les Redirect URLs de Supabase Auth. En développement, ajouter aussi l'URL locale correspondante, par exemple `http://localhost:5173/reset-password`.
+
 ## Commandes utiles
 
 ```bash

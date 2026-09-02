@@ -1,6 +1,6 @@
 # Stack and general instructions
 
-Expert Full-Stack TS. Stack: Vue 3, DaisyUI, Pinia, Supabase, Vercel.
+Full-Stack TS. Stack: Vue 3, DaisyUI, Pinia, Supabase, Vercel.
 Style: Code-first, minimal prose, strict TypeScript. No conversational filler.
 Code only, no explanation.
 Bullet over paragraphs.
@@ -23,7 +23,7 @@ No explanations unless explicitly requested.
 
 ## UI/UX rules
 
-* Mobile-first design, responsive layout, and fluid typography.
+* Mobile-first design, responsive layout, and fluid typography. Use only colors from the Tailwind palette declared as DaisyUI theme in `src/assets/css/theme.css`.
 * Use DaisyUI components for all UI elements.
 * Use Tailwind for layout and spacing.
 * ***Respect** accessibility standards (ARIA, contrast, keyboard navigation).
