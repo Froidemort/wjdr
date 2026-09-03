@@ -29,11 +29,7 @@ defineProps<{
     />
 
     <div class="relative z-10 mx-auto max-w-3xl px-6 pb-20 pt-14 text-center sm:pb-24 sm:pt-16">
-      <p class="text-[0.7rem] font-bold uppercase tracking-[0.3em] text-primary">
-        The Old World · JDR v2
-      </p>
-
-      <h1 id="home-brand" class="grim-modal-title mt-4 text-6xl sm:text-7xl lg:text-8xl">
+      <h1 id="home-brand" class="grim-modal-title text-6xl sm:text-7xl lg:text-8xl">
         Grimorium
       </h1>
 
@@ -49,10 +45,10 @@ defineProps<{
 
       <p
         v-if="displayName"
-        class="mt-6 inline-flex items-center gap-2 border-y border-base-content/15 px-4 py-1.5 text-sm"
+        class="mt-8 inline-flex items-center gap-3 border-y border-base-content/15 px-6 py-2.5 text-lg"
       >
-        <span class="text-base-content/65">Bienvenue,</span>
-        <span class="font-grim-title tracking-wide text-primary">{{ displayName }}</span>
+        <span class="text-base-content/60">Bienvenue,</span>
+        <span class="font-grim-title text-xl tracking-widest text-primary">{{ displayName }}</span>
       </p>
     </div>
   </header>
