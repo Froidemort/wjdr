@@ -1153,6 +1153,7 @@ import type {
   CharacterTalent,
   CharacterWeapon,
 } from '../types/domain'
+import type { WeaponHand, WeaponPreferredHand } from '../utils/equipmentSlots'
 import AppCard from '../components/ui/AppCard.vue'
 import CharacterDerivedStatsCard from '../components/ui/CharacterDerivedStatsCard.vue'
 import CharacteristicCard from '../components/ui/CharacteristicCard.vue'
@@ -1169,7 +1170,14 @@ import {
   type RealtimeUpdatePayload,
   useRealtimeChannels,
 } from '../composables/useRealtimeChannels'
-import { canEquipArmorStack, findConflictingWeapons, isTwoHandedWeapon, resolveWeaponEquipHand } from '../utils/equipmentSlots'
+import {
+  canEquipArmorStack,
+  computeArmorByLocation,
+  findConflictingWeapons,
+  isTwoHandedWeapon,
+  isWeaponHand,
+  resolveWeaponEquipHand,
+} from '../utils/equipmentSlots'
 import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
 import { isTransientError } from '../services/shared/networkErrors'
 
@@ -1546,38 +1554,7 @@ const totalEncumbrance = computed(() => {
   return weaponsEncumbrance + armorsEncumbrance + itemsEncumbrance
 })
 
-const armorByLocation = computed(() => {
-  const totals = {
-    tete: 0,
-    corps: 0,
-    bras: 0,
-    jambes: 0,
-  }
-
-  for (const armor of characterArmors.value) {
-    if (!armor.isEquipped || !armor.coveredLocations?.length) {
-      continue
-    }
-
-    for (const location of armor.coveredLocations) {
-      const normalized = location.trim().toLowerCase()
-      if (normalized === 'tête' || normalized === 'tete') {
-        totals.tete += armor.armorPoints
-      }
-      if (normalized === 'corps') {
-        totals.corps += armor.armorPoints
-      }
-      if (normalized === 'bras') {
-        totals.bras += armor.armorPoints
-      }
-      if (normalized === 'jambes') {
-        totals.jambes += armor.armorPoints
-      }
-    }
-  }
-
-  return totals
-})
+const armorByLocation = computed(() => computeArmorByLocation(characterArmors.value))
 
 const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpdate<
   typeof editable.value
@@ -2248,11 +2225,11 @@ async function onWeaponStateChange(
     return
   }
 
-  if (value !== null && value !== 'droite' && value !== 'gauche' && value !== 'd&g') {
+  if (value !== null && !isWeaponHand(value)) {
     return
   }
 
-  let nextEquipped: 'droite' | 'gauche' | 'd&g' | null = value
+  let nextEquipped: WeaponHand | null = value
   if (nextEquipped === 'd&g' && !isTwoHandedWeapon(weapon)) {
     nextEquipped = 'droite'
   } else if ((nextEquipped === 'droite' || nextEquipped === 'gauche') && isTwoHandedWeapon(weapon)) {
@@ -2339,11 +2316,12 @@ async function onDeleteArmor(linkId: string): Promise<void> {
   }
 }
 
-function canEquipArmorCheck(armor: CharacterArmor, targetEquipped: boolean): boolean {
-  if (!targetEquipped) {
+function ensureArmorCanBeEquipped(armor: CharacterArmor): boolean {
+  if (canEquipArmorStack(characterArmors.value, armor)) {
     return true
   }
-  return canEquipArmorStack(characterArmors.value, armor)
+  errorMessage.value = 'Maximum 3 couches d’armure atteint sur une localisation couverte.'
+  return false
 }
 
 async function onEquipArmorFromDoll(armorId: string): Promise<void> {
@@ -2356,8 +2334,7 @@ async function onEquipArmorFromDoll(armorId: string): Promise<void> {
     return
   }
 
-  if (!canEquipArmorCheck(armor, true)) {
-    errorMessage.value = 'Maximum 3 couches d’armure atteint sur une localisation couverte.'
+  if (!ensureArmorCanBeEquipped(armor)) {
     return
   }
 
@@ -2397,7 +2374,7 @@ async function onUnequipArmorFromDoll(armorId: string): Promise<void> {
     await updateCharacterArmorEquipped(armor.id, false)
     armor.isEquipped = false
     invalidateCurrentLinksCache()
-    setSectionSuccess('armors', 'Armure retiree.')
+    setSectionSuccess('armors', 'Armure déséquipée.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
   } finally {
@@ -2430,7 +2407,7 @@ async function onUnequipArmorsFromDoll(armorIds: string[]): Promise<void> {
     invalidateCurrentLinksCache()
     setSectionSuccess(
       'armors',
-      armorsToUnequip.length > 1 ? 'Couches d’armure retirees.' : 'Armure retiree.'
+      armorsToUnequip.length > 1 ? 'Couches d’armure déséquipées.' : 'Armure déséquipée.'
     )
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
@@ -2443,7 +2420,7 @@ async function onUnequipArmorsFromDoll(armorIds: string[]): Promise<void> {
 
 async function onEquipWeaponFromDoll(
   weaponId: string,
-  hand: 'droite' | 'gauche' | 'd&g'
+  hand: WeaponHand
 ): Promise<void> {
   if (!canEditQuickSection.value || !character.value) {
     return
@@ -2454,7 +2431,7 @@ async function onEquipWeaponFromDoll(
     return
   }
 
-  const preferredHand = hand === 'gauche' ? 'gauche' : 'droite'
+  const preferredHand: WeaponPreferredHand = hand === 'gauche' ? 'gauche' : 'droite'
   const resolvedHand = resolveWeaponEquipHand(weapon, preferredHand)
 
   if (weapon.equipped === resolvedHand) {
@@ -2478,7 +2455,7 @@ async function onEquipWeaponFromDoll(
     invalidateCurrentLinksCache()
     setSectionSuccess(
       'weapons',
-      conflicts.length > 0 ? 'Arme équipee (remplacement).' : 'Arme équipee.'
+      conflicts.length > 0 ? 'Arme équipée (remplacement).' : 'Arme équipée.'
     )
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
@@ -2507,7 +2484,7 @@ async function onUnequipWeaponFromDoll(weaponId: string): Promise<void> {
     await updateCharacterWeaponEquipped(weapon.id, null)
     weapon.equipped = null
     invalidateCurrentLinksCache()
-    setSectionSuccess('weapons', 'Arme retiree.')
+    setSectionSuccess('weapons', 'Arme déséquipée.')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
   } finally {
@@ -2532,8 +2509,7 @@ async function onArmorStateChange(
     return
   }
 
-  if (!canEquipArmorCheck(armor, nextEquipped)) {
-    errorMessage.value = 'Maximum 3 couches d’armure atteint sur une localisation couverte.'
+  if (nextEquipped && !ensureArmorCanBeEquipped(armor)) {
     return
   }
 

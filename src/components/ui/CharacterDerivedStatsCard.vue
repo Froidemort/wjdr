@@ -2,7 +2,7 @@
 import { Weight } from '@lucide/vue'
 import { computed } from 'vue'
 import type { CharacterArmor, CharacterWeapon } from '../../types/domain'
-import type { ArmorByLocation } from '../../utils/equipmentSlots'
+import type { ArmorByLocation, WeaponHand } from '../../utils/equipmentSlots'
 import CharacterEquipmentDoll from './CharacterEquipmentDoll.vue'
 
 const props = withDefaults(
@@ -33,7 +33,7 @@ defineEmits<{
   'equip-armor': [armorId: string]
   'unequip-armor': [armorId: string]
   'unequip-armors': [armorIds: string[]]
-  'equip-weapon': [weaponId: string, hand: 'droite' | 'gauche' | 'd&g']
+  'equip-weapon': [weaponId: string, hand: WeaponHand]
   'unequip-weapon': [weaponId: string]
 }>()
 

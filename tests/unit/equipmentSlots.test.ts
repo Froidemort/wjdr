@@ -4,6 +4,7 @@ import {
   MAX_ARMORS_PER_LOCATION,
   armorCoversLocation,
   canEquipArmorStack,
+  computeArmorByLocation,
   countEquippedArmorsForLocation,
   filterArmorsForSlot,
   findConflictingArmors,
@@ -14,7 +15,6 @@ import {
   getPrimaryArmorForSlot,
   getWeaponForHand,
   isTwoHandedWeapon,
-  normalizeArmorLocation,
   resolveWeaponEquipHand,
 } from '../../src/utils/equipmentSlots'
 
@@ -46,12 +46,6 @@ function makeWeapon(
 }
 
 describe('equipmentSlots', () => {
-  it('normalizes head location accents', () => {
-    expect(normalizeArmorLocation('tête')).toBe('tête')
-    expect(normalizeArmorLocation('Tete')).toBe('tête')
-    expect(normalizeArmorLocation('corps')).toBe('corps')
-  })
-
   it('filters armors by slot location including multi-cover pieces', () => {
     const armors = [
       makeArmor({ id: '1', name: 'Casque', coveredLocations: ['tête'] }),
@@ -189,6 +183,33 @@ describe('equipmentSlots', () => {
     expect(
       getArmorPointsForSlot({ tete: 0, corps: 1, bras: 1, jambes: 0 }, 'bras_droit')
     ).toBe(1)
+  })
+
+  it('sums equipped armor points by location', () => {
+    expect(
+      computeArmorByLocation([
+        makeArmor({
+          id: 'helm',
+          name: 'Casque',
+          isEquipped: true,
+          coveredLocations: ['tête'],
+          armorPoints: 2,
+        }),
+        makeArmor({
+          id: 'veste',
+          name: 'Veste',
+          isEquipped: true,
+          coveredLocations: ['corps', 'bras'],
+          armorPoints: 1,
+        }),
+        makeArmor({
+          id: 'stored',
+          name: 'Plastron',
+          coveredLocations: ['corps'],
+          armorPoints: 5,
+        }),
+      ])
+    ).toEqual({ tete: 2, corps: 1, bras: 1, jambes: 0 })
   })
 
   it('treats two-handed weapons as occupying both hands', () => {

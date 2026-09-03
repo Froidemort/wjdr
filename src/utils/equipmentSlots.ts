@@ -1,122 +1,78 @@
 import type { CharacterArmor, CharacterWeapon } from '../types/domain'
+import type {
+  ArmorByLocation,
+  ArmorDataLocation,
+  ArmorSlotDefinition,
+  ArmorSlotId,
+  WeaponHand,
+  WeaponPreferredHand,
+  WeaponSlotDefinition,
+  WeaponSlotId,
+} from '../types/equipment'
 
-export type ArmorDataLocation = 'tête' | 'corps' | 'bras' | 'jambes'
-
-export type ArmorSlotId =
-  | 'tete'
-  | 'bras_droit'
-  | 'bras_gauche'
-  | 'corps'
-  | 'jambe_droite'
-  | 'jambe_gauche'
-
-export type WeaponSlotId = 'main_droite' | 'main_gauche'
-
-export type EquipmentSlotId = ArmorSlotId | WeaponSlotId
-
-export type WeaponHand = 'droite' | 'gauche' | 'd&g'
-
-export type ArmorSlotDefinition = {
-  id: ArmorSlotId
-  kind: 'armor'
-  label: string
-  shortLabel: string
-  dataLocation: ArmorDataLocation
-  hitRange: string
-  column: 'left' | 'right'
-  row: 0 | 1 | 2
-}
-
-export type WeaponSlotDefinition = {
-  id: WeaponSlotId
-  kind: 'weapon'
-  label: string
-  shortLabel: string
-  hand: 'droite' | 'gauche'
-  column: 'left' | 'right'
-}
+export type {
+  ArmorByLocation,
+  ArmorDataLocation,
+  ArmorSlotDefinition,
+  ArmorSlotId,
+  EquipmentSlotId,
+  WeaponHand,
+  WeaponPreferredHand,
+  WeaponSlotDefinition,
+  WeaponSlotId,
+} from '../types/equipment'
 
 export const ARMOR_SLOTS: readonly ArmorSlotDefinition[] = [
   {
     id: 'tete',
-    kind: 'armor',
     label: 'Tête',
-    shortLabel: 'Tête',
     dataLocation: 'tête',
     hitRange: '01-15',
-    column: 'left',
-    row: 0,
   },
   {
     id: 'bras_droit',
-    kind: 'armor',
     label: 'Bras droit',
-    shortLabel: 'Bras D',
     dataLocation: 'bras',
     hitRange: '16-35',
-    column: 'left',
-    row: 1,
   },
   {
     id: 'jambe_droite',
-    kind: 'armor',
     label: 'Jambe droite',
-    shortLabel: 'Jambe D',
     dataLocation: 'jambes',
     hitRange: '81-90',
-    column: 'left',
-    row: 2,
   },
   {
     id: 'corps',
-    kind: 'armor',
     label: 'Corps',
-    shortLabel: 'Corps',
     dataLocation: 'corps',
     hitRange: '56-80',
-    column: 'right',
-    row: 0,
   },
   {
     id: 'bras_gauche',
-    kind: 'armor',
     label: 'Bras gauche',
-    shortLabel: 'Bras G',
     dataLocation: 'bras',
     hitRange: '36-55',
-    column: 'right',
-    row: 1,
   },
   {
     id: 'jambe_gauche',
-    kind: 'armor',
     label: 'Jambe gauche',
-    shortLabel: 'Jambe G',
     dataLocation: 'jambes',
     hitRange: '91-00',
-    column: 'right',
-    row: 2,
   },
-] as const
+]
 
-export const WEAPON_SLOTS: readonly WeaponSlotDefinition[] = [
+const WEAPON_SLOTS: readonly WeaponSlotDefinition[] = [
   {
     id: 'main_droite',
-    kind: 'weapon',
     label: 'Main droite',
-    shortLabel: 'MD',
     hand: 'droite',
-    column: 'left',
   },
   {
     id: 'main_gauche',
-    kind: 'weapon',
     label: 'Main gauche',
-    shortLabel: 'MG',
     hand: 'gauche',
-    column: 'right',
   },
-] as const
+]
 
 const ARMOR_SLOT_BY_ID = new Map(ARMOR_SLOTS.map((slot) => [slot.id, slot]))
 const WEAPON_SLOT_BY_ID = new Map(WEAPON_SLOTS.map((slot) => [slot.id, slot]))
@@ -145,36 +101,9 @@ export function isWeaponSlotId(id: string): id is WeaponSlotId {
   return WEAPON_SLOT_BY_ID.has(id as WeaponSlotId)
 }
 
-export function normalizeArmorLocation(location: string): ArmorDataLocation | null {
-  const normalized = location.trim().toLowerCase()
-  if (normalized === 'tête' || normalized === 'tete') {
-    return 'tête'
-  }
-  if (normalized === 'corps') {
-    return 'corps'
-  }
-  if (normalized === 'bras') {
-    return 'bras'
-  }
-  if (normalized === 'jambes') {
-    return 'jambes'
-  }
-  return null
-}
-
 export function getArmorCoveredLocations(armor: CharacterArmor): ArmorDataLocation[] {
-  if (!armor.coveredLocations?.length) {
-    return []
-  }
-
-  const locations: ArmorDataLocation[] = []
-  for (const location of armor.coveredLocations) {
-    const normalized = normalizeArmorLocation(location)
-    if (normalized && !locations.includes(normalized)) {
-      locations.push(normalized)
-    }
-  }
-  return locations
+  // covered_locations is guaranteed by a DB CHECK constraint to only contain valid ArmorDataLocation values
+  return (armor.coveredLocations ?? []) as ArmorDataLocation[]
 }
 
 export function armorCoversLocation(armor: CharacterArmor, location: ArmorDataLocation): boolean {
@@ -315,17 +244,22 @@ export function isTwoHandedWeapon(weapon: Pick<CharacterWeapon, 'name'>): boolea
   return TWO_HANDED_WEAPON_NAMES.has(name)
 }
 
+/** Type guard : vérifie qu'une valeur est un WeaponHand valide. */
+export function isWeaponHand(value: string | boolean | null): value is WeaponHand {
+  return value === 'droite' || value === 'gauche' || value === 'd&g'
+}
+
 /** Equip hand is derived from the weapon: 2H → both hands, else the preferred hand. */
 export function resolveWeaponEquipHand(
   weapon: Pick<CharacterWeapon, 'name'>,
-  preferredHand: 'droite' | 'gauche'
+  preferredHand: WeaponPreferredHand
 ): WeaponHand {
   return isTwoHandedWeapon(weapon) ? 'd&g' : preferredHand
 }
 
 export function getWeaponForHand(
   weapons: readonly CharacterWeapon[],
-  hand: 'droite' | 'gauche'
+  hand: WeaponPreferredHand
 ): CharacterWeapon | null {
   const twoHanded = weapons.find((weapon) => weapon.equipped === 'd&g')
   if (twoHanded) {
@@ -361,26 +295,37 @@ export function findConflictingWeapons(
   })
 }
 
-export type ArmorByLocation = {
-  tete: number
-  corps: number
-  bras: number
-  jambes: number
+const ARMOR_LOCATION_KEYS = {
+  tête: 'tete',
+  corps: 'corps',
+  bras: 'bras',
+  jambes: 'jambes',
+} as const satisfies Record<ArmorDataLocation, keyof ArmorByLocation>
+
+export function computeArmorByLocation(armors: readonly CharacterArmor[]): ArmorByLocation {
+  const totals: ArmorByLocation = {
+    tete: 0,
+    corps: 0,
+    bras: 0,
+    jambes: 0,
+  }
+
+  for (const armor of armors) {
+    if (!armor.isEquipped) {
+      continue
+    }
+
+    for (const location of getArmorCoveredLocations(armor)) {
+      totals[ARMOR_LOCATION_KEYS[location]] += armor.armorPoints
+    }
+  }
+
+  return totals
 }
 
 export function getArmorPointsForSlot(
   armorByLocation: ArmorByLocation,
   slotId: ArmorSlotId
 ): number {
-  const slot = getArmorSlot(slotId)
-  switch (slot.dataLocation) {
-    case 'tête':
-      return armorByLocation.tete
-    case 'corps':
-      return armorByLocation.corps
-    case 'bras':
-      return armorByLocation.bras
-    case 'jambes':
-      return armorByLocation.jambes
-  }
+  return armorByLocation[ARMOR_LOCATION_KEYS[getArmorSlot(slotId).dataLocation]]
 }

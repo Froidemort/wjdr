@@ -5,6 +5,7 @@ import type { CharacterArmor, CharacterWeapon } from '../../types/domain'
 import {
   MAX_ARMORS_PER_LOCATION,
   type ArmorSlotId,
+  type WeaponHand,
   type WeaponSlotId,
   canEquipArmorStack,
   filterArmorsForSlot,
@@ -38,7 +39,7 @@ const emit = defineEmits<{
   'equip-armor': [armorId: string]
   'unequip-armor': [armorId: string]
   'unequip-armors': [armorIds: string[]]
-  'equip-weapon': [weaponId: string, hand: 'droite' | 'gauche' | 'd&g']
+  'equip-weapon': [weaponId: string, hand: WeaponHand]
   'unequip-weapon': [weaponId: string]
 }>()
 
@@ -118,7 +119,7 @@ const equippedWeaponOnSlot = computed(() => {
   return getWeaponForSlot(props.weapons, renderedSlotId.value)
 })
 
-const targetHand = computed<'droite' | 'gauche' | null>(() => {
+const targetHand = computed(() => {
   if (!renderedSlotId.value || !isWeaponSlotId(renderedSlotId.value)) {
     return null
   }
@@ -426,7 +427,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                   v-for="(armor, index) in equippedArmors"
                   :key="armor.id"
                   type="button"
-                  class="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2.5 border border-accent/40 bg-base-100 px-3 py-2.5 text-left transition hover:-translate-y-px hover:border-accent/50 hover:shadow-sm disabled:translate-y-0 disabled:cursor-not-allowed disabled:shadow-none"
+                  class="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2.5 border border-accent/40 bg-base-100 px-3 py-2.5 text-left transition hover:-translate-y-px hover:border-accent/50 hover:shadow-sm disabled:translate-y-0 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
                   :disabled="!editable || busy"
                   @click="onSelectArmor(armor)"
                 >
@@ -496,7 +497,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                   v-for="armor in inventoryArmors"
                   :key="armor.id"
                   type="button"
-                  class="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2.5 border border-base-content/15 bg-base-100 px-3 py-2.5 text-left transition hover:-translate-y-px hover:border-accent/50 hover:shadow-sm disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+                  class="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2.5 border border-base-content/15 bg-base-100 px-3 py-2.5 text-left transition hover:-translate-y-px hover:border-accent/50 hover:shadow-sm disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none cursor-pointer"
                   :disabled="!editable || busy || isArmorBlocked(armor)"
                   :title="
                     isArmorBlocked(armor)

@@ -5,13 +5,16 @@ import type { CharacterArmor, CharacterWeapon } from '../../types/domain'
 import {
   ARMOR_SLOTS,
   MAX_ARMORS_PER_LOCATION,
-  WEAPON_SLOTS,
   type ArmorByLocation,
+  type ArmorSlotDefinition,
   type ArmorSlotId,
   type EquipmentSlotId,
+  type WeaponHand,
+  type WeaponSlotDefinition,
   getArmorPointsForSlot,
   getEquippedArmorsForSlot,
   getWeaponForSlot,
+  getWeaponSlot,
 } from '../../utils/equipmentSlots'
 import EquipmentSlotPickerModal from './EquipmentSlotPickerModal.vue'
 
@@ -33,7 +36,7 @@ const emit = defineEmits<{
   'equip-armor': [armorId: string]
   'unequip-armor': [armorId: string]
   'unequip-armors': [armorIds: string[]]
-  'equip-weapon': [weaponId: string, hand: 'droite' | 'gauche' | 'd&g']
+  'equip-weapon': [weaponId: string, hand: WeaponHand]
   'unequip-weapon': [weaponId: string]
 }>()
 
@@ -41,11 +44,11 @@ const activeSlotId = ref<EquipmentSlotId | null>(null)
 const pickerOpen = ref(false)
 const hoveredSlotId = ref<EquipmentSlotId | null>(null)
 
-const leftWeaponSlot = WEAPON_SLOTS.find((slot) => slot.column === 'left')!
-const rightWeaponSlot = WEAPON_SLOTS.find((slot) => slot.column === 'right')!
+const leftWeaponSlot = getWeaponSlot('main_droite')
+const rightWeaponSlot = getWeaponSlot('main_gauche')
 
 type ArmorSlotView = {
-  slot: (typeof ARMOR_SLOTS)[number]
+  slot: ArmorSlotDefinition
   layers: CharacterArmor[]
   filled: boolean
   stacked: boolean
@@ -55,7 +58,7 @@ type ArmorSlotView = {
   areaClass: string
 }
 
-function buildArmorSlotView(slot: (typeof ARMOR_SLOTS)[number]): ArmorSlotView {
+function buildArmorSlotView(slot: ArmorSlotDefinition): ArmorSlotView {
   const layers = getEquippedArmorsForSlot(props.armors, slot.id)
   return {
     slot,
@@ -83,7 +86,7 @@ const leftWeaponView = computed(() => buildWeaponSlotView(leftWeaponSlot))
 const rightWeaponView = computed(() => buildWeaponSlotView(rightWeaponSlot))
 
 type WeaponSlotView = {
-  slot: (typeof WEAPON_SLOTS)[number]
+  slot: WeaponSlotDefinition
   weapon: CharacterWeapon | null
   filled: boolean
   twoHanded: boolean
@@ -91,7 +94,7 @@ type WeaponSlotView = {
   encumbrance: number | null
 }
 
-function buildWeaponSlotView(slot: (typeof WEAPON_SLOTS)[number]): WeaponSlotView {
+function buildWeaponSlotView(slot: WeaponSlotDefinition): WeaponSlotView {
   const weapon = getWeaponForSlot(props.weapons, slot.id)
   return {
     slot,
@@ -205,7 +208,7 @@ function slotButtonClass(opts: {
     'border-base-content/15',
     'enabled:hover:-translate-y-px enabled:hover:border-accent/55 enabled:hover:bg-accent/10 enabled:hover:shadow-sm',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-    'disabled:cursor-default disabled:opacity-95',
+    'cursor-pointer disabled:cursor-default disabled:opacity-95',
     'motion-reduce:transition-none motion-reduce:enabled:hover:translate-y-0',
     opts.weapon ? 'min-h-16 gap-0.5' : '',
     opts.filled ? 'border-accent/40 bg-accent/10' : '',
