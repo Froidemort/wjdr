@@ -8,6 +8,7 @@ import type {
   InventoryQuality,
   WeaponAttribute,
 } from '../types/domain'
+import type { WeaponHand } from '../utils/equipmentSlots'
 
 function normalizeQuality(value: string | null | undefined): InventoryQuality {
   if (
@@ -78,7 +79,7 @@ interface WeaponLinkRow {
   id: string
   weapon_id: string
   quality: string
-  equiped: 'droite' | 'gauche' | 'd&g' | null
+  equiped: WeaponHand | null
   weapons?:
     | {
         id: string
@@ -497,7 +498,7 @@ export async function removeCharacterWeapon(linkId: string): Promise<void> {
 
 export async function updateCharacterWeaponEquipped(
   linkId: string,
-  equipped: 'droite' | 'gauche' | 'd&g' | null
+  equipped: WeaponHand | null
 ): Promise<void> {
   const { error } = await supabase
     .from('character_weapons')
