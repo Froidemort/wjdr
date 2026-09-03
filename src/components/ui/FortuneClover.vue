@@ -49,7 +49,7 @@ function setPoints(index: number): void {
         <div class="flex items-center justify-between gap-2">
           <p class="text-sm font-semibold leading-tight text-base-content/85 sm:text-base">{{ label }}</p>
           <div class="flex items-center gap-1.5 text-base font-semibold tabular-nums text-base-content/80 sm:text-lg" :aria-label="`${label}: ${resolvedPoints} sur ${resolvedMaxPoints} points`">
-            <span>{{ resolvedPoints }}</span><span>/</span>
+            <span>Max :</span>
             <input v-if="editable && maxPointsEditable" :value="resolvedMaxPoints" type="number" min="0" inputmode="numeric" class="input input-xs h-9 w-14 text-center text-base font-bold [appearance:textfield] sm:h-10 sm:w-16 sm:text-lg" :aria-label="`Maximum de ${label.toLowerCase()}`" @change="onMaxPointsInput" />
             <span v-else>{{ resolvedMaxPoints }}</span>
           </div>

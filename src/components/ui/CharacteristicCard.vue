@@ -25,7 +25,6 @@ const cardToneClass = computed(() =>
   props.stat.isSecondary ? 'bg-base-100 border-base-300' : 'bg-base-200 border-base-300'
 )
 const totalToneClass = computed(() => (props.stat.isSecondary ? 'bg-base-200' : 'bg-base-300'))
-const totalValueClass = computed(() => (props.stat.isSecondary ? 'text-secondary' : 'text-primary'))
 
 function onTickUp(): void {
   if (!props.editable) {
@@ -78,7 +77,7 @@ function onTotalAdvancedInput(event: Event): void {
       <div class="rounded-box border border-base-300 p-3" :class="totalToneClass">
         <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Valeur totale</div>
         <div class="mt-0.5 text-[11px] text-center opacity-65">Base + avancement courant</div>
-        <div class="text-4xl font-black leading-none tabular-nums text-center" :class="totalValueClass">{{ totalValue }}</div>
+        <div class="text-4xl font-black leading-none tabular-nums text-center text-primary">{{ totalValue }}</div>
       </div>
 
       <div class="rounded-box border border-base-300 p-3">

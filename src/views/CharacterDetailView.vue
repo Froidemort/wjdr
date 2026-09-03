@@ -201,15 +201,6 @@
 							:options="CHARACTERISTICS_VIEW_OPTIONS"
 							@change="onCharacteristicsViewModeChange"
 						/>
-						<button
-							v-if="canEditQuickSection"
-							type="button"
-              class="btn btn-square min-h-11 min-w-11"
-							aria-label="Importer les caractéristiques de carrière"
-							@click.stop.prevent="openStatsImportModal"
-						>
-							<Import class="h-4 w-4" />
-						</button>
 					</div>
 					<div v-if="visibleStats.length === 0" class="text-sm opacity-70">Aucune caractéristique disponible.</div>
 					<div v-else-if="characteristicsViewMode === 'normal'" class="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -666,52 +657,6 @@
 					</div>
         </div>
       </section>
-
-			<dialog ref="statsImportDialogRef" class="modal modal-top sm:modal-middle" @close="onStatsImportDialogClosed">
-        <div class="modal-box grim-modal-box p-4 sm:p-6 max-w-3xl">
-          <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeStatsImportModal" aria-label="Fermer">✕</button>
-          <h3 class="grim-modal-title text-2xl pr-8">Import rapide des avancées de carrière</h3>
-					<p class="mt-1 text-xs opacity-70">Renseigne les valeurs d'avancée totale (0-99). Laisse vide pour ignorer une caractéristique.</p>
-
-					<div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-						<label
-							v-for="stat in allStatsSorted"
-							:key="`import-${stat.statCode}`"
-							class="fieldset rounded-box border border-base-300 p-2"
-						>
-							<span class="fieldset-legend text-xs">{{ stat.statCode.toUpperCase() }}</span>
-							<input
-								:value="statsImportValues[stat.statCode]"
-								type="text"
-								inputmode="numeric"
-								pattern="^[0-9]{0,2}$"
-								maxlength="2"
-								class="input input-xs w-full text-center tabular-nums"
-								:aria-label="`Avancée totale ${stat.statCode}`"
-								@input="onStatsImportInput(stat.statCode, $event)"
-							/>
-						</label>
-					</div>
-
-					<div v-if="statsImportError" role="alert" class="alert alert-error alert-soft mt-4">
-						<span>{{ statsImportError }}</span>
-					</div>
-          <div v-if="getSectionSuccessMessage('stats')" role="status" class="alert alert-success alert-soft mt-4 text-sm">
-            <span>{{ getSectionSuccessMessage('stats') }}</span>
-          </div>
-
-          <div class="grim-modal-actions mt-4 flex items-center justify-end gap-2 border-t border-base-300 pt-3">
-            <button type="button" class="btn btn-sm btn-ghost ui-critical-action" @click="closeStatsImportModal">Annuler</button>
-            <button type="button" class="btn btn-sm ui-critical-action" :disabled="statsImportSaving" @click="confirmStatsImport">
-							<span v-if="statsImportSaving" class="loading loading-spinner loading-xs" aria-hidden="true" />
-							Appliquer
-						</button>
-					</div>
-				</div>
-				<form method="dialog" class="modal-backdrop">
-					<button>Fermer</button>
-				</form>
-			</dialog>
 		</template>
 
 		<dialog ref="careerDialogRef" class="modal modal-top sm:modal-middle" @close="onCareerDialogClosed">
@@ -1091,7 +1036,6 @@
 import {
   ChevronLeft,
   CircleX,
-  Import,
   Info,
   LoaderCircle,
   Mars,
@@ -1102,6 +1046,7 @@ import {
   Sword,
   Trash2,
   UserPen,
+  UserCog,
   Venus,
   Weight,
 } from '@lucide/vue'
@@ -1264,7 +1209,6 @@ const changingCareer = ref(false)
 
 const catalogDialogRef = ref<HTMLDialogElement | null>(null)
 const descriptionDialogRef = ref<HTMLDialogElement | null>(null)
-const statsImportDialogRef = ref<HTMLDialogElement | null>(null)
 const catalogSection = ref<CatalogSection>('skills')
 const catalogQuery = ref('')
 const catalogOptions = ref<CatalogItem[]>([])
@@ -1293,9 +1237,6 @@ const newItemForm = ref({
 })
 const descriptionTitle = ref<string | null>(null)
 const descriptionContent = ref<string | null>(null)
-const statsImportValues = ref<Record<string, string>>({})
-const statsImportError = ref<string | null>(null)
-const statsImportSaving = ref(false)
 
 const characterSkills = ref<CharacterSkill[]>([])
 const characterTalents = ref<CharacterTalent[]>([])
@@ -1608,7 +1549,6 @@ const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpda
 const {
   status: statSaveStatus,
   update: triggerStatSave,
-  flush: triggerStatSaveNow,
 } = useOptimisticUpdate<{
     statCode: string
     currentAdvanced?: number
@@ -2038,89 +1978,6 @@ function onStatTotalAdvancedChange(statCode: string, totalAdvanced: number): voi
 function onCharacteristicsViewModeChange(value: string | boolean | null): void {
   if (value === 'normal' || value === 'compact') {
     characteristicsViewMode.value = value
-  }
-}
-
-function openStatsImportModal(): void {
-  if (!character.value) {
-    return
-  }
-
-  statsImportError.value = null
-  statsImportSaving.value = false
-  statsImportValues.value = Object.fromEntries(
-    character.value.stats.map((stat) => [stat.statCode, ''])
-  )
-  statsImportDialogRef.value?.showModal()
-}
-
-function closeStatsImportModal(): void {
-  if (statsImportDialogRef.value?.open) {
-    statsImportDialogRef.value.close()
-    return
-  }
-  resetStatsImportModalState()
-}
-
-function resetStatsImportModalState(): void {
-  statsImportError.value = null
-  statsImportSaving.value = false
-  statsImportValues.value = {}
-}
-
-function onStatsImportDialogClosed(): void {
-  resetStatsImportModalState()
-}
-
-function onStatsImportInput(statCode: string, event: Event): void {
-  const target = event.target as HTMLInputElement
-  const normalized = target.value.replace(/\D/g, '').slice(0, 2)
-  statsImportValues.value = {
-    ...statsImportValues.value,
-    [statCode]: normalized,
-  }
-  target.value = normalized
-}
-
-async function confirmStatsImport(): Promise<void> {
-  if (!character.value || !canEditQuickSection.value || statsImportSaving.value) {
-    return
-  }
-
-  const updates = Object.entries(statsImportValues.value)
-    .map(([statCode, rawValue]) => ({ statCode, rawValue: rawValue.trim() }))
-    .filter(({ rawValue }) => rawValue.length > 0)
-    .filter(({ statCode, rawValue }) => {
-      const parsedValue = Math.max(0, Math.min(99, Number(rawValue)))
-      const localStat = character.value?.stats.find((stat) => stat.statCode === statCode)
-      return localStat ? localStat.totalAdvanced !== parsedValue : true
-    })
-
-  if (updates.length === 0) {
-    closeStatsImportModal()
-    return
-  }
-
-  statsImportSaving.value = true
-  statsImportError.value = null
-  try {
-    for (const update of updates) {
-      const parsedValue = Math.max(0, Math.min(99, Number(update.rawValue)))
-      await triggerStatSaveNow({ statCode: update.statCode, totalAdvanced: parsedValue })
-
-      const localStat = character.value.stats.find((stat) => stat.statCode === update.statCode)
-      if (localStat) {
-        localStat.totalAdvanced = parsedValue
-      }
-    }
-
-    await loadCharacter({ background: true })
-    setSectionSuccess('stats', `${updates.length} caracteristique(s) mise(s) a jour.`)
-    closeStatsImportModal()
-  } catch (error) {
-    statsImportError.value = error instanceof Error ? error.message : 'Import impossible.'
-  } finally {
-    statsImportSaving.value = false
   }
 }
 

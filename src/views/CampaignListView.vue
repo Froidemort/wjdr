@@ -24,7 +24,6 @@
             <span class="badge badge-sm" :class="campaign.isArchived ? 'badge-warning' : 'badge-success'">
 							{{ campaign.isArchived ? 'Archivée' : 'Active' }}
 						</span>
-            <span class="badge badge-outline badge-sm font-mono">Code: {{ campaign.code }}</span>
 					</div>
           <div class="card-actions mt-4 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div class="join w-full sm:w-auto">
@@ -55,7 +54,7 @@
       title="Rejoindre une campagne"
       placeholder="A B C D E F"
       button-label="Rejoindre"
-      helper-message="Demande le code au Maitre du Jeu puis saisis 6 caracteres (lettres/chiffres). Exemple: A1B2C3."
+      helper-message="Entre le code à 6 chiffres donné par ton maitre du jeu (Exemple : ABC234)"
       :loading="joining"
       :success-message="joinSuccess"
       :error-message="joinError"
