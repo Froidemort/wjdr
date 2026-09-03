@@ -46,11 +46,6 @@ const sessionInfoOpenModel = computed({
     <AppCard :title="session.name">
       <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2">
-          <span class="badge" :class="isMj ? 'badge-secondary' : 'badge-neutral'">
-            {{ isMj ? 'MJ' : 'Joueur' }}
-          </span>
-          <span v-if="session.isArchived" class="badge badge-warning">Archivée</span>
-          <span class="badge badge-outline font-mono">Code: {{ session.code }}</span>
           <div class="join join-vertical sm:join-horizontal">
             <div class="tooltip" :data-tip="feedbackMap['campaign-code'] || 'Copier le code de campagne'">
               <button class="btn btn-xs ui-critical-action join-item" @click="emit('copy-code')">
@@ -65,6 +60,10 @@ const sessionInfoOpenModel = computed({
               </button>
             </div>
           </div>
+          <span class="badge" :class="isMj ? 'badge-primary' : 'badge-accent'">
+            {{ isMj ? 'MJ' : 'Joueur' }}
+          </span>
+          <span v-if="session.isArchived" class="badge badge-warning">Archivée</span>
         </div>
         <button
           v-if="isMj"

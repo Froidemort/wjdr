@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Minus, Plus } from '@lucide/vue'
 import { computed, ref, watch } from 'vue';
 
 const props = withDefaults(
@@ -95,9 +96,6 @@ watch(
           <span class="hidden sm:inline">{{ label }}</span>
           <span class="sm:hidden">{{ mobileLabel || 'Blessures' }}</span>
         </p>
-        <p class="text-sm font-semibold tabular-nums text-base-content/75">
-          {{ clampedCurrentHp }} / {{ resolvedMaxHp }}
-        </p>
       </div>
 
       <div
@@ -113,9 +111,7 @@ watch(
         class="btn btn-circle btn-sm min-h-11 min-w-11 border border-base-300 bg-base-100 text-base-content transition-transform active:scale-95"
         :aria-label="`Diminuer les ${label.toLowerCase()}`"
       >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 stroke-current" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
-        </svg>
+          <Minus class="text-primary" :class="{ 'disabled opacity-30': currentHp <= 0 }"/>
       </button>
 
       <!-- Conteneur Cœur central agrandi -->
@@ -158,14 +154,13 @@ watch(
               min="0"
               :max="resolvedMaxHp"
               aria-label="Points de vie actuels"
-              class="w-16 bg-transparent text-center text-4xl font-black [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none sm:w-20 sm:text-5xl"
+              class="w-16 h-8 bg-transparent text-center text-4xl font-black[appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none sm:h-16 sm:w-20 sm:text-5xl"
             />
             <span
               v-else
               class="w-16 text-center text-4xl font-black sm:w-20 sm:text-5xl"
             >{{ clampedCurrentHp }}</span>
-            <!-- Affichage secondaire des PV Max (placé à droite, légèrement plus petit) -->
-            <span class="mt-1 text-sm font-bold opacity-85 sm:text-base">/ {{ resolvedMaxHp }}</span>
+            <span class="text-sm font-bold opacity-85 sm:text-base">/ {{ resolvedMaxHp }}</span>
           </div>
         </div>
       </div>
@@ -179,9 +174,7 @@ watch(
         class="btn btn-circle btn-sm min-h-11 min-w-11 border border-base-300 bg-base-100 text-base-content transition-transform active:scale-95"
         :aria-label="`Augmenter les ${label.toLowerCase()}`"
       >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 stroke-current" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-        </svg>
+          <Plus class="text-primary" :class="{ 'disabled opacity-30': currentHp >= maxHp }"/>
       </button>
       </div>
     </div>

@@ -10,7 +10,7 @@ const route = useRoute()
 const { isMobile } = useDeviceBreakpoint()
 
 const layoutComponent = computed(() => (isMobile.value ? MobileLayout : DesktopLayout))
-const showFooter = computed(() => !route.meta.hideFooter)
+const showFooter = computed(() => !route.meta.hideFooter && !isMobile.value)
 </script>
 
 <template>
