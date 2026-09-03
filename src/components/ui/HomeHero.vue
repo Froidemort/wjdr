@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import heroBackdrop from '../../assets/images/home-campaigns.webp'
-
-defineProps<{
-  displayName?: string | null
-}>()
 </script>
 
 <template>
-  <!-- Pulled under the overlay header so the backdrop runs edge to edge, then padded back to keep content clear of it. -->
   <header
     class="relative -mt-(--grim-nav-height) overflow-hidden pt-(--grim-nav-height)"
     aria-labelledby="home-brand"
@@ -20,36 +15,24 @@ defineProps<{
     />
 
     <div
-      class="pointer-events-none absolute inset-0 bg-linear-to-b from-base-100/70 via-base-100/45 to-base-100"
+      class="pointer-events-none absolute inset-0 bg-linear-to-b from-base-100/65 via-base-100/30 to-base-100"
       aria-hidden="true"
     />
     <div
-      class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,transparent_10%,color-mix(in_oklab,var(--color-base-100)_62%,transparent)_100%)]"
+      class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,transparent_15%,color-mix(in_oklab,var(--color-base-100)_55%,transparent)_100%)]"
       aria-hidden="true"
     />
 
-    <div class="relative z-10 mx-auto max-w-3xl px-6 pb-20 pt-14 text-center sm:pb-24 sm:pt-16">
+    <div class="relative z-10 mx-auto max-w-3xl px-6 pt-6 pb-14 text-center sm:pt-12 sm:pb-32">
       <h1 id="home-brand" class="grim-modal-title text-6xl sm:text-7xl lg:text-8xl">
         Grimorium
       </h1>
 
-      <div class="mx-auto mt-5 flex w-56 items-center gap-3 sm:w-72" aria-hidden="true">
-        <span class="h-px flex-1 bg-linear-to-r from-transparent to-primary/55" />
-        <span class="size-1.5 rotate-45 border border-primary/60 bg-primary/25" />
-        <span class="h-px flex-1 bg-linear-to-l from-transparent to-primary/55" />
+      <div class="mx-auto mt-5 flex w-64 items-center gap-3 sm:w-80" aria-hidden="true">
+        <span class="h-px flex-1 bg-linear-to-r from-transparent to-primary/50" />
+        <span class="size-1.5 rotate-45 border border-primary/55 bg-primary/20" />
+        <span class="h-px flex-1 bg-linear-to-l from-transparent to-primary/50" />
       </div>
-
-      <p class="mx-auto mt-5 max-w-lg text-base leading-relaxed text-base-content/80 sm:text-lg">
-        Forgez votre légende dans les ténèbres du Vieux Monde.
-      </p>
-
-      <p
-        v-if="displayName"
-        class="mt-8 inline-flex items-center gap-3 border-y border-base-content/15 px-6 py-2.5 text-lg"
-      >
-        <span class="text-base-content/60">Bienvenue,</span>
-        <span class="font-grim-title text-xl tracking-widest text-primary">{{ displayName }}</span>
-      </p>
     </div>
   </header>
 </template>

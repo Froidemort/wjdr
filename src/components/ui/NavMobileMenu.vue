@@ -27,7 +27,7 @@ function close(): void {
 <template>
   <div
     v-if="open"
-    class="fixed inset-x-0 top-16 z-40 border-b border-base-300 bg-base-200 p-3 shadow-lg sm:hidden"
+    class="fixed inset-x-0 top-(--grim-nav-height) z-40 border-b border-base-300 bg-base-200 p-3 shadow-lg sm:hidden"
   >
     <ul class="menu w-full p-0">
       <li v-for="link in mainNavLinks" :key="link.label">

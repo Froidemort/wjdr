@@ -1,3 +1,36 @@
+<script lang="ts" setup>
+import { Menu, X } from '@lucide/vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { usePageScrolled } from '../../composables/usePageScrolled'
+import { useAuthStore } from '../../stores/auth'
+import AccountPopover from './AccountPopover.vue'
+import MissivesPopover from './MissivesPopover.vue'
+import NavMainLinks from './NavMainLinks.vue'
+import NavMobileMenu from './NavMobileMenu.vue'
+import ThemeToggle from './ThemeToggle.vue'
+
+// Layout: brand (left) | centered links | utilities (right).
+// 3-col grid on sm+ keeps nav links visually centered regardless of right-side width.
+const authStore = useAuthStore()
+const route = useRoute()
+const { isScrolled } = usePageScrolled()
+
+const mobileMenuOpen = ref(false)
+const unreadCount = ref(0)
+const missivesRef = ref<InstanceType<typeof MissivesPopover> | null>(null)
+const accountRef = ref<InstanceType<typeof AccountPopover> | null>(null)
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+// Close all overlays on navigation to prevent them from lingering across routes.
+watch(() => route.path, () => {
+  mobileMenuOpen.value = false
+  missivesRef.value?.close()
+  accountRef.value?.close()
+})
+</script>
+
 <template>
   <nav
     class="relative navbar min-h-16 border-b border-transparent px-4 transition-[background-color,border-color,box-shadow] duration-300 ease-out motion-reduce:transition-none sm:px-6"
@@ -8,7 +41,7 @@
     "
   >
     <div
-      class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-primary/45 to-transparent transition-opacity duration-300"
+      class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-base-content/12 to-transparent transition-opacity duration-300"
       :class="isScrolled ? 'opacity-100' : 'opacity-0'"
       aria-hidden="true"
     />
@@ -32,7 +65,7 @@
         :class="isAuthenticated && 'justify-self-end sm:ml-0'"
       >
         <template v-if="isAuthenticated">
-          <!-- Only one navbar popover open at a time -->
+          <!-- Only one popover open at a time -->
           <MissivesPopover
             ref="missivesRef"
             @open="accountRef?.close()"
@@ -64,36 +97,3 @@
     />
   </nav>
 </template>
-
-<script lang="ts" setup>
-import { Menu, X } from '@lucide/vue'
-import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { usePageScrolled } from '../../composables/usePageScrolled'
-import { useAuthStore } from '../../stores/auth'
-import AccountPopover from './AccountPopover.vue'
-import MissivesPopover from './MissivesPopover.vue'
-import NavMainLinks from './NavMainLinks.vue'
-import NavMobileMenu from './NavMobileMenu.vue'
-import ThemeToggle from './ThemeToggle.vue'
-
-// Layout: brand (left) | main links (center) | utilities (right).
-// On sm+, a 3-column grid keeps center links visually centered regardless of right-side width.
-const authStore = useAuthStore()
-const route = useRoute()
-const { isScrolled } = usePageScrolled()
-
-const mobileMenuOpen = ref(false)
-const unreadCount = ref(0)
-const missivesRef = ref<InstanceType<typeof MissivesPopover> | null>(null)
-const accountRef = ref<InstanceType<typeof AccountPopover> | null>(null)
-
-const isAuthenticated = computed(() => authStore.isAuthenticated)
-
-// Close every overlay on navigation so panels do not linger across routes.
-watch(() => route.path, () => {
-  mobileMenuOpen.value = false
-  missivesRef.value?.close()
-  accountRef.value?.close()
-})
-</script>

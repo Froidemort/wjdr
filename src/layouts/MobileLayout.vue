@@ -30,7 +30,8 @@ function isRouteActive(path: string): boolean {
 </script>
 
 <template>
-  <div class="min-h-screen bg-base-100 [--grim-nav-height:3.5rem]">
+  <!-- --grim-nav-height:0 — mobile header is sticky, not overlaid, so the hero does not pull up under it -->
+  <div class="flex min-h-screen flex-col bg-base-100 [--grim-nav-height:0px] [--grim-dock-height:4rem]">
     <header
       class="sticky top-0 z-40 navbar min-h-14 border-b border-transparent px-3 transition-[background-color,border-color,box-shadow] duration-300 ease-out motion-reduce:transition-none"
       :class="
@@ -66,11 +67,11 @@ function isRouteActive(path: string): boolean {
       </div>
     </header>
 
-    <main id="main-content" class="pb-20" tabindex="-1">
+    <main id="main-content" class="flex-1" tabindex="-1">
       <slot />
     </main>
 
-    <div v-if="isAuthenticated" class="dock dock-sm z-40 border-t border-base-300 bg-base-200">
+    <div v-if="isAuthenticated" class="sticky bottom-0 z-40 dock dock-sm border-t border-base-300 bg-base-200">
       <component
         :is="item.to ? RouterLink : 'button'"
         v-for="item in navItems"
@@ -80,7 +81,7 @@ function isRouteActive(path: string): boolean {
         :disabled="item.to ? undefined : true"
         :title="item.to ? undefined : 'Bientôt disponible'"
         :class="[
-          isRouteActive(item.to) ? 'dock-active' : '',
+          item.to && isRouteActive(item.to) ? 'dock-active' : '',
           item.to ? '' : 'text-base-content/35',
         ]"
       >
