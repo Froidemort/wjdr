@@ -92,13 +92,22 @@
 						@commit="onMoneyCommit"
 						@subtract="onMoneySubtract"
 					/>
-          <div class="sm:col-span-2 lg:col-span-1">
+          <div class="sm:col-span-2 lg:col-span-3">
             <CharacterDerivedStatsCard
 						:total-encumbrance="totalEncumbrance"
 						:max-encumbrance="maxEncumbrance"
 						:bonus-force="bonusForce"
 						:bonus-endurance="bonusEndurance"
 						:armor-by-location="armorByLocation"
+            :armors="characterArmors"
+            :weapons="characterWeapons"
+            :editable="canEditQuickSection"
+            :busy="Boolean(actionBusyKey)"
+            @equip-armor="onEquipArmorFromDoll"
+            @unequip-armor="onUnequipArmorFromDoll"
+            @unequip-armors="onUnequipArmorsFromDoll"
+            @equip-weapon="onEquipWeaponFromDoll"
+            @unequip-weapon="onUnequipWeaponFromDoll"
             />
           </div>
 				</div>
@@ -395,7 +404,7 @@
         </div>
       </section>
 
-			<dialog ref="descriptionDialogRef" class="modal modal-top sm:modal-middle" @close="closeDescriptionModal">
+			<dialog ref="descriptionDialogRef" class="modal modal-top sm:modal-middle" @close="onDescriptionDialogClosed">
         <div class="modal-box grim-modal-box p-6 max-w-lg">
           <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeDescriptionModal" aria-label="Fermer">✕</button>
           <h3 class="grim-modal-title text-2xl pr-8">{{ descriptionTitle || 'Description' }}</h3>
@@ -451,7 +460,7 @@
                   <StateCycleBadge
                     v-if="canEditQuickSection"
                     :value="weapon.equipped"
-                    :options="WEAPON_EQUIPPED_OPTIONS"
+                    :options="weaponEquippedOptions(weapon)"
                     @change="onWeaponStateChange(weapon, $event)"
                   />
                   <span
@@ -459,7 +468,15 @@
                     class="badge badge-sm"
                     :class="weapon.equipped ? 'badge-secondary' : 'badge-outline'"
                   >
-                    {{ weapon.equipped === null ? 'Inventaire' : weapon.equipped === 'd&g' ? 'Deux mains' : weapon.equipped === 'droite' ? 'Droite' : 'Gauche' }}
+                    {{
+                      weapon.equipped === null
+                        ? 'Inventaire'
+                        : weapon.equipped === 'd&g'
+                          ? 'Équipée'
+                          : weapon.equipped === 'droite'
+                            ? 'Droite'
+                            : 'Gauche'
+                    }}
                   </span>
 									<StateCycleBadge
 										v-if="canEditQuickSection"
@@ -650,7 +667,7 @@
         </div>
       </section>
 
-			<dialog ref="statsImportDialogRef" class="modal modal-top sm:modal-middle" @close="closeStatsImportModal">
+			<dialog ref="statsImportDialogRef" class="modal modal-top sm:modal-middle" @close="onStatsImportDialogClosed">
         <div class="modal-box grim-modal-box p-4 sm:p-6 max-w-3xl">
           <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeStatsImportModal" aria-label="Fermer">✕</button>
           <h3 class="grim-modal-title text-2xl pr-8">Import rapide des avancées de carrière</h3>
@@ -697,7 +714,7 @@
 			</dialog>
 		</template>
 
-		<dialog ref="careerDialogRef" class="modal modal-top sm:modal-middle" @close="closeCareerModal">
+		<dialog ref="careerDialogRef" class="modal modal-top sm:modal-middle" @close="onCareerDialogClosed">
       <div class="modal-box grim-modal-box p-6">
         <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeCareerModal" aria-label="Fermer">✕</button>
         <h3 class="grim-modal-title mb-4 text-center text-3xl">Changer de carrière</h3>
@@ -784,7 +801,7 @@
 			</form>
 		</dialog>
 
-		<dialog ref="careerConfirmDialogRef" class="modal modal-top sm:modal-middle" @close="closeCareerConfirmModal()">
+		<dialog ref="careerConfirmDialogRef" class="modal modal-top sm:modal-middle" @close="onCareerConfirmDialogClosed">
       <div class="modal-box grim-modal-box p-6">
         <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeCareerConfirmModal()" aria-label="Fermer">✕</button>
         <h3 class="grim-modal-title mb-2 text-center text-3xl">Appliquer le profil de carrière</h3>
@@ -828,7 +845,7 @@
 			</form>
 		</dialog>
 
-		<dialog ref="catalogDialogRef" class="modal modal-top sm:modal-middle" @close="closeCatalogModal">
+		<dialog ref="catalogDialogRef" class="modal modal-top sm:modal-middle" @close="onCatalogDialogClosed">
       <div class="modal-box grim-modal-box w-11/12 max-w-2xl p-4 sm:p-6 max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
         <button class="btn btn-sm btn-circle grim-modal-close absolute right-4 top-4" @click="closeCatalogModal" aria-label="Fermer">✕</button>
         <h3 class="grim-modal-title mb-4 pr-8 text-center text-2xl sm:text-3xl text-primary">Ajouter des {{ modalSectionLabel }}</h3>
@@ -1136,6 +1153,7 @@ import type {
   CharacterTalent,
   CharacterWeapon,
 } from '../types/domain'
+import type { WeaponHand, WeaponPreferredHand } from '../utils/equipmentSlots'
 import AppCard from '../components/ui/AppCard.vue'
 import CharacterDerivedStatsCard from '../components/ui/CharacterDerivedStatsCard.vue'
 import CharacteristicCard from '../components/ui/CharacteristicCard.vue'
@@ -1152,6 +1170,14 @@ import {
   type RealtimeUpdatePayload,
   useRealtimeChannels,
 } from '../composables/useRealtimeChannels'
+import {
+  canEquipArmorStack,
+  computeArmorByLocation,
+  findConflictingWeapons,
+  isTwoHandedWeapon,
+  isWeaponHand,
+  resolveWeaponEquipHand,
+} from '../utils/equipmentSlots'
 import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
 import { isTransientError } from '../services/shared/networkErrors'
 
@@ -1182,13 +1208,22 @@ const CATALOG_LABELS: Record<CatalogSection, string> = {
   items: 'équipements',
 }
 
-const WEAPON_EQUIPPED_OPTIONS = [
+const WEAPON_ONE_HANDED_EQUIPPED_OPTIONS = [
   { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
   { value: 'droite', label: 'Droite', badgeClass: 'btn-secondary' },
   { value: 'gauche', label: 'Gauche', badgeClass: 'btn-secondary' },
-  { value: 'd&g', label: 'Deux mains', badgeClass: 'btn-secondary' },
 ] as const
 
+const WEAPON_TWO_HANDED_EQUIPPED_OPTIONS = [
+  { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
+  { value: 'd&g', label: 'Équipée', badgeClass: 'btn-secondary' },
+] as const
+
+function weaponEquippedOptions(weapon: CharacterWeapon) {
+  return isTwoHandedWeapon(weapon)
+    ? WEAPON_TWO_HANDED_EQUIPPED_OPTIONS
+    : WEAPON_ONE_HANDED_EQUIPPED_OPTIONS
+}
 const ARMOR_EQUIPPED_OPTIONS = [
   { value: false, label: 'Inventaire', badgeClass: 'btn-outline' },
   { value: true, label: 'Équipée', badgeClass: 'btn-success' },
@@ -1519,38 +1554,7 @@ const totalEncumbrance = computed(() => {
   return weaponsEncumbrance + armorsEncumbrance + itemsEncumbrance
 })
 
-const armorByLocation = computed(() => {
-  const totals = {
-    tete: 0,
-    corps: 0,
-    bras: 0,
-    jambes: 0,
-  }
-
-  for (const armor of characterArmors.value) {
-    if (!armor.isEquipped || !armor.coveredLocations?.length) {
-      continue
-    }
-
-    for (const location of armor.coveredLocations) {
-      const normalized = location.trim().toLowerCase()
-      if (normalized === 'tête' || normalized === 'tete') {
-        totals.tete += armor.armorPoints
-      }
-      if (normalized === 'corps') {
-        totals.corps += armor.armorPoints
-      }
-      if (normalized === 'bras') {
-        totals.bras += armor.armorPoints
-      }
-      if (normalized === 'jambes') {
-        totals.jambes += armor.armorPoints
-      }
-    }
-  }
-
-  return totals
-})
+const armorByLocation = computed(() => computeArmorByLocation(characterArmors.value))
 
 const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpdate<
   typeof editable.value
@@ -2053,10 +2057,19 @@ function openStatsImportModal(): void {
 function closeStatsImportModal(): void {
   if (statsImportDialogRef.value?.open) {
     statsImportDialogRef.value.close()
+    return
   }
+  resetStatsImportModalState()
+}
+
+function resetStatsImportModalState(): void {
   statsImportError.value = null
   statsImportSaving.value = false
   statsImportValues.value = {}
+}
+
+function onStatsImportDialogClosed(): void {
+  resetStatsImportModalState()
 }
 
 function onStatsImportInput(statCode: string, event: Event): void {
@@ -2204,14 +2217,6 @@ async function onDeleteWeapon(linkId: string): Promise<void> {
   }
 }
 
-function canEquipWeaponCheck(
-  _weapon: CharacterWeapon,
-  _targetEquipped: 'droite' | 'gauche' | 'd&g' | null
-): boolean {
-  // Placeholder for future weapon rules validation.
-  return true
-}
-
 async function onWeaponStateChange(
   weapon: CharacterWeapon,
   value: string | boolean | null
@@ -2220,16 +2225,18 @@ async function onWeaponStateChange(
     return
   }
 
-  if (value !== null && value !== 'droite' && value !== 'gauche' && value !== 'd&g') {
+  if (value !== null && !isWeaponHand(value)) {
     return
   }
 
-  const nextEquipped: 'droite' | 'gauche' | 'd&g' | null = value
+  let nextEquipped: WeaponHand | null = value
+  if (nextEquipped === 'd&g' && !isTwoHandedWeapon(weapon)) {
+    nextEquipped = 'droite'
+  } else if ((nextEquipped === 'droite' || nextEquipped === 'gauche') && isTwoHandedWeapon(weapon)) {
+    nextEquipped = 'd&g'
+  }
+
   if (weapon.equipped === nextEquipped) {
-    return
-  }
-
-  if (!canEquipWeaponCheck(weapon, nextEquipped)) {
     return
   }
 
@@ -2238,6 +2245,14 @@ async function onWeaponStateChange(
   }
 
   try {
+    if (nextEquipped !== null) {
+      const conflicts = findConflictingWeapons(characterWeapons.value, weapon.id, nextEquipped)
+      for (const conflict of conflicts) {
+        await updateCharacterWeaponEquipped(conflict.id, null)
+        conflict.equipped = null
+      }
+    }
+
     await updateCharacterWeaponEquipped(weapon.id, nextEquipped)
     weapon.equipped = nextEquipped
     invalidateCurrentLinksCache()
@@ -2301,9 +2316,180 @@ async function onDeleteArmor(linkId: string): Promise<void> {
   }
 }
 
-function canEquipArmorCheck(_armor: CharacterArmor, _targetEquipped: boolean): boolean {
-  // Placeholder for future armor rules validation.
-  return true
+function ensureArmorCanBeEquipped(armor: CharacterArmor): boolean {
+  if (canEquipArmorStack(characterArmors.value, armor)) {
+    return true
+  }
+  errorMessage.value = 'Maximum 3 couches d’armure atteint sur une localisation couverte.'
+  return false
+}
+
+async function onEquipArmorFromDoll(armorId: string): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
+
+  const armor = characterArmors.value.find((item) => item.id === armorId)
+  if (!armor || armor.isEquipped) {
+    return
+  }
+
+  if (!ensureArmorCanBeEquipped(armor)) {
+    return
+  }
+
+  if (!beginAction(`armor-equip-doll-${armor.id}`)) {
+    return
+  }
+
+  try {
+    await updateCharacterArmorEquipped(armor.id, true)
+    armor.isEquipped = true
+    invalidateCurrentLinksCache()
+    setSectionSuccess('armors', 'Armure équipée (couche ajoutée).')
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
+  } finally {
+    endAction()
+  }
+}
+
+async function onUnequipArmorFromDoll(armorId: string): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
+
+  const armor = characterArmors.value.find((item) => item.id === armorId)
+  if (!armor || !armor.isEquipped) {
+    return
+  }
+
+  if (!beginAction(`armor-unequip-doll-${armor.id}`)) {
+    return
+  }
+
+  try {
+    await updateCharacterArmorEquipped(armor.id, false)
+    armor.isEquipped = false
+    invalidateCurrentLinksCache()
+    setSectionSuccess('armors', 'Armure déséquipée.')
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  } finally {
+    endAction()
+  }
+}
+
+async function onUnequipArmorsFromDoll(armorIds: string[]): Promise<void> {
+  if (!canEditQuickSection.value || !character.value || armorIds.length === 0) {
+    return
+  }
+
+  const armorsToUnequip = armorIds
+    .map((id) => characterArmors.value.find((item) => item.id === id))
+    .filter((armor): armor is CharacterArmor => Boolean(armor?.isEquipped))
+
+  if (armorsToUnequip.length === 0) {
+    return
+  }
+
+  if (!beginAction('armor-unequip-doll-batch')) {
+    return
+  }
+
+  try {
+    for (const armor of armorsToUnequip) {
+      await updateCharacterArmorEquipped(armor.id, false)
+      armor.isEquipped = false
+    }
+    invalidateCurrentLinksCache()
+    setSectionSuccess(
+      'armors',
+      armorsToUnequip.length > 1 ? 'Couches d’armure déséquipées.' : 'Armure déséquipée.'
+    )
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
+  } finally {
+    endAction()
+  }
+}
+
+async function onEquipWeaponFromDoll(
+  weaponId: string,
+  hand: WeaponHand
+): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
+
+  const weapon = characterWeapons.value.find((item) => item.id === weaponId)
+  if (!weapon) {
+    return
+  }
+
+  const preferredHand: WeaponPreferredHand = hand === 'gauche' ? 'gauche' : 'droite'
+  const resolvedHand = resolveWeaponEquipHand(weapon, preferredHand)
+
+  if (weapon.equipped === resolvedHand) {
+    return
+  }
+
+  if (!beginAction(`weapon-equip-doll-${weapon.id}`)) {
+    return
+  }
+
+  const conflicts = findConflictingWeapons(characterWeapons.value, weapon.id, resolvedHand)
+
+  try {
+    for (const conflict of conflicts) {
+      await updateCharacterWeaponEquipped(conflict.id, null)
+      conflict.equipped = null
+    }
+
+    await updateCharacterWeaponEquipped(weapon.id, resolvedHand)
+    weapon.equipped = resolvedHand
+    invalidateCurrentLinksCache()
+    setSectionSuccess(
+      'weapons',
+      conflicts.length > 0 ? 'Arme équipée (remplacement).' : 'Arme équipée.'
+    )
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+    invalidateCurrentLinksCache()
+    await loadCharacterLinks(character.value.id, { force: true })
+  } finally {
+    endAction()
+  }
+}
+
+async function onUnequipWeaponFromDoll(weaponId: string): Promise<void> {
+  if (!canEditQuickSection.value || !character.value) {
+    return
+  }
+
+  const weapon = characterWeapons.value.find((item) => item.id === weaponId)
+  if (!weapon || weapon.equipped === null) {
+    return
+  }
+
+  if (!beginAction(`weapon-unequip-doll-${weapon.id}`)) {
+    return
+  }
+
+  try {
+    await updateCharacterWeaponEquipped(weapon.id, null)
+    weapon.equipped = null
+    invalidateCurrentLinksCache()
+    setSectionSuccess('weapons', 'Arme déséquipée.')
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+  } finally {
+    endAction()
+  }
 }
 
 async function onArmorStateChange(
@@ -2323,7 +2509,7 @@ async function onArmorStateChange(
     return
   }
 
-  if (!canEquipArmorCheck(armor, nextEquipped)) {
+  if (nextEquipped && !ensureArmorCanBeEquipped(armor)) {
     return
   }
 
@@ -2551,12 +2737,21 @@ async function openCareerModal(): Promise<void> {
 function closeCareerModal(): void {
   if (careerDialogRef.value?.open) {
     careerDialogRef.value.close()
+    return
   }
+  resetCareerModalState()
+}
+
+function resetCareerModalState(): void {
   selectedCareerId.value = null
   selectedCareerName.value = null
   careerError.value = null
   careerSearchLoading.value = false
   careerPathLoading.value = false
+}
+
+function onCareerDialogClosed(): void {
+  resetCareerModalState()
 }
 
 function selectCareer(id: string, name: string): void {
@@ -2572,15 +2767,18 @@ function resetPendingCareerChange(): void {
   careerConfirmError.value = null
 }
 
-function closeCareerConfirmModal(resetPending = true): void {
+function closeCareerConfirmModal(): void {
   if (careerConfirmDialogRef.value?.open) {
     careerConfirmDialogRef.value.close()
+    return
   }
-
   careerCharacteristicsLoading.value = false
-  if (resetPending) {
-    resetPendingCareerChange()
-  }
+  resetPendingCareerChange()
+}
+
+function onCareerConfirmDialogClosed(): void {
+  careerCharacteristicsLoading.value = false
+  resetPendingCareerChange()
 }
 
 async function confirmCareerChange(): Promise<void> {
@@ -2745,15 +2943,29 @@ function onSkillMasteryKeydown(event: KeyboardEvent): void {
 function closeDescriptionModal(): void {
   if (descriptionDialogRef.value?.open) {
     descriptionDialogRef.value.close()
+    return
   }
+  resetDescriptionModalState()
+}
+
+function resetDescriptionModalState(): void {
   descriptionTitle.value = null
   descriptionContent.value = null
+}
+
+function onDescriptionDialogClosed(): void {
+  resetDescriptionModalState()
 }
 
 function closeCatalogModal(): void {
   if (catalogDialogRef.value?.open) {
     catalogDialogRef.value.close()
+    return
   }
+  resetCatalogModalState()
+}
+
+function resetCatalogModalState(): void {
   selectedCatalogIds.value = []
   selectedCatalogLabels.value = {}
   catalogError.value = null
@@ -2762,6 +2974,10 @@ function closeCatalogModal(): void {
   creatingItem.value = false
   resetSelectedItemsSettings()
   resetNewItemForm()
+}
+
+function onCatalogDialogClosed(): void {
+  resetCatalogModalState()
 }
 
 function toggleCatalogSelection(id: string): void {

@@ -1,4 +1,5 @@
 import type { CharacterCore } from './character'
+import type { WeaponHand } from './equipment'
 
 export type UserRole = 'mj' | 'player'
 
@@ -113,7 +114,7 @@ export interface CharacterWeapon {
   weaponId: string
   name: string
   description: string | null
-  equipped: 'droite' | 'gauche' | 'd&g' | null
+  equipped: WeaponHand | null
   quality: InventoryQuality
   encumbrance: number
   damageFormula: string | null
