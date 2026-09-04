@@ -1,6 +1,6 @@
 # Warhammer RPG App
 
-Companion app pour Warhammer Fantasy Roleplay 2e, construite avec Vue 3 + TypeScript + Supabase.
+Companion app pour le jeu de rôle Warhammer seconde édition, construite avec Vue 3 TS + DaisyUI/Tailwind4 + Supabase.
 
 ## Fonctionnalités
 
@@ -12,7 +12,9 @@ Companion app pour Warhammer Fantasy Roleplay 2e, construite avec Vue 3 + TypeSc
 
 ## Stack
 
-- Vue 3, TypeScript, Pinia, Vue Router
+- Vue 3 et TypeScript
+- Pinia
+- Vue-core, Vue-router, ...
 - Tailwind CSS v4, DaisyUI v5
 - Supabase (Auth, Postgres, Realtime)
 - Vite, Vitest, Playwright
@@ -25,7 +27,7 @@ Companion app pour Warhammer Fantasy Roleplay 2e, construite avec Vue 3 + TypeSc
 
 ## Variables d'environnement
 
-Créer `.env` à la racine:
+Pour le développement, créer un fichier `.env` à la racine:
 
 ```bash
 VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
@@ -39,13 +41,16 @@ Référence schema/data publique pour initialiser la base de données :
 - `migrations/public_schema.sql` : schéma initial
 - `migrations/public_data.sql` : données initiales du livre de règles
 
-Exécuter les scripts SQL dans l'ordre:
+Exécuter les scripts SQL `migrations/*.sql` des différentes migrations
 
-1. `migrations/001_rename_sessions_to_campaigns.sql`
-2. `migrations/002_create_sessions_table.sql`
-3. `migrations/003_update_rls_policies.sql`
-4. `migrations/004_unique_campaign_code.sql`
+⚠️ Les scripts de migration n'ont pas toutes les instructions à jour, notamment pour les GRANT et les RLS ⚠️.
 
+Il existe également des resources à extraire de PDF via des scripts python.
+⚠️ Actuellement l'environnement python n'est pas défini ⚠️
+
+Il faut utiliser les scripts `career_paths_extractor.py` pour les carrières et les liens de carrières, `skills_talents.py` pour les liens entre les talents et les compétences, `weapon_attributes.py` pour les liens entres les armes des les attributs des armes.
+
+Ces scripts sont perfectibles, et fonctionnent avec les PDFs `migrations/compendium_carrieres_modifie.pdf` et `migrations/compendium_skills_talents.pdf` qui proviennent du forum (Warhammer)[https://www.warhammer-forum.com/topic/270712-compendium-divers-wjdr-v2/], grâce au travail d'un certain *Balian de Troy* que je remercie.
 
 ## Développement
 
@@ -59,18 +64,18 @@ Pour la récupération de mot de passe, ajouter l'URL `https://VOTRE_DOMAINE/res
 ## Commandes utiles
 
 ```bash
-npm run typecheck
-npm run lint
-npm run build
-npm run test:unit
-npm run test:e2e
+npm run typecheck # typescript
+npm run lint # linter eslint
+npm run build # 🚀 build l'application
+npm run test:unit # tests unitaires
+npm run test:e2e # ⚠️ nécessite playwright
 ```
 
-Smoke tests deploy:
+## Storybook
 
-```bash
-PLAYWRIGHT_BASE_URL=https://your-preview-url.vercel.app npm run test:e2e:deploy
-```
+Il est possible d'utiliser [StoryBook](https://storybook.js.org/) pour tester les composants vue. A voir dans `src/stories`.
+
+La commande utile est `npm run storybook`.
 
 ## Notes
 
