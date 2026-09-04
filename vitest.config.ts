@@ -15,7 +15,11 @@ export default defineConfig({
         globals: true,
         environment: 'node',
         setupFiles: ['./tests/setup/indexeddb.ts'],
-        include: ['tests/unit/**/*.test.ts']
+        include: ['tests/unit/**/*.test.ts'],
+        coverage: {
+          provider: 'v8',
+          include: ['tests/unit/**/*.test.ts']
+        }
       }
     },
     {
