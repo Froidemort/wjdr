@@ -159,4 +159,41 @@ describe('offlineSyncService', () => {
     expect(updateSessionMock).toHaveBeenCalledTimes(1)
     expect(result).toEqual({ applied: 1, reconciled: 0, dropped: 0, pending: 0 })
   })
+
+  it('replays character stat patches and silently removes unsupported updates', async () => {
+    await enqueueOfflineUpdate({
+      entityType: 'character',
+      entityId: 'char-4',
+      payload: { kind: 'character-stat', statCode: 'CC', patch: { currentAdvanced: 3, baseValue: 35 } },
+    })
+    await enqueueOfflineUpdate({
+      entityType: 'unknown' as 'character',
+      entityId: 'unknown-1',
+      payload: { kind: 'unknown' },
+    })
+
+    const result = await replayOfflineQueue()
+
+    expect(updateCharacterStatValuesMock).toHaveBeenCalledWith('char-4', 'CC', {
+      current_advanced: 3,
+      base_value: 35,
+      total_advanced: undefined,
+    })
+    expect(result).toEqual({ applied: 1, reconciled: 0, dropped: 0, pending: 0 })
+  })
+
+  it('drops session updates when the remote session no longer exists', async () => {
+    getSessionByIdMock.mockResolvedValue(null)
+    const onDropped = vi.fn()
+    await enqueueOfflineUpdate({
+      entityType: 'session',
+      entityId: 'session-3',
+      payload: { kind: 'session', patch: { name: 'Perdue' } },
+    })
+
+    const result = await replayOfflineQueue({ onDropped })
+
+    expect(result).toEqual({ applied: 0, reconciled: 0, dropped: 1, pending: 0 })
+    expect(onDropped).toHaveBeenCalledWith(expect.objectContaining({ entityId: 'session-3' }), expect.any(Error))
+  })
 })

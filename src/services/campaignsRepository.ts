@@ -84,6 +84,7 @@ export async function createCampaign(payload: {
   name: string
   description: string
   code: string
+  
 }): Promise<string> {
   const { data, error } = await supabase
     .from('campaigns')

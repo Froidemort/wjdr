@@ -135,4 +135,109 @@ describe('referenceDataStore', () => {
       },
     ])
   })
+
+  it('normalizes catalog fields, supports specialized search, and exposes characteristics placeholder', async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'weapons') {
+        return createBuilder([{ id: 'weapon-1', name: 'Arc', encumbrance: '2', damageFormula: 'BF+3' }])
+      }
+      if (table === 'skills') {
+        return createBuilder([{ id: 'skill-1', name: 'Conduite', specialization: 'Chariot' }])
+      }
+      return createBuilder([])
+    })
+    const store = useReferenceDataStore()
+
+    await store.init()
+
+    expect(store.weapons[0]).toMatchObject({ encumbrance: 2, damageFormula: 'BF+3' })
+    expect(await store.search('skills', 'chariot')).toHaveLength(1)
+    expect(await store.search('skills', '   ')).toEqual([])
+    expect(await store.getCareerCharacteristicsByCareerId('career-1')).toEqual([
+      expect.objectContaining({ id: '', name: '' }),
+    ])
+  })
+
+  it.each([
+    ['weapons', { id: 7, name: 8, encumbrance: '  ', damage_formula: 12 }, { id: '7', name: '8', encumbrance: null, damageFormula: null }],
+    ['armors', { id: 'armor-1', name: 'Armure', encumbrance: '2.5', armor_points: 'invalid' }, { encumbrance: 2.5, armorPoints: Number.NaN }],
+    ['skills', { id: 'skill-1', name: 'Langue', specialization: 1, description: false }, { specialization: null, description: null }],
+  ] as const)('coerces %s catalog rows and discards incomplete entries', async (table, row, expected) => {
+    fromMock.mockImplementation((requestedTable: string) =>
+      createBuilder(requestedTable === table ? [row, { id: '', name: 'Ignore' }, { id: 'ignore', name: '' }] : [])
+    )
+    const store = useReferenceDataStore()
+
+    await store.init()
+
+    const catalog = table === 'weapons' ? store.weapons : table === 'armors' ? store.armors : store.skills
+    expect(catalog).toHaveLength(1)
+    expect(catalog[0]).toMatchObject(expected)
+  })
+
+  it.each(['skills', 'talents', 'weapons', 'armors', 'career_paths'] as const)(
+    'retains a %s catalog query failure',
+    async (failedTable) => {
+      const failedBuilder = createBuilder([])
+      failedBuilder.order.mockResolvedValue({ data: null, error: new Error(`${failedTable} indisponible`) })
+      fromMock.mockImplementation((table: string) => table === failedTable ? failedBuilder : createBuilder([]))
+      const store = useReferenceDataStore()
+
+      await expect(store.init()).rejects.toThrow(`${failedTable} indisponible`)
+
+      expect(store.error).toBe(`${failedTable} indisponible`)
+      expect(store.loading).toBe(false)
+    }
+  )
+
+  it('reloads missing career paths, excludes invalid targets, and sorts the result', async () => {
+    const careersBuilder = createBuilder([
+      { id: 'career-a', name: 'Zelote' },
+      { id: 'career-b', name: 'Apothicaire' },
+    ])
+    const pathsBuilder = createBuilder([])
+    pathsBuilder.select.mockImplementation(() => pathsBuilder)
+    pathsBuilder.order
+      .mockResolvedValueOnce({
+        data: [
+          { from_career_id: 'career-1', to_career_id: 'career-a' },
+          { from_career_id: 'career-1', to_career_id: 'career-b' },
+          { from_career_id: '', to_career_id: 'career-a' },
+          { from_career_id: 'career-1', to_career_id: 'missing' },
+        ],
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: [
+          { from_career_id: 'career-1', to_career_id: 'career-a' },
+          { from_career_id: 'career-1', to_career_id: 'career-b' },
+        ],
+        error: null,
+      })
+    fromMock.mockImplementation((table: string) => {
+      if (table === 'careers') return careersBuilder
+      if (table === 'career_paths') return pathsBuilder
+      return createBuilder([])
+    })
+    const store = useReferenceDataStore()
+
+    await store.init()
+    expect(await store.getCareerPathsByFromCareerId('unknown')).toEqual([])
+    expect(await store.getCareerPathsByFromCareerId('career-1')).toMatchObject([
+      { id: 'career-b', name: 'Apothicaire' },
+      { id: 'career-a', name: 'Zelote' },
+    ])
+  })
+
+  it('retains an initialization failure in the store error state', async () => {
+    const careersBuilder = createBuilder([])
+    careersBuilder.order.mockResolvedValue({ data: null, error: new Error('Indisponible') })
+    fromMock.mockReturnValue(careersBuilder)
+    const store = useReferenceDataStore()
+
+    await expect(store.init()).rejects.toThrow('Indisponible')
+
+    expect(store.error).toBe('Indisponible')
+    expect(store.loading).toBe(false)
+  })
 })
