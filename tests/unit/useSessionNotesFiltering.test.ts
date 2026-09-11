@@ -46,9 +46,9 @@ describe('useSessionNotesFiltering', () => {
   it('ranks matching notes and exposes session labels', () => {
     const filtering = createFiltering()
     filtering.linkedSessionFilter.value = 'none'
-    filtering.filteredNotes.value
+    //filtering.filteredNotes.value
     filtering.linkedSessionFilter.value = 'all'
-    filtering.filteredNotes.value
+    //filtering.filteredNotes.value
     filtering.searchQuery.value = 'tour'
 
     expect(filtering.filteredNotes.value.map((note) => note.id)).toEqual(['note-1', 'note-3'])

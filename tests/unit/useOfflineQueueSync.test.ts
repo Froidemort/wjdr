@@ -93,7 +93,7 @@ describe('useOfflineQueueSync', () => {
     const addEventListener = vi.fn()
     const removeEventListener = vi.fn()
     vi.stubGlobal('window', { addEventListener, removeEventListener })
-    const sync = useOfflineQueueSync()
+    useOfflineQueueSync()
     const mounted = dependencies.onMounted.mock.calls[0]?.[0] as (() => void)
     const queueChange = dependencies.subscribeChanges.mock.calls[0]?.[0] as () => void
 
