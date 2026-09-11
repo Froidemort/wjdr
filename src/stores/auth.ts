@@ -33,6 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
   const initialized = ref(false)
   const authError = ref<string | null>(null)
+  const authSuccess = ref<string | null>(null)
   const isRecoverySession = ref(false)
   const identityCache = ref<{
     userId: string | null
@@ -187,6 +188,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function signIn(identifier: string, password: string): Promise<void> {
     loading.value = true
     authError.value = null
+    authSuccess.value = null
 
     try {
       const resolved = await resolveIdentifier(identifier)
@@ -209,6 +211,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function signUp(username: string, email: string, password: string): Promise<void> {
     loading.value = true
     authError.value = null
+    authSuccess.value = null
 
     try {
       const normalizedEmail = email.trim().toLowerCase()
@@ -226,6 +229,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (error) {
         throw error
       }
+
+      authSuccess.value = 'Compte cree. Verifie ta boite mail pour finaliser l inscription.'
     } catch (error) {
       authError.value = error instanceof Error ? error.message : 'Inscription impossible.'
       throw error
@@ -237,6 +242,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function requestPasswordReset(email: string): Promise<void> {
     loading.value = true
     authError.value = null
+    authSuccess.value = null
 
     try {
       const redirectTo = `${window.location.origin}/reset-password`
@@ -258,6 +264,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function updatePassword(password: string): Promise<void> {
     loading.value = true
     authError.value = null
+    authSuccess.value = null
 
     try {
       const { error } = await supabase.auth.updateUser({ password })
@@ -276,6 +283,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function signOut(): Promise<void> {
     loading.value = true
     authError.value = null
+    authSuccess.value = null
     try {
       const { error } = await supabase.auth.signOut()
       if (error) {
@@ -314,6 +322,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading,
     initialized,
     authError,
+    authSuccess,
     isRecoverySession,
     isAuthenticated,
     initAuth,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Bell, BookOpenText, House, Scroll, UserCircle, Users } from '@lucide/vue'
-import { computed, type Component } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { Bell, BookOpenText, House, LogOut, MoreHorizontal, Scroll, UserCircle, Users } from '@lucide/vue'
+import { computed, type Component, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useMissivesInbox } from '../composables/useMissivesInbox'
 import { usePageScrolled } from '../composables/usePageScrolled'
 import { useAuthStore } from '../stores/auth'
@@ -9,8 +9,10 @@ import ThemeToggle from '../components/ui/ThemeToggle.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 const { unreadCount } = useMissivesInbox()
 const { isScrolled } = usePageScrolled()
+const optionsOpen = ref(false)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
@@ -20,12 +22,21 @@ const navItems = [
   { to: '/characters', label: 'Personnages', icon: Users },
   { to: '/', label: 'Accueil', icon: House },
   { label: 'Compendium', icon: BookOpenText },
-  { to: '/profile', label: 'Profil', icon: UserCircle },
 ] satisfies { to?: string; label: string; icon: Component }[]
 
 function isRouteActive(path: string): boolean {
   const section = path.slice(1)
   return route.meta.navSection === section
+}
+
+function closeOptions(): void {
+  optionsOpen.value = false
+}
+
+async function onLogout(): Promise<void> {
+  closeOptions()
+  await authStore.signOut()
+  await router.replace('/')
 }
 </script>
 
@@ -88,6 +99,27 @@ function isRouteActive(path: string): boolean {
         <component :is="item.icon" class="size-5" />
         <span class="dock-label">{{ item.label }}</span>
       </component>
+
+      <details class="dropdown dropdown-top dropdown-end" :open="optionsOpen" @toggle="optionsOpen = !optionsOpen">
+        <summary class="flex cursor-pointer flex-col items-center justify-center gap-1 px-2 text-xs text-base-content/80 outline-none list-none">
+          <MoreHorizontal class="size-5" />
+          <span class="dock-label">Options</span>
+        </summary>
+        <ul class="menu dropdown-content z-50 w-44 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg mb-2">
+          <li>
+            <router-link to="/profile" class="min-h-11 gap-3" @click="closeOptions">
+              <UserCircle class="size-5 text-primary" />
+              Profil
+            </router-link>
+          </li>
+          <li>
+            <button type="button" class="min-h-11 w-full justify-start gap-3 text-error" @click="onLogout">
+              <LogOut class="size-5" />
+              Se déconnecter
+            </button>
+          </li>
+        </ul>
+    </details>
     </div>
   </div>
 </template>

@@ -92,10 +92,7 @@ watch(
   () => authFormStore.mode,
   () => {
     localError.value = null
-    formSubmitted.value = false
-    passwordConfirm.value = ''
-    isResetFormOpen.value = false
-    isResetRequested.value = false
+    authStore.authSuccess = null
     resetError.value = null
   },
 )
@@ -303,6 +300,9 @@ async function requestPasswordReset(): Promise<void> {
 
       <div v-if="localError" role="alert" class="alert alert-error alert-soft text-sm">
         <span>{{ localError }}</span>
+      </div>
+      <div v-else-if="authStore.authSuccess" role="status" aria-live="polite" class="alert alert-success alert-soft text-sm">
+        <span>{{ authStore.authSuccess }}</span>
       </div>
 
       <button type="submit" class="btn btn-primary ui-critical-action mt-2 min-h-11 w-full" :disabled="authStore.loading" :aria-busy="authStore.loading ? 'true' : 'false'">
