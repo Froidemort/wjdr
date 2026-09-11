@@ -8,6 +8,28 @@ const dirname = typeof import.meta.dirname !== 'undefined' ? import.meta.dirname
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   test: {
+    coverage: {
+      provider: 'v8',
+      all: true,
+      include: [
+        'src/services/**/*.ts',
+        'src/stores/**/*.ts',
+        'src/composables/**/*.ts',
+        'src/utils/**/*.ts',
+        'src/router/**/*.ts',
+        'src/server/**/*.ts',
+      ],
+      exclude: [
+        'src/main.ts',
+        'src/db/**',
+        '**/*.d.ts',
+      ],
+      thresholds: {
+        lines: 90,
+        statements: 90,
+        functions: 90,
+      },
+    },
     projects: [{
       extends: true,
       test: {
@@ -15,7 +37,7 @@ export default defineConfig({
         globals: true,
         environment: 'node',
         setupFiles: ['./tests/setup/indexeddb.ts'],
-        include: ['tests/unit/**/*.test.ts']
+        include: ['tests/unit/**/*.test.ts'],
       }
     },
     {

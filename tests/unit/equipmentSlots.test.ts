@@ -9,12 +9,20 @@ import {
   filterArmorsForSlot,
   findConflictingArmors,
   findConflictingWeapons,
+  getArmorCoveredLocations,
+  getArmorSlot,
   getArmorPointsForSlot,
   getArmorStackLimitLocations,
   getEquippedArmorsForSlot,
   getPrimaryArmorForSlot,
   getWeaponForHand,
+  getWeaponForSlot,
+  getWeaponSlot,
+  isArmorSlotId,
   isTwoHandedWeapon,
+  isWeaponHand,
+  isWeaponSlotId,
+  locationsOverlap,
   resolveWeaponEquipHand,
 } from '../../src/utils/equipmentSlots'
 
@@ -235,5 +243,71 @@ describe('equipmentSlots', () => {
     expect(resolveWeaponEquipHand({ name: 'Épée à deux mains' }, 'gauche')).toBe('d&g')
     expect(resolveWeaponEquipHand({ name: 'Dague' }, 'gauche')).toBe('gauche')
     expect(resolveWeaponEquipHand({ name: 'Bouclier' }, 'droite')).toBe('droite')
+  })
+
+  it.each([
+    ['tete', 'tête', true],
+    ['bras_droit', 'bras', true],
+    ['jambe_gauche', 'jambes', true],
+    ['invalide', null, false],
+  ] as const)('validates armor slot %s', (slotId, location, valid) => {
+    expect(isArmorSlotId(slotId)).toBe(valid)
+    if (valid) {
+      expect(getArmorSlot(slotId).dataLocation).toBe(location)
+    } else {
+      expect(() => getArmorSlot(slotId as 'tete')).toThrow('Unknown armor slot: invalide')
+    }
+  })
+
+  it.each([
+    ['main_droite', 'droite', true],
+    ['main_gauche', 'gauche', true],
+    ['invalide', null, false],
+  ] as const)('validates weapon slot %s', (slotId, hand, valid) => {
+    expect(isWeaponSlotId(slotId)).toBe(valid)
+    if (valid) {
+      expect(getWeaponSlot(slotId).hand).toBe(hand)
+      expect(getWeaponForSlot([makeWeapon({ id: 'weapon', name: 'Dague', equipped: hand })], slotId)?.id).toBe('weapon')
+    } else {
+      expect(() => getWeaponSlot(slotId as 'main_droite')).toThrow('Unknown weapon slot: invalide')
+    }
+  })
+
+  it('handles empty armor and weapon inputs without conflicts', () => {
+    const unequipped = makeArmor({ id: 'stored', name: 'Stockee', coveredLocations: null })
+    const equipped = makeArmor({ id: 'equipped', name: 'Equipee', isEquipped: true, coveredLocations: null })
+
+    expect(getArmorCoveredLocations(unequipped)).toEqual([])
+    expect(locationsOverlap(['corps'], ['bras'])).toBe(false)
+    expect(locationsOverlap(['corps'], ['corps'])).toBe(true)
+    expect(findConflictingArmors([equipped], unequipped)).toEqual([])
+    expect(getArmorStackLimitLocations([], unequipped)).toEqual([])
+    expect(canEquipArmorStack([], equipped)).toBe(true)
+    expect(getPrimaryArmorForSlot([], 'tete')).toBeNull()
+    expect(getWeaponForHand([], 'droite')).toBeNull()
+    expect(getWeaponForSlot([], 'main_gauche')).toBeNull()
+  })
+
+  it.each([
+    ['droite', true],
+    ['gauche', true],
+    ['d&g', true],
+    [true, false],
+    [null, false],
+    ['invalide', false],
+  ] as const)('recognizes valid weapon hand %s', (value, valid) => {
+    expect(isWeaponHand(value)).toBe(valid)
+  })
+
+  it('prefers a two-handed weapon and only conflicts with matching occupied hands', () => {
+    const weapons = [
+      makeWeapon({ id: 'right', name: 'Epee', equipped: 'droite' }),
+      makeWeapon({ id: 'left', name: 'Dague', equipped: 'gauche' }),
+      makeWeapon({ id: 'stored', name: 'Arc', equipped: null }),
+    ]
+
+    expect(getWeaponForHand(weapons, 'gauche')?.id).toBe('left')
+    expect(findConflictingWeapons(weapons, 'right', 'droite').map((weapon) => weapon.id)).toEqual([])
+    expect(findConflictingWeapons(weapons, 'stored', 'gauche').map((weapon) => weapon.id)).toEqual(['left'])
   })
 })
