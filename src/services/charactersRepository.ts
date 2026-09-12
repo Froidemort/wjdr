@@ -7,7 +7,7 @@ import type {
   ProfileAvatarRow,
   StaticStatRow,
 } from '../types/db'
-import type { CreateCharacterPayload } from '../types/character'
+import type { CharacterRace, CreateCharacterPayload } from '../types/character'
 import type { CharacterDetail, CharacterStatValue, CharacterSummary } from '../types/domain'
 import { withRetry } from './shared/retry'
 
@@ -26,7 +26,7 @@ function mapCharacter(
   return {
     id: row.id,
     name: row.name,
-    race: row.race,
+    race: row.race as CharacterRace,
     gender: row.gender === 'masculin' ? 'masculin' : 'féminin',
     campaignId: row.campaign_id,
     userId: row.user_id,

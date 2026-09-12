@@ -63,7 +63,7 @@ const encumbranceProgressValue = computed(() =>
               />
               <span
                 class="pointer-events-none absolute inset-0 flex items-center justify-center text-lg font-black sm:text-xl"
-                :class="isEncumbranceOverLimit ? 'text-error' : 'text-accent'"
+                :class="isEncumbranceOverLimit ? 'text-error' : 'text-base-content'"
               >
                 {{ totalEncumbrance }} / {{ maxEncumbrance }}
               </span>

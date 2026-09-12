@@ -1054,6 +1054,7 @@ import { useDebounceFn, useTimeoutFn } from '@vueuse/core'
 import { useRouteParams } from '@vueuse/router'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
+import type { CharacterRace } from '../types/character'
 import { createCatalogItem, searchCatalog } from '../services/catalogRepository'
 import {
   listCareerCharacteristicsByCareerId,
@@ -1288,6 +1289,13 @@ const lastSavedEditable = ref({
   moneyCopper: 0,
 })
 
+const multiplierEmcumbranceByRace: Record<CharacterRace, number> = {
+  'humain': 10,
+  'elfe':10,
+  'nain': 20,
+  'halfling': 10,
+}
+
 const canEditQuickSection = computed(() =>
   Boolean(character.value && authStore.user?.id === character.value.userId)
 )
@@ -1473,8 +1481,7 @@ const maxEncumbrance = computed(() => {
   if (!character.value) {
     return 0
   }
-
-  const multiplier = character.value.race.trim().toLowerCase() === 'nain' ? 30 : 20
+  const multiplier = multiplierEmcumbranceByRace[character.value.race] ?? 10
   return forceValue.value * multiplier
 })
 
