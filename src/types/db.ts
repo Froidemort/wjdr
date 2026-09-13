@@ -1,9 +1,9 @@
-import type { CharacterGender } from './character'
+import type { CharacterGender, CharacterRace } from './character'
 
 export interface CharacterRow {
   id: string
   name: string
-  race: string
+  race: CharacterRace | string
   gender: CharacterGender | string
   campaign_id: string
   user_id: string

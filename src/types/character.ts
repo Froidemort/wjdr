@@ -13,7 +13,7 @@ export interface CreateCharacterPayload {
 export interface CharacterCore {
   id: string
   name: string
-  race: string
+  race: CharacterRace
   gender: CharacterGender
   campaignId: string
   userId: string
