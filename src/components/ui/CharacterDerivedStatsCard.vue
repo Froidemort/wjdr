@@ -53,7 +53,7 @@ const encumbranceProgressValue = computed(() =>
             <div class="mb-2 flex items-center justify-between gap-2">
               <p class="text-xs font-semibold uppercase tracking-wide opacity-75">Encombrement</p>
               <Weight class="h-5 w-5 text-accent" aria-hidden="true" />
-              <p class="text-xs opacity-50">Enc. max : 2xF ou 3xF nains</p>
+              <p class="text-xs opacity-50">Enc. max : 10xF ou 20xF nains</p>
             </div>
             <div class="relative">
               <progress
