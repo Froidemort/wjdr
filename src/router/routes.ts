@@ -16,6 +16,7 @@ const CampaignListView = () => import('../views/CampaignListView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
+const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
   // Home page
@@ -94,6 +95,11 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/sessions/:campaignId/timeline/:sessionEntryId',
     redirect: (to) =>
       buildLegacySessionTimelineRedirect(to.params.campaignId, to.params.sessionEntryId),
+  },
+  {
+    path: '/compendium/spells',
+    component: CompendiumSpellsView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
   },
   {
     path: '/:pathMatch(.*)*',
