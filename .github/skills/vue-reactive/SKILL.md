@@ -1,11 +1,10 @@
-# Skill: vue-reactive
-
-## Constraints
-- Syntax: Strictly use `<script setup lang="ts">`.
-- State: `ref()` for primitives, `reactive()` only for complex objects/forms.
-- Pinia: Setup store syntax (`defineStore('id', () => { ... })`).
-- Destructuring: Always wrap state with `storeToRefs()` to preserve reactivity.
-- Strict Typing: Explicit TS types for `defineProps<{...}>()` and `defineEmits<{...}>()`.
-
-## Output Style
-Return clean TypeScript code, omitting optional generic definitions if inferred correctly.
+---
+name: vue-reactive
+description: Vue 3 reactivity, Pinia stores, props/emits typing. Use when writing or editing Vue components, composables, or Pinia stores.
+---
+- `<script setup lang="ts">` only.
+- `ref()` for primitives; `reactive()` for complex objects/forms.
+- Pinia setup syntax: `defineStore('id', () => {...})`.
+- Wrap store state with `storeToRefs()`.
+- Type `defineProps<{...}>()` and `defineEmits<{...}>()`.
+- Omit generics when inferred.

@@ -1,6 +1,8 @@
-# Skill: vercel-serverless
-
-## Constraints
-- Target: TypeScript runtime within the root `api/` directory.
-- Runtime: Default to edge runtime: `export const config = { runtime: 'edge' };`.
-- Security: Access backend secrets via `process.env`. Never leak or reference these environment variables in the frontend scope.
+---
+name: vercel-serverless
+description: Vercel functions in api/. Use when creating or editing serverless endpoints or vercel.json.
+---
+- TypeScript in `api/`.
+- Default `export const config = { runtime: 'edge' };`.
+- Secrets via `process.env`; never in frontend.
+- Validate input; JSON responses with proper status codes.

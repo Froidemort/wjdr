@@ -1,7 +1,9 @@
-# Skill: supabase-data
-
-## Constraints
-- Database Types: Always map queries using auto-generated CLI schema definitions: `Database['public']['Tables'][TableName]['Row'|'Insert']`.
-- Pattern: Always destructure responses: `const { data, error } = await supabase...`.
-- Guard Clauses: Check errors immediately: `if (error) throw error;`.
-- Auth: Use `supabase.auth.getUser()` for secure server/client identity check, never `getSession()`.
+---
+name: supabase-data
+description: Supabase queries, typing, auth, repositories. Use when reading or writing database data or handling auth.
+---
+- Type with `Database['public']['Tables'][T]['Row'|'Insert']`.
+- `const { data, error } = await supabase...`; `if (error) throw error;`.
+- `supabase.auth.getUser()`, never `getSession()`.
+- Queries live in `src/services/*Repository.ts`.
+- Client in `src/db/supabase.ts`.
