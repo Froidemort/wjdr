@@ -24,6 +24,7 @@ Companion app pour le jeu de rôle Warhammer seconde édition, construite avec V
 - Node.js 22+
 - npm 10+
 - Projet Supabase
+- Python 3.13+ (aide à la migrations et scripts de tâche)
 
 ## Variables d'environnement
 

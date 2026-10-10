@@ -1,24 +1,37 @@
 [project]
-name = "wjdr-migrations"
-version = "0.0.0"
-description = "Data scripts for the wjdr Supabase database"
+name = "wjdr"
+version = "0.1.0"
+description = "Python script to manage migrations and other script tasks"
+readme = "README.md"
+authors = [
+    { name = "PHILIPPE Jean-Baptiste", email = "jb.myst89@gmail.com" }
+]
 requires-python = ">=3.13"
 dependencies = [
     "pdfplumber",
     "python-dotenv",
-    "questionary",
+    "postgrest",
     "supabase",
     "tabulate",
     "unidecode",
+    "questionary",
+    "pydantic-ai"
 ]
 
-[tool.uv]
-package = false
+[project.scripts]
+extract_spells = "wjdr.migrations.extract_spells:main"
+extract_career = "wjdr.migrations.extract_career:main"
+extract_skills_talents = "wjdr.migrations.skills_talents_links:main"
+extract_weapon_attributes = "wjdr.migrations.weapon_attributes_setter:main"
+
+[build-system]
+requires = ["uv_build>=0.12.24,<0.13.0"]
+build-backend = "uv_build"
 
 [tool.ruff]
 target-version = "py313"
 line-length = 240
-src = ["migrations"]
+src = ["migrations", "src"]
 
 [tool.ruff.lint]
 # PEP 8 (E, W, N, I), PEP 484/585/604 (ANN, UP), PEP 257 (D)
