@@ -1,5 +1,6 @@
 ---
+name: fix-lint
 description: Fix lint and type errors
-agent: agent
+disable-model-invocation: true
 ---
 Apply skill `lint-typecheck-fix`. Fix all errors.
