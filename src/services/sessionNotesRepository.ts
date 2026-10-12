@@ -2,7 +2,7 @@ import { supabase } from '../db/supabase'
 import type { CreateSessionNoteInput, SessionNote, UpdateSessionNoteInput } from '../types/domain'
 import { withRetry } from './shared/retry'
 
-export type SessionNotesRealtimeEvent = '*' | 'INSERT' | 'UPDATE' | 'DELETE'
+type SessionNotesRealtimeEvent = '*' | 'INSERT' | 'UPDATE' | 'DELETE'
 
 export interface SessionNotesRealtimeSubscription {
   table: string

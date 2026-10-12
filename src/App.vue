@@ -27,7 +27,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import { useReferenceDataStore } from './stores/referenceData'
 import { APP_SPLASH } from './config/appSplash'
 import AppSplash from './components/ui/AppSplash.vue'
 import CampaignCreateModal from './components/ui/CampaignCreateModal.vue'
@@ -35,7 +34,6 @@ import { useOfflineQueueSync } from './composables/useOfflineQueueSync'
 import AppLayout from './layouts/AppLayout.vue'
 
 const authStore = useAuthStore()
-const referenceDataStore = useReferenceDataStore()
 const router = useRouter()
 const route = useRoute()
 const showSplash = ref(route.meta.skipSplash !== true)
@@ -49,11 +47,7 @@ onMounted(() => {
     document.documentElement.classList.add(APP_SPLASH.classNames.activeHtmlClass)
   }
 
-  const referenceInitialization = route.meta.skipSplash === true
-    ? Promise.resolve()
-    : referenceDataStore.init()
-
-  void Promise.all([authStore.initAuth(), referenceInitialization]).finally(() => {
+  void authStore.initAuth().finally(() => {
     authReady.value = true
   })
 })
