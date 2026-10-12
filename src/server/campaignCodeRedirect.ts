@@ -1,12 +1,12 @@
 import { isUuidLike } from '../utils/validation'
 
-export type CampaignCodeLookup = {
+type CampaignCodeLookup = {
   id: string
   mjId: string
   isArchived: boolean
 } | null
 
-export type CampaignCodeResolutionStatus = 200 | 302 | 404 | 429
+type CampaignCodeResolutionStatus = 200 | 302 | 404 | 429
 
 export interface CampaignCodeResolutionResult {
   status: CampaignCodeResolutionStatus

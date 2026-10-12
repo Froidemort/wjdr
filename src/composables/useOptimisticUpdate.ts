@@ -2,7 +2,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { computed, getCurrentInstance, onBeforeUnmount, ref } from 'vue'
 import type { Ref } from 'vue'
 
-export type SaveStatus = 'idle' | 'pending' | 'saving' | 'error'
+type SaveStatus = 'idle' | 'pending' | 'saving' | 'error'
 
 type MergePatch<T> = (current: Partial<T>, next: Partial<T>) => Partial<T>
 

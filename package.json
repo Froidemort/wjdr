@@ -44,6 +44,7 @@
     "@storybook/addon-docs": "^10.5.10",
     "@storybook/addon-onboarding": "^10.5.10",
     "@storybook/addon-vitest": "^10.5.10",
+    "@storybook/vue3": "^10.6.1",
     "@storybook/vue3-vite": "^10.5.10",
     "@types/node": "^26.6.5",
     "@vitejs/plugin-vue": "^6.0.8",
