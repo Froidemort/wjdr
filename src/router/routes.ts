@@ -16,6 +16,7 @@ const CampaignListView = () => import('../views/CampaignListView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
+const CompendiumInventoryView = () => import('../views/CompendiumInventoryView.vue')
 const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
@@ -30,6 +31,12 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/old-world',
     component: OldWorldMapView,
     meta: { requiresAuth: false, hideFooter: false },
+  },
+  // Public read-only compendium of weapons, armors and items
+  {
+    path: '/compendium/inventory',
+    component: CompendiumInventoryView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
   },
   // Character list with summary details
   {
