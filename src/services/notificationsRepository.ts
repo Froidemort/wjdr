@@ -379,6 +379,3 @@ export async function notifyJoinRequestRejected(
   }
 }
 
-export const requestJoinSession = requestJoinCampaign
-export const requestJoinByCode = requestCampaignJoinByCode
-export const listPendingJoinRequestsForSession = listPendingJoinRequestsForCampaign

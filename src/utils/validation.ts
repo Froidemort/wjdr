@@ -62,7 +62,7 @@ export function validateInput<T>(
   return value
 }
 
-export type PasswordStrengthLevel = 0 | 1 | 2 | 3 | 4
+type PasswordStrengthLevel = 0 | 1 | 2 | 3 | 4
 
 export type PasswordStrength = {
   level: PasswordStrengthLevel

@@ -11,7 +11,7 @@ import type { CharacterRace, CreateCharacterPayload } from '../types/character'
 import type { CharacterDetail, CharacterStatValue, CharacterSummary } from '../types/domain'
 import { withRetry } from './shared/retry'
 
-export type { CharacterGender, CharacterRace, CreateCharacterPayload } from '../types/character'
+export type { CreateCharacterPayload } from '../types/character'
 
 const DEFAULT_CHARACTER_CAREER_NAME = 'Serviteur'
 const WOUNDS_STAT_CODE = 'B'

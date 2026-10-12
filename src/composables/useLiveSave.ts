@@ -1,7 +1,5 @@
 import { useOptimisticUpdate } from './useOptimisticUpdate'
 
-export type { SaveStatus } from './useOptimisticUpdate'
-
 export function useLiveSave<T>(saveFunction: (data: T) => Promise<void>, delay: number = 500) {
   const { status, update, flush } = useOptimisticUpdate<T>({
     onSave: async (patch) => {

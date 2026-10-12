@@ -6,7 +6,7 @@ import type {
   CreateCatalogItemInput,
 } from '../types/catalog'
 
-export type { CatalogItem, CatalogRow, CatalogTableName, CreateCatalogItemInput } from '../types/catalog'
+export type { CatalogItem, CreateCatalogItemInput } from '../types/catalog'
 
 function mapCatalogItem(row: CatalogRow): CatalogItem {
   return {

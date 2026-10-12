@@ -159,5 +159,3 @@ export async function createCampaignInvitations(
   }
 }
 
-export const listSessionInvitations = listCampaignInvitations
-export const createSessionInvitations = createCampaignInvitations

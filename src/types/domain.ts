@@ -1,8 +1,6 @@
 import type { CharacterCore } from './character'
 import type { WeaponHand } from './equipment'
 
-export type UserRole = 'mj' | 'player'
-
 export interface Profile {
   id: string
   username: string
