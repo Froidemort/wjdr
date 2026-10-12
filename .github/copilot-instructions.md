@@ -26,6 +26,7 @@ Warhammer Fantasy RPG companion. Vue 3.5, Vite 8, TypeScript, Pinia, vue-router,
 - Add or update tests with every behavior change.
 - No secrets in code; no frontend access to server env.
 - Run lint + typecheck before finishing.
+- Use conventional commits in English for commit messages.
 
 ## Skills
 `vue-reactive`, `daisyui-ux`, `supabase-data`, `supabase-migrations`, `pinia-dexie-offline`, `vercel-serverless`, `storybook-vitest`, `playwright-e2e`, `warhammer-domain`, `lint-typecheck-fix`.
