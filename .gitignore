@@ -18,8 +18,6 @@ playwright-report
 .vscode/*
 !.vscode/extensions.json
 !.vscode/mcp.json
-<<<<<<< HEAD
-=======
 !.vscode/settings.json
 .idea
 .DS_Store
@@ -44,8 +42,6 @@ storybook-static
 # Coverage and reports
 coverage
 reports
-<<<<<<< HEAD
-=======
 
 # Python 
 # Byte-compiled / optimized / DLL files
@@ -268,3 +264,4 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
