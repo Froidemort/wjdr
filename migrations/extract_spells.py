@@ -1,18 +1,50 @@
+import asyncio
+import json
+import logging
+import os
 import re
+import time
 from collections.abc import Generator
+from functools import cache
+from pathlib import Path
+from typing import Any
 
 import pdfplumber
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_validator
 from pydantic_ai import Agent
+from pydantic_ai.exceptions import ModelHTTPError
+
+# Here we import the GitHub Copilot model and provider for use with the pydantic_ai agent
+# If needed, you can replace this with another model and provider combination.
+from pydantic_ai.models.github_copilot import GitHubCopilotModel
+from pydantic_ai.providers.github_copilot import GitHubCopilotProvider
 
 load_dotenv()
 
+LOGGER = logging.getLogger(__name__)
+MIGRATIONS_DIR = Path(__file__).resolve().parent
+PDF_FILE_PATH = MIGRATIONS_DIR / "compendium_spells.pdf"
+OUTPUT_PATH = MIGRATIONS_DIR / "compendium_spells.json"
+OUTPUT_PATH_FIXED = MIGRATIONS_DIR / "compendium_spells_fixed.json"
 TITLE_PATTERN = re.compile(r"^\d+(?:\.\d+)*\) ")
+MODEL_NAME = "claude-haiku-4.5"
+
+MAX_REQUESTS_PER_MINUTE = 50
+FIXER_BATCH_SIZE = 15
+UNKNOWN_MARKERS = {"<UNKNOWN>", "UNKNOWN"}
+
 
 class SpellResult(BaseModel):
     range: str = Field(description="Portée du sort")
     duration: str | None = Field(description="Durée du sort")
+
+
+class SpellFixResult(BaseModel):
+    index: int = Field(description="1-based position of the spell in the full input list")
+    range: str = Field(description="Corrected concise French range")
+    duration: str | None = Field(description="Corrected concise French duration")
+
 
 class Spell(SpellResult):
     category: str  # The section title (e.g., "Magie commune de Manann")
@@ -45,34 +77,193 @@ class Spell(SpellResult):
     @field_validator("duration", mode="after")
     @classmethod
     def strip_duration(cls, value: str | None) -> str | None:
-        # for the regular spells, duration is in the description text
         return value.strip() if value else None
 
 
 def clean_text(text: str | None) -> str:
-    """Helper utility to normalize whitespace and strip trailing garbage text."""
+    """Normalize whitespace and common PDF punctuation."""
     if not text:
         return ""
     return " ".join(
         text.replace("’", "'").replace("“", '"').replace("”", '"').split()
     ).strip()
 
-spell_filler_agent = Agent(model="nvidia/nemotron-3-ultra-550b-a55b:free",
-                           output_type=SpellResult,
-                           system_prompt="""You are an expert in extracting structured spell data from text.
-                           You will be provided with raw text from a PDF containing spell tables.
-                           Your task is to accurately fill in the fields of the Spell model based on the description provided.""" 
-                           )
+
+SpellsList = TypeAdapter(list[Spell])
+
+
+def is_unresolved(value: str | None) -> bool:
+    return value is None or not value.strip() or value.strip().upper() in UNKNOWN_MARKERS
+
+
+def unresolved_fields(spell: Spell) -> list[str]:
+    return [field for field in ("range", "duration") if is_unresolved(getattr(spell, field))]
+
+
+def get_spells(
+    json_from: list[dict[str, Any]], json_to: list[dict[str, Any]]
+) -> list[tuple[Spell, Spell]]:
+    spells_from = SpellsList.validate_python(json_from)
+    spells_to = SpellsList.validate_python(json_to)
+    if len(spells_from) != len(spells_to):
+        raise ValueError(
+            f"Spell count mismatch: source has {len(spells_from)}, target has {len(spells_to)}."
+        )
+    return list(zip(spells_from, spells_to, strict=True))
+
+
+def compare(spells_pairs: list[tuple[Spell, Spell]]) -> dict[str, list[str]]:
+    differences: dict[str, list[str]] = {}
+    for spell_from, spell_to in spells_pairs:
+        diff = []
+        for field in ("range", "duration"):
+            value_from = getattr(spell_from, field)
+            value_to = getattr(spell_to, field)
+            if value_from != value_to:
+                diff.append(f"{field}: '{value_from}' -> '{value_to}'")
+        differences[spell_from.name] = diff
+    return differences
+
+
+def pprint_diff(json_from_path: Path, json_to_path: Path) -> None:
+    json_from = json.loads(json_from_path.read_text(encoding="utf-8"))
+    json_to = json.loads(json_to_path.read_text(encoding="utf-8"))
+    spell_pairs = get_spells(json_from, json_to)
+    differences = compare(spell_pairs)
+    changed_count = sum(bool(diff) for diff in differences.values())
+    LOGGER.info(
+        "Compared %d spells; %d have range/duration changes.",
+        len(spell_pairs),
+        changed_count,
+    )
+    for spell_name, diff in differences.items():
+        if diff:
+            LOGGER.info("%s: %s", spell_name, "; ".join(diff))
+
+
+def write_spells_json(path: Path, spells: list[Spell]) -> None:
+    """Replace a JSON output atomically, preserving the prior file on failure."""
+    temporary_path = path.with_suffix(f"{path.suffix}.tmp")
+    content = json.dumps(
+        [spell.model_dump(mode="json") for spell in spells],
+        ensure_ascii=False,
+        indent=2,
+    )
+    temporary_path.write_text(f"{content}\n", encoding="utf-8")
+    temporary_path.replace(path)
+
+
+def validate_fixed_spells(original: list[Spell], fixed: list[Spell]) -> None:
+    if len(original) != len(fixed):
+        raise ValueError(
+            f"Fixer changed spell count: expected {len(original)}, received {len(fixed)}."
+        )
+
+    unresolved: list[str] = []
+    for index, (source, result) in enumerate(zip(original, fixed, strict=True), start=1):
+        if (source.category, source.name) != (result.category, result.name):
+            raise ValueError(
+                f"Fixer changed spell identity/order at item {index}: "
+                f"expected '{source.category} / {source.name}', received "
+                f"'{result.category} / {result.name}'."
+            )
+        if source.model_dump(exclude={"range", "duration"}) != result.model_dump(
+            exclude={"range", "duration"}
+        ):
+            raise ValueError(
+                f"Fixer modified fields other than range/duration for '{source.name}'."
+            )
+        fields = unresolved_fields(result)
+        if fields:
+            unresolved.append(f"{result.name} ({', '.join(fields)})")
+
+    if unresolved:
+        raise ValueError(
+            "Unresolved spell fields remain; fixed output was not written: "
+            + "; ".join(unresolved)
+        )
+
+
+def apply_spell_fix_results(
+    original: list[Spell], results: list[SpellFixResult], start_index: int
+) -> list[Spell]:
+    if len(original) != len(results):
+        raise ValueError(
+            f"Fixer changed batch count: expected {len(original)}, received {len(results)}."
+        )
+
+    fixed: list[Spell] = []
+    for offset, (source, result) in enumerate(zip(original, results, strict=True)):
+        expected_index = start_index + offset + 1
+        if result.index != expected_index:
+            raise ValueError(
+                f"Expected result index {expected_index}, received {result.index}."
+            )
+        fixed.append(
+            source.model_copy(
+                update={
+                    "range": result.range.strip(),
+                    "duration": result.duration.strip() if result.duration else None,
+                }
+            )
+        )
+
+    validate_fixed_spells(original, fixed)
+    return fixed
+
+
+@cache
+def initialize_spell_filler_agent() -> Agent[object, SpellResult]:
+    provider = GitHubCopilotProvider(
+        api_key=os.getenv("GITHUB_TOKEN")
+    )
+    model = GitHubCopilotModel(MODEL_NAME, provider=provider)
+    spell_filler_agent = Agent(
+        model=model,
+        output_type=SpellResult,
+        system_prompt="""You extract Warhammer Fantasy Roleplay spell range and duration from French source text.
+
+Return concise French values grounded in the supplied spell data. Prefer an explicit value in the description or existing table fields. Use the other fields only to resolve clear references; do not invent mechanics or infer a value solely from the spell's name or category.
+
+Normalize equivalent wording consistently: "Instantané" and "Immédiat" mean the same duration; "Personnel" and "Contact (vous)" mean the same range, while "Contact" alone is distinct. Express a duration based on the value of magic as "X/Mag". Use "Spécial" only when the source describes a conditional, variable, or otherwise special value.
+
+Never return an empty value, null, "UNKNOWN", or "<UNKNOWN>". If the supplied text does not support a value, make the best evidence-based inference from the complete spell entry and state the concise result rather than copying a placeholder.""",
+    )
+    return spell_filler_agent
+
+def initialize_spells_fixer_agent() -> Agent[object, list[SpellFixResult]]:
+    provider = GitHubCopilotProvider(
+        api_key=os.getenv("GITHUB_TOKEN")
+    )
+    model = GitHubCopilotModel(MODEL_NAME, provider=provider)
+    spells_fixer_agent = Agent(
+        model=model,
+        output_type=list[SpellFixResult],
+        system_prompt="""You normalize range and duration for Warhammer Fantasy Roleplay spells in French.
+
+    Process only the spell entries in the current input batch. Resolve every blank, null, "UNKNOWN", or "<UNKNOWN>" range/duration using that spell's description and explicit evidence from comparable entries. Do not use the spell name or category alone to guess. Keep already supported values unless a clear inconsistency requires canonical normalization.
+
+    Use concise values. Normalize "Instantané" and "Immédiat" consistently. Normalize "Personnel" and "Contact (vous)" as equivalent, but do not conflate either with "Contact". Express duration tied to the value of magic as "X/Mag". Use "Spécial" only for a value the text makes conditional, variable, or genuinely special. Never return blank, null, "UNKNOWN", or "<UNKNOWN>"; make the strongest evidence-based resolution available.
+
+    Return a JSON array with exactly one object per input entry, in the same order. Each object contains only its exact input index, range, and duration. Copy the index exactly. Do not return names or any other spell fields.""",
+    )
+    return spells_fixer_agent
 
 async def fill_spell_duration_range(spell: Spell) -> SpellResult:
     context_text = f"""
-    Nom du sort : {spell.name}
+    Entrée du sort :
+    Nom : {spell.name}
     Catégorie : {spell.category}
+    Difficulté : {spell.difficulty}
+    Temps d'incantation : {spell.casting_time}
+    Portée actuelle : {spell.range or '<UNKNOWN>'}
+    Durée actuelle : {spell.duration or '<UNKNOWN>'}
     Description : {spell.description}
-    """
-    result = await spell_filler_agent.run(context_text)
-    return SpellResult.model_validate(result.output)
 
+    Remplace uniquement les valeurs absentes ou incorrectes de portée et durée. Réponds avec des valeurs françaises courtes, jamais avec un marqueur inconnu.
+    """
+    result = await initialize_spell_filler_agent().run(context_text)
+    return SpellResult.model_validate(result.output)
 
 def extract_row_fields(
     cleaned_row: list[str],
@@ -109,7 +300,7 @@ def extract_row_fields(
     )
 
 
-def stream_spells(pdf_path: str) -> Generator[Spell]:
+def stream_spells(pdf_path: str | Path) -> Generator[Spell]:
     """
     Sequentially parses the PDF, extracts table rows, cleans the text data,
     and constructs Spell model objects on-the-fly.
@@ -122,11 +313,15 @@ def stream_spells(pdf_path: str) -> Generator[Spell]:
     bonus_pattern = re.compile(r"\(\s*\+\s*(\d+)\s*\)")
 
     current_header: str = "Unknown Section"
+    spell_count = 0
 
+    LOGGER.info("Opening spell PDF: %s", pdf_path)
     with pdfplumber.open(pdf_path) as pdf:
+        LOGGER.info("PDF contains %d pages; processing pages 1 through 87.", len(pdf.pages))
         for page_num, page in enumerate(pdf.pages, start=1):
             if page_num > 87:
                 break
+            page_spell_count = 0
             # 1. Parse text lines to update context header state
             text_objects = page.extract_text_lines()
             page_titles = []
@@ -177,7 +372,7 @@ def stream_spells(pdf_path: str) -> Generator[Spell]:
                         ingredient_name = raw_ingredient
 
                     # Yield the populated data wrapper safely
-                    yield Spell(
+                    spell = Spell(
                         category=current_header,
                         name=name,
                         difficulty=int(diff_raw),
@@ -190,6 +385,17 @@ def stream_spells(pdf_path: str) -> Generator[Spell]:
                         range=spell_range,
                         description=description,
                     )
+                    spell_count += 1
+                    page_spell_count += 1
+                    yield spell
+
+            LOGGER.info(
+                "Page %d/%d: extracted %d spells (%d total).",
+                page_num,
+                min(len(pdf.pages), 87),
+                page_spell_count,
+                spell_count,
+            )
 
             # Update final context fallback if a title sits at the very bottom edge of a page
             if page_titles:
@@ -198,45 +404,224 @@ def stream_spells(pdf_path: str) -> Generator[Spell]:
                     current_header = last_title["text"]
 
 
-# --- Consumer execution block ---
-if __name__ == "__main__":
-    import asyncio
-    PDF_FILE_PATH = "migrations/compendium_spells.pdf"
+class SlidingWindowRateLimiter:
+    def __init__(self, max_requests_per_minute: int) -> None:
+        self.max_rpm = max_requests_per_minute
+        self.requests: list[float] = []
+        self.lock = asyncio.Lock()
 
-    # Building the final target flat list requested
-    all_spells: list[Spell] = []
+    async def wait_if_needed(self) -> None:
+        async with self.lock:
+            now = time.monotonic()
+            self.requests = [t for t in self.requests if now - t < 60]
 
-    print("Extracting spells into active memory objects...")
+            if len(self.requests) >= self.max_rpm:
+                oldest_request = self.requests[0]
+                sleep_time = 60 - (now - oldest_request)
+
+                if sleep_time > 0:
+                    LOGGER.info(
+                        "Rate limit reached (%d requests); waiting %.2f seconds.",
+                        len(self.requests),
+                        sleep_time,
+                    )
+                    await asyncio.sleep(sleep_time)
+
+                now = time.monotonic()
+                self.requests = [t for t in self.requests if now - t < 60]
+
+            self.requests.append(time.monotonic())
+
+
+async def process_with_rate_limit(
+    limiter: SlidingWindowRateLimiter, spell: Spell
+) -> Spell:
+    await limiter.wait_if_needed()
+    LOGGER.info("Enriching '%s' (%s).", spell.name, spell.category)
     try:
-        for spell_object in stream_spells(PDF_FILE_PATH):
-            spell_duration_range = asyncio.run(fill_spell_duration_range(spell_object))
-            spell_object.duration = spell_duration_range.duration
-            spell_object.range = spell_duration_range.range
-            all_spells.append(spell_object)
+        result = await fill_spell_duration_range(spell)
+    except ModelHTTPError as error:
+        LOGGER.error(
+            "Model request failed for '%s' with HTTP %d.",
+            spell.name,
+            error.status_code,
+        )
+        if error.status_code in (429, 503):
+            LOGGER.info("Waiting 60 seconds before one retry for '%s'.", spell.name)
+            await asyncio.sleep(60)
+            result = await fill_spell_duration_range(spell)
+        else:
+            raise
+    except Exception:
+        LOGGER.exception("Unexpected enrichment failure for '%s'.", spell.name)
+        raise
 
-        print(
-            f"\nProcessing complete! Successfully compiled {len(all_spells)} spell instances."
+    spell.range = result.range
+    spell.duration = result.duration
+    fields = unresolved_fields(spell)
+    if fields:
+        LOGGER.warning(
+            "'%s' still has unresolved fields after enrichment: %s",
+            spell.name,
+            ", ".join(fields),
+        )
+    else:
+        LOGGER.info(
+            "Enriched '%s': range=%r, duration=%r.",
+            spell.name,
+            spell.range,
+            spell.duration,
+        )
+    return spell
+
+
+async def execute_spell_enrichment() -> list[Spell]:
+    if not PDF_FILE_PATH.is_file():
+        raise FileNotFoundError(f"Spell PDF not found: {PDF_FILE_PATH}")
+
+    LOGGER.info("Starting PDF extraction.")
+    base_spells = list(stream_spells(PDF_FILE_PATH))
+    if not base_spells:
+        raise ValueError(f"No spells were extracted from {PDF_FILE_PATH}.")
+    LOGGER.info(
+        "Extracted %d spells; enriching missing range/duration values.",
+        len(base_spells),
+    )
+    write_spells_json(OUTPUT_PATH, base_spells)
+
+    limiter = SlidingWindowRateLimiter(MAX_REQUESTS_PER_MINUTE)
+    for index, spell in enumerate(base_spells, start=1):
+        if unresolved_fields(spell):
+            await process_with_rate_limit(limiter, spell)
+        write_spells_json(OUTPUT_PATH, base_spells)
+        LOGGER.info(
+            "Checkpoint saved: %d/%d spells processed in %s.",
+            index,
+            len(base_spells),
+            OUTPUT_PATH,
         )
 
-        # Display validation proofing if database is populated
-        if all_spells:
-            print("\n--- FIRST SPELL OBJECT PREVIEW ---")
-            first = all_spells[0]
-            print(f"Category : {first.category}")
-            print(f"Name     : {first.name} (Diff: {first.difficulty})")
-            print(f"Time     : {first.casting_time} | Range: {first.range}")
-            print(f"Item     : {first.bonus_ingredient} [Bonus active: +{first.bonus}]")
-            print(f"Desc     : {first.description[:80]}...")
-            # Store spells in json:
-            import json
+    unresolved_count = sum(bool(unresolved_fields(spell)) for spell in base_spells)
+    LOGGER.info(
+        "Extraction/enrichment complete: %d spells; %d still need fixer resolution.",
+        len(base_spells),
+        unresolved_count,
+    )
+    return base_spells
 
-            with open("migrations/compendium_spells.json", "w", encoding="utf-8") as f:
-                json.dump(
-                    [spell.model_dump() for spell in all_spells],
-                    f,
-                    ensure_ascii=False,
-                    indent=4,
-                )
 
-    except FileNotFoundError:
-        print(f"Could not open file at: {PDF_FILE_PATH}")
+async def execute_spells_fixes(spells: list[Spell]) -> list[Spell]:
+    if not spells:
+        return []
+
+    known_ranges = sorted(
+        {
+            spell.range.strip()
+            for spell in spells
+            if not is_unresolved(spell.range)
+        }
+    )[:30]
+    known_durations = sorted(
+        {
+            spell.duration.strip()
+            for spell in spells
+            if spell.duration and not is_unresolved(spell.duration)
+        }
+    )[:30]
+    reference_values = json.dumps(
+        {"range": known_ranges, "duration": known_durations},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+
+    limiter = SlidingWindowRateLimiter(MAX_REQUESTS_PER_MINUTE)
+    fixed_spells: list[Spell] = []
+    batch_count = (len(spells) + FIXER_BATCH_SIZE - 1) // FIXER_BATCH_SIZE
+
+    for batch_index, start in enumerate(
+        range(0, len(spells), FIXER_BATCH_SIZE),
+        start=1,
+    ):
+        batch = spells[start : start + FIXER_BATCH_SIZE]
+        end = start + len(batch)
+        LOGGER.info(
+            "Fixing batch %d/%d, spells %d-%d of %d (%d entries).",
+            batch_index,
+            batch_count,
+            start + 1,
+            end,
+            len(spells),
+            len(batch),
+        )
+        await limiter.wait_if_needed()
+        indexed_batch = [
+            {"index": start + offset + 1, "spell": spell.model_dump(mode="json")}
+            for offset, spell in enumerate(batch)
+        ]
+        context = f"""Resolve range and duration for this batch only.
+Use these values already present elsewhere only as normalization references, not as assumptions: {reference_values}
+Return exactly {len(batch)} result objects, preserving the supplied indices and order. Each result must contain only index, range, and duration.
+
+Indexed batch data:
+{json.dumps(indexed_batch, ensure_ascii=False, separators=(",", ":"))}
+"""
+        result = await initialize_spells_fixer_agent().run(context)
+        try:
+            fixed_batch = apply_spell_fix_results(batch, result.output, start)
+        except ValueError as error:
+            raise ValueError(
+                f"Fixer returned an invalid result for batch {batch_index}/{batch_count} "
+                f"(spells {start + 1}-{end}): {error}"
+            ) from error
+
+        fixed_spells.extend(fixed_batch)
+        LOGGER.info(
+            "Validated batch %d/%d; %d/%d spells fixed.",
+            batch_index,
+            batch_count,
+            len(fixed_spells),
+            len(spells),
+        )
+
+    return fixed_spells
+
+
+async def main_async() -> None:
+    if not os.getenv("GITHUB_TOKEN"):
+        raise RuntimeError("GITHUB_TOKEN is required for spell enrichment.")
+
+    if OUTPUT_PATH.exists():
+        LOGGER.info("Loading existing extraction data: %s", OUTPUT_PATH)
+        spell_list = SpellsList.validate_python(
+            json.loads(OUTPUT_PATH.read_text(encoding="utf-8"))
+        )
+    else:
+        spell_list = await execute_spell_enrichment()
+
+    if not spell_list:
+        raise ValueError(f"No spells found in {OUTPUT_PATH}.")
+
+    unresolved_before = sum(bool(unresolved_fields(spell)) for spell in spell_list)
+    LOGGER.info(
+        "Starting consistency pass for %d spells (%d contain unresolved values).",
+        len(spell_list),
+        unresolved_before,
+    )
+    fixed_spells = await execute_spells_fixes(spell_list)
+    validate_fixed_spells(spell_list, fixed_spells)
+    write_spells_json(OUTPUT_PATH_FIXED, fixed_spells)
+    LOGGER.info("Validated fixed spell data written to %s.", OUTPUT_PATH_FIXED)
+    pprint_diff(OUTPUT_PATH, OUTPUT_PATH_FIXED)
+
+
+def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+    asyncio.run(main_async())
+
+
+# --- Consumer execution block ---
+if __name__ == "__main__":
+    main()

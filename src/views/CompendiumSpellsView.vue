@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import data_json from '../../migrations/compendium_spells.json'
+import data_json from '../../migrations/compendium_spells_fixed.json'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useWindowScroll } from '@vueuse/core'
 import { ArrowUp, ListFilter, RotateCcw, ArrowDownUp } from '@lucide/vue'
