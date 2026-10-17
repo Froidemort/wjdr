@@ -21,7 +21,7 @@ const navItems = [
   { to: '/campaigns', label: 'Campagnes', icon: Scroll },
   { to: '/characters', label: 'Personnages', icon: Users },
   { to: '/', label: 'Accueil', icon: House },
-  { label: 'Compendium', icon: BookOpenText },
+  { to: '/compendium', label: 'Compendium', icon: BookOpenText },
 ] satisfies { to?: string; label: string; icon: Component }[]
 
 function isRouteActive(path: string): boolean {
@@ -57,6 +57,15 @@ async function onLogout(): Promise<void> {
         </router-link>
 
         <div class="flex items-center gap-1">
+          <router-link
+            v-if="!isAuthenticated"
+            to="/compendium"
+            class="btn btn-ghost btn-square min-h-11 min-w-11"
+            :class="isRouteActive('/compendium') ? 'text-primary' : ''"
+            aria-label="Compendium"
+          >
+            <BookOpenText class="size-5" />
+          </router-link>
           <router-link
             v-if="isAuthenticated"
             to="/notifications"

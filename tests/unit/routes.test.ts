@@ -23,6 +23,12 @@ describe('application routes', () => {
     expect(inventory?.meta).toMatchObject({ requiresAuth: false, skipSplash: true })
   })
 
+  it('exposes the public compendium home route', () => {
+    const home = appRoutes.find((route) => route.path === '/compendium')
+
+    expect(home?.meta).toMatchObject({ requiresAuth: false, skipSplash: true, navSection: 'compendium' })
+  })
+
   it('exposes the public compendium careers route', () => {
     const careers = appRoutes.find((route) => route.path === '/compendium/careers')
 

@@ -58,7 +58,11 @@ watch(() => route.path, () => {
         GRIMORIUM
       </router-link>
 
-      <NavMainLinks v-if="isAuthenticated" class="hidden justify-self-center sm:flex" />
+      <NavMainLinks
+        :public-only="!isAuthenticated"
+        class="hidden sm:flex"
+        :class="isAuthenticated ? 'justify-self-center' : 'ml-4'"
+      />
 
       <div
         class="ml-auto flex items-center gap-1 sm:gap-2"

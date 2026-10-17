@@ -45,6 +45,7 @@ export const homeFeatures: readonly HomeFeature[] = [
       'Consultez règles, sorts, talents et objets du Vieux Monde dans une encyclopédie unifiée.',
     icon: BookOpenText,
     image: compendiumImage,
-    cta: 'Bientôt disponible',
+    cta: 'Ouvrir le compendium',
+    to: '/compendium',
   },
 ]
