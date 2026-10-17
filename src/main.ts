@@ -15,5 +15,6 @@ app.use(router)
 const themeStore = useThemeStore(pinia)
 
 themeStore.initTheme()
+await router.isReady() // Ensure the router is ready before loading the app.
 applyAppSplashCssVars()
 app.mount('#app')

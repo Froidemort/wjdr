@@ -11,5 +11,5 @@ export interface NavLink {
 export const mainNavLinks: readonly NavLink[] = [
   { to: '/campaigns', label: 'Campagnes', icon: Scroll },
   { to: '/characters', label: 'Personnages', icon: Users },
-  { label: 'Compendium', icon: BookOpenText },
+  { to: '/compendium/inventory', label: 'Compendium', icon: BookOpenText },
 ]
