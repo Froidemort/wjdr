@@ -1,0 +1,31 @@
+[project]
+name = "wjdr-migrations"
+version = "0.0.0"
+description = "Data scripts for the wjdr Supabase database"
+requires-python = ">=3.13"
+dependencies = [
+    "pdfplumber",
+    "python-dotenv",
+    "questionary",
+    "supabase",
+    "tabulate",
+    "unidecode",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py313"
+line-length = 240
+src = ["migrations"]
+
+[tool.ruff.lint]
+# PEP 8 (E, W, N, I), PEP 484/585/604 (ANN, UP), PEP 257 (D)
+select = ["E", "W", "F", "I", "N", "UP", "B", "ANN", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.format]
+docstring-code-format = true
