@@ -6,7 +6,7 @@ import type { CareerPathRow } from '../types/db'
 
 export type CareerGraphMode = 'chemin' | 'vers' | 'depuis'
 
-export interface CareerGraphEdge {
+interface CareerGraphEdge {
   id: string
   source: string
   target: string
@@ -17,7 +17,7 @@ export interface CareerSubgraph {
   edges: CareerGraphEdge[]
 }
 
-export interface PositionedNode {
+interface PositionedNode {
   id: string
   x: number
   y: number
@@ -25,7 +25,7 @@ export interface PositionedNode {
 
 export const NODE_WIDTH = 160
 export const NODE_HEIGHT = 56
-export const MAX_SHORTEST_PATHS = 50
+const MAX_SHORTEST_PATHS = 50
 
 const EMPTY_SUBGRAPH: CareerSubgraph = { nodeIds: [], edges: [] }
 

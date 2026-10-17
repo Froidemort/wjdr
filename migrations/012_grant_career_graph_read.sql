@@ -20,9 +20,9 @@ DROP POLICY IF EXISTS "career_paths_select_authenticated" ON public.career_paths
 CREATE POLICY "career_paths_select_authenticated" ON public.career_paths
   FOR SELECT TO authenticated USING (true);
 
-REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
   ON TABLE public.careers FROM anon, authenticated;
-REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, MAINTAIN
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
   ON TABLE public.career_paths FROM anon, authenticated;
 
 GRANT SELECT ON TABLE public.careers TO anon, authenticated;
