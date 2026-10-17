@@ -1,0 +1,70 @@
+{
+  "inputs": [
+    {
+      "id": "supabase-project-ref",
+      "type": "promptString",
+      "description": "Supabase project ref"
+    },
+    {
+      "id": "supabase-token",
+      "type": "promptString",
+      "description": "Supabase access token",
+      "password": true
+    }
+  ],
+  "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "supabase": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=${input:supabase-project-ref}"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${input:supabase-token}"
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com"
+    },
+    "storybook": {
+      "type": "http",
+      "url": "http://localhost:6006/mcp"
+    },
+    "context-cutter": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "context-cutter-mcp"]
+    },
+    "graphify": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--no-project",
+        "--with",
+        "graphifyy[mcp]",
+        "python",
+        "-m",
+        "graphify.serve",
+        "graphify-out/graph.json"
+      ]
+    }
+  }
+}
