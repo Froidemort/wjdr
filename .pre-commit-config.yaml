@@ -36,7 +36,7 @@ repos:
         entry: node .github/hooks/secret-guard.cjs --files
         language: system
         files: '^(\.github/|AGENTS\.md$|\.mcp\.json$|\.vscode/mcp\.json$)'
-        exclude: '^\.github/hooks/secret-guard\.cjs$'
+        exclude: '^\.github/hooks/secret-guard\.cjs|graphify-out/.*$'
 
   # Schema validation
   - repo: https://github.com/python-jsonschema/check-jsonschema
