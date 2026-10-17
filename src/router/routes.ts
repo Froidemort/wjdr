@@ -44,7 +44,7 @@ export const appRoutes: RouteRecordRaw[] = [
   {
     path: '/compendium/inventory',
     component: CompendiumInventoryView,
-    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
   },
   // Character list with summary details
   {
@@ -114,12 +114,12 @@ export const appRoutes: RouteRecordRaw[] = [
   {
     path: '/compendium/careers',
     component: CompendiumCareerGraphView,
-    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
   },
   {
     path: '/compendium/spells',
     component: CompendiumSpellsView,
-    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
   },
   {
     path: '/:pathMatch(.*)*',

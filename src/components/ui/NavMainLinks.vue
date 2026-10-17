@@ -11,13 +11,13 @@ const links = computed(() =>
   mainNavLinks
     .filter((link) => !props.publicOnly || link.public)
     .map((link) => ({
-    ...link,
-    available: Boolean(link.to),
-    active: Boolean(
-      link.to &&
-        (route.path === link.to || route.path.startsWith(`${link.to}/`)),
-    ),
-  })),
+      ...link,
+      available: Boolean(link.to),
+      active: Boolean(
+        link.to &&
+          (route.path === link.to || route.path.startsWith(`${link.to}/`)),
+      ),
+    })),
 )
 </script>
 
