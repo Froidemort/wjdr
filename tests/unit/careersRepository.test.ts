@@ -12,6 +12,8 @@ vi.mock('../../src/db/supabase', () => ({
 }))
 
 import {
+  listAllCareerPaths,
+  listAllCareers,
   listCareerCharacteristicsByCareerId,
   listCareerPathCareersByFromCareerId,
 } from '../../src/services/careersRepository'
@@ -78,6 +80,38 @@ describe('careersRepository', () => {
       { id: 'b', name: 'Agitateur' },
       { id: 'a', name: 'Aubergiste' },
     ])
+  })
+
+  it('lists all careers and drops invalid rows', async () => {
+    const builder = createSupabaseQueryBuilder({
+      data: [
+        { id: 'b', name: 'Bailli' },
+        { id: 'a', name: 'Agitateur' },
+        { id: '', name: 'Ignoree' },
+      ],
+      error: null,
+    })
+    fromMock.mockReturnValue(builder)
+
+    await expect(listAllCareers()).resolves.toEqual([
+      { id: 'a', name: 'Agitateur' },
+      { id: 'b', name: 'Bailli' },
+    ])
+    expect(fromMock).toHaveBeenCalledWith('careers')
+  })
+
+  it('lists all career paths and filters incomplete rows', async () => {
+    fromMock.mockReturnValue(
+      createSupabaseQueryBuilder({
+        data: [
+          { from_career_id: 'a', to_career_id: 'b' },
+          { from_career_id: '', to_career_id: 'b' },
+        ],
+        error: null,
+      })
+    )
+
+    await expect(listAllCareerPaths()).resolves.toEqual([{ from_career_id: 'a', to_career_id: 'b' }])
   })
 
   it('rejects blank career identifiers before querying', async () => {

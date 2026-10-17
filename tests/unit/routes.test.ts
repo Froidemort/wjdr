@@ -23,6 +23,12 @@ describe('application routes', () => {
     expect(inventory?.meta).toMatchObject({ requiresAuth: false, skipSplash: true })
   })
 
+  it('exposes the public compendium careers route', () => {
+    const careers = appRoutes.find((route) => route.path === '/compendium/careers')
+
+    expect(careers?.meta).toMatchObject({ requiresAuth: false, skipSplash: true })
+  })
+
   it('maps legacy session URLs to their campaign equivalents', () => {
     const sessions = appRoutes.find((route) => route.path === '/sessions')
     const detail = appRoutes.find((route) => route.path === '/sessions/:id')
