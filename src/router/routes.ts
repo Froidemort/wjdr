@@ -18,8 +18,6 @@ const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
 const CompendiumInventoryView = () => import('../views/CompendiumInventoryView.vue')
 const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
-const CompendiumInventoryView = () => import('../views/CompendiumInventoryView.vue')
-const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
   // Home page

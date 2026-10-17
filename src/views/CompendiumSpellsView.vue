@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import data_json from '../../migrations/compendium_spells_fixed.json'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useWindowScroll } from '@vueuse/core'
 import { ArrowUp, ListFilter, RotateCcw, ArrowDownUp } from '@lucide/vue'
@@ -39,7 +38,7 @@ function difficultyBadgeClass(difficulty: number): string {
 }
 
 // Example data for the compendium of spells, must be replaced by Supabase calls later.
-const rawData: Array<Spell> = JSON.parse(JSON.stringify(data_json))
+const rawData: Array<Spell> = []
 // DataGrid needs a stable identifier, kept separate from the Spell shape.
 const data = rawData.map((spell) => ({ ...spell, id: `${slugify(spell.category)}-${slugify(spell.name)}` }))
 

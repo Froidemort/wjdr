@@ -48,8 +48,6 @@ onMounted(() => {
   }
 
   const referenceInitialization = showSplash.value === true
-    ? Promise.resolve()
-    : referenceDataStore.init()
 
   void Promise.all([authStore.initAuth(), referenceInitialization]).finally(() => {
     authReady.value = true
