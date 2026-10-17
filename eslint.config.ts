@@ -8,7 +8,7 @@ import pluginVue from "eslint-plugin-vue";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  { ignores: ["dist/**", "coverage/**", "playwright-report/**", "test-results/**"] },
+  { ignores: ["dist/**", "coverage/**", "playwright-report/**", "test-results/**", ".github/**", "graphify/**"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts,vue}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: globals.browser } },
   tseslint.configs.recommended,
   pluginVue.configs["flat/essential"],

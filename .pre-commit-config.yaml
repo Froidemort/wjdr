@@ -1,0 +1,105 @@
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit]
+exclude: '^(coverage/|graphify-out/|tmp/|dist/|public/mockServiceWorker\.js|package-lock\.json|migrations/public_data\.sql)'
+
+repos:
+  - repo: builtin
+    hooks:
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+      - id: detect-private-key
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        exclude: '(^|/)(tsconfig[^/]*|\.eslintrc|\.prettierrc)\.json$|^\.(vscode|devcontainer)/'
+      - id: trailing-whitespace
+        args: ['--markdown-linebreak-ext=md']
+      - id: end-of-file-fixer
+
+  # Secrets
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: forbid-env-files
+        name: forbid .env files
+        entry: .env files must not be committed (use .env.example)
+        language: fail
+        files: '(^|/)\.env(?!\.(example|sample|template)$)(\..+)?$'
+        exclude: '^$'
+      - id: secret-guard-context
+        name: no secrets in agent context files
+        entry: node .github/hooks/secret-guard.cjs --files
+        language: system
+        files: '^(\.github/|AGENTS\.md$|\.mcp\.json$|\.vscode/mcp\.json$)'
+        exclude: '^\.github/hooks/secret-guard\.cjs$'
+
+  # Schema validation
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.33.3
+    hooks:
+      - id: check-github-workflows
+      - id: check-jsonschema
+        name: check package.json schema
+        files: '^package\.json$'
+        args: ['--schemafile', 'https://json.schemastore.org/package.json']
+
+  # Python
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.12
+    hooks:
+      - id: ruff-check
+        args: ['--fix']
+        files: '^migrations/.*\.py$'
+      - id: ruff-format
+        files: '^migrations/.*\.py$'
+
+  # TypeScript / Vue
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: ./node_modules/.bin/eslint --max-warnings=0
+        language: system
+        files: '\.(ts|vue|js|mjs|cjs)$'
+        types_or: [ts, vue, javascript]
+        exclude: '^\.github/hooks/'
+      - id: vue-tsc
+        name: typecheck (vue-tsc)
+        entry: npm run typecheck
+        language: system
+        pass_filenames: false
+        files: '\.(ts|vue)$|^tsconfig.*\.json$'
+      - id: vitest-unit
+        name: unit tests
+        entry: npm run test:unit
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: graphify-update
+        name: refresh code graph (graphify)
+        entry: graphify update .
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
+      - id: knip
+        name: knip (unused code)
+        entry: npm run knip
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
+
+  # Commit message
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.2.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert]

@@ -3,7 +3,7 @@
   "image": "mcr.microsoft.com/devcontainers/typescript-node",
 
   // Ensures npm dependencies install cleanly after build
-  "postCreateCommand": "npm install",
+  "postCreateCommand": "npm install && curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/v0.5.5/prek-installer.sh | sh && $HOME/.local/bin/prek install",
 
   // Explicitly set non-root user for security and permissions
   "remoteUser": "node",
@@ -20,7 +20,10 @@
         "esbenp.prettier-vscode",
         "github.copilot",
         "github.copilot-chat",
-        "ms-python.python"
+        "ms-python.python",
+        "tamasfe.even-better-toml",
+        "GitHub.vscode-pull-request-github",
+        "webpro.vscode-knip"
       ]
     }
   }
