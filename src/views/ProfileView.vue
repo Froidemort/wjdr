@@ -6,10 +6,10 @@
 					<h3 class="font-semibold">Avatar</h3>
 					<div class="flex flex-col md:flex-row md:items-end gap-4">
 						<div class="flex-shrink-0">
-							<div v-if="(previewUrl || persistedAvatarUrl) && !avatarLoadFailed" class="avatar">
+							<div v-if="displayAvatarUrl && !avatarLoadFailed" class="avatar">
 								<div class="bg-base-300 text-base-content rounded-full w-20 h-20 overflow-hidden flex items-center justify-center">
 									<img
-										:src="previewUrl || persistedAvatarUrl || ''"
+										:src="displayAvatarUrl ?? ''"
 										alt="Avatar utilisateur"
 										class="w-full h-full object-cover"
 										@error="onAvatarLoadError"
@@ -160,7 +160,7 @@
 import { ChevronLeft, UserCircle } from '@lucide/vue'
 import PasswordInput from '../components/ui/PasswordInput.vue'
 import imageCompression from 'browser-image-compression'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
   getProfileSettings,
   reauthenticateWithPassword,
@@ -171,6 +171,7 @@ import {
 } from '../services/profileRepository'
 import { useAuthStore } from '../stores/auth'
 import AppCard from '../components/ui/AppCard.vue'
+import { sanitizeAvatarUrl } from '../utils/avatarUrl'
 
 const authStore = useAuthStore()
 
@@ -200,6 +201,10 @@ const avatarError = ref('')
 const avatarSuccess = ref('')
 const previewUrl = ref<string | null>(null)
 const persistedAvatarUrl = ref<string | null>(null)
+// previewUrl is a local blob; only the persisted URL needs origin validation.
+const displayAvatarUrl = computed(
+  () => previewUrl.value || sanitizeAvatarUrl(persistedAvatarUrl.value)
+)
 const avatarLoadFailed = ref(false)
 
 const AVATAR_MAX_SIZE_BYTES = 1 * 1024 * 1024

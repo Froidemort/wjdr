@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  bindOfflineQueueUser,
   clearQueuedUpdates,
   countQueuedUpdates,
   enqueueOfflineUpdate,
@@ -9,6 +10,7 @@ import {
 
 describe('offlineQueueRepository', () => {
   beforeEach(async () => {
+    await bindOfflineQueueUser('user-1')
     await clearQueuedUpdates()
   })
 
@@ -62,6 +64,29 @@ describe('offlineQueueRepository', () => {
 
     expect(await countQueuedUpdates()).toBe(1)
     await removeQueuedUpdate(id)
+    expect(await countQueuedUpdates()).toBe(0)
+  })
+
+  it('rejects enqueue without an authenticated user', async () => {
+    await bindOfflineQueueUser(null)
+    await expect(
+      enqueueOfflineUpdate({ entityType: 'session', entityId: 's', payload: {} })
+    ).rejects.toThrow()
+    expect(await listQueuedUpdates()).toEqual([])
+  })
+
+  it('purges entries of other users and clears on sign out', async () => {
+    await enqueueOfflineUpdate({ entityType: 'session', entityId: 's1', payload: {} })
+    await bindOfflineQueueUser('user-2')
+    expect(await countQueuedUpdates()).toBe(0)
+
+    await enqueueOfflineUpdate({ entityType: 'session', entityId: 's2', payload: {} })
+    const rows = await listQueuedUpdates()
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.userId).toBe('user-2')
+
+    await bindOfflineQueueUser(null)
+    await bindOfflineQueueUser('user-2')
     expect(await countQueuedUpdates()).toBe(0)
   })
 })

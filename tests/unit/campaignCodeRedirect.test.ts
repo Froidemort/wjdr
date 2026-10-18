@@ -87,7 +87,7 @@ describe('resolveCampaignCodeRedirect', () => {
       identifier: 'AB12CD',
       request: new Request('https://example.test/campaigns/AB12CD', {
         headers: {
-          'x-forwarded-for': '203.0.113.10',
+          'x-vercel-forwarded-for': '203.0.113.10',
         },
       }),
       findCampaignByCode: vi.fn(),
@@ -96,5 +96,22 @@ describe('resolveCampaignCodeRedirect', () => {
     })
 
     expect(result.status).toBe(429)
+  })
+
+  it('ignores spoofable x-forwarded-for and shares one bucket for unknown IPs', async () => {
+    const rateLimiter = createInMemoryRateLimiter(1, 60_000)
+    const resolve = (ip: string) =>
+      resolveCampaignCodeRedirect({
+        identifier: 'AB12CD',
+        request: new Request('https://example.test/campaigns/AB12CD', {
+          headers: { 'x-forwarded-for': ip },
+        }),
+        findCampaignByCode: vi.fn().mockResolvedValue(null),
+        resolveUserId: vi.fn(),
+        rateLimiter,
+      })
+
+    expect((await resolve('1.1.1.1')).status).toBe(404)
+    expect((await resolve('2.2.2.2')).status).toBe(429)
   })
 })

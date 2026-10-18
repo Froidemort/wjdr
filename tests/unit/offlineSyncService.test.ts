@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  bindOfflineQueueUser,
   clearQueuedUpdates,
   enqueueOfflineUpdate,
   listQueuedUpdates,
@@ -34,6 +35,7 @@ describe('offlineSyncService', () => {
     updateCharacterStatValuesMock.mockReset()
     getSessionByIdMock.mockReset()
     updateSessionMock.mockReset()
+    await bindOfflineQueueUser('user-1')
     await clearQueuedUpdates()
   })
 

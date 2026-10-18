@@ -42,6 +42,10 @@ export function normalizeCampaignCode(identifier: string): string {
   return identifier.trim().toUpperCase()
 }
 
+/**
+ * Best-effort limiter: state lives in a single function instance and is lost on
+ * cold start, so it only slows bursts. Real protection needs a shared store or WAF.
+ */
 export function createInMemoryRateLimiter(limit: number, windowMs: number): RateLimiter {
   const buckets = new Map<string, { count: number; resetAt: number }>()
 
@@ -64,22 +68,10 @@ export function createInMemoryRateLimiter(limit: number, windowMs: number): Rate
   }
 }
 
+// Vercel overwrites x-vercel-forwarded-for, so unlike x-forwarded-for it cannot be spoofed by clients.
 function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get('x-forwarded-for')
-  if (forwardedFor) {
-    const [firstIp] = forwardedFor.split(',')
-    const ip = firstIp?.trim()
-    if (ip) {
-      return ip
-    }
-  }
-
-  const realIp = request.headers.get('x-real-ip')?.trim()
-  if (realIp) {
-    return realIp
-  }
-
-  return 'unknown'
+  const vercelIp = request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim()
+  return vercelIp || 'unknown'
 }
 
 export async function resolveCampaignCodeRedirect(
@@ -95,8 +87,8 @@ export async function resolveCampaignCodeRedirect(
   }
 
   const rateLimiter = context.rateLimiter
-  const clientIp = getClientIp(context.request)
-  if (rateLimiter && clientIp !== 'unknown' && !rateLimiter.consume(clientIp)) {
+  // Unknown IPs share one bucket instead of bypassing the limiter.
+  if (rateLimiter && !rateLimiter.consume(getClientIp(context.request))) {
     return { status: 429, message: 'Trop de requetes.' }
   }
   const campaign = await context.findCampaignByCode(normalizeCampaignCode(identifier))

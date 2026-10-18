@@ -39,12 +39,14 @@ export default async function handler(request: Request): Promise<Response> {
     process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL,
     'SUPABASE_URL'
   )
-  const serviceRoleKey = getRequiredEnv(
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    'SUPABASE_SERVICE_ROLE_KEY'
+  const publicKey = getRequiredEnv(
+    process.env.SUPABASE_ANON_KEY ??
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+      process.env.VITE_SUPABASE_ANON_KEY,
+    'SUPABASE_ANON_KEY'
   )
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+  const supabase = createClient(supabaseUrl, publicKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -57,22 +59,15 @@ export default async function handler(request: Request): Promise<Response> {
     request,
     rateLimiter,
     findCampaignByCode: async (code) => {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('id, mj_id, is_archived')
-        .eq('code', code)
-        .maybeSingle()
+      const { data, error } = await supabase.rpc('resolve_campaign_code', { code })
 
       if (error) {
         throw error
       }
 
-      return data
-        ? {
-            id: data.id as string,
-            mjId: data.mj_id as string,
-            isArchived: Boolean(data.is_archived),
-          }
+      const row = (data as { id: string; mj_id: string; is_archived: boolean }[] | null)?.[0]
+      return row
+        ? { id: row.id, mjId: row.mj_id, isArchived: Boolean(row.is_archived) }
         : null
     },
     resolveUserId: async (incomingRequest) => {
