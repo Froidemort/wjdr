@@ -1,5 +1,20 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "api/**/*.ts",
+    "src/main.ts",
+    "playwright.deploy.config.ts",
+    "tests/setup/**",
+    "src/stories/**"
+  ],
+  "ignore": [
+    "public/mockServiceWorker.js",
+    "tmp/**",
+    "coverage/**",
+    "**/graphify-out/**",
+    "migrations/**"
+  ],
+  "ignoreExportsUsedInFile": true,
   "tags": [
     "-lintignore"
   ]
