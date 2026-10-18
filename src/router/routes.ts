@@ -63,7 +63,7 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/characters/:id',
     component: CharacterDetailView,
     props: true,
-    meta: { requiresAuth: true, hideFooter: true },
+    meta: { requiresAuth: true, hideFooter: true, navSection: 'characters' },
   },
   {
     path: '/notifications',

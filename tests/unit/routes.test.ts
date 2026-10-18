@@ -17,6 +17,12 @@ describe('application routes', () => {
     expect(notFound).toMatchObject({ path: '/:pathMatch(.*)*', meta: { skipSplash: true } })
   })
 
+  it('marks the character detail route as part of the characters section', () => {
+    const detail = appRoutes.find((route) => route.path === '/characters/:id')
+
+    expect(detail?.meta).toMatchObject({ requiresAuth: true, navSection: 'characters' })
+  })
+
   it('exposes the public compendium inventory route', () => {
     const inventory = appRoutes.find((route) => route.path === '/compendium/inventory')
 

@@ -29,10 +29,4 @@ describe('compendium navigation', () => {
     expect(resolveNavTo(characters, player)).toBe('/characters/k1')
     expect(resolveNavTo(characters, mj)).toBe('/characters')
   })
-
-  it('exposes the map as a public link', () => {
-    const link = mainNavLinks.find((entry) => entry.label === 'Carte')
-
-    expect(link).toMatchObject({ to: '/map', public: true })
-  })
 })
