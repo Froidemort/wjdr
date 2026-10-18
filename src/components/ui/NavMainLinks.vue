@@ -1,23 +1,28 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { mainNavLinks } from '../../config/navLinks'
+import { CalendarDays } from '@lucide/vue'
+import { useCurrentContext } from '../../composables/useCurrentContext'
+import { mainNavLinks, resolveNavTo } from '../../config/navLinks'
 
 const props = defineProps<{ publicOnly?: boolean }>()
 
 const route = useRoute()
+const { campaign, campaignTo, sessionTo, navContext } = useCurrentContext()
 
 const links = computed(() =>
   mainNavLinks
     .filter((link) => !props.publicOnly || link.public)
-    .map((link) => ({
-      ...link,
-      available: Boolean(link.to),
-      active: Boolean(
-        link.to &&
-          (route.path === link.to || route.path.startsWith(`${link.to}/`)),
-      ),
-    })),
+    .map((link) => {
+      const to = resolveNavTo(link, navContext.value)
+      const prefix = link.activePrefix ?? to
+      return {
+        ...link,
+        to,
+        available: Boolean(to),
+        active: Boolean(prefix && (route.path === prefix || route.path.startsWith(`${prefix}/`))),
+      }
+    }),
 )
 </script>
 
@@ -48,5 +53,29 @@ const links = computed(() =>
         aria-hidden="true"
       />
     </component>
+
+    <!-- Current campaign chip, with a shortcut to the current session -->
+    <div
+      v-if="!publicOnly && campaign && campaignTo"
+      class="ml-2 hidden items-center gap-1 lg:flex"
+      data-testid="current-campaign-chip"
+    >
+      <router-link
+        :to="campaignTo"
+        class="badge badge-outline badge-lg max-w-48 gap-1.5 hover:border-primary hover:text-primary"
+        :title="`Campagne en cours : ${campaign.name}`"
+      >
+        <span class="truncate">{{ campaign.name }}</span>
+      </router-link>
+      <router-link
+        v-if="sessionTo"
+        :to="sessionTo"
+        class="btn btn-ghost btn-square btn-sm min-h-11 min-w-11"
+        aria-label="Session en cours"
+        title="Session en cours"
+      >
+        <CalendarDays class="size-4" aria-hidden="true" />
+      </router-link>
+    </div>
   </nav>
 </template>

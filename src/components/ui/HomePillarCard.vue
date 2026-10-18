@@ -14,7 +14,7 @@ defineProps<{
   <li
     class="card card-border relative isolate overflow-hidden bg-base-100/95 px-5 py-5 shadow-sm sm:px-6"
   >
-   
+
 
     <div class="relative z-10 flex items-start gap-4">
       <div

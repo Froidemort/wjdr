@@ -80,10 +80,12 @@ import DataGrid from '../components/ui/DataGrid.vue'
 import InputAction from '../components/ui/InputAction.vue'
 import PageFooter from '../components/ui/PageFooter.vue'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
+import { useSingleItemRedirect } from '../composables/useSingleItemRedirect'
 import { usePagination } from '../composables/usePagination'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 
 const authStore = useAuthStore()
+const { redirectIfSingle } = useSingleItemRedirect()
 const campaignCreateModalStore = useCampaignCreateModalStore()
 const pageSize = 9
 const {
@@ -130,6 +132,9 @@ async function loadCampaigns(options: { background?: boolean } = {}): Promise<vo
     const result = await listCampaignsForUserPaginated(authStore.user.id, page.value, pageSize)
     campaigns.value = result.items
     totalItems.value = result.total
+    if (!isBackgroundRefresh && result.total === 1) {
+      await redirectIfSingle(result.items, (campaign) => `/campaigns/${campaign.id}`)
+    }
   } catch (error) {
     if (!isBackgroundRefresh || campaigns.value.length === 0) {
       errorMessage.value =
