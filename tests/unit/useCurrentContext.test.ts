@@ -1,4 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('../../src/stores/auth', () => ({ useAuthStore: vi.fn() }))
+vi.mock('../../src/stores/lastActive', () => ({ useLastActiveStore: vi.fn() }))
+vi.mock('../../src/stores/userContext', () => ({ useUserContextStore: vi.fn() }))
+
 import { resolveCurrentContext } from '../../src/composables/useCurrentContext'
 import type { CampaignSummary, CharacterSummary, SessionSummary } from '../../src/types/domain'
 
