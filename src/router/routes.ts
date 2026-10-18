@@ -19,6 +19,8 @@ const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
 const CompendiumHomeView = () => import('../views/CompendiumHomeView.vue')
 const CompendiumInventoryView = () => import('../views/CompendiumInventoryView.vue')
 const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
+const CompendiumSkillsView = () => import('../views/CompendiumSkillsView.vue')
+const CompendiumTalentsView = () => import('../views/CompendiumTalentsView.vue')
 const CompendiumCareerGraphView = () => import('../views/CompendiumCareerGraphView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
@@ -119,6 +121,16 @@ export const appRoutes: RouteRecordRaw[] = [
   {
     path: '/compendium/spells',
     component: CompendiumSpellsView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
+  },
+  {
+    path: '/compendium/skills',
+    component: CompendiumSkillsView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
+  },
+  {
+    path: '/compendium/talents',
+    component: CompendiumTalentsView,
     meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
   },
   {

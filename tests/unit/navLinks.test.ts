@@ -9,14 +9,13 @@ describe('compendium navigation', () => {
     expect(link).toMatchObject({ to: '/compendium', public: true })
   })
 
-  it('lists inventory, careers, spells, skills, talents and map sections', () => {
+  it('lists inventory, careers, spells, skills and talents sections', () => {
     expect(compendiumSections.map((section) => section.to)).toEqual([
       '/compendium/inventory',
       '/compendium/careers',
       '/compendium/spells',
       '/compendium/skills',
       '/compendium/talents',
-      '/map',
     ])
   })
 

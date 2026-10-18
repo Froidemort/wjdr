@@ -41,6 +41,16 @@ describe('application routes', () => {
     expect(careers?.meta).toMatchObject({ requiresAuth: false, skipSplash: true })
   })
 
+  it.each(['/compendium/skills', '/compendium/talents'])('exposes the public %s route', (path) => {
+    const route = appRoutes.find((entry) => entry.path === path)
+
+    expect(route?.meta).toMatchObject({
+      requiresAuth: false,
+      skipSplash: true,
+      navSection: 'compendium',
+    })
+  })
+
   it('maps legacy session URLs to their campaign equivalents', () => {
     const sessions = appRoutes.find((route) => route.path === '/sessions')
     const detail = appRoutes.find((route) => route.path === '/sessions/:id')
