@@ -1,4 +1,4 @@
-import { Backpack, Hammer, Network, Sparkles, Star, type LucideIcon } from '@lucide/vue'
+import { Backpack, Hammer, Map as MapIcon, Network, Sparkles, Star, type LucideIcon } from '@lucide/vue'
 
 export interface CompendiumSection {
   title: string
@@ -37,5 +37,11 @@ export const compendiumSections: readonly CompendiumSection[] = [
     description: 'Aptitudes spéciales et leurs compétences associées.',
     icon: Star,
     to: '/compendium/talents',
+  },
+  {
+    title: 'Carte',
+    description: 'Carte interactive du Vieux Monde, avec lieux et marqueurs de campagne.',
+    icon: MapIcon,
+    to: '/map',
   },
 ]

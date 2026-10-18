@@ -51,6 +51,17 @@ describe('application routes', () => {
     })
   })
 
+  it('exposes the public interactive map route', () => {
+    const map = appRoutes.find((route) => route.path === '/map')
+
+    expect(map?.meta).toMatchObject({
+      requiresAuth: false,
+      hideFooter: true,
+      skipSplash: true,
+      navSection: 'map',
+    })
+  })
+
   it('maps legacy session URLs to their campaign equivalents', () => {
     const sessions = appRoutes.find((route) => route.path === '/sessions')
     const detail = appRoutes.find((route) => route.path === '/sessions/:id')

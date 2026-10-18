@@ -9,13 +9,14 @@ describe('compendium navigation', () => {
     expect(link).toMatchObject({ to: '/compendium', public: true })
   })
 
-  it('lists inventory, careers, spells, skills and talents sections', () => {
+  it('lists inventory, careers, spells, skills, talents and map sections', () => {
     expect(compendiumSections.map((section) => section.to)).toEqual([
       '/compendium/inventory',
       '/compendium/careers',
       '/compendium/spells',
       '/compendium/skills',
       '/compendium/talents',
+      '/map',
     ])
   })
 
@@ -30,5 +31,11 @@ describe('compendium navigation', () => {
     expect(resolveNavTo(campaigns, player)).toBe('/campaigns/c1')
     expect(resolveNavTo(characters, player)).toBe('/characters/k1')
     expect(resolveNavTo(characters, mj)).toBe('/characters')
+  })
+
+  it('exposes the map as a public link', () => {
+    const link = mainNavLinks.find((entry) => entry.label === 'Carte')
+
+    expect(link).toMatchObject({ to: '/map', public: true })
   })
 })

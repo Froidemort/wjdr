@@ -1,4 +1,4 @@
-import { BookOpenText, Scroll, Users, type LucideIcon } from '@lucide/vue'
+import { BookOpenText, Map as MapIcon, Scroll, Users, type LucideIcon } from '@lucide/vue'
 
 /** Contextual shortcuts resolved from the user's current campaign. */
 export interface NavContext {
@@ -40,4 +40,5 @@ export const mainNavLinks: readonly NavLink[] = [
     icon: Users,
   },
   { to: '/compendium', label: 'Compendium', icon: BookOpenText, public: true },
+  { to: '/map', label: 'Carte', icon: MapIcon, public: true },
 ]
