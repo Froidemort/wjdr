@@ -1,9 +1,15 @@
 import { supabase } from '../db/supabase'
+import { slugify } from '../utils/slugify'
 import type {
   CompendiumArmor,
   CompendiumArmorRow,
   CompendiumItem,
   CompendiumItemRow,
+  CompendiumLink,
+  CompendiumSkill,
+  CompendiumSkillRow,
+  CompendiumTalent,
+  CompendiumTalentRow,
   CompendiumWeapon,
   CompendiumWeaponRow,
 } from '../types/compendium'
@@ -83,4 +89,87 @@ export async function fetchCompendiumItems(): Promise<CompendiumItem[]> {
   if (error) throw error
 
   return (data ?? []).map(mapItem)
+}
+
+const SKILL_SELECT =
+  'id, name, specialization, is_basic, stat_code, description, skills_talents(talents(id, name, specialization))'
+const TALENT_SELECT =
+  'id, name, specialization, description, skills_talents(skills(id, name, specialization))'
+// PostgREST caps responses at 1000 rows by default.
+const PAGE_SIZE = 1000
+
+function compareByName(
+  a: { name: string; specialization: string | null },
+  b: { name: string; specialization: string | null }
+): number {
+  return (
+    a.name.localeCompare(b.name, 'fr') ||
+    (a.specialization ?? '').localeCompare(b.specialization ?? '', 'fr')
+  )
+}
+
+function mapLink(row: { id: string; name: string; specialization: string | null }): CompendiumLink {
+  const specialization = row.specialization?.trim() || null
+  return {
+    id: row.id,
+    slug: slugify(specialization ? `${row.name} ${specialization}` : row.name),
+    name: row.name,
+    specialization,
+  }
+}
+
+function mapLinks(
+  rows: Array<{ id: string; name: string; specialization: string | null } | null>
+): CompendiumLink[] {
+  return rows
+    .filter((row): row is NonNullable<typeof row> => row !== null)
+    .map(mapLink)
+    .sort(compareByName)
+}
+
+function mapSkill(row: CompendiumSkillRow): CompendiumSkill {
+  return {
+    ...mapLink(row),
+    isBasic: row.is_basic,
+    statCode: row.stat_code,
+    description: row.description ?? null,
+    linkedTalents: mapLinks((row.skills_talents ?? []).map((link) => link.talents)),
+  }
+}
+
+function mapTalent(row: CompendiumTalentRow): CompendiumTalent {
+  return {
+    ...mapLink(row),
+    description: row.description ?? null,
+    linkedSkills: mapLinks((row.skills_talents ?? []).map((link) => link.skills)),
+  }
+}
+
+async function fetchAllRows<Row>(table: 'skills' | 'talents', select: string): Promise<Row[]> {
+  const rows: Row[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(select)
+      .order('name', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1)
+      .returns<Row[]>()
+
+    if (error) throw error
+
+    const page = data ?? []
+    rows.push(...page)
+    if (page.length < PAGE_SIZE) return rows
+  }
+}
+
+export async function fetchCompendiumSkills(): Promise<CompendiumSkill[]> {
+  const rows = await fetchAllRows<CompendiumSkillRow>('skills', SKILL_SELECT)
+  return rows.map(mapSkill).sort(compareByName)
+}
+
+export async function fetchCompendiumTalents(): Promise<CompendiumTalent[]> {
+  const rows = await fetchAllRows<CompendiumTalentRow>('talents', TALENT_SELECT)
+  return rows.map(mapTalent).sort(compareByName)
 }

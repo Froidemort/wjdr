@@ -58,3 +58,42 @@ export interface CompendiumItemRow {
   description: string | null
   encumbrance: number
 }
+
+export type CompendiumKind = 'skills' | 'talents'
+
+export interface CompendiumLink {
+  id: string
+  slug: string
+  name: string
+  specialization: string | null
+}
+
+export interface CompendiumSkill extends CompendiumLink {
+  isBasic: boolean
+  statCode: string
+  description: string | null
+  linkedTalents: CompendiumLink[]
+}
+
+export interface CompendiumTalent extends CompendiumLink {
+  description: string | null
+  linkedSkills: CompendiumLink[]
+}
+
+interface CompendiumLinkRow {
+  id: string
+  name: string
+  specialization: string | null
+}
+
+export interface CompendiumSkillRow extends CompendiumLinkRow {
+  is_basic: boolean
+  stat_code: string
+  description: string | null
+  skills_talents?: Array<{ talents: CompendiumLinkRow | null }> | null
+}
+
+export interface CompendiumTalentRow extends CompendiumLinkRow {
+  description: string | null
+  skills_talents?: Array<{ skills: CompendiumLinkRow | null }> | null
+}
