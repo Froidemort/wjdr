@@ -2,6 +2,7 @@ import type { Session, User } from '@supabase/supabase-js'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { supabase } from '../db/supabase'
+import { bindOfflineQueueUser } from '../services/offlineQueueRepository'
 
 type AuthIdentifier = {
   email: string
@@ -148,6 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
 
         session.value = data.session
         user.value = data.session?.user ?? null
+        await bindOfflineQueueUser(user.value?.id ?? null)
         if (user.value?.id) {
           await loadIdentity(user.value.id)
         }
@@ -156,6 +158,7 @@ export const useAuthStore = defineStore('auth', () => {
           isRecoverySession.value = event === 'PASSWORD_RECOVERY'
           session.value = nextSession
           user.value = nextSession?.user ?? null
+          void bindOfflineQueueUser(user.value?.id ?? null)
           if (user.value?.id) {
             void loadIdentity(user.value.id)
           } else {
@@ -286,6 +289,7 @@ export const useAuthStore = defineStore('auth', () => {
     authSuccess.value = null
     try {
       const { error } = await supabase.auth.signOut()
+      await bindOfflineQueueUser(null)
       if (error) {
         throw error
       }

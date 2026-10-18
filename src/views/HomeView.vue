@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { CalendarDays, Scroll, UserRound } from '@lucide/vue'
+import { computed } from 'vue'
+import { useCurrentContext } from '../composables/useCurrentContext'
 import { useAuthStore } from '../stores/auth'
 import { homeFeatures } from '../config/homeFeatures'
 import { homePillars } from '../config/homePillars'
@@ -6,8 +9,29 @@ import AuthForm from '../components/ui/AuthForm.vue'
 import HomeFeatureCard from '../components/ui/HomeFeatureCard.vue'
 import HomeHero from '../components/ui/HomeHero.vue'
 import HomePillarCard from '../components/ui/HomePillarCard.vue'
+import HomeResumeCard from '../components/ui/HomeResumeCard.vue'
+import { parseCampaignSessionDate } from '../utils/campaignSessions'
 
 const authStore = useAuthStore()
+const { campaign, session, character, campaignTo, sessionTo, characterTo } = useCurrentContext()
+
+const sessionTitle = computed(() => {
+  if (!session.value) {
+    return ''
+  }
+
+  const name = session.value.name?.trim()
+  if (name) {
+    return name
+  }
+
+  const parsed = parseCampaignSessionDate(session.value.date)
+  return `Session du ${parsed ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(parsed) : session.value.date}`
+})
+const characterDescription = computed(() =>
+  character.value ? [character.value.race, character.value.careerName].filter(Boolean).join(' · ') : ''
+)
+const hasResume = computed(() => Boolean(campaignTo.value))
 </script>
 
 <template>
@@ -59,8 +83,37 @@ const authStore = useAuthStore()
     <template v-else>
       <HomeHero />
 
+      <section
+        v-if="hasResume && campaign && campaignTo"
+        class="relative z-10 mx-auto max-w-6xl space-y-3 px-4 pb-6 sm:px-6 md:-mt-16 lg:px-8"
+        aria-labelledby="home-resume-title"
+      >
+        <h2 id="home-resume-title" class="font-grim-title text-sm uppercase tracking-[0.16em] text-base-content/70">
+          Reprendre
+        </h2>
+        <ul class="grid gap-3 md:grid-cols-3" aria-label="Reprendre">
+          <HomeResumeCard label="Campagne" :title="campaign.name" :to="campaignTo" :icon="Scroll" />
+          <HomeResumeCard
+            v-if="session && sessionTo"
+            label="Session"
+            :title="sessionTitle"
+            :to="sessionTo"
+            :icon="CalendarDays"
+          />
+          <HomeResumeCard
+            v-if="character && characterTo"
+            label="Personnage"
+            :title="character.name"
+            :description="characterDescription"
+            :to="characterTo"
+            :icon="UserRound"
+          />
+        </ul>
+      </section>
+
       <ul
-        class="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 pb-6 sm:px-6 md:-mt-16 md:grid-cols-[1.6fr_1fr_1fr] md:gap-5 md:pb-16 lg:px-8 lg:gap-6"
+        class="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 pb-6 sm:px-6 md:grid-cols-[1.6fr_1fr_1fr] md:gap-5 md:pb-16 lg:px-8 lg:gap-6"
+        :class="hasResume ? '' : 'md:-mt-16'"
         aria-label="Sections de Grimorium"
       >
         <HomeFeatureCard

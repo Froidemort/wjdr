@@ -56,8 +56,10 @@ import PageFooter from '../components/ui/PageFooter.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import { useLoadingState } from '../composables/useLoadingState'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import { useSingleItemRedirect } from '../composables/useSingleItemRedirect'
 
 const authStore = useAuthStore()
+const { redirectIfSingle } = useSingleItemRedirect()
 const {
   data: characters,
   loading,
@@ -66,7 +68,7 @@ const {
 } = useLoadingState<CharacterSummary[]>({ fallbackValue: [] })
 const { subscribe, unsubscribe } = useRealtimeChannels(
   () => {
-    void loadCharacters()
+    void loadCharacters({ background: true })
   },
   { debounceMs: 400 }
 )
@@ -90,13 +92,16 @@ const filteredCharacters = computed(() => {
   })
 })
 
-async function loadCharacters(): Promise<void> {
+async function loadCharacters(options: { background?: boolean } = {}): Promise<void> {
   if (!authStore.user?.id) {
     characters.value = []
     return
   }
 
   await execute(() => listCharactersForUser(authStore.user!.id))
+  if (!options.background && !errorMessage.value) {
+    await redirectIfSingle(charactersList.value, (character) => `/characters/${character.id}`)
+  }
 }
 
 watch(

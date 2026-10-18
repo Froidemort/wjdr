@@ -90,3 +90,34 @@ export interface ProfileSettingsRow {
   email: string
   avatar_url: string | null
 }
+
+export interface MapMarkerTypeRow {
+  id: string
+  code: string
+  label: string
+  icon: string | null
+  color: string | null
+}
+
+export interface MapMarkerRow {
+  id: string
+  type_id: string
+  name: string
+  description: string | null
+  lat: number
+  lng: number
+  external_ref: string | null
+}
+
+export interface CampaignMarkerRow {
+  id: string
+  campaign_id: string
+  type_id: string
+  name: string
+  description: string | null
+  lat: number
+  lng: number
+  visibility: 'mj' | 'players' | 'private'
+  created_by: string
+  created_at: string | null
+}

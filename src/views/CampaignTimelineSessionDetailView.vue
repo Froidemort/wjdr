@@ -81,6 +81,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { getCampaignById } from '../services/campaignsRepository'
 import { getSessionById } from '../services/sessionsRepository'
 import { useAuthStore } from '../stores/auth'
+import { useLastActiveStore } from '../stores/lastActive'
 import type { CampaignSummary, SessionSummary } from '../types/domain'
 import AppCard from '../components/ui/AppCard.vue'
 import PageFooter from '../components/ui/PageFooter.vue'
@@ -92,6 +93,7 @@ import {
 } from '../utils/campaignSessions'
 
 const authStore = useAuthStore()
+const lastActive = useLastActiveStore()
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const campaign = ref<CampaignSummary | null>(null)
@@ -197,6 +199,7 @@ async function loadData(): Promise<void> {
 
     campaign.value = campaignData
     sessionItem.value = sessionData
+    lastActive.setSession(campaignData.id, sessionData.id)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Chargement impossible.'
     campaign.value = null

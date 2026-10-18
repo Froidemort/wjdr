@@ -10,25 +10,21 @@ function createSupabaseMock(options: {
   campaign?: { id: string; mj_id: string; is_archived: boolean } | null
   userId?: string | null
 }) {
-  const selectMock = vi.fn().mockReturnThis()
-  const eqMock = vi.fn().mockReturnThis()
-  const maybeSingleMock = vi.fn().mockResolvedValue({
-    data: options.campaign ?? null,
+  const rpcMock = vi.fn().mockResolvedValue({
+    data: options.campaign ? [options.campaign] : [],
     error: null,
   })
-
-  const fromMock = vi.fn(() => ({ select: selectMock, eq: eqMock, maybeSingle: maybeSingleMock }))
   const getUserMock = vi.fn().mockResolvedValue({
     data: { user: options.userId ? { id: options.userId } : null },
     error: null,
   })
 
   createClientMock.mockReturnValue({
-    from: fromMock,
+    rpc: rpcMock,
     auth: { getUser: getUserMock },
   })
 
-  return { fromMock, getUserMock }
+  return { rpcMock, getUserMock }
 }
 
 async function importHandler() {
@@ -38,7 +34,7 @@ async function importHandler() {
 beforeEach(() => {
   createClientMock.mockReset()
   process.env.SUPABASE_URL = 'https://example.supabase.co'
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key'
+  vi.stubEnv('SUPABASE_ANON_KEY', 'public-test-value')
 })
 
 describe('campaign code api handler', () => {
@@ -104,7 +100,7 @@ describe('campaign code api handler', () => {
     const { default: handler } = await importHandler()
 
     const request = new Request('https://app.test/campaigns/AB12CD', {
-      headers: { 'x-forwarded-for': '198.51.100.42' },
+      headers: { 'x-vercel-forwarded-for': '198.51.100.42' },
     })
 
     for (let index = 0; index < 10; index += 1) {
@@ -116,5 +112,29 @@ describe('campaign code api handler', () => {
 
     const blocked = await handler(request)
     expect(blocked.status).toBe(429)
+  })
+
+  it('resolves codes through the RPC with the public key', async () => {
+    const { rpcMock } = createSupabaseMock({
+      campaign: { id: 'campaign-uuid', mj_id: 'mj-1', is_archived: false },
+    })
+    const { default: handler } = await importHandler()
+
+    await handler(new Request('https://app.test/campaigns/ab12cd'))
+
+    expect(createClientMock.mock.calls[0]?.[1]).toBe('public-test-value')
+    expect(rpcMock).toHaveBeenCalledWith('resolve_campaign_code', { code: 'AB12CD' })
+  })
+
+  it('rate limits requests without a trusted client IP', async () => {
+    createSupabaseMock({ campaign: null })
+    const { default: handler } = await importHandler()
+
+    let last = 0
+    for (let index = 0; index < 12; index += 1) {
+      last = (await handler(new Request('https://app.test/campaigns/ZZ99ZZ'))).status
+    }
+
+    expect(last).toBe(429)
   })
 })

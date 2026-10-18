@@ -9,6 +9,7 @@ vi.mock('../../src/db/supabase', () => ({
 import {
   createCharacterForCampaign,
   getCharacterById,
+  listCampaignCharacterSheets,
   listCharactersByCampaign,
   listCharactersForUser,
   replaceCharacterTotalAdvancedValues,
@@ -238,5 +239,52 @@ describe('charactersRepository', () => {
     } else {
       await expect(operation).resolves.toBe('character-1')
     }
+  })
+
+  it('assembles campaign sheets with stats and links in a constant number of queries', async () => {
+    const row = (id: string, userId: string) => ({ id, name: id, race: 'humain', gender: 'masculin', campaign_id: 'campaign-1', user_id: userId, career_id: 'career', pv_current: 5, fortune_current: 1, fortune_max: 2, destiny_current: 1, destiny_max: 2, xp_total: 10, xp_available: 4, insanity_points: 0, money_gold: 1, money_silver: 2, money_copper: 3 })
+    const sheetStats = builder([{ character_id: 'one', stat_code: 'F', base_value: 30, current_advanced: 5, total_advanced: 0 }])
+    mockTables({
+      characters: [builder([row('one', 'u1'), row('two', 'u2')])],
+      careers: [builder([{ id: 'career', name: 'Soldat' }])],
+      profiles: [builder([])],
+      character_stat_values: [builder([]), sheetStats],
+      character_skills: [builder([])],
+      character_talents: [builder([])],
+      character_weapons: [builder([])],
+      character_armors: [builder([])],
+      character_items: [builder([])],
+    })
+
+    const sheets = await listCampaignCharacterSheets('campaign-1')
+
+    expect(sheets.map((sheet) => sheet.character.id)).toEqual(['one', 'two'])
+    expect(sheets[0].stats).toEqual([{ statCode: 'F', baseValue: 30, currentAdvanced: 5, totalAdvanced: 0, isSecondary: false }])
+    expect(sheets[1].stats).toEqual([])
+    expect(sheets[1].links).toEqual({ skills: [], talents: [], weapons: [], armors: [], items: [] })
+    expect(sheetStats.in).toHaveBeenCalledWith('character_id', ['one', 'two'])
+    expect(fromMock).toHaveBeenCalledTimes(10)
+  })
+
+  it('returns no sheet without querying details for an empty campaign', async () => {
+    mockTables({ characters: [builder([])] })
+    await expect(listCampaignCharacterSheets('campaign-1')).resolves.toEqual([])
+    expect(fromMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('propagates stat query errors', async () => {
+    const row = { id: 'one', name: 'one', race: 'humain', gender: 'masculin', campaign_id: 'c', user_id: 'u', career_id: 'career', pv_current: 5, fortune_current: 1, fortune_max: 2, destiny_current: 1, destiny_max: 2, xp_total: 1, xp_available: 1, insanity_points: 0, money_gold: 0, money_silver: 0, money_copper: 0 }
+    mockTables({
+      characters: [builder([row])],
+      careers: [builder([])],
+      profiles: [builder([])],
+      character_stat_values: [builder([]), builder(null, new Error('stats down'))],
+      character_skills: [builder([])],
+      character_talents: [builder([])],
+      character_weapons: [builder([])],
+      character_armors: [builder([])],
+      character_items: [builder([])],
+    })
+    await expect(listCampaignCharacterSheets('c')).rejects.toThrow('stats down')
   })
 })

@@ -1,19 +1,24 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+import { sanitizeAvatarUrl } from '../../utils/avatarUrl'
+
+const props = defineProps<{
   title?: string
   compact?: boolean
   avatarUrl?: string | null
   avatarAlt?: string
 }>()
+
+const safeAvatarUrl = computed(() => sanitizeAvatarUrl(props.avatarUrl))
 </script>
 
 <template>
   <article class="card rounded-box border border-base-300 bg-base-100">
     <div class="card-body" :class="compact ? 'gap-3 p-4 lg:p-3.5' : 'gap-4 p-5'">
       <div v-if="title" class="flex gap-3" :class="compact ? 'mb-0 items-start' : 'mb-1 items-center'">
-        <div v-if="avatarUrl" class="avatar">
+        <div v-if="safeAvatarUrl" class="avatar">
           <div class="w-9 rounded-full ring ring-base-300 ring-offset-1 ring-offset-base-100">
-            <img :src="avatarUrl" :alt="avatarAlt || title" class="object-cover" />
+            <img :src="safeAvatarUrl" :alt="avatarAlt || title" class="object-cover" />
           </div>
         </div>
         <h2

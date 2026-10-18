@@ -83,6 +83,106 @@ describe('compendiumRepository', () => {
     expect(fromMock).toHaveBeenCalledWith('items')
   })
 
+  it('maps skills with sorted, deduplicated-null talent links', async () => {
+    const builder = createSupabaseQueryBuilder({
+      data: [
+        {
+          id: 's2',
+          name: 'Soins',
+          specialization: null,
+          is_basic: false,
+          stat_code: 'INT',
+          description: null,
+          skills_talents: null,
+        },
+        {
+          id: 's1',
+          name: 'Athlétisme',
+          specialization: ' Course ',
+          is_basic: true,
+          stat_code: 'AG',
+          description: 'd',
+          skills_talents: [
+            { talents: { id: 't2', name: 'Résistance', specialization: null } },
+            { talents: null },
+            { talents: { id: 't1', name: 'Ambidextre', specialization: null } },
+          ],
+        },
+      ],
+      error: null,
+    })
+    fromMock.mockReturnValue(builder)
+
+    const result = await repository.fetchCompendiumSkills()
+
+    expect(fromMock).toHaveBeenCalledWith('skills')
+    expect(builder.range).toHaveBeenCalledWith(0, 999)
+    expect(result.map((skill) => skill.id)).toEqual(['s1', 's2'])
+    expect(result[0]).toMatchObject({
+      slug: 'athletisme-course',
+      specialization: 'Course',
+      isBasic: true,
+      statCode: 'AG',
+      linkedTalents: [
+        { id: 't1', slug: 'ambidextre', name: 'Ambidextre', specialization: null },
+        { id: 't2', slug: 'resistance', name: 'Résistance', specialization: null },
+      ],
+    })
+    expect(result[1]).toMatchObject({ description: null, linkedTalents: [] })
+  })
+
+  it('maps talents with linked skills', async () => {
+    fromMock.mockReturnValue(
+      createSupabaseQueryBuilder({
+        data: [
+          {
+            id: 't1',
+            name: 'Chance',
+            specialization: null,
+            description: 'x',
+            skills_talents: [{ skills: { id: 's1', name: 'Jeu', specialization: 'Dés' } }],
+          },
+        ],
+        error: null,
+      })
+    )
+
+    const [talent] = await repository.fetchCompendiumTalents()
+
+    expect(fromMock).toHaveBeenCalledWith('talents')
+    expect(talent).toEqual({
+      id: 't1',
+      slug: 'chance',
+      name: 'Chance',
+      specialization: null,
+      description: 'x',
+      linkedSkills: [{ id: 's1', slug: 'jeu-des', name: 'Jeu', specialization: 'Dés' }],
+    })
+  })
+
+  it('paginates until a short page is returned', async () => {
+    const fullPage = Array.from({ length: 1000 }, (_, index) => ({
+      id: `t${index}`,
+      name: `Talent ${index}`,
+      specialization: null,
+      description: null,
+      skills_talents: [],
+    }))
+    const builder = createSupabaseQueryBuilder({ data: fullPage, error: null })
+    builder.returns.mockResolvedValueOnce({ data: fullPage, error: null })
+    builder.returns.mockResolvedValueOnce({
+      data: [{ id: 'last', name: 'Zèle', specialization: null, description: null, skills_talents: [] }],
+      error: null,
+    })
+    fromMock.mockReturnValue(builder)
+
+    const result = await repository.fetchCompendiumTalents()
+
+    expect(result).toHaveLength(1001)
+    expect(builder.range).toHaveBeenNthCalledWith(1, 0, 999)
+    expect(builder.range).toHaveBeenNthCalledWith(2, 1000, 1999)
+  })
+
   it('throws supabase errors', async () => {
     const error = new Error('boom')
     fromMock.mockReturnValue(createSupabaseQueryBuilder({ data: null, error }))
@@ -94,6 +194,8 @@ describe('compendiumRepository', () => {
     expect(Object.keys(repository).sort()).toEqual([
       'fetchCompendiumArmors',
       'fetchCompendiumItems',
+      'fetchCompendiumSkills',
+      'fetchCompendiumTalents',
       'fetchCompendiumWeapons',
     ])
   })

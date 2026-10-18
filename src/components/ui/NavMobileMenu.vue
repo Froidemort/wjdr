@@ -2,7 +2,8 @@
 import { Bell, LogOut, UserCircle } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { mainNavLinks } from '../../config/navLinks'
+import { mainNavLinks, resolveNavTo } from '../../config/navLinks'
+import { useCurrentContext } from '../../composables/useCurrentContext'
 
 // Collapsible drawer for authenticated users on small screens (sm and below).
 const open = defineModel<boolean>('open', { required: true })
@@ -11,6 +12,7 @@ defineProps<{
 }>()
 
 const authStore = useAuthStore()
+const { navContext } = useCurrentContext()
 const router = useRouter()
 
 async function onLogout(): Promise<void> {
@@ -31,7 +33,12 @@ function close(): void {
   >
     <ul class="menu w-full p-0">
       <li v-for="link in mainNavLinks" :key="link.label">
-        <router-link v-if="link.to" :to="link.to" class="min-h-11 gap-3" @click="close">
+        <router-link
+          v-if="link.to"
+          :to="resolveNavTo(link, navContext) ?? '/'"
+          class="min-h-11 gap-3"
+          @click="close"
+        >
           <component :is="link.icon" class="size-5 text-primary" />
           {{ link.label }}
         </router-link>

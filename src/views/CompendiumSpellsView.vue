@@ -6,6 +6,7 @@ import { useCompendiumSpellFilters } from '../composables/useCompendiumSpellFilt
 import { useIncrementalReveal } from '../composables/useIncrementalReveal'
 import DataGrid from '../components/ui/DataGrid.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
+import { slugify } from '../utils/slugify'
 
 // TODO : Put these types definition in type directory
 
@@ -19,14 +20,6 @@ interface Spell {
     duration?: string;
     range?: string;
     description?: string;
-}
-
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
 }
 
 // green <10, orange 10-20, red 20-30, purple >30

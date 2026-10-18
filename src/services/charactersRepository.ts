@@ -9,6 +9,7 @@ import type {
 } from '../types/db'
 import type { CharacterRace, CreateCharacterPayload } from '../types/character'
 import type { CharacterDetail, CharacterStatValue, CharacterSummary } from '../types/domain'
+import { listCharacterLinksBundlesByIds, type CharacterLinksBundle } from './characterLinksRepository'
 import { withRetry } from './shared/retry'
 
 export type { CreateCharacterPayload } from '../types/character'
@@ -351,6 +352,50 @@ export async function listCharactersByCampaign(campaignId: string): Promise<Char
       )
     )
   })
+}
+
+export interface CampaignCharacterSheet {
+  character: CharacterSummary
+  stats: CharacterStatValue[]
+  links: CharacterLinksBundle
+}
+
+// Batch read for the MJ table: constant number of queries whatever the party size.
+export async function listCampaignCharacterSheets(
+  campaignId: string
+): Promise<CampaignCharacterSheet[]> {
+  const characters = await listCharactersByCampaign(campaignId)
+  if (characters.length === 0) {
+    return []
+  }
+
+  const characterIds = characters.map((character) => character.id)
+  const [statsResult, linksById] = await withRetry(() =>
+    Promise.all([
+      supabase
+        .from('character_stat_values')
+        .select('character_id, stat_code, base_value, current_advanced, total_advanced')
+        .in('character_id', characterIds),
+      listCharacterLinksBundlesByIds(characterIds),
+    ])
+  )
+
+  if (statsResult.error) {
+    throw statsResult.error
+  }
+
+  const statsById = new Map<string, CharacterStatValue[]>()
+  for (const row of (statsResult.data ?? []) as Array<CharacterStatRow & { character_id: string }>) {
+    const entries = statsById.get(row.character_id) ?? []
+    entries.push(mapCharacterStat(row))
+    statsById.set(row.character_id, entries)
+  }
+
+  return characters.map((character) => ({
+    character,
+    stats: statsById.get(character.id) ?? [],
+    links: linksById.get(character.id) ?? { skills: [], talents: [], weapons: [], armors: [], items: [] },
+  }))
 }
 
 export async function getCharacterById(characterId: string): Promise<CharacterDetail | null> {

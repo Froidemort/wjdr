@@ -1,0 +1,185 @@
+<script setup lang="ts">
+import { Layers } from '@lucide/vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, ref, watch } from 'vue'
+import MapCanvas from '../components/map/MapCanvas.vue'
+import MapLayerPanel from '../components/map/MapLayerPanel.vue'
+import MapSearch from '../components/map/MapSearch.vue'
+import MarkerDetailSheet from '../components/map/MarkerDetailSheet.vue'
+import MarkerFormModal from '../components/map/MarkerFormModal.vue'
+import { useMapCampaign } from '../composables/useMapCampaign'
+import type { MapPin } from '../composables/useLeafletMap'
+import { useRealtimeSync } from '../composables/useRealtimeSync'
+import { useMapStore } from '../stores/map'
+import type { MapFlyTarget, MapMarker, MarkerDraft } from '../types/map'
+import { allowedVisibilities, canEditMarker } from '../utils/mapMarkers'
+import { normalizeLatLng } from '../utils/mapCoordinates'
+
+const FALLBACK_COLOR = '#0369a1'
+const FOCUS_ZOOM = 5
+
+const store = useMapStore()
+const {
+  types,
+  typesById,
+  showBase,
+  showCampaign,
+  hiddenTypeIds,
+  query,
+  selectedId,
+  selectedMarker,
+  visibleMarkers,
+  searchResults,
+  loading,
+  error,
+  writeError,
+} = storeToRefs(store)
+const { campaignId, role, userId } = useMapCampaign()
+
+const flyTarget = ref<MapFlyTarget | null>(null)
+const formOpen = ref(false)
+const editing = ref<MapMarker | null>(null)
+const newPosition = ref<{ lat: number; lng: number } | null>(null)
+const saving = ref(false)
+const hint = ref<string | null>(null)
+
+const pins = computed<MapPin[]>(() =>
+  visibleMarkers.value.map((marker) => ({
+    id: marker.id,
+    name: marker.name,
+    lat: marker.lat,
+    lng: marker.lng,
+    color: typesById.value.get(marker.typeId)?.color ?? FALLBACK_COLOR,
+    selected: marker.id === selectedId.value,
+  }))
+)
+const visibilities = computed(() => allowedVisibilities(role.value))
+const canEditSelected = computed(() => (selectedMarker.value ? canEditMarker(selectedMarker.value, userId.value, role.value) : false))
+
+function focusMarker(marker: MapMarker): void {
+  store.select(marker.id)
+  flyTarget.value = { lat: marker.lat, lng: marker.lng, zoom: FOCUS_ZOOM, nonce: Date.now() }
+}
+
+function onMapContextMenu(lat: number, lng: number): void {
+  if (!role.value) {
+    hint.value = 'Connecte-toi et choisis une campagne pour ajouter des marqueurs.'
+    return
+  }
+
+  hint.value = null
+  editing.value = null
+  newPosition.value = normalizeLatLng(lat, lng)
+  formOpen.value = true
+}
+
+function startEdit(): void {
+  editing.value = selectedMarker.value
+  newPosition.value = null
+  formOpen.value = true
+}
+
+async function onSubmit(draft: MarkerDraft): Promise<void> {
+  if (!userId.value) return
+
+  saving.value = true
+  const target = editing.value
+  const result = target ? await store.editMarker(target.id, draft) : await store.addMarker(draft, userId.value)
+  saving.value = false
+
+  if (result) {
+    formOpen.value = false
+  }
+}
+
+async function onRemove(): Promise<void> {
+  if (selectedMarker.value) {
+    await store.removeMarker(selectedMarker.value.id)
+  }
+}
+
+const { start, stop } = useRealtimeSync({
+  onUpdate: () => store.loadCampaign(campaignId.value),
+})
+
+watch(
+  campaignId,
+  (id) => {
+    void store.loadCampaign(id)
+    if (id) {
+      start(`map-markers-${id}`, [{ table: 'campaign_markers', filter: `campaign_id=eq.${id}` }])
+    } else {
+      stop()
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  void store.loadBase()
+})
+</script>
+
+<template>
+  <main id="map-page" class="h-[calc(100dvh-7.5rem)] lg:h-[calc(100dvh-4rem)]">
+    <div class="drawer lg:drawer-open size-full">
+      <input id="map-layers-drawer" type="checkbox" class="drawer-toggle" aria-label="Afficher les calques" />
+
+      <div class="drawer-content relative size-full">
+        <MapCanvas :pins="pins" :fly-target="flyTarget" @select="store.select" @contextmenu="onMapContextMenu" />
+
+        <div class="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex items-start gap-2 p-3">
+          <div class="pointer-events-auto w-full max-w-md">
+            <MapSearch v-model="query" :results="searchResults" @select="focusMarker" />
+          </div>
+          <label for="map-layers-drawer" class="btn btn-square min-h-11 min-w-11 pointer-events-auto lg:hidden" aria-label="Calques">
+            <Layers class="size-5" aria-hidden="true" />
+          </label>
+        </div>
+
+        <div class="pointer-events-none absolute inset-x-0 top-16 z-[1000] flex flex-col items-center gap-2 px-3">
+          <p v-if="loading" class="badge badge-neutral pointer-events-auto">Chargement des lieux…</p>
+          <p v-if="error" role="alert" class="alert alert-error alert-soft pointer-events-auto py-2 text-sm">{{ error }}</p>
+          <p v-if="writeError" role="alert" class="alert alert-error alert-soft pointer-events-auto py-2 text-sm">{{ writeError }}</p>
+          <p v-if="hint" role="status" class="alert alert-info alert-soft pointer-events-auto py-2 text-sm">{{ hint }}</p>
+        </div>
+
+        <MarkerDetailSheet
+          v-if="selectedMarker"
+          :marker="selectedMarker"
+          :type="typesById.get(selectedMarker.typeId) ?? null"
+          :can-edit="canEditSelected"
+          @close="store.select(null)"
+          @center="focusMarker(selectedMarker)"
+          @edit="startEdit"
+          @remove="onRemove"
+        />
+      </div>
+
+      <div class="drawer-side z-[1200]">
+        <label for="map-layers-drawer" class="drawer-overlay" aria-label="Fermer les calques" />
+        <div class="min-h-full w-72 bg-base-100">
+          <MapLayerPanel
+            v-model:show-base="showBase"
+            v-model:show-campaign="showCampaign"
+            :types="types"
+            :hidden-type-ids="hiddenTypeIds"
+            :has-campaign="campaignId !== null"
+            @toggle-type="store.toggleType"
+          />
+        </div>
+      </div>
+    </div>
+
+    <MarkerFormModal
+      :open="formOpen"
+      :types="types"
+      :visibilities="visibilities"
+      :marker="editing"
+      :position="newPosition"
+      :saving="saving"
+      @submit="onSubmit"
+      @close="formOpen = false"
+    />
+  </main>
+</template>

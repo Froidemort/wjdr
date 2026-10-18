@@ -15,10 +15,13 @@ const CampaignDetailView = () => import('../views/CampaignDetailView.vue')
 const CampaignListView = () => import('../views/CampaignListView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
+const MapView = () => import('../views/MapView.vue')
 const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
 const CompendiumHomeView = () => import('../views/CompendiumHomeView.vue')
 const CompendiumInventoryView = () => import('../views/CompendiumInventoryView.vue')
 const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
+const CompendiumSkillsView = () => import('../views/CompendiumSkillsView.vue')
+const CompendiumTalentsView = () => import('../views/CompendiumTalentsView.vue')
 const CompendiumCareerGraphView = () => import('../views/CompendiumCareerGraphView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
@@ -33,6 +36,12 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/old-world',
     component: OldWorldMapView,
     meta: { requiresAuth: false, hideFooter: false },
+  },
+  // Interactive map: public base layer, campaign markers when a campaign is in context
+  {
+    path: '/map',
+    component: MapView,
+    meta: { requiresAuth: false, hideFooter: true, skipSplash: true, navSection: 'map' },
   },
   // Public compendium landing page
   {
@@ -63,7 +72,7 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/characters/:id',
     component: CharacterDetailView,
     props: true,
-    meta: { requiresAuth: true, hideFooter: true },
+    meta: { requiresAuth: true, hideFooter: true, navSection: 'characters' },
   },
   {
     path: '/notifications',
@@ -119,6 +128,16 @@ export const appRoutes: RouteRecordRaw[] = [
   {
     path: '/compendium/spells',
     component: CompendiumSpellsView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
+  },
+  {
+    path: '/compendium/skills',
+    component: CompendiumSkillsView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
+  },
+  {
+    path: '/compendium/talents',
+    component: CompendiumTalentsView,
     meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
   },
   {

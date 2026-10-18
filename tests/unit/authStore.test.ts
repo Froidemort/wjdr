@@ -17,6 +17,12 @@ vi.mock('../../src/db/supabase', () => ({
   supabase: { auth: authApi, from: authApi.from, rpc: authApi.rpc },
 }))
 
+const bindOfflineQueueUserMock = vi.hoisted(() => vi.fn())
+
+vi.mock('../../src/services/offlineQueueRepository', () => ({
+  bindOfflineQueueUser: bindOfflineQueueUserMock,
+}))
+
 import { useAuthStore } from '../../src/stores/auth'
 
 describe('auth store password recovery', () => {
@@ -123,6 +129,7 @@ describe('auth store password recovery', () => {
     await store.signOut()
 
     expect(authApi.signOut).toHaveBeenCalledOnce()
+    expect(bindOfflineQueueUserMock).toHaveBeenLastCalledWith(null)
     expect(store).toMatchObject({ displayName: '', avatarUrl: null, authError: null, loading: false })
   })
 

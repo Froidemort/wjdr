@@ -5,6 +5,7 @@ export type OfflineEntityType = 'character' | 'session'
 
 export interface QueuedUpdate {
   id: string
+  userId: string
   entityType: OfflineEntityType
   entityId: string
   payload: Record<string, unknown>
@@ -27,6 +28,33 @@ const queueChangeEvent = new EventTarget()
 db.version(1).stores({
   updates: '&id, [entityType+entityId], timestamp',
 })
+
+// v2: entries are owned by a user; legacy untagged entries are discarded.
+db.version(2)
+  .stores({
+    updates: '&id, [userId+entityType+entityId], userId, timestamp',
+  })
+  .upgrade((tx) => tx.table('updates').clear())
+
+let activeUserId: string | null = null
+
+/** Binds the queue to the signed-in user and purges entries owned by anyone else. */
+export async function bindOfflineQueueUser(userId: string | null): Promise<void> {
+  activeUserId = userId
+  if (userId) {
+    await db.updates.where('userId').notEqual(userId).delete()
+  } else {
+    await db.updates.clear()
+  }
+  notifyQueueChange()
+}
+
+function requireUserId(): string {
+  if (!activeUserId) {
+    throw new Error('Offline queue has no authenticated user.')
+  }
+  return activeUserId
+}
 
 function notifyQueueChange(): void {
   queueChangeEvent.dispatchEvent(new Event('change'))
@@ -79,13 +107,14 @@ export async function enqueueOfflineUpdate(input: {
   baseUpdatedAt?: string | null
   localUpdatedAt?: number | null
 }): Promise<string> {
+  const userId = requireUserId()
   const now = Date.now()
   const baseUpdatedAt = input.baseUpdatedAt ?? null
   const localUpdatedAt = input.localUpdatedAt ?? now
 
   const existing = await db.updates
-    .where('[entityType+entityId]')
-    .equals([input.entityType, input.entityId])
+    .where('[userId+entityType+entityId]')
+    .equals([userId, input.entityType, input.entityId])
     .last()
 
   if (existing) {
@@ -103,6 +132,7 @@ export async function enqueueOfflineUpdate(input: {
   const id = generateId()
   await db.updates.add({
     id,
+    userId,
     entityType: input.entityType,
     entityId: input.entityId,
     payload: input.payload,
@@ -117,11 +147,18 @@ export async function enqueueOfflineUpdate(input: {
 }
 
 export async function listQueuedUpdates(): Promise<QueuedUpdate[]> {
-  return db.updates.orderBy('timestamp').toArray()
+  if (!activeUserId) {
+    return []
+  }
+  const rows = await db.updates.where('userId').equals(activeUserId).toArray()
+  return rows.sort((a, b) => a.timestamp - b.timestamp)
 }
 
 export async function countQueuedUpdates(): Promise<number> {
-  return db.updates.count()
+  if (!activeUserId) {
+    return 0
+  }
+  return db.updates.where('userId').equals(activeUserId).count()
 }
 
 export async function removeQueuedUpdate(id: string): Promise<void> {

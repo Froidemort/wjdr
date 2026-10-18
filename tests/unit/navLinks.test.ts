@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { compendiumSections } from '../../src/config/compendiumSections'
-import { mainNavLinks } from '../../src/config/navLinks'
+import { mainNavLinks, resolveNavTo } from '../../src/config/navLinks'
 
 describe('compendium navigation', () => {
   it('exposes the compendium home to signed-out visitors', () => {
@@ -9,11 +9,33 @@ describe('compendium navigation', () => {
     expect(link).toMatchObject({ to: '/compendium', public: true })
   })
 
-  it('lists inventory, careers and spells sections', () => {
+  it('lists inventory, careers, spells, skills, talents and map sections', () => {
     expect(compendiumSections.map((section) => section.to)).toEqual([
       '/compendium/inventory',
       '/compendium/careers',
       '/compendium/spells',
+      '/compendium/skills',
+      '/compendium/talents',
+      '/map',
     ])
+  })
+
+  it('resolves dynamic targets from the current context', () => {
+    const campaigns = mainNavLinks.find((entry) => entry.label === 'Campagnes')!
+    const characters = mainNavLinks.find((entry) => entry.label === 'Personnages')!
+    const empty = { role: null, campaignTo: null, characterTo: null }
+    const player = { role: 'player' as const, campaignTo: '/campaigns/c1', characterTo: '/characters/k1' }
+    const mj = { role: 'mj' as const, campaignTo: '/campaigns/c1', characterTo: null }
+
+    expect(resolveNavTo(campaigns, empty)).toBe('/campaigns')
+    expect(resolveNavTo(campaigns, player)).toBe('/campaigns/c1')
+    expect(resolveNavTo(characters, player)).toBe('/characters/k1')
+    expect(resolveNavTo(characters, mj)).toBe('/characters')
+  })
+
+  it('exposes the map as a public link', () => {
+    const link = mainNavLinks.find((entry) => entry.label === 'Carte')
+
+    expect(link).toMatchObject({ to: '/map', public: true })
   })
 })

@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { usePopoverPanel } from '../../composables/usePopoverPanel'
+import { sanitizeAvatarUrl } from '../../utils/avatarUrl'
 
 // Desktop-only account menu: display name on the trigger, actions only in the dropdown.
 const emit = defineEmits<{
@@ -20,7 +21,7 @@ const { isOpen, close, toggle } = usePopoverPanel({
   onOpen: () => emit('open'),
 })
 
-const avatarUrl = computed(() => authStore.avatarUrl)
+const avatarUrl = computed(() => sanitizeAvatarUrl(authStore.avatarUrl))
 const displayName = computed(() => authStore.displayName)
 const ariaLabel = computed(() =>
   displayName.value ? `Menu compte — ${displayName.value}` : 'Menu compte',
