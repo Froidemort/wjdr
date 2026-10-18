@@ -1,125 +1,30 @@
 <template>
-  <main class="mx-auto max-w-6xl p-4 pb-24 sm:p-6 sm:pb-6 space-y-4">
-		<div v-if="loading && !character" class="skeleton h-56 w-full" />
+  <main class="mx-auto max-w-6xl space-y-4 p-4 pb-40 sm:p-6 sm:pb-6">
+    <div v-if="loading && !character" class="skeleton h-56 w-full" />
 
-		<div v-else-if="errorMessage && !character" role="alert" class="alert alert-error alert-soft">
-			<span>{{ errorMessage }}</span>
-		</div>
+    <div v-else-if="errorMessage && !character" role="alert" class="alert alert-error alert-soft">
+      <span>{{ errorMessage }}</span>
+    </div>
 
-		<template v-else-if="character">
-			<AppCard :title="character.name">
-				<div class="space-y-2">
-					<div class="flex items-center gap-2">
-						<span class="text-xl font-black capitalize leading-tight">{{ character.race }}</span>
-						<component 
-							:is="character.gender === 'masculin' ? Mars : Venus" 
-							class="h-5 w-5 opacity-75"
-						/>
-					</div>
-					<div class="flex flex-wrap items-center gap-2 text-sm opacity-90">
-						<button
-							v-if="canEditQuickSection"
-              class="btn btn-accent min-h-11 min-w-11"
-							aria-label="Modifier la carrière"
-							@click="openCareerModal"
-						>
-              <UserPen :size="24" stroke-width="1.5">
-              </UserPen>
-						</button>
-						<span class="text-xl">{{ character.careerName || 'Inconnue' }}</span>
-						<span v-if="!canEditQuickSection" class="badge badge-neutral">Lecture seule</span>
-					</div>
-				</div>
+    <template v-else-if="character">
+      <CharacterSummaryHeader
+        :name="character.name"
+        :race="character.race"
+        :gender="character.gender"
+        :career-name="character.careerName"
+        :values="editable"
+        :editable="canEditQuickSection"
+        @edit-career="openCareerModal"
+        @quick-change="onQuickValueChange"
+      />
 
-          <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-            <HealthHeart
-              :model-value="editable.pvCurrent"
-              :max-hp="editable.pvMax"
-              label="Points de Blessures"
-              mobile-label="Blessures"
-              :editable="canEditQuickSection"
-              @update:model-value="onQuickValueChange('pvCurrent', $event)"
-            />
-            <FortuneClover
-              label="Fortune"
-              :model-value="editable.fortuneCurrent"
-              :max-points="editable.fortuneMax"
-              max-points-editable
-              :editable="canEditQuickSection"
-              @update:model-value="onQuickValueChange('fortuneCurrent', $event)"
-              @update:max-points="onQuickValueChange('fortuneMax', $event)"
-              />
-              <FortuneClover
-              label="Destin"
-              :model-value="editable.destinyCurrent"
-              :max-points="editable.destinyMax"
-              max-points-editable
-              variant="destin"
-              :editable="canEditQuickSection"
-              @update:model-value="onQuickValueChange('destinyCurrent', $event)"
-              @update:max-points="onQuickValueChange('destinyMax', $event)"
-            />
-            <CharacterValueCard
-              label="Experience"
-              :icon="ScrollText"
-              icon-class="h-6 w-6 text-base-content/80"
-              :current="editable.xpAvailable"
-              :max="editable.xpTotal"
-              :editable="canEditQuickSection"
-              current-aria-label="Experience disponible"
-              max-aria-label="Experience maximale"
-              @update:current="onQuickValueChange('xpAvailable', $event)"
-              @update:max="onQuickValueChange('xpTotal', $event)"
-            />
-            <CharacterValueCard
-              label="Points de folie"
-              :icon="Hospital"
-              icon-class="h-6 w-6 text-warning"
-              :current="editable.insanityPoints"
-              :editable="canEditQuickSection"
-              class="border-2"
-              current-aria-label="Points de folie"
-              @update:current="onQuickValueChange('insanityPoints', $event)"
-            />
-					<CharacterMoneyCard
-						:gold="editable.moneyGold"
-						:silver="editable.moneySilver"
-						:copper="editable.moneyCopper"
-					:editable="canEditQuickSection"
-						@update:gold="onQuickValueChange('moneyGold', $event)"
-						@update:silver="onQuickValueChange('moneySilver', $event)"
-						@update:copper="onQuickValueChange('moneyCopper', $event)"
-						@commit="onMoneyCommit"
-						@subtract="onMoneySubtract"
-					/>
-          <div class="sm:col-span-2 lg:col-span-3">
-            <CharacterDerivedStatsCard
-						:total-encumbrance="totalEncumbrance"
-						:max-encumbrance="maxEncumbrance"
-						:bonus-force="bonusForce"
-						:bonus-endurance="bonusEndurance"
-						:armor-by-location="armorByLocation"
-            :armors="characterArmors"
-            :weapons="characterWeapons"
-            :editable="canEditQuickSection"
-            :busy="Boolean(actionBusyKey)"
-            @equip-armor="onEquipArmorFromDoll"
-            @unequip-armor="onUnequipArmorFromDoll"
-            @unequip-armors="onUnequipArmorsFromDoll"
-            @equip-weapon="onEquipWeaponFromDoll"
-            @unequip-weapon="onUnequipWeaponFromDoll"
-            />
-          </div>
-				</div>
-			</AppCard>
-
-			<div v-if="globalState !== 'ok'" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
-				<div :class="['alert py-3 px-4 min-h-0 shadow-lg gap-2 border-0', globalState === 'error' ? 'bg-error text-error-content' : 'bg-warning text-warning-content']" role="status" aria-live="polite">
-					<LoaderCircle v-if="globalState === 'loading'" class="h-5 w-5 flex-shrink-0 animate-spin" />
-					<CircleX v-else class="h-5 w-5 flex-shrink-0" />
-					<span class="text-sm sm:text-base font-medium">{{ globalStateLabel }}</span>
-				</div>
-			</div>
+      <div v-if="globalState !== 'ok'" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
+        <div :class="['alert py-3 px-4 min-h-0 shadow-lg gap-2 border-0', globalState === 'error' ? 'bg-error text-error-content' : 'bg-warning text-warning-content']" role="status" aria-live="polite">
+          <LoaderCircle v-if="globalState === 'loading'" class="h-5 w-5 flex-shrink-0 animate-spin" />
+          <CircleX v-else class="h-5 w-5 flex-shrink-0" />
+          <span class="text-sm sm:text-base font-medium">{{ globalStateLabel }}</span>
+        </div>
+      </div>
 
       <div v-if="actionSuccessMessage" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
         <div class="alert bg-success text-success-content py-3 px-4 min-h-0 shadow-lg gap-2 border-0" role="status" aria-live="polite">
@@ -127,537 +32,94 @@
         </div>
       </div>
 
-      <div class="rounded-box border border-base-300 bg-base-100 p-3 sm:p-4">
-        <div class="sm:hidden">
-          <label class="form-control">
-            <span class="label-text mb-2">Section</span>
-            <select v-model="activeCharacterTab" class="select select-bordered ui-critical-control w-full">
-              <option value="profile">Profil</option>
-              <option value="skillsTalents">Compétences/Talents</option>
-              <option value="inventory">Inventaire</option>
-            </select>
-          </label>
-        </div>
+      <CharacterTabs v-model="activeCharacterTab" />
 
-        <div
-          role="tablist"
-          aria-label="Sections du personnage"
-          class="hidden sm:flex flex-wrap items-center gap-2 border-b border-base-300 pb-3"
-        >
-          <button
-            id="character-tab-profile"
-            type="button"
-            role="tab"
-            :aria-selected="activeCharacterTab === 'profile'"
-            aria-controls="character-panel-profile"
-            class="btn btn-sm ui-critical-action gap-2"
-            :class="activeCharacterTab === 'profile' ? 'btn-active' : ''"
-            @click="activeCharacterTab = 'profile'"
-          >
-            <UserCog class="h-4 w-4" />
-            Profil
-          </button>
-          <button
-            id="character-tab-skills"
-            type="button"
-            role="tab"
-            :aria-selected="activeCharacterTab === 'skillsTalents'"
-            aria-controls="character-panel-skills"
-            class="btn btn-sm ui-critical-action gap-2"
-            :class="{ 'btn-active': activeCharacterTab === 'skillsTalents' }"
-            @click="activeCharacterTab = 'skillsTalents'"
-          >
-            <ScrollText class="h-4 w-4" />
-            Compétences/Talents
-          </button>
-          <button
-            id="character-tab-inventory"
-            type="button"
-            role="tab"
-            :aria-selected="activeCharacterTab === 'inventory'"
-            aria-controls="character-panel-inventory"
-            class="btn btn-sm ui-critical-action gap-2"
-            :class="{ 'btn-active': activeCharacterTab === 'inventory' }"
-            @click="activeCharacterTab = 'inventory'"
-          >
-            <Sword class="h-4 w-4" />
-            Inventaire
-          </button>
-        </div>
+      <!-- From lg, Profil and Inventaire share the screen side by side. -->
+      <div
+        v-show="activeCharacterTab === 'profile' || activeCharacterTab === 'inventory'"
+        class="grid gap-4 lg:grid-cols-2 lg:items-start"
+      >
+        <CharacterProfilePanel
+          :class="{ 'max-lg:hidden': activeCharacterTab !== 'profile' }"
+          :race="character.race"
+          :stats="character.stats"
+          :armors="characterArmors"
+          :weapons="characterWeapons"
+          :items="characterItems"
+          :editable="canEditQuickSection"
+          :busy="Boolean(actionBusyKey)"
+          @stat-tick="onStatTick"
+          @stat-base-change="onStatBaseChange"
+          @stat-total-advanced-change="onStatTotalAdvancedChange"
+          @equip-armor="onEquipArmorFromDoll"
+          @unequip-armor="onUnequipArmorFromDoll"
+          @unequip-armors="onUnequipArmorsFromDoll"
+          @equip-weapon="onEquipWeaponFromDoll"
+          @unequip-weapon="onUnequipWeaponFromDoll"
+        />
+
+        <CharacterInventoryPanel
+          :class="{ 'max-lg:hidden': activeCharacterTab !== 'inventory' }"
+          :weapons="sortedCharacterWeapons"
+          :armors="sortedCharacterArmors"
+          :items="sortedCharacterItems"
+          :values="editable"
+          :editable="canEditQuickSection"
+          :busy-key="actionBusyKey"
+          :weapons-message="getSectionSuccessMessage('weapons')"
+          :armors-message="getSectionSuccessMessage('armors')"
+          :items-message="getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog')"
+          @add="openCatalogModal"
+          @quick-change="onQuickValueChange"
+          @money-commit="onMoneyCommit"
+          @money-subtract="onMoneySubtract"
+          @delete-weapon="onDeleteWeapon"
+          @delete-armor="onDeleteArmor"
+          @delete-item="onDeleteItem"
+          @weapon-state-change="onWeaponStateChange"
+          @weapon-quality-change="onWeaponQualityChange"
+          @armor-state-change="onArmorStateChange"
+          @armor-quality-change="onArmorQualityChange"
+          @item-quality-change="onItemQualityChange"
+          @item-quantity-change="onChangeItemQuantity"
+          @show-description="openDescriptionModal"
+        />
       </div>
 
-			<section
-        v-show="activeCharacterTab === 'profile'"
-        id="character-panel-profile"
-        role="tabpanel"
-        aria-labelledby="character-tab-profile"
-        class="rounded-box border border-base-300 bg-base-100 p-4"
-      >
-        <h2 class="mb-3 text-lg font-semibold">Caractéristiques</h2>
-        <div>
-          <div class="mb-3 flex flex-wrap items-center justify-start gap-3 border-b border-base-300 pb-3">
-						<StateCycleBadge
-							:value="characteristicsViewMode"
-							:options="CHARACTERISTICS_VIEW_OPTIONS"
-							@change="onCharacteristicsViewModeChange"
-						/>
-					</div>
-					<div v-if="visibleStats.length === 0" class="text-sm opacity-70">Aucune caractéristique disponible.</div>
-					<div v-else-if="characteristicsViewMode === 'normal'" class="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-						<CharacteristicCard
-							v-for="stat in visibleStats"
-							:key="stat.statCode"
-							:stat="stat"
-							:editable="canEditQuickSection"
-							@tick-up="onStatTick($event.statCode, $event.step)"
-							@tick-down="onStatTick($event.statCode, -$event.step)"
-							@update-base="onStatBaseChange($event.statCode, $event.baseValue)"
-							@update-total-advanced="onStatTotalAdvancedChange($event.statCode, $event.totalAdvanced)"
-						/>
-					</div>
-					<div v-else class="mt-1 space-y-2 overflow-x-hidden">
-						<div class="grid grid-cols-2 gap-2 md:grid-cols-4">
-							<div v-for="stat in primaryStatsRows[0]" :key="`compact-${stat.statCode}`" class="rounded-box border border-base-300 bg-base-200 px-2 py-1 text-center">
-								<div class="text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</div>
-								<div class="text-lg font-black tabular-nums">{{ stat.baseValue + stat.currentAdvanced }}</div>
-							</div>
-						</div>
-						<div class="grid grid-cols-2 gap-2 md:grid-cols-4">
-							<div v-for="stat in primaryStatsRows[1]" :key="`compact-${stat.statCode}`" class="rounded-box border border-base-300 bg-base-200 px-2 py-1 text-center">
-								<div class="text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</div>
-								<div class="text-lg font-black tabular-nums">{{ stat.baseValue + stat.currentAdvanced }}</div>
-							</div>
-						</div>
-            <div class="grid grid-cols-2 gap-2 md:grid-cols-4">
-              <div v-for="stat in secondaryStats" :key="`compact-${stat.statCode}`" class="rounded-box border border-base-300 bg-base-200 px-2 py-1 text-center">
-								<div class="text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</div>
-								<div class="text-lg font-black tabular-nums">{{ stat.baseValue + stat.currentAdvanced }}</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</section>
+      <CharacterSkillsPanel
+        v-show="activeCharacterTab === 'skills'"
+        :skills="sortedCharacterSkills"
+        :editable="canEditQuickSection"
+        :busy-key="actionBusyKey"
+        :success-message="getSectionSuccessMessage('skills')"
+        @add="openCatalogModal('skills')"
+        @delete="onDeleteSkill"
+        @change-mastery="onChangeSkillMastery"
+        @show-description="openDescriptionModal"
+      />
 
-			<section
-        v-show="activeCharacterTab === 'skillsTalents'"
-        id="character-panel-skills"
-        role="tabpanel"
-        aria-labelledby="character-tab-skills"
-        class="rounded-box border border-base-300 bg-base-100 p-4"
-      >
-        <h2 class="mb-3 text-lg font-semibold">Compétences</h2>
-        <div>
-          <div v-if="getSectionSuccessMessage('skills')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
-            <span>{{ getSectionSuccessMessage('skills') }}</span>
-          </div>
-          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
-            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des compétences" @click.stop.prevent="openCatalogModal('skills')">
-              <Plus class="h-4 w-4" />
-            </button>
-          </div>
-					<div v-if="sortedCharacterSkills.length === 0" class="text-sm opacity-70">Aucune compétence.</div>
-					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <article v-for="skill in sortedCharacterSkills" :key="skill.skillId" class="group card border border-base-300 bg-base-100">
-              <div class="card-body min-w-0 p-3 gap-3">
-                <div class="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div class="flex min-w-0 flex-1 flex-wrap items-start gap-2">
-                    <h4 class="min-w-0 max-w-full break-words text-left [overflow-wrap:anywhere] font-semibold leading-snug">
-                      {{ formatNamedWithSpecialization(skill.name, skill.specialization) }}
-                    </h4>
-                    <span class="badge badge-neutral badge-sm shrink-0 self-start">{{ skill.statCode }}</span>
-										<div
-											v-if="!skill.isBasic"
-											class="tooltip shrink-0 self-start"
-											data-tip="Compétence avancée"
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												shape-rendering="geometricPrecision"
-												text-rendering="geometricPrecision"
-												image-rendering="optimizeQuality"
-												fill-rule="evenodd"
-												clip-rule="evenodd"
-												viewBox="0 0 512 512"
-												class="h-5 w-5 fill-current text-warning"
-											>
-												<path fill-rule="nonzero" d="M255.998 0c70.69 0 134.694 28.657 181.017 74.981C483.342 121.308 512 185.309 512 255.998c0 70.69-28.655 134.694-74.985 181.017C390.692 483.345 326.688 512 255.998 512c-70.689 0-134.69-28.658-181.017-74.985C28.657 390.692 0 326.688 0 255.998c0-70.689 28.657-134.687 74.981-181.017C121.311 28.657 185.309 0 255.998 0zm-31.652 349.762h-63.307l48.606-187.522h92.713l48.606 187.522h-63.311l-6.898-29.703h-49.507l-6.902 29.703zm30.003-129.915l-12.301 52.507h27.603l-12.001-52.507h-3.301zm155.474-117.674C370.461 62.812 316.071 38.46 255.998 38.46c-60.072 0-114.46 24.352-153.825 63.713-39.361 39.365-63.713 93.753-63.713 153.825 0 60.073 24.352 114.463 63.713 153.825 39.365 39.365 93.753 63.716 153.825 63.716 60.073 0 114.463-24.351 153.825-63.716 39.365-39.362 63.716-93.752 63.716-153.825 0-60.072-24.351-114.46-63.716-153.825z" />
-											</svg>
-										</div>
-									</div>
-                  <div class="hover-actions ml-auto flex shrink-0 items-center gap-1 self-end sm:self-start">
-										<button
-											v-if="skill.description"
-                      class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
-											aria-label="Afficher la description de la compétence"
-											@click="openDescriptionModal(formatNamedWithSpecialization(skill.name, skill.specialization), skill.description)"
-										>
-											<Info class="h-4 w-4" />
-										</button>
-                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `skill-${skill.skillId}` ? 'true' : 'false'" @click="onDeleteSkill(skill.skillId)">
-											<Trash2 class="h-4 w-4" />
-										</button>
-									</div>
-								</div>
-								<div v-if="canEditQuickSection" class="relative w-full self-start sm:w-auto" data-skill-mastery-control>
-                  <button
-                    :ref="(element) => setSkillMasteryTrigger(skill.skillId, element)"
-                    type="button"
-                    class="btn btn-sm h-11 min-h-11 w-full sm:w-auto"
-                    :aria-expanded="activeSkillMasteryId === skill.skillId"
-                    :aria-controls="`skill-mastery-options-${skill.skillId}`"
-                    :disabled="Boolean(actionBusyKey)"
-                    :aria-busy="actionBusyKey === `mastery-${skill.skillId}` ? 'true' : 'false'"
-                    @click="toggleSkillMastery(skill.skillId)"
-                  >
-                    {{ skillMasteryLabel(skill.masteryLevel) }}
-                  </button>
-                  <div
-                    v-if="activeSkillMasteryId === skill.skillId"
-                    :id="`skill-mastery-options-${skill.skillId}`"
-                    class="absolute left-0 top-full z-30 mt-1 w-40 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-1 shadow-xl"
-                    role="group"
-                    aria-label="Choisir le niveau de maîtrise"
-                  >
-                    <button
-                      v-for="level in SKILL_MASTERY_LEVELS"
-                      :key="level"
-                      type="button"
-                      class="btn btn-ghost btn-sm min-h-10 w-full justify-start"
-                      :class="skill.masteryLevel === level ? 'btn-active' : ''"
-                      :aria-pressed="skill.masteryLevel === level"
-                      :disabled="Boolean(actionBusyKey)"
-                      @click="selectSkillMastery(skill.skillId, level)"
-                    >
-                      {{ skillMasteryLabel(level) }}
-                    </button>
-                  </div>
-                </div>
-                <span v-else class="badge badge-neutral min-h-11 self-start px-3" aria-label="Niveau de maîtrise">
-                  {{ skillMasteryLabel(skill.masteryLevel) }}
-                </span>
+      <CharacterTalentsPanel
+        v-show="activeCharacterTab === 'talents'"
+        :talents="sortedCharacterTalents"
+        :editable="canEditQuickSection"
+        :busy-key="actionBusyKey"
+        :success-message="getSectionSuccessMessage('talents')"
+        @add="openCatalogModal('talents')"
+        @delete="onDeleteTalent"
+        @show-description="openDescriptionModal"
+      />
 
-                <div v-if="skill.linkedTalents?.length" class="mt-3 space-y-1.5">
-                  <div class="text-[10px] font-semibold uppercase tracking-wide opacity-60">
-                    Talents liés
-                  </div>
-                  <div class="flex min-w-0 flex-wrap gap-1.5">
-                    <button
-                      v-for="talent in skill.linkedTalents"
-                      :key="`${skill.skillId}-${talent.talentId}`"
-                      type="button"
-                      class="btn btn-xs btn-outline h-auto min-h-8 max-w-full justify-start whitespace-normal break-words px-2 text-left [overflow-wrap:anywhere]"
-                      @click="openDescriptionModal(formatNamedWithSpecialization(talent.name, talent.specialization), talent.description)"
-                    >
-                      {{ formatNamedWithSpecialization(talent.name, talent.specialization) }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <h2 class="mb-3 mt-5 text-lg font-semibold">Talents</h2>
-        <div>
-          <div v-if="getSectionSuccessMessage('talents')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
-            <span>{{ getSectionSuccessMessage('talents') }}</span>
-          </div>
-          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
-            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des talents" @click.stop.prevent="openCatalogModal('talents')">
-              <Plus class="h-4 w-4" />
-            </button>
-          </div>
-          <div v-if="sortedCharacterTalents.length === 0" class="text-sm opacity-70">Aucun talent.</div>
-          <div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <article v-for="talent in sortedCharacterTalents" :key="talent.talentId" v-memo="[talent.talentId, canEditQuickSection]" class="group card border border-base-300 bg-base-100">
-              <div class="card-body min-w-0 p-3 gap-2">
-                <div class="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <h4 class="min-w-0 max-w-full flex-1 break-words text-left [overflow-wrap:anywhere] font-semibold leading-snug">
-                    {{ formatNamedWithSpecialization(talent.name, talent.specialization) }}
-                  </h4>
-                  <div class="hover-actions ml-auto flex shrink-0 items-center gap-1 self-end sm:self-start">
-                    <button
-                      v-if="talent.description"
-                      class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
-                      aria-label="Afficher la description du talent"
-                      @click="openDescriptionModal(formatNamedWithSpecialization(talent.name, talent.specialization), talent.description)"
-                    >
-                      <Info class="h-4 w-4" />
-                    </button>
-                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `talent-${talent.talentId}` ? 'true' : 'false'" @click="onDeleteTalent(talent.talentId)">
-                      <Trash2 class="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-			<dialog ref="descriptionDialogRef" class="modal modal-top sm:modal-middle" @close="onDescriptionDialogClosed">
+      <dialog ref="descriptionDialogRef" class="modal modal-top sm:modal-middle" @close="onDescriptionDialogClosed">
         <div class="modal-box grim-modal-box p-6 max-w-lg">
           <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeDescriptionModal" aria-label="Fermer">✕</button>
           <h3 class="grim-modal-title text-2xl pr-8">{{ descriptionTitle || 'Description' }}</h3>
-					<p class="mt-3 whitespace-pre-line text-sm opacity-90">{{ descriptionContent || 'Aucune description.' }}</p>
-				</div>
-				<form method="dialog" class="modal-backdrop">
-					<button>Fermer</button>
-				</form>
-			</dialog>
-
-			<section
-        v-show="activeCharacterTab === 'inventory'"
-        id="character-panel-inventory"
-        role="tabpanel"
-        aria-labelledby="character-tab-inventory"
-        class="rounded-box border border-base-300 bg-base-100 p-4"
-      >
-        <h2 class="mb-3 text-lg font-semibold">Armes</h2>
-        <div>
-          <div v-if="getSectionSuccessMessage('weapons')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
-            <span>{{ getSectionSuccessMessage('weapons') }}</span>
-          </div>
-          <div class="mb-3 flex flex-wrap items-center gap-2">
-            <span class="badge badge-outline">Total: {{ weaponStats.total }}</span>
-            <span class="badge badge-outline">Equipees: {{ weaponStats.equipped }}</span>
-            <span class="badge badge-outline">Inventaire: {{ weaponStats.total - weaponStats.equipped }}</span>
-          </div>
-          <div class="mb-3 join join-vertical sm:join-horizontal">
-            <button class="btn btn-xs ui-critical-action join-item" :class="weaponFilter === 'all' ? 'btn-active' : ''" @click="weaponFilter = 'all'">Toutes</button>
-            <button class="btn btn-xs ui-critical-action join-item" :class="weaponFilter === 'equipped' ? 'btn-active' : ''" @click="weaponFilter = 'equipped'">Equipees</button>
-            <button class="btn btn-xs ui-critical-action join-item" :class="weaponFilter === 'inventory' ? 'btn-active' : ''" @click="weaponFilter = 'inventory'">Inventaire</button>
-          </div>
-          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
-            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des armes" @click.stop.prevent="openCatalogModal('weapons')">
-              <Plus class="h-4 w-4" />
-            </button>
-          </div>
-					<div v-if="sortedCharacterWeapons.length === 0" class="text-sm opacity-70">Aucune arme.</div>
-          <div v-else-if="filteredCharacterWeapons.length === 0" class="text-sm opacity-70">Aucune arme pour ce filtre.</div>
-          <div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <article v-for="weapon in filteredCharacterWeapons" :key="weapon.id" v-memo="[weapon.equipped, weapon.quality, weaponAttributesMemoKey(weapon), canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
-							<div class="card-body p-3 gap-2">
-								<div class="flex items-start justify-between gap-2">
-									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ weapon.name }}</h4>
-									<div class="flex items-center gap-1">
-                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `weapon-${weapon.id}` ? 'true' : 'false'" @click="onDeleteWeapon(weapon.id)">
-											<Trash2 class="h-4 w-4" />
-										</button>
-									</div>
-								</div>
-								<p v-if="weapon.description" class="text-sm opacity-70">{{ weapon.description }}</p>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <StateCycleBadge
-                    v-if="canEditQuickSection"
-                    :value="weapon.equipped"
-                    :options="weaponEquippedOptions(weapon)"
-                    @change="onWeaponStateChange(weapon, $event)"
-                  />
-                  <span
-                    v-else
-                    class="badge badge-sm"
-                    :class="weapon.equipped ? 'badge-secondary' : 'badge-outline'"
-                  >
-                    {{
-                      weapon.equipped === null
-                        ? 'Inventaire'
-                        : weapon.equipped === 'd&g'
-                          ? 'Équipée'
-                          : weapon.equipped === 'droite'
-                            ? 'Droite'
-                            : 'Gauche'
-                    }}
-                  </span>
-									<StateCycleBadge
-										v-if="canEditQuickSection"
-										:value="weapon.quality"
-										:options="ITEM_QUALITY_STATE_OPTIONS"
-										@change="onWeaponQualityChange(weapon, $event)"
-									/>
-									<span v-else class="badge badge-sm" :class="qualityBadgeClass(weapon.quality)">{{ weapon.quality || 'normal' }}</span>
-									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ weapon.encumbrance }}</span>
-									<span v-if="weapon.damageFormula" class="badge badge-sm badge-outline gap-1"><Sword class="h-3 w-3" /> {{ weapon.damageFormula }}</span>
-								</div>
-                <details
-                  v-if="weapon.attributes.length > 0"
-                  class="collapse collapse-arrow rounded-box border border-base-300 bg-base-200/40"
-                >
-                  <summary class="collapse-title min-h-11 py-2 text-sm font-medium">
-                    Attributs de l arme ({{ weapon.attributes.length }})
-                  </summary>
-                  <div class="collapse-content pt-1">
-                    <div class="flex flex-wrap gap-1.5">
-                      <span
-                        v-for="attribute in weapon.attributes"
-                        :key="attribute.id"
-                        class="badge badge-sm badge-outline"
-                      >
-                        {{ attribute.name }}
-                      </span>
-                    </div>
-                  </div>
-                </details>
-							</div>
-						</article>
-					</div>
+          <p class="mt-3 whitespace-pre-line text-sm opacity-90">{{ descriptionContent || 'Aucune description.' }}</p>
         </div>
-
-        <h2 class="mb-3 mt-5 text-lg font-semibold">Armures</h2>
-        <div>
-          <div v-if="getSectionSuccessMessage('armors')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
-            <span>{{ getSectionSuccessMessage('armors') }}</span>
-          </div>
-          <div class="mb-3 flex flex-wrap items-center gap-2">
-            <span class="badge badge-outline">Total: {{ armorStats.total }}</span>
-            <span class="badge badge-outline">Equipees: {{ armorStats.equipped }}</span>
-            <span class="badge badge-outline">Inventaire: {{ armorStats.total - armorStats.equipped }}</span>
-          </div>
-          <div class="mb-3 join join-vertical sm:join-horizontal">
-            <button class="btn btn-xs ui-critical-action join-item" :class="armorFilter === 'all' ? 'btn-active' : ''" @click="armorFilter = 'all'">Toutes</button>
-            <button class="btn btn-xs ui-critical-action join-item" :class="armorFilter === 'equipped' ? 'btn-active' : ''" @click="armorFilter = 'equipped'">Equipees</button>
-            <button class="btn btn-xs ui-critical-action join-item" :class="armorFilter === 'inventory' ? 'btn-active' : ''" @click="armorFilter = 'inventory'">Inventaire</button>
-          </div>
-          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
-            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des armures" @click.stop.prevent="openCatalogModal('armors')">
-              <Plus class="h-4 w-4" />
-            </button>
-          </div>
-					<div v-if="sortedCharacterArmors.length === 0" class="text-sm opacity-70">Aucune armure.</div>
-          <div v-else-if="filteredCharacterArmors.length === 0" class="text-sm opacity-70">Aucune armure pour ce filtre.</div>
-					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="armor in filteredCharacterArmors" :key="armor.id" v-memo="[armor.isEquipped, armor.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
-							<div class="card-body p-3 gap-2">
-								<div class="flex items-start justify-between gap-2">
-									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ armor.name }}</h4>
-									<div class="flex items-center gap-1">
-                    <button v-if="canEditQuickSection" class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11" :disabled="Boolean(actionBusyKey)" :aria-busy="actionBusyKey === `armor-${armor.id}` ? 'true' : 'false'" @click="onDeleteArmor(armor.id)">
-											<Trash2 class="h-4 w-4" />
-										</button>
-									</div>
-								</div>
-								<p v-if="armor.description" class="text-sm opacity-70">{{ armor.description }}</p>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <StateCycleBadge
-                    v-if="canEditQuickSection"
-                    :value="armor.isEquipped"
-                    :options="ARMOR_EQUIPPED_OPTIONS"
-                    @change="onArmorStateChange(armor, $event)"
-                  />
-                  <span
-                    v-else
-                    class="badge badge-sm"
-                    :class="armor.isEquipped ? 'badge-success' : 'badge-outline'"
-                  >
-                    {{ armor.isEquipped ? 'Équipée' : 'Inventaire' }}
-                  </span>
-									<StateCycleBadge
-										v-if="canEditQuickSection"
-										:value="armor.quality"
-										:options="ITEM_QUALITY_STATE_OPTIONS"
-										@change="onArmorQualityChange(armor, $event)"
-									/>
-									<span v-else class="badge badge-sm" :class="qualityBadgeClass(armor.quality)">{{ armor.quality || 'normal' }}</span>
-									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ armor.encumbrance }}</span>
-									<span class="badge badge-sm badge-outline gap-1"><Shield class="h-3 w-3" /> {{ armor.armorPoints }}</span>
-									<span v-if="armor.coveredLocations?.length" class="w-full text-xs opacity-75 break-words">{{ armor.coveredLocations.join(', ') }}</span>
-								</div>
-							</div>
-						</article>
-					</div>
-        </div>
-
-        <h2 class="mb-3 mt-5 text-lg font-semibold">Équipements</h2>
-        <div>
-          <div v-if="getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog')" role="status" class="alert alert-success alert-soft mb-3 text-sm">
-            <span>{{ getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog') }}</span>
-          </div>
-          <div class="mb-3 flex flex-wrap items-center gap-2">
-            <span class="badge badge-outline">Total: {{ itemStats.total }}</span>
-            <span class="badge badge-outline">Mediocre: {{ itemStats.mediocre }}</span>
-            <span class="badge badge-outline">Normal: {{ itemStats.normal }}</span>
-            <span class="badge badge-outline">Bonne: {{ itemStats.good }}</span>
-            <span class="badge badge-outline">Exceptionelle: {{ itemStats.exceptional }}</span>
-          </div>
-          <div class="mb-3 grid gap-2 sm:grid-cols-[auto,1fr]">
-            <div class="join join-vertical sm:join-horizontal">
-              <button class="btn btn-xs ui-critical-action join-item" :class="itemFilterQuality === 'all' ? 'btn-active' : ''" @click="itemFilterQuality = 'all'">Toutes</button>
-              <button class="btn btn-xs ui-critical-action join-item" :class="itemFilterQuality === 'normal' ? 'btn-active' : ''" @click="itemFilterQuality = 'normal'">Normal</button>
-              <button class="btn btn-xs ui-critical-action join-item" :class="itemFilterQuality === 'bonne' ? 'btn-active' : ''" @click="itemFilterQuality = 'bonne'">Bonne</button>
-            </div>
-            <SearchInput v-model="itemFilterQuery" placeholder="Filtrer les équipements" aria-label="Filtrer les equipements" />
-          </div>
-          <div v-if="canEditQuickSection" class="mb-3 flex justify-start">
-            <button class="btn btn-sm btn-square min-h-11 min-w-11" aria-label="Ajouter des équipements" @click.stop.prevent="openCatalogModal('items')">
-              <Plus class="h-4 w-4" />
-            </button>
-          </div>
-					<div v-if="sortedCharacterItems.length === 0" class="text-sm opacity-70">Aucun équipement.</div>
-          <div v-else-if="filteredCharacterItems.length === 0" class="text-sm opacity-70">Aucun équipement pour ce filtre.</div>
-					<div v-else class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						<article v-for="item in filteredCharacterItems" :key="item.id" v-memo="[item.quantity, item.quality, canEditQuickSection]" class="card border border-base-300 bg-base-100 hover:border-primary transition-colors">
-							<div class="card-body p-3 gap-2">
-								<div class="flex items-start justify-between gap-2">
-									<h4 class="font-semibold flex-1 min-w-0 break-words leading-tight">{{ item.name }}</h4>
-									<div class="flex items-center gap-1">
-										<button
-											v-if="item.description"
-                      class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
-											aria-label="Afficher la description de l'équipement"
-											@click="openDescriptionModal(item.name, item.description)"
-										>
-											<Info class="h-4 w-4" />
-										</button>
-										<button
-											v-if="canEditQuickSection"
-                      class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11 text-error"
-											aria-label="Retirer l'équipement de l'inventaire"
-                      :disabled="Boolean(actionBusyKey)"
-                      :aria-busy="actionBusyKey === `item-${item.id}` ? 'true' : 'false'"
-											@click="onDeleteItem(item.id)"
-										>
-											<Trash2 class="h-4 w-4" />
-										</button>
-									</div>
-								</div>
-								<div class="flex gap-1 flex-wrap">
-									<StateCycleBadge
-										v-if="canEditQuickSection"
-										:value="item.quality"
-										:options="ITEM_QUALITY_STATE_OPTIONS"
-										@change="onItemQualityChange(item, $event)"
-									/>
-									<span v-else class="badge badge-sm" :class="qualityBadgeClass(item.quality)">{{ item.quality || 'normal' }}</span>
-									<span class="badge badge-sm badge-outline gap-1"><Weight class="h-3 w-3" /> {{ item.encumbrance }}</span>
-									<div v-if="canEditQuickSection" class="join items-stretch">
-										<button
-                      class="btn btn-sm h-11 min-h-11 min-w-11 join-item px-3 text-base font-semibold leading-none"
-                      :disabled="item.quantity <= 1 || Boolean(actionBusyKey)"
-                      :aria-busy="actionBusyKey === `item-qty-${item.id}` ? 'true' : 'false'"
-											aria-label="Réduire la quantité"
-											@click="onChangeItemQuantity(item, -1)"
-										>
-											-
-										</button>
-                    <span class="join-item inline-flex h-11 min-h-11 min-w-12 items-center justify-center bg-secondary px-3 text-sm font-bold tracking-wide text-secondary-content border-none">x{{ item.quantity }}</span>
-										<button
-                      class="btn btn-sm h-11 min-h-11 min-w-11 join-item px-3 text-base font-semibold leading-none"
-                      :disabled="Boolean(actionBusyKey)"
-                      :aria-busy="actionBusyKey === `item-qty-${item.id}` ? 'true' : 'false'"
-											aria-label="Augmenter la quantité"
-											@click="onChangeItemQuantity(item, 1)"
-										>
-											+
-										</button>
-									</div>
-									<span v-else class="badge badge-sm badge-secondary font-bold tracking-wide text-secondary-content">x{{ item.quantity }}</span>
-								</div>
-							</div>
-						</article>
-					</div>
-        </div>
-      </section>
-		</template>
+        <form method="dialog" class="modal-backdrop">
+          <button>Fermer</button>
+        </form>
+      </dialog>
+    </template>
 
 		<dialog ref="careerDialogRef" class="modal modal-top sm:modal-middle" @close="onCareerDialogClosed">
       <div class="modal-box grim-modal-box p-6">
@@ -874,10 +336,10 @@
 					<template v-else>
 						<!-- Search Input -->
             <div class="sticky top-0 z-10 bg-base-100/95 backdrop-blur py-1">
-							<SearchInput 
-								v-model="catalogQuery" 
-								:placeholder="`Chercher des ${modalSectionLabel}`" 
-								class="w-full" 
+							<SearchInput
+								v-model="catalogQuery"
+								:placeholder="`Chercher des ${modalSectionLabel}`"
+								class="w-full"
 							/>
               <p class="mt-2 text-xs opacity-70">Saisissez au moins 2 caractères pour lancer la recherche.</p>
 						</div>
@@ -1016,45 +478,24 @@
 			</form>
 		</dialog>
 
-    <!-- Pied de page navigation -->
-    <footer class="fixed inset-x-0 bottom-0 z-40 border-t border-base-300 bg-base-100/95 px-3 py-2 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-      <div class="mx-auto flex w-full max-w-6xl gap-2">
-        <router-link v-if="character" class="btn btn-sm min-h-11 flex-1" :to="`/campaigns/${character.campaignId}`">
-          <ChevronLeft class="h-4 w-4" />
-          Retour à la campagne
-        </router-link>
-        <router-link class="btn btn-sm min-h-11 flex-1 max-sm:hidden" to="/">
-          <ChevronLeft class="h-4 w-4" />
-          Menu principal
-        </router-link>
-      </div>
+    <footer class="flex flex-wrap gap-2">
+      <router-link v-if="character" class="btn btn-sm min-h-11 flex-1" :to="`/campaigns/${character.campaignId}`">
+        <ChevronLeft class="h-4 w-4" />
+        Retour à la campagne
+      </router-link>
+      <router-link class="btn btn-sm min-h-11 flex-1" to="/characters?all=1">
+        <Users class="h-4 w-4" />
+        Tous les personnages
+      </router-link>
     </footer>
 	</main>
 </template>
 
 <script setup lang="ts">
-import {
-  ChevronLeft,
-  CircleX,
-  Info,
-  LoaderCircle,
-  Mars,
-  Plus,
-  ScrollText,
-  Hospital,
-  Shield,
-  Sword,
-  Trash2,
-  UserPen,
-  UserCog,
-  Venus,
-  Weight,
-} from '@lucide/vue'
+import { ChevronLeft, CircleX, LoaderCircle, Users } from '@lucide/vue'
 import { useDebounceFn, useTimeoutFn } from '@vueuse/core'
 import { useRouteParams } from '@vueuse/router'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { ComponentPublicInstance } from 'vue'
-import type { CharacterRace } from '../types/character'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { createCatalogItem, searchCatalog } from '../services/catalogRepository'
 import {
   listCareerCharacteristicsByCareerId,
@@ -1090,6 +531,7 @@ import {
   updateCharacterStatValues,
 } from '../services/charactersRepository'
 import { useAuthStore } from '../stores/auth'
+import { useLastActiveStore } from '../stores/lastActive'
 import type {
   CatalogItem,
   CharacterArmor,
@@ -1099,16 +541,15 @@ import type {
   CharacterTalent,
   CharacterWeapon,
 } from '../types/domain'
+import type { CharacterQuickField, CharacterTabId } from '../types/characterSheet'
 import type { WeaponHand, WeaponPreferredHand } from '../utils/equipmentSlots'
-import AppCard from '../components/ui/AppCard.vue'
-import CharacterDerivedStatsCard from '../components/ui/CharacterDerivedStatsCard.vue'
-import CharacteristicCard from '../components/ui/CharacteristicCard.vue'
-import CharacterMoneyCard from '../components/ui/CharacterMoneyCard.vue'
-import FortuneClover from '../components/ui/FortuneClover.vue'
-import HealthHeart from '../components/ui/HealthHeart.vue'
-import CharacterValueCard from '../components/ui/CharacterValueCard.vue'
+import CharacterInventoryPanel from '../components/character/CharacterInventoryPanel.vue'
+import CharacterProfilePanel from '../components/character/CharacterProfilePanel.vue'
+import CharacterSkillsPanel from '../components/character/CharacterSkillsPanel.vue'
+import CharacterSummaryHeader from '../components/character/CharacterSummaryHeader.vue'
+import CharacterTabs from '../components/character/CharacterTabs.vue'
+import CharacterTalentsPanel from '../components/character/CharacterTalentsPanel.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
-import StateCycleBadge from '../components/ui/StateCycleBadge.vue'
 import { useConfirmAction } from '../composables/useConfirmAction'
 import { useOptimisticUpdate } from '../composables/useOptimisticUpdate'
 import { useMoneyCoercion } from '../composables/useMoneyCoercion'
@@ -1118,34 +559,21 @@ import {
 } from '../composables/useRealtimeChannels'
 import {
   canEquipArmorStack,
-  computeArmorByLocation,
   findConflictingWeapons,
   isTwoHandedWeapon,
   isWeaponHand,
   resolveWeaponEquipHand,
 } from '../utils/equipmentSlots'
+import {
+  formatNamedWithSpecialization,
+  sortStatsByCharacteristicOrder,
+} from '../utils/characterSheet'
+import { ITEM_QUALITY_OPTIONS, isInventoryQuality } from '../utils/inventoryQuality'
 import { enqueueOfflineUpdate } from '../services/offlineQueueRepository'
 import { isTransientError } from '../services/shared/networkErrors'
 
 type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
-type CharacterDetailTab = 'profile' | 'skillsTalents' | 'inventory'
 
-const CHARACTERISTICS_ORDER = [
-  'CC',
-  'CT',
-  'F',
-  'E',
-  'AG',
-  'INT',
-  'FM',
-  'SOC',
-  'A',
-  'M',
-  'MAG',
-] as const
-const CHARACTERISTICS_INDEX = new Map<string, number>(
-  CHARACTERISTICS_ORDER.map((code, index) => [code, index])
-)
 const CATALOG_LABELS: Record<CatalogSection, string> = {
   skills: 'compétences',
   talents: 'talents',
@@ -1154,35 +582,9 @@ const CATALOG_LABELS: Record<CatalogSection, string> = {
   items: 'équipements',
 }
 
-const WEAPON_ONE_HANDED_EQUIPPED_OPTIONS = [
-  { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: 'droite', label: 'Droite', badgeClass: 'btn-secondary' },
-  { value: 'gauche', label: 'Gauche', badgeClass: 'btn-secondary' },
-] as const
-
-const WEAPON_TWO_HANDED_EQUIPPED_OPTIONS = [
-  { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: 'd&g', label: 'Équipée', badgeClass: 'btn-secondary' },
-] as const
-
-function weaponEquippedOptions(weapon: CharacterWeapon) {
-  return isTwoHandedWeapon(weapon)
-    ? WEAPON_TWO_HANDED_EQUIPPED_OPTIONS
-    : WEAPON_ONE_HANDED_EQUIPPED_OPTIONS
-}
-const ARMOR_EQUIPPED_OPTIONS = [
-  { value: false, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: true, label: 'Équipée', badgeClass: 'btn-success' },
-] as const
-
-const CHARACTERISTICS_VIEW_OPTIONS = [
-  { value: 'compact', label: 'Compact', badgeClass: 'btn-neutral' },
-  { value: 'normal', label: 'Détaillé', badgeClass: 'btn-outline' },
-] as const
-
-const activeCharacterTab = ref<CharacterDetailTab>('profile')
-const SKILL_MASTERY_LEVELS = [1, 2, 3] as const
+const activeCharacterTab = ref<CharacterTabId>('profile')
 const authStore = useAuthStore()
+const lastActive = useLastActiveStore()
 const { confirmAction } = useConfirmAction()
 const { coerceMoney } = useMoneyCoercion()
 const loading = ref(false)
@@ -1221,12 +623,6 @@ const itemCatalogMode = ref<'search' | 'create'>('search')
 const creatingItem = ref(false)
 const MAX_CATALOG_RESULTS = 8
 let catalogSearchSequence = 0
-const ITEM_QUALITY_OPTIONS = ['médiocre', 'normal', 'bonne', 'exceptionelle'] as const
-const ITEM_QUALITY_STATE_OPTIONS = ITEM_QUALITY_OPTIONS.map((quality) => ({
-  value: quality,
-  label: quality,
-  badgeClass: qualityStateClass(quality),
-}))
 const selectedItemsQuality = ref<(typeof ITEM_QUALITY_OPTIONS)[number]>('normal')
 const selectedItemsQuantity = ref(1)
 const newItemForm = ref({
@@ -1247,17 +643,11 @@ const characterItems = ref<CharacterItem[]>([])
 const actionSuccessMessage = ref<string | null>(null)
 type FeedbackSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items' | 'stats' | 'career' | 'catalog'
 const sectionSuccess = ref<{ section: FeedbackSection; message: string } | null>(null)
-const weaponFilter = ref<'all' | 'equipped' | 'inventory'>('all')
-const armorFilter = ref<'all' | 'equipped' | 'inventory'>('all')
-const itemFilterQuality = ref<'all' | 'médiocre' | 'normal' | 'bonne' | 'exceptionelle'>('all')
-const itemFilterQuery = ref('')
 const careerSearchLoading = ref(false)
 const careerPathLoading = ref(false)
 const careerCharacteristicsLoading = ref(false)
 const catalogSearchLoading = ref(false)
 const actionBusyKey = ref<string | null>(null)
-const activeSkillMasteryId = ref<string | null>(null)
-const skillMasteryTriggers = new Map<string, HTMLElement>()
 
 const editable = ref({
   pvMax: 0,
@@ -1289,17 +679,9 @@ const lastSavedEditable = ref({
   moneyCopper: 0,
 })
 
-const multiplierEmcumbranceByRace: Record<CharacterRace, number> = {
-  'humain': 10,
-  'elfe':10,
-  'nain': 20,
-  'halfling': 10,
-}
-
 const canEditQuickSection = computed(() =>
   Boolean(character.value && authStore.user?.id === character.value.userId)
 )
-const characteristicsViewMode = ref<'normal' | 'compact'>('compact')
 const modalSectionLabel = computed(() => CATALOG_LABELS[catalogSection.value])
 const scheduleDeferredLinksReload = useDebounceFn((currentCharacterId: string) => {
   void loadCharacterLinks(currentCharacterId, { force: true })
@@ -1357,152 +739,7 @@ const sortedCharacterTalents = computed(() => sortByName(characterTalents.value)
 const sortedCharacterWeapons = computed(() => sortByName(characterWeapons.value))
 const sortedCharacterArmors = computed(() => sortByName(characterArmors.value))
 const sortedCharacterItems = computed(() => sortByName(characterItems.value))
-const filteredCharacterWeapons = computed(() => {
-  if (weaponFilter.value === 'all') {
-    return sortedCharacterWeapons.value
-  }
-
-  return sortedCharacterWeapons.value.filter((weapon) =>
-    weaponFilter.value === 'equipped' ? weapon.equipped !== null : weapon.equipped === null
-  )
-})
-const filteredCharacterArmors = computed(() => {
-  if (armorFilter.value === 'all') {
-    return sortedCharacterArmors.value
-  }
-
-  return sortedCharacterArmors.value.filter((armor) =>
-    armorFilter.value === 'equipped' ? armor.isEquipped : !armor.isEquipped
-  )
-})
-const filteredCharacterItems = computed(() => {
-  const normalizedQuery = itemFilterQuery.value.trim().toLowerCase()
-
-  return sortedCharacterItems.value.filter((item) => {
-    const qualityMatch =
-      itemFilterQuality.value === 'all' || item.quality.trim().toLowerCase() === itemFilterQuality.value
-
-    const queryMatch =
-      normalizedQuery.length === 0 ||
-      item.name.toLowerCase().includes(normalizedQuery) ||
-      (item.description ?? '').toLowerCase().includes(normalizedQuery)
-
-    return qualityMatch && queryMatch
-  })
-})
-const weaponStats = computed(() => ({
-  total: characterWeapons.value.length,
-  equipped: characterWeapons.value.filter((weapon) => weapon.equipped !== null).length,
-}))
-const armorStats = computed(() => ({
-  total: characterArmors.value.length,
-  equipped: characterArmors.value.filter((armor) => armor.isEquipped).length,
-}))
-const itemStats = computed(() => ({
-  total: characterItems.value.length,
-  mediocre: characterItems.value.filter((item) => item.quality === 'médiocre').length,
-  normal: characterItems.value.filter((item) => item.quality === 'normal').length,
-  good: characterItems.value.filter((item) => item.quality === 'bonne').length,
-  exceptional: characterItems.value.filter((item) => item.quality === 'exceptionelle').length,
-}))
 const displayedCatalogOptions = computed(() => catalogOptions.value.slice(0, MAX_CATALOG_RESULTS))
-
-const visibleStats = computed(() => {
-  if (!character.value) {
-    return []
-  }
-
-  return character.value.stats
-    .filter((stat) => {
-      const normalized = stat.statCode.trim().toUpperCase()
-      return normalized !== 'PD'
-    })
-    .sort((left, right) => {
-      const leftCode = left.statCode.trim().toUpperCase()
-      const rightCode = right.statCode.trim().toUpperCase()
-      const leftIndex = CHARACTERISTICS_INDEX.get(leftCode)
-      const rightIndex = CHARACTERISTICS_INDEX.get(rightCode)
-
-      if (leftIndex === undefined && rightIndex === undefined) {
-        return leftCode.localeCompare(rightCode)
-      }
-      if (leftIndex === undefined) {
-        return 1
-      }
-      if (rightIndex === undefined) {
-        return -1
-      }
-
-      return leftIndex - rightIndex
-    })
-})
-
-const primaryStats = computed(() =>
-  visibleStats.value.filter((stat) => !stat.isSecondary).slice(0, 8)
-)
-const secondaryStats = computed(() => visibleStats.value.filter((stat) => stat.isSecondary))
-const primaryStatsRows = computed(() => [
-  primaryStats.value.slice(0, 4),
-  primaryStats.value.slice(4, 8),
-])
-
-const forceValue = computed(() => {
-  if (!character.value) {
-    return 0
-  }
-
-  const forceStat = character.value.stats.find((stat) => stat.statCode.trim().toUpperCase() === 'F')
-  if (!forceStat) {
-    return 0
-  }
-
-  return Math.max(0, forceStat.baseValue + forceStat.currentAdvanced)
-})
-
-const enduranceValue = computed(() => {
-  if (!character.value) {
-    return 0
-  }
-
-  const enduranceStat = character.value.stats.find(
-    (stat) => stat.statCode.trim().toUpperCase() === 'E'
-  )
-  if (!enduranceStat) {
-    return 0
-  }
-
-  return Math.max(0, enduranceStat.baseValue + enduranceStat.currentAdvanced)
-})
-
-const bonusForce = computed(() => Math.floor(forceValue.value / 10))
-const bonusEndurance = computed(() => Math.floor(enduranceValue.value / 10))
-
-const maxEncumbrance = computed(() => {
-  if (!character.value) {
-    return 0
-  }
-  const multiplier = multiplierEmcumbranceByRace[character.value.race] ?? 10
-  return forceValue.value * multiplier
-})
-
-const totalEncumbrance = computed(() => {
-  const weaponsEncumbrance = characterWeapons.value.reduce(
-    (total, weapon) => total + (weapon.encumbrance ?? 0),
-    0
-  )
-  const armorsEncumbrance = characterArmors.value.reduce(
-    (total, armor) => total + (armor.encumbrance ?? 0),
-    0
-  )
-  const itemsEncumbrance = characterItems.value.reduce(
-    (total, item) => total + (item.encumbrance ?? 0) * Math.max(1, item.quantity),
-    0
-  )
-
-  return weaponsEncumbrance + armorsEncumbrance + itemsEncumbrance
-})
-
-const armorByLocation = computed(() => computeArmorByLocation(characterArmors.value))
 
 const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpdate<
   typeof editable.value
@@ -1698,30 +935,9 @@ function invalidateCurrentLinksCache(): void {
   invalidateCharacterLinksCache(currentCharacterId)
 }
 
-const allStatsSorted = computed(() => {
-  if (!character.value) {
-    return []
-  }
-
-  return [...character.value.stats].sort((left, right) => {
-    const leftCode = left.statCode.trim().toUpperCase()
-    const rightCode = right.statCode.trim().toUpperCase()
-    const leftIndex = CHARACTERISTICS_INDEX.get(leftCode)
-    const rightIndex = CHARACTERISTICS_INDEX.get(rightCode)
-
-    if (leftIndex === undefined && rightIndex === undefined) {
-      return leftCode.localeCompare(rightCode)
-    }
-    if (leftIndex === undefined) {
-      return 1
-    }
-    if (rightIndex === undefined) {
-      return -1
-    }
-
-    return leftIndex - rightIndex
-  })
-})
+const allStatsSorted = computed(() =>
+  character.value ? sortStatsByCharacteristicOrder(character.value.stats) : []
+)
 
 const pendingCareerCharacteristicRows = computed(() => {
   const valuesByCode = new Map(
@@ -1812,6 +1028,13 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
       return
     }
 
+    // Another player's sheet only refreshes the campaign, never the "own character" shortcut.
+    if (data.userId === authStore.user?.id) {
+      lastActive.setCharacter(data.campaignId, data.id)
+    } else {
+      lastActive.setCampaign(data.campaignId)
+    }
+
     const nextEditable = {
       pvMax: data.pvMax,
       pvCurrent: data.pvCurrent,
@@ -1850,7 +1073,7 @@ async function loadCharacter(options: { background?: boolean } = {}): Promise<vo
   }
 }
 
-function onQuickValueChange(field: keyof typeof editable.value, value: number): void {
+function onQuickValueChange(field: CharacterQuickField, value: number): void {
   const previousValue = editable.value[field]
   const newValue = Math.max(0, value)
   const isMoneyField = field === 'moneyGold' || field === 'moneySilver' || field === 'moneyCopper'
@@ -1980,12 +1203,6 @@ function onStatTotalAdvancedChange(statCode: string, totalAdvanced: number): voi
   target.totalAdvanced = nextTotalAdvanced
 
   triggerStatSave({ statCode, totalAdvanced: nextTotalAdvanced })
-}
-
-function onCharacteristicsViewModeChange(value: string | boolean | null): void {
-  if (value === 'normal' || value === 'compact') {
-    characteristicsViewMode.value = value
-  }
 }
 
 async function onChangeSkillMastery(skillId: string, level: 1 | 2 | 3): Promise<void> {
@@ -2750,60 +1967,6 @@ function openDescriptionModal(title: string, description: string | null): void {
   descriptionDialogRef.value?.showModal()
 }
 
-function skillMasteryLabel(level: (typeof SKILL_MASTERY_LEVELS)[number]): string {
-  return level === 1 ? 'Acquis' : `+${(level - 1) * 10}%`
-}
-
-function setSkillMasteryTrigger(
-  skillId: string,
-  element: Element | ComponentPublicInstance | null
-): void {
-  if (element instanceof HTMLElement) {
-    skillMasteryTriggers.set(skillId, element)
-  } else {
-    skillMasteryTriggers.delete(skillId)
-  }
-}
-
-function closeSkillMastery(): void {
-  const trigger = activeSkillMasteryId.value
-    ? skillMasteryTriggers.get(activeSkillMasteryId.value)
-    : null
-  activeSkillMasteryId.value = null
-  trigger?.focus()
-}
-
-function toggleSkillMastery(skillId: string): void {
-  if (activeSkillMasteryId.value === skillId) {
-    closeSkillMastery()
-    return
-  }
-
-  activeSkillMasteryId.value = skillId
-}
-
-async function selectSkillMastery(
-  skillId: string,
-  level: (typeof SKILL_MASTERY_LEVELS)[number]
-): Promise<void> {
-  await onChangeSkillMastery(skillId, level)
-  closeSkillMastery()
-}
-
-function onSkillMasteryPointerDown(event: PointerEvent): void {
-  const target = event.target
-  if (activeSkillMasteryId.value && target instanceof Element && !target.closest('[data-skill-mastery-control]')) {
-    closeSkillMastery()
-  }
-}
-
-function onSkillMasteryKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape' && activeSkillMasteryId.value) {
-    event.preventDefault()
-    closeSkillMastery()
-  }
-}
-
 function closeDescriptionModal(): void {
   if (descriptionDialogRef.value?.open) {
     descriptionDialogRef.value.close()
@@ -3037,15 +2200,6 @@ async function saveQuickFields(options: { immediate?: boolean } = {}): Promise<v
   triggerSave({ ...editable.value })
 }
 
-function formatNamedWithSpecialization(name: string, specialization: string | null): string {
-  const trimmedSpecialization = specialization?.trim()
-  if (!trimmedSpecialization) {
-    return name
-  }
-
-  return `${name} (${trimmedSpecialization})`
-}
-
 function formatCatalogOptionLabel(option: CatalogItem): string {
   if (catalogSection.value === 'skills' || catalogSection.value === 'talents') {
     return formatNamedWithSpecialization(option.name, option.specialization ?? null)
@@ -3083,48 +2237,6 @@ function formatCatalogOptionLabel(option: CatalogItem): string {
   }
 
   return option.name
-}
-
-function qualityBadgeClass(quality: string | null): string {
-  const normalized = quality?.trim().toLowerCase() ?? ''
-  if (normalized === 'médiocre') {
-    return 'badge-warning'
-  }
-  if (normalized === 'normal') {
-    return 'badge-neutral'
-  }
-  if (normalized === 'bonne') {
-    return 'badge-info'
-  }
-  if (normalized === 'exceptionelle') {
-    return 'badge-success'
-  }
-  return 'badge-outline'
-}
-
-function weaponAttributesMemoKey(weapon: CharacterWeapon): string {
-  if (weapon.attributes.length === 0) {
-    return 'none'
-  }
-
-  return weapon.attributes.map((attribute) => attribute.id).join('|')
-}
-
-function qualityStateClass(quality: string | null): string {
-  const normalized = quality?.trim().toLowerCase() ?? ''
-  if (normalized === 'médiocre') {
-    return 'btn-warning'
-  }
-  if (normalized === 'normal') {
-    return 'btn-neutral'
-  }
-  if (normalized === 'bonne') {
-    return 'btn-info'
-  }
-  if (normalized === 'exceptionelle') {
-    return 'btn-success'
-  }
-  return 'btn-outline'
 }
 
 function setActionSuccess(message: string): void {
@@ -3178,10 +2290,6 @@ async function runWithBusyAction(key: string, operation: () => Promise<void>): P
   }
 }
 
-function isInventoryQuality(value: string | boolean | null): value is 'médiocre' | 'normal' | 'bonne' | 'exceptionelle' {
-  return value === 'médiocre' || value === 'normal' || value === 'bonne' || value === 'exceptionelle'
-}
-
 watch(
   () => characterId.value,
   (value) => {
@@ -3207,15 +2315,7 @@ watch(
   { immediate: true }
 )
 
-onMounted(() => {
-  document.addEventListener('pointerdown', onSkillMasteryPointerDown)
-  document.addEventListener('keydown', onSkillMasteryKeydown)
-})
-
 onBeforeUnmount(() => {
-  document.removeEventListener('pointerdown', onSkillMasteryPointerDown)
-  document.removeEventListener('keydown', onSkillMasteryKeydown)
-  skillMasteryTriggers.clear()
   scheduleDeferredRealtimeReload.cancel()
   scheduleDeferredLinksReload.cancel()
   scheduleCatalogSearch.cancel()
@@ -3223,11 +2323,3 @@ onBeforeUnmount(() => {
   stopActionSuccessReset()
 })
 </script>
-
-<style scoped>
-	.btn-active {
-		background-color: var(--color-accent);
-		border-color: var(--color-accent);
-		color: var(--color-accent-content);
-	}
-</style>

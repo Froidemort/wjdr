@@ -35,6 +35,7 @@ function getArmorEncumbrance(encumbrance: number, quality: InventoryQuality): nu
 }
 
 interface SkillLinkRow {
+  character_id?: string
   skill_id: string
   mastery_level: 1 | 2 | 3
   skills?:
@@ -58,6 +59,7 @@ interface SkillLinkRow {
 }
 
 interface TalentLinkRow {
+  character_id?: string
   talent_id: string
   talents?:
     | {
@@ -76,6 +78,7 @@ interface TalentLinkRow {
 }
 
 interface WeaponLinkRow {
+  character_id?: string
   id: string
   weapon_id: string
   quality: string
@@ -129,6 +132,7 @@ interface WeaponLinkRow {
 }
 
 interface ArmorLinkRow {
+  character_id?: string
   id: string
   armor_id: string
   quality: string
@@ -154,6 +158,7 @@ interface ArmorLinkRow {
 }
 
 interface ItemLinkRow {
+  character_id?: string
   id: string
   item_id: string
   quality: string
@@ -271,7 +276,7 @@ async function loadSkillTalentRelations(skillIds: string[]): Promise<Map<string,
     .from('skills_talents')
     .select('skill_id, talent_id')
     .in('skill_id', skillIds)
-  
+
 
   if (error) {
     throw error
@@ -300,18 +305,20 @@ export async function listCharacterSkills(characterId: string): Promise<Characte
     throw error
   }
 
-  return ((data ?? []) as SkillLinkRow[]).map((row) => {
-    const skill = unwrapRelated(row.skills)
-    return {
-      skillId: row.skill_id,
-      name: skill?.name ?? 'Compétence inconnue',
-      statCode: skill?.stat_code ?? 'INT',
-      specialization: skill?.specialization ?? null,
-      description: skill?.description ?? null,
-      masteryLevel: row.mastery_level,
-      isBasic: Boolean(skill?.is_basic),
-    }
-  })
+  return ((data ?? []) as SkillLinkRow[]).map(mapSkillRow)
+}
+
+function mapSkillRow(row: SkillLinkRow): CharacterSkill {
+  const skill = unwrapRelated(row.skills)
+  return {
+    skillId: row.skill_id,
+    name: skill?.name ?? 'Compétence inconnue',
+    statCode: skill?.stat_code ?? 'INT',
+    specialization: skill?.specialization ?? null,
+    description: skill?.description ?? null,
+    masteryLevel: row.mastery_level,
+    isBasic: Boolean(skill?.is_basic),
+  }
 }
 
 export async function addCharacterSkills(characterId: string, skillIds: string[]): Promise<void> {
@@ -374,15 +381,17 @@ export async function listCharacterTalents(characterId: string): Promise<Charact
     throw error
   }
 
-  return ((data ?? []) as TalentLinkRow[]).map((row) => {
-    const talent = unwrapRelated(row.talents)
-    return {
-      talentId: row.talent_id,
-      name: talent?.name ?? 'Talent inconnu',
-      specialization: talent?.specialization ?? null,
-      description: talent?.description ?? null,
-    }
-  })
+  return ((data ?? []) as TalentLinkRow[]).map(mapTalentRow)
+}
+
+function mapTalentRow(row: TalentLinkRow): CharacterTalent {
+  const talent = unwrapRelated(row.talents)
+  return {
+    talentId: row.talent_id,
+    name: talent?.name ?? 'Talent inconnu',
+    specialization: talent?.specialization ?? null,
+    description: talent?.description ?? null,
+  }
 }
 
 export async function addCharacterTalents(characterId: string, talentIds: string[]): Promise<void> {
@@ -430,39 +439,41 @@ export async function listCharacterWeapons(characterId: string): Promise<Charact
     throw error
   }
 
-  return ((data ?? []) as WeaponLinkRow[]).map((row) => {
-    const weapon = unwrapRelated(row.weapons)
-    const mappedAttributes = (weapon?.weapon_attribute_mappings ?? [])
-      .map((mapping) => unwrapRelated(mapping.weapon_attributes))
-      .filter((attribute): attribute is WeaponAttribute => Boolean(attribute?.id && attribute.name))
-      .map((attribute) => ({
-        id: attribute.id,
-        name: attribute.name,
-        description: attribute.description ?? null,
-      }))
+  return ((data ?? []) as WeaponLinkRow[]).map(mapWeaponRow)
+}
 
-    const dedupedAttributesById = new Map<string, WeaponAttribute>()
-    for (const attribute of mappedAttributes) {
-      dedupedAttributesById.set(attribute.id, attribute)
-    }
+function mapWeaponRow(row: WeaponLinkRow): CharacterWeapon {
+  const weapon = unwrapRelated(row.weapons)
+  const mappedAttributes = (weapon?.weapon_attribute_mappings ?? [])
+    .map((mapping) => unwrapRelated(mapping.weapon_attributes))
+    .filter((attribute): attribute is WeaponAttribute => Boolean(attribute?.id && attribute.name))
+    .map((attribute) => ({
+      id: attribute.id,
+      name: attribute.name,
+      description: attribute.description ?? null,
+    }))
 
-    const attributes = [...dedupedAttributesById.values()].sort((left, right) =>
-      left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })
-    )
+  const dedupedAttributesById = new Map<string, WeaponAttribute>()
+  for (const attribute of mappedAttributes) {
+    dedupedAttributesById.set(attribute.id, attribute)
+  }
 
-    const quality = normalizeQuality(row.quality)
-    return {
-      id: row.id,
-      weaponId: row.weapon_id,
-      name: weapon?.name ?? 'Arme inconnue',
-      description: weapon?.description ?? null,
-      equipped: row.equiped,
-      quality,
-      encumbrance: getWeaponEncumbrance(weapon?.encumbrance ?? 0, quality),
-      damageFormula: weapon?.damage_formula ?? null,
-      attributes,
-    }
-  })
+  const attributes = [...dedupedAttributesById.values()].sort((left, right) =>
+    left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })
+  )
+
+  const quality = normalizeQuality(row.quality)
+  return {
+    id: row.id,
+    weaponId: row.weapon_id,
+    name: weapon?.name ?? 'Arme inconnue',
+    description: weapon?.description ?? null,
+    equipped: row.equiped,
+    quality,
+    encumbrance: getWeaponEncumbrance(weapon?.encumbrance ?? 0, quality),
+    damageFormula: weapon?.damage_formula ?? null,
+    attributes,
+  }
 }
 
 export async function addCharacterWeapons(
@@ -534,21 +545,23 @@ export async function listCharacterArmors(characterId: string): Promise<Characte
     throw error
   }
 
-  return ((data ?? []) as ArmorLinkRow[]).map((row) => {
-    const armor = unwrapRelated(row.armors)
-    const quality = normalizeQuality(row.quality)
-    return {
-      id: row.id,
-      armorId: row.armor_id,
-      name: armor?.name ?? 'Armure inconnue',
-      description: armor?.description ?? null,
-      isEquipped: row.is_equipped,
-      coveredLocations: armor?.covered_locations ?? null,
-      quality,
-      encumbrance: getArmorEncumbrance(armor?.encumbrance ?? 0, quality),
-      armorPoints: armor?.armor_points ?? 0,
-    }
-  })
+  return ((data ?? []) as ArmorLinkRow[]).map(mapArmorRow)
+}
+
+function mapArmorRow(row: ArmorLinkRow): CharacterArmor {
+  const armor = unwrapRelated(row.armors)
+  const quality = normalizeQuality(row.quality)
+  return {
+    id: row.id,
+    armorId: row.armor_id,
+    name: armor?.name ?? 'Armure inconnue',
+    description: armor?.description ?? null,
+    isEquipped: row.is_equipped,
+    coveredLocations: armor?.covered_locations ?? null,
+    quality,
+    encumbrance: getArmorEncumbrance(armor?.encumbrance ?? 0, quality),
+    armorPoints: armor?.armor_points ?? 0,
+  }
 }
 
 export async function addCharacterArmors(
@@ -619,18 +632,20 @@ export async function listCharacterItems(characterId: string): Promise<Character
     throw error
   }
 
-  return ((data ?? []) as ItemLinkRow[]).map((row) => {
-    const item = unwrapRelated(row.items)
-    return {
-      id: row.id,
-      itemId: row.item_id,
-      name: item?.name ?? 'Équipement inconnu',
-      description: item?.description ?? null,
-      quality: normalizeQuality(row.quality),
-      encumbrance: item?.encumbrance ?? 0,
-      quantity: row.quantity ?? 1,
-    }
-  })
+  return ((data ?? []) as ItemLinkRow[]).map(mapItemRow)
+}
+
+function mapItemRow(row: ItemLinkRow): CharacterItem {
+  const item = unwrapRelated(row.items)
+  return {
+    id: row.id,
+    itemId: row.item_id,
+    name: item?.name ?? 'Équipement inconnu',
+    description: item?.description ?? null,
+    quality: normalizeQuality(row.quality),
+    encumbrance: item?.encumbrance ?? 0,
+    quantity: row.quantity ?? 1,
+  }
 }
 
 export async function addCharacterItems(
@@ -689,4 +704,91 @@ export async function removeCharacterItem(linkId: string): Promise<void> {
   if (error) {
     throw error
   }
+}
+
+function groupByCharacter<Row extends { character_id?: string }, Entry>(
+  rows: Row[],
+  map: (row: Row) => Entry
+): Map<string, Entry[]> {
+  const grouped = new Map<string, Entry[]>()
+  for (const row of rows) {
+    if (!row.character_id) {
+      continue
+    }
+    const entries = grouped.get(row.character_id) ?? []
+    entries.push(map(row))
+    grouped.set(row.character_id, entries)
+  }
+
+  return grouped
+}
+
+function throwIfError(error: unknown): void {
+  if (error) {
+    throw error
+  }
+}
+
+// One query per link table for all characters, so a campaign table needs no per-character requests.
+export async function listCharacterLinksBundlesByIds(
+  characterIds: string[]
+): Promise<Map<string, CharacterLinksBundle>> {
+  const uniqueIds = Array.from(new Set(characterIds.filter(Boolean)))
+  const bundles = new Map<string, CharacterLinksBundle>()
+  if (uniqueIds.length === 0) {
+    return bundles
+  }
+
+  const [skills, talents, weapons, armors, items] = await Promise.all([
+    supabase
+      .from('character_skills')
+      .select(
+        'character_id, skill_id, mastery_level, skills!inner(id, name, stat_code, specialization, description, is_basic)'
+      )
+      .in('character_id', uniqueIds),
+    supabase
+      .from('character_talents')
+      .select('character_id, talent_id, talents!inner(id, name, specialization, description)')
+      .in('character_id', uniqueIds),
+    supabase
+      .from('character_weapons')
+      .select(
+        'character_id, id, weapon_id, quality, equiped, weapons!inner(id, name, description, encumbrance, damage_formula, weapon_attribute_mappings(attribute_id, weapon_attributes(id, name, description)))'
+      )
+      .in('character_id', uniqueIds),
+    supabase
+      .from('character_armors')
+      .select(
+        'character_id, id, armor_id, quality, is_equipped, armors!inner(id, name, description, covered_locations, encumbrance, armor_points)'
+      )
+      .in('character_id', uniqueIds),
+    supabase
+      .from('character_items')
+      .select(
+        'character_id, id, item_id, quality, quantity, items!inner(id, name, description, encumbrance)'
+      )
+      .in('character_id', uniqueIds),
+  ])
+
+  for (const result of [skills, talents, weapons, armors, items]) {
+    throwIfError(result.error)
+  }
+
+  const skillsById = groupByCharacter((skills.data ?? []) as SkillLinkRow[], mapSkillRow)
+  const talentsById = groupByCharacter((talents.data ?? []) as TalentLinkRow[], mapTalentRow)
+  const weaponsById = groupByCharacter((weapons.data ?? []) as WeaponLinkRow[], mapWeaponRow)
+  const armorsById = groupByCharacter((armors.data ?? []) as ArmorLinkRow[], mapArmorRow)
+  const itemsById = groupByCharacter((items.data ?? []) as ItemLinkRow[], mapItemRow)
+
+  for (const id of uniqueIds) {
+    bundles.set(id, {
+      skills: skillsById.get(id) ?? [],
+      talents: talentsById.get(id) ?? [],
+      weapons: weaponsById.get(id) ?? [],
+      armors: armorsById.get(id) ?? [],
+      items: itemsById.get(id) ?? [],
+    })
+  }
+
+  return bundles
 }

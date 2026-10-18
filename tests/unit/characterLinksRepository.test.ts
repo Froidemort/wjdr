@@ -7,6 +7,7 @@ vi.mock('../../src/db/supabase', () => ({ supabase: { from: fromMock } }))
 import {
   addCharacterArmors, addCharacterItems, addCharacterSkills, addCharacterTalents, addCharacterWeapons,
   invalidateCharacterLinksCache, listCharacterArmors, listCharacterItems, listCharacterLinksBundle,
+  listCharacterLinksBundlesByIds,
   listCharacterSkills, listCharacterTalents, listCharacterWeapons, removeCharacterArmor,
   removeCharacterItem, removeCharacterSkill, removeCharacterTalent, removeCharacterWeapon,
   updateCharacterArmorEquipped, updateCharacterArmorQuality, updateCharacterItemQuality,
@@ -37,6 +38,32 @@ describe('characterLinksRepository', () => {
     const cached = await listCharacterLinksBundle('character-1')
     expect(cached.skills[0]).toMatchObject({ name: 'Athlétisme', linkedTalents: [{ talentId: 'talent-1' }, { talentId: 'talent-2' }] })
     expect(fromMock).toHaveBeenCalledTimes(6)
+  })
+
+  it('batch-loads links for several characters with one query per table', async () => {
+    const builders = {
+      character_skills: builder([{ character_id: 'c1', skill_id: 's1', mastery_level: 2, skills: { name: 'Athlétisme', stat_code: 'F', specialization: null, description: null, is_basic: true } }]),
+      character_talents: builder([{ character_id: 'c2', talent_id: 't1', talents: { name: 'Acrobate', specialization: null, description: null } }]),
+      character_weapons: builder([{ character_id: 'c1', id: 'wl', weapon_id: 'w', quality: 'normal', equiped: 'droite', weapons: { name: 'Épée', description: null, encumbrance: 2, damage_formula: '+4' } }]),
+      character_armors: builder(),
+      character_items: builder([{ character_id: 'c2', id: 'il', item_id: 'i', quality: 'bonne', quantity: 2, items: { name: 'Corde', description: null, encumbrance: 1 } }]),
+    }
+    fromMock.mockImplementation((table: keyof typeof builders) => builders[table])
+
+    const bundles = await listCharacterLinksBundlesByIds(['c1', 'c2', 'c1', ''])
+
+    expect(fromMock).toHaveBeenCalledTimes(5)
+    expect(builders.character_skills.in).toHaveBeenCalledWith('character_id', ['c1', 'c2'])
+    expect(bundles.get('c1')).toMatchObject({ skills: [{ name: 'Athlétisme' }], weapons: [{ name: 'Épée', equipped: 'droite' }], talents: [], items: [] })
+    expect(bundles.get('c2')).toMatchObject({ talents: [{ name: 'Acrobate' }], items: [{ name: 'Corde', quantity: 2 }], skills: [] })
+  })
+
+  it('skips the batch query without character ids and propagates errors', async () => {
+    await expect(listCharacterLinksBundlesByIds([])).resolves.toEqual(new Map())
+    expect(fromMock).not.toHaveBeenCalled()
+
+    fromMock.mockImplementation((table: string) => (table === 'character_items' ? builder([], new Error('boom')) : builder()))
+    await expect(listCharacterLinksBundlesByIds(['c1'])).rejects.toThrow('boom')
   })
 
   it.each([

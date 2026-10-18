@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Crown, Eye, FileText, List } from '@lucide/vue'
+import { Crown, Eye, FileText, List, Users } from '@lucide/vue'
 import { useVModel } from '@vueuse/core'
 
-type CampaignTab = 'overview' | 'management' | 'sessions' | 'notes'
+type CampaignTab = 'overview' | 'management' | 'table' | 'sessions' | 'notes'
 
 const props = defineProps<{
   modelValue: CampaignTab
@@ -28,6 +28,7 @@ const model = useVModel(props, 'modelValue', emit)
         >
           <option value="overview">Aperçu</option>
           <option v-if="isMj" value="management">Gestion MJ</option>
+          <option v-if="isMj" value="table">Table</option>
           <option value="sessions">Sessions</option>
           <option value="notes">Notes</option>
         </select>
@@ -67,6 +68,20 @@ const model = useVModel(props, 'modelValue', emit)
         <Crown class="h-4 w-4" />
         Gestion MJ
         <span class="badge badge-outline badge-xs">spécial</span>
+      </button>
+      <button
+        v-if="isMj"
+        id="campaign-tab-table"
+        type="button"
+        role="tab"
+        :aria-selected="model === 'table' ? 'true' : 'false'"
+        aria-controls="campaign-panel-table"
+        class="btn btn-sm ui-critical-action gap-2"
+        :class="model === 'table' ? 'btn-active' : ''"
+        @click="model = 'table'"
+      >
+        <Users class="h-4 w-4" />
+        Table
       </button>
       <button
         id="campaign-tab-sessions"

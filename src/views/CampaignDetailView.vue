@@ -7,6 +7,22 @@
 		</div>
 
     <template v-else-if="session">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <router-link
+          v-if="myCharacter"
+          class="btn btn-primary min-h-11 w-full sm:w-auto"
+          :to="`/characters/${myCharacter.id}`"
+          data-testid="my-character-cta"
+        >
+          <UserRound class="h-4 w-4" />
+          Ma fiche
+          <span class="font-normal opacity-80">— {{ myCharacter.name }}</span>
+        </router-link>
+        <router-link class="btn btn-ghost btn-sm min-h-11 sm:hidden" to="/campaigns?all=1">
+          Voir toutes les campagnes
+        </router-link>
+      </div>
+
       <CampaignDetailTabs v-model="activeCampaignTab" :is-mj="isMj" :is-mobile="isMobile" />
 
       <CampaignOverviewSection
@@ -89,6 +105,22 @@
 
       <section
         v-if="isMj"
+        v-show="activeCampaignTab === 'table'"
+        id="campaign-panel-table"
+        role="tabpanel"
+        aria-labelledby="campaign-tab-table"
+      >
+        <CampaignTableSection
+          :entries="tableEntries"
+          :loading="tableLoading"
+          :error="tableError"
+          :is-mobile="isMobile"
+          @reload="reloadTable"
+        />
+      </section>
+
+      <section
+        v-if="isMj"
         v-show="activeCampaignTab === 'management'"
         id="campaign-panel-management"
         role="tabpanel"
@@ -143,7 +175,7 @@
 
 		<!-- Pied de page navigation -->
     <footer class="flex justify-start pt-2 max-sm:hidden">
-      <router-link class="btn btn-sm btn-ghost ui-critical-action" to="/campaigns">
+      <router-link class="btn btn-sm btn-ghost ui-critical-action" to="/campaigns?all=1">
 				<ChevronLeft class="h-4 w-4" />
         Retour aux campagnes
 			</router-link>
@@ -160,22 +192,26 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronLeft } from '@lucide/vue'
+import { ChevronLeft, UserRound } from '@lucide/vue'
 import { useTimeoutFn } from '@vueuse/core'
 import { useRouteParams } from '@vueuse/router'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { listCharactersByCampaign } from '../services/charactersRepository'
 import { listSessionsForCampaign } from '../services/sessionsRepository'
 import { getCampaignById, updateCampaignArchivedState } from '../services/campaignsRepository'
 import { useAuthStore } from '../stores/auth'
+import { useLastActiveStore } from '../stores/lastActive'
 import type { CharacterSummary, CampaignSummary, SessionSummary } from '../types/domain'
 import AppCard from '../components/ui/AppCard.vue'
 import CharacterCreateModal from '../components/ui/CharacterCreateModal.vue'
+import CampaignTableSection from '../components/campaign/CampaignTableSection.vue'
 import CampaignDetailTabs from '../components/ui/CampaignDetailTabs.vue'
 import CampaignManagementSection from '../components/ui/CampaignManagementSection.vue'
 import CampaignOverviewSection from '../components/ui/CampaignOverviewSection.vue'
 import CampaignSessionsSection from '../components/ui/CampaignSessionsSection.vue'
 import { useCampaignSessions } from '../composables/useCampaignSessions'
+import { useCampaignTable } from '../composables/useCampaignTable'
 import SessionAccessRequest from '../components/ui/SessionAccessRequest.vue'
 import SessionNotesPanel from '../components/ui/SessionNotesPanel.vue'
 import { useCampaignManagement } from '../composables/useCampaignManagement'
@@ -185,12 +221,17 @@ import { useDeviceBreakpoint } from '../composables/useDeviceBreakpoint'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 
 const authStore = useAuthStore()
+const lastActive = useLastActiveStore()
+const route = useRoute()
 const { confirmAction } = useConfirmAction()
 const { isMobile } = useDeviceBreakpoint()
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const session = ref<CampaignSummary | null>(null)
-const activeCampaignTab = ref<'overview' | 'management' | 'sessions' | 'notes'>('overview')
+type CampaignTab = 'overview' | 'management' | 'table' | 'sessions' | 'notes'
+const campaignTabs: readonly CampaignTab[] = ['overview', 'management', 'table', 'sessions', 'notes']
+const MJ_ONLY_TABS: readonly CampaignTab[] = ['management', 'table']
+const activeCampaignTab = ref<CampaignTab>('overview')
 const characters = ref<CharacterSummary[]>([])
 const sessions = ref<SessionSummary[]>([])
 const sessionInfoOpen = ref(true)
@@ -217,6 +258,14 @@ const campaignId = useRouteParams('id', '', {
 })
 const isMj = computed(() => Boolean(session.value && authStore.user?.id === session.value.mjId))
 const managementUserId = computed(() => authStore.user?.id ?? null)
+const tableCampaignId = computed(() => (isMj.value ? (session.value?.id ?? null) : null))
+const tableActive = computed(() => activeCampaignTab.value === 'table')
+const {
+  entries: tableEntries,
+  loading: tableLoading,
+  error: tableError,
+  reload: reloadTable,
+} = useCampaignTable({ campaignId: tableCampaignId, active: tableActive })
 const {
   invitations,
   inviteCandidates,
@@ -295,6 +344,11 @@ const hasOwnCharacter = computed(() =>
       characters.value.some((character) => character.userId === authStore.user?.id)
   )
 )
+const ownCharacters = computed(() =>
+  characters.value.filter((character) => character.userId === authStore.user?.id)
+)
+// The player role wins over MJ when both apply, so the CTA does not depend on isMj.
+const myCharacter = computed(() => (ownCharacters.value.length === 1 ? ownCharacters.value[0] : null))
 const canCreateOwnCharacter = computed(() =>
   Boolean(
     session.value &&
@@ -412,6 +466,10 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
       characters.value = []
     }
 
+    if (isBackgroundRefresh && activeCampaignTab.value === 'table') {
+      void reloadTable()
+    }
+
     try {
       sessions.value = await listSessionsForCampaign(resolvedCampaignId)
     } catch {
@@ -516,8 +574,28 @@ function subscribeRealtime(targetSessionId: string): void {
   ])
 }
 
+watch(
+  () => session.value?.id,
+  (id) => {
+    if (id) {
+      lastActive.setCampaign(id)
+    }
+  },
+  { immediate: true }
+)
+// `?tab=` deep-links a tab; management and table stay MJ-only through the watchers below.
+watch(
+  () => [route.query.tab, isMj.value] as const,
+  ([tab, mj]) => {
+    const requested = campaignTabs.find((candidate) => candidate === tab)
+    if (requested && (!MJ_ONLY_TABS.includes(requested) || mj)) {
+      activeCampaignTab.value = requested
+    }
+  },
+  { immediate: true }
+)
 watch(isMj, (value) => {
-  if (!value && activeCampaignTab.value === 'management') {
+  if (!value && MJ_ONLY_TABS.includes(activeCampaignTab.value)) {
     activeCampaignTab.value = 'overview'
   }
 })
