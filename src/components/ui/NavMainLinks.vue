@@ -3,17 +3,21 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { mainNavLinks } from '../../config/navLinks'
 
+const props = defineProps<{ publicOnly?: boolean }>()
+
 const route = useRoute()
 
 const links = computed(() =>
-  mainNavLinks.map((link) => ({
-    ...link,
-    available: Boolean(link.to),
-    active: Boolean(
-      link.to &&
-        (route.path === link.to || route.path.startsWith(`${link.to}/`)),
-    ),
-  })),
+  mainNavLinks
+    .filter((link) => !props.publicOnly || link.public)
+    .map((link) => ({
+      ...link,
+      available: Boolean(link.to),
+      active: Boolean(
+        link.to &&
+          (route.path === link.to || route.path.startsWith(`${link.to}/`)),
+      ),
+    })),
 )
 </script>
 

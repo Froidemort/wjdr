@@ -1,17 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 
-function getRequiredEnv(value: string | undefined, variableName: string): string {
-  if (!value || value.trim().length === 0) {
-    throw new Error(`Missing required environment variable: ${variableName}`)
-  }
+const rawUrl: string | undefined = import.meta.env.VITE_SUPABASE_URL
+const rawKey: string | undefined =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY
 
-  return value
+const missing = [
+  !rawUrl?.trim() && 'VITE_SUPABASE_URL',
+  !rawKey?.trim() && 'VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY)',
+].filter(Boolean)
+
+// Report every missing variable at once so a CI misconfiguration is obvious.
+if (missing.length > 0) {
+  throw new Error(`Missing required environment variable(s): ${missing.join(', ')}`)
 }
 
-const supabaseUrl = getRequiredEnv(import.meta.env.VITE_SUPABASE_URL, 'VITE_SUPABASE_URL')
-const supabasePublicKey = getRequiredEnv(
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY,
-  'VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY)'
-)
-
-export const supabase = createClient(supabaseUrl, supabasePublicKey)
+export const supabase = createClient(rawUrl as string, rawKey as string)

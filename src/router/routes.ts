@@ -16,6 +16,7 @@ const CampaignListView = () => import('../views/CampaignListView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
+const CompendiumHomeView = () => import('../views/CompendiumHomeView.vue')
 const CompendiumInventoryView = () => import('../views/CompendiumInventoryView.vue')
 const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
 const CompendiumCareerGraphView = () => import('../views/CompendiumCareerGraphView.vue')
@@ -33,11 +34,17 @@ export const appRoutes: RouteRecordRaw[] = [
     component: OldWorldMapView,
     meta: { requiresAuth: false, hideFooter: false },
   },
+  // Public compendium landing page
+  {
+    path: '/compendium',
+    component: CompendiumHomeView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
+  },
   // Public read-only compendium of weapons, armors and items
   {
     path: '/compendium/inventory',
     component: CompendiumInventoryView,
-    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
   },
   // Character list with summary details
   {
@@ -107,12 +114,12 @@ export const appRoutes: RouteRecordRaw[] = [
   {
     path: '/compendium/careers',
     component: CompendiumCareerGraphView,
-    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
   },
   {
     path: '/compendium/spells',
     component: CompendiumSpellsView,
-    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true, navSection: 'compendium' },
   },
   {
     path: '/:pathMatch(.*)*',

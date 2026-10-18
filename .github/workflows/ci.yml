@@ -76,6 +76,18 @@ jobs:
 
       - name: Run E2E tests
         run: npm run test:e2e
+        env:
+          # Dummy values: specs mock all REST calls, nothing reaches a real project.
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_PUBLISHABLE_KEY: e2e-dummy-key
+
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
 
   build:
     name: Build
