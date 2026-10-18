@@ -95,3 +95,47 @@ export async function listCareerPathCareersByFromCareerId(
     .filter((row): row is CareerPathCareer => row !== null)
     .sort((left, right) => left.name.localeCompare(right.name, 'fr', FRENCH_SORT_OPTIONS))
 }
+
+const PAGE_SIZE = 1000
+
+// PostgREST caps responses at 1000 rows, so page until a short page.
+async function fetchAllPages<T>(
+  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: Error | null }>
+): Promise<T[]> {
+  const rows: T[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await fetchPage(from, from + PAGE_SIZE - 1)
+    if (error) {
+      throw error
+    }
+    const page = data ?? []
+    rows.push(...page)
+    if (page.length < PAGE_SIZE) {
+      return rows
+    }
+  }
+}
+
+export async function listAllCareers(): Promise<CareerPathCareer[]> {
+  const rows = await fetchAllPages<CareerRow>((from, to) =>
+    supabase.from('careers').select('id, name').order('id').range(from, to)
+  )
+
+  return rows
+    .map(mapCareerPathCareer)
+    .filter((row): row is CareerPathCareer => row !== null)
+    .sort((left, right) => left.name.localeCompare(right.name, 'fr', FRENCH_SORT_OPTIONS))
+}
+
+export async function listAllCareerPaths(): Promise<CareerPathRow[]> {
+  const rows = await fetchAllPages<CareerPathRow>((from, to) =>
+    supabase
+      .from('career_paths')
+      .select('from_career_id, to_career_id')
+      .order('from_career_id')
+      .order('to_career_id')
+      .range(from, to)
+  )
+
+  return rows.filter((row) => Boolean(row.from_career_id) && Boolean(row.to_career_id))
+}

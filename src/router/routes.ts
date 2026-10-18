@@ -18,6 +18,7 @@ const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
 const CompendiumInventoryView = () => import('../views/CompendiumInventoryView.vue')
 const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
+const CompendiumCareerGraphView = () => import('../views/CompendiumCareerGraphView.vue')
 
 export const appRoutes: RouteRecordRaw[] = [
   // Home page
@@ -102,6 +103,11 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/sessions/:campaignId/timeline/:sessionEntryId',
     redirect: (to) =>
       buildLegacySessionTimelineRedirect(to.params.campaignId, to.params.sessionEntryId),
+  },
+  {
+    path: '/compendium/careers',
+    component: CompendiumCareerGraphView,
+    meta: { requiresAuth: false, hideFooter: false, skipSplash: true },
   },
   {
     path: '/compendium/spells',

@@ -12,6 +12,8 @@ vi.mock('../../src/db/supabase', () => ({
 }))
 
 import {
+  listAllCareerPaths,
+  listAllCareers,
   listCareerCharacteristicsByCareerId,
   listCareerPathCareersByFromCareerId,
 } from '../../src/services/careersRepository'
@@ -78,6 +80,57 @@ describe('careersRepository', () => {
       { id: 'b', name: 'Agitateur' },
       { id: 'a', name: 'Aubergiste' },
     ])
+  })
+
+  it('lists all careers and drops invalid rows', async () => {
+    const builder = createSupabaseQueryBuilder({
+      data: [
+        { id: 'b', name: 'Bailli' },
+        { id: 'a', name: 'Agitateur' },
+        { id: '', name: 'Ignoree' },
+      ],
+      error: null,
+    })
+    fromMock.mockReturnValue(builder)
+
+    await expect(listAllCareers()).resolves.toEqual([
+      { id: 'a', name: 'Agitateur' },
+      { id: 'b', name: 'Bailli' },
+    ])
+    expect(fromMock).toHaveBeenCalledWith('careers')
+  })
+
+  it('pages through career paths until a short page', async () => {
+    const fullPage = Array.from({ length: 1000 }, (_, index) => ({
+      from_career_id: `from-${index}`,
+      to_career_id: `to-${index}`,
+    }))
+    const lastPage = [{ from_career_id: 'last', to_career_id: 'end' }]
+    const firstBuilder = createSupabaseQueryBuilder({ data: fullPage, error: null })
+    const secondBuilder = createSupabaseQueryBuilder({ data: lastPage, error: null })
+    fromMock.mockReturnValueOnce(firstBuilder).mockReturnValueOnce(secondBuilder)
+
+    const result = await listAllCareerPaths()
+
+    expect(result).toHaveLength(1001)
+    expect(result[1000]).toEqual(lastPage[0])
+    expect(firstBuilder.range).toHaveBeenCalledWith(0, 999)
+    expect(secondBuilder.range).toHaveBeenCalledWith(1000, 1999)
+    expect(fromMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('lists all career paths and filters incomplete rows', async () => {
+    fromMock.mockReturnValue(
+      createSupabaseQueryBuilder({
+        data: [
+          { from_career_id: 'a', to_career_id: 'b' },
+          { from_career_id: '', to_career_id: 'b' },
+        ],
+        error: null,
+      })
+    )
+
+    await expect(listAllCareerPaths()).resolves.toEqual([{ from_career_id: 'a', to_career_id: 'b' }])
   })
 
   it('rejects blank career identifiers before querying', async () => {
