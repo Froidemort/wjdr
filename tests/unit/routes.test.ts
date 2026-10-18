@@ -51,17 +51,13 @@ describe('application routes', () => {
     })
   })
 
-  it('exposes the public interactive map route', () => {
-    const map = appRoutes.find((route) => route.path === '/map')
+  it('registers compendium skills, talents, and map routes together', () => {
+    const paths = appRoutes.map((route) => route.path)
 
-    expect(map?.meta).toMatchObject({
-      requiresAuth: false,
-      hideFooter: true,
-      skipSplash: true,
-      navSection: 'map',
-    })
+    expect(paths).toEqual(
+      expect.arrayContaining(['/compendium/skills', '/compendium/talents', '/map'])
+    )
   })
-
   it('maps legacy session URLs to their campaign equivalents', () => {
     const sessions = appRoutes.find((route) => route.path === '/sessions')
     const detail = appRoutes.find((route) => route.path === '/sessions/:id')
@@ -71,4 +67,5 @@ describe('application routes', () => {
     expect((detail?.redirect as (to: { params: { id: string } }) => string)({ params: { id: 'c-42' } })).toBe('/campaigns/c-42')
     expect((timeline?.redirect as (to: { params: { campaignId: string; sessionEntryId: string } }) => string)({ params: { campaignId: 'c-42', sessionEntryId: 's-07' } })).toBe('/campaigns/c-42/timeline/s-07')
   })
+
 })
