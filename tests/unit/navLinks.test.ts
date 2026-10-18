@@ -9,18 +9,14 @@ describe('compendium navigation', () => {
     expect(link).toMatchObject({ to: '/compendium', public: true })
   })
 
-  it('lists inventory, careers and spells sections', () => {
+  it('lists inventory, careers, spells, skills, talents and map sections', () => {
     expect(compendiumSections.map((section) => section.to)).toEqual([
       '/compendium/inventory',
       '/compendium/careers',
       '/compendium/spells',
-    ])
-  })
-
-  it('includes the V2 skills and talents sections', () => {
-    expect(compendiumSections.filter((section) => section.to.includes('/skills') || section.to.includes('/talents')).map((section) => section.to)).toEqual([
       '/compendium/skills',
       '/compendium/talents',
+      '/map',
     ])
   })
 
