@@ -1,0 +1,54 @@
+import type { MapMarker, MapRole, MarkerVisibility } from '../types/map'
+import { normalizeSearchText } from './searchText'
+
+export interface MarkerFilters {
+  showBase: boolean
+  showCampaign: boolean
+  hiddenTypeIds: readonly string[]
+  query: string
+}
+
+/** Merges base and campaign markers; a campaign marker replaces a base one with the same id. */
+export function mergeMarkers(base: readonly MapMarker[], campaign: readonly MapMarker[]): MapMarker[] {
+  const byId = new Map<string, MapMarker>()
+  for (const marker of base) byId.set(marker.id, marker)
+  for (const marker of campaign) byId.set(marker.id, marker)
+  return [...byId.values()]
+}
+
+export function filterMarkers(markers: readonly MapMarker[], filters: Omit<MarkerFilters, 'query'>): MapMarker[] {
+  const hidden = new Set(filters.hiddenTypeIds)
+  return markers.filter((marker) => {
+    if (marker.source === 'base' ? !filters.showBase : !filters.showCampaign) return false
+    return !hidden.has(marker.typeId)
+  })
+}
+
+/** Name search ignoring case and accents; prefix matches rank first. */
+export function searchMarkers(markers: readonly MapMarker[], query: string, limit = 20): MapMarker[] {
+  const needle = normalizeSearchText(query.trim())
+  if (!needle) return []
+
+  const prefix: MapMarker[] = []
+  const contains: MapMarker[] = []
+  for (const marker of markers) {
+    const name = normalizeSearchText(marker.name)
+    if (name.startsWith(needle)) prefix.push(marker)
+    else if (name.includes(needle)) contains.push(marker)
+  }
+
+  const byName = (a: MapMarker, b: MapMarker) => a.name.localeCompare(b.name, 'fr')
+  return [...prefix.sort(byName), ...contains.sort(byName)].slice(0, limit)
+}
+
+export function canEditMarker(marker: MapMarker, userId: string | null, role: MapRole | null): boolean {
+  if (marker.source !== 'campaign' || !userId) return false
+  if (marker.createdBy === userId) return true
+  return role === 'mj' && marker.visibility !== 'private'
+}
+
+export function allowedVisibilities(role: MapRole | null): MarkerVisibility[] {
+  if (role === 'mj') return ['private', 'mj', 'players']
+  if (role === 'player') return ['private']
+  return []
+}
