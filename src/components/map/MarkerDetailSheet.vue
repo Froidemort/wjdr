@@ -31,7 +31,7 @@ watch(
 
 <template>
   <aside
-    class="absolute inset-x-0 bottom-0 z-[1000] max-h-[60%] overflow-y-auto rounded-t-box border border-base-300 bg-base-100 p-4 shadow-xl lg:inset-x-auto lg:bottom-4 lg:right-4 lg:w-96 lg:rounded-box"
+    class="absolute inset-x-0 bottom-0 z-20 max-h-[60%] overflow-y-auto rounded-t-box border border-base-300 bg-base-100 p-4 shadow-xl lg:inset-x-auto lg:bottom-8 lg:right-4 lg:w-96 lg:rounded-box"
     aria-labelledby="marker-detail-title"
   >
     <header class="flex items-start justify-between gap-2">

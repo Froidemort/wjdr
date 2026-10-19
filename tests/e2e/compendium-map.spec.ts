@@ -63,3 +63,30 @@ test.describe('Public skills and talents compendium', () => {
     await expect(page.getByRole('dialog', { name: 'Acrobatie' })).toBeVisible()
   })
 })
+
+test.describe('Interactive map', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/rest/v1/map_marker_types**', (route) => route.fulfill({ json: [] }))
+    await page.route('**/rest/v1/map_markers**', (route) => route.fulfill({ json: [] }))
+    await page.route('**/data/cities.json', (route) =>
+      route.fulfill({
+        json: [{ id: 1, name: 'Altdorf', lat: 48.1, lng: 11.5, type: 'Cité', population: 105000, region: 'Reikland', hidden: false }],
+      })
+    )
+    await page.route('**/storage/v1/object/**/map-tiles/**', (route) => route.fulfill({ status: 401, json: { message: 'unauthorized' } }))
+  })
+
+  test('signed-out visitors are asked to sign in for the base map', async ({ page }) => {
+    await page.goto('/map')
+
+    await expect(page.getByRole('application', { name: 'Carte du Vieux Monde' })).toBeVisible()
+    await expect(page.getByRole('alert').filter({ hasText: 'Connecte-toi pour afficher le fond de carte' })).toBeVisible()
+  })
+
+  test('shows the cities toggle and offline prefetch in the layer panel', async ({ page }) => {
+    await page.goto('/map')
+
+    await expect(page.getByLabel('Villes et lieux-dits')).toBeChecked()
+    await expect(page.getByRole('button', { name: /Précharger la carte/ })).toBeVisible()
+  })
+})

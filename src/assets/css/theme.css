@@ -17,26 +17,26 @@
   default: false;
   prefersdark: true;
   color-scheme: "dark";
-  
+
   /* Arrière-plans : Cendres et Encre corrompue */
   --color-base-100: oklch(14.05% 0.012 15.0);       /* Fond ultra sombre teinté de rouge/brun */
   --color-base-200: oklch(18.22% 0.014 15.0);       /* Éléments de cartes légèrement plus clairs */
   --color-base-300: oklch(22.35% 0.016 15.0);       /* Survols et zones imbriquées */
   --color-base-content: oklch(88.24% 0.025 65.0);   /* Texte blanc cassé / parchemin brûlé */
-  
+
   /* Couleurs d'accentuation : Rouge Sang Impérial & Or du Vieux Monde */
   --color-primary: oklch(48% 0.165 24.22);          /* Rouge sang séché / Enluminures du grimoire (augmenté pour AAA) */
-  --color-primary-content: oklch(92.0% 0.01 25.0);  
-  
+  --color-primary-content: oklch(92.0% 0.01 25.0);
+
   --color-secondary: oklch(28.0% 0.03 20.0);        /* Brun d'acier corrodé et de cuir */
   --color-secondary-content: oklch(85.0% 0.02 70.0);
-  
+
   --color-accent: oklch(73% 0.1389 90.43);        /* Or Vieilli / Artefacts & Magie */
   --color-accent-content: oklch(25.0% 0.06 80.0);
-  
+
   --color-neutral: oklch(10.0% 0.005 0.0);          /* Noir pur pour les ombres et contrastes lourds */
   --color-neutral-content: oklch(75.0% 0.01 60.0);
-  
+
   /* États (Adaptés au ton rude et pragmatique du Jdr) */
   --color-info: oklch(62.5% 0.114 233.1);           /* Bleu nuit alchimique */
   --color-info-content: oklch(100% 0 0);
@@ -69,26 +69,26 @@ html[data-theme="grimorium-dark"] {
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  
+
   /* Arrière-plans : Ton Parchemin et Vieux Papiers (tiré de l'image) */
   --color-base-100: oklch(93.12% 0.045 82.0);       /* Fond parchemin clair texturé */
   --color-base-200: oklch(89.45% 0.058 80.0);       /* Teinte papier un peu plus dense / Encadrés */
   --color-base-300: oklch(84.18% 0.071 78.0);       /* Lignes de tableau et séparateurs */
   --color-base-content: oklch(18.05% 0.021 52.0);   /* Encre noire/brune délavée très lisible */
-  
+
   /* Couleurs d'accentuation : Contrastes issus des lettrines de la page */
   --color-primary: oklch(38.15% 0.142 22.0);       /* Rouge bordeaux des titres de chapitres */
   --color-primary-content: oklch(96.0% 0.01 80.0);
-  
+
   --color-secondary: oklch(52.4% 0.082 58.0);       /* Brun de reliure en cuir */
   --color-secondary-content: oklch(98.0% 0.005 80.0);
-  
+
   --color-accent: oklch(45.0% 0.12 40.0);           /* Brun-rouge flamboyant pour les modificateurs négatifs */
   --color-accent-content: oklch(97.0% 0.01 40.0);
-  
+
   --color-neutral: oklch(25.0% 0.03 75.0);          /* Gris-brun de pierre pour les boutons secondaires */
   --color-neutral-content: oklch(95.0% 0.01 75.0);
-  
+
   /* États */
   --color-info: oklch(50.0% 0.10 240.0);
   --color-info-content: oklch(100% 0 0);
@@ -1081,4 +1081,10 @@ html.app-splash-active body {
   .grim-feature-card__arrow {
     transition: none;
   }
+}
+
+/* The Leaflet overlay pane is 0x0, so a global `canvas { max-width: 100% }` collapses the marker canvas. */
+.leaflet-overlay-pane canvas {
+  max-width: none !important;
+  max-height: none !important;
 }

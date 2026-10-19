@@ -1,6 +1,7 @@
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { listCities } from '../services/citiesRepository'
 import {
   createCampaignMarker,
   deleteCampaignMarker,
@@ -9,6 +10,7 @@ import {
   listMarkerTypes,
   updateCampaignMarker,
 } from '../services/mapRepository'
+import type { City } from '../types/cities'
 import type { MapMarker, MarkerDraft, MarkerType } from '../types/map'
 import { filterMarkers, mergeMarkers, searchMarkers } from '../utils/mapMarkers'
 
@@ -20,9 +22,11 @@ export const useMapStore = defineStore('map', () => {
   const baseMarkers = ref<MapMarker[]>([])
   const campaignMarkers = ref<MapMarker[]>([])
   const campaignId = ref<string | null>(null)
+  const cities = ref<City[]>([])
 
   const showBase = useStorage('wjdr:map:show-base', true)
   const showCampaign = useStorage('wjdr:map:show-campaign', true)
+  const showCities = useStorage('wjdr:map:show-cities', true)
   const hiddenTypeIds = useStorage<string[]>('wjdr:map:hidden-types', [])
   const query = ref('')
   const selectedId = ref<string | null>(null)
@@ -66,6 +70,17 @@ export const useMapStore = defineStore('map', () => {
       })
 
     return pendingBase
+  }
+
+  /** Lazy: fetched once, only when the cities layer is shown. */
+  async function loadCities(): Promise<void> {
+    if (cities.value.length > 0) return
+
+    try {
+      cities.value = await listCities()
+    } catch {
+      error.value = LOAD_ERROR
+    }
   }
 
   /** Loads markers of a campaign, or clears them when `id` is null. */
@@ -173,8 +188,10 @@ export const useMapStore = defineStore('map', () => {
     baseMarkers,
     campaignMarkers,
     campaignId,
+    cities,
     showBase,
     showCampaign,
+    showCities,
     hiddenTypeIds,
     query,
     selectedId,
@@ -187,6 +204,7 @@ export const useMapStore = defineStore('map', () => {
     searchResults,
     loadBase,
     loadCampaign,
+    loadCities,
     toggleType,
     select,
     addMarker,

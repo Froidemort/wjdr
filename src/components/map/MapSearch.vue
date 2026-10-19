@@ -26,7 +26,7 @@ function pick(marker: MapMarker): void {
     <SearchInput v-model="query" placeholder="Rechercher un lieu" aria-label="Rechercher un lieu sur la carte" />
     <ul
       v-if="open"
-      class="menu absolute inset-x-0 top-full z-[1100] mt-1 max-h-64 flex-nowrap overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
+      class="menu absolute inset-x-0 top-full z-10 mt-1 max-h-64 flex-nowrap overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
       aria-label="Résultats de recherche"
     >
       <li v-for="marker in props.results" :key="marker.id">

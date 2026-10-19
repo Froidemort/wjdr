@@ -2,6 +2,7 @@
 import { Layers } from '@lucide/vue'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
+import CityDetailSheet from '../components/map/CityDetailSheet.vue'
 import MapCanvas from '../components/map/MapCanvas.vue'
 import MapLayerPanel from '../components/map/MapLayerPanel.vue'
 import MapSearch from '../components/map/MapSearch.vue'
@@ -9,6 +10,7 @@ import MarkerDetailSheet from '../components/map/MarkerDetailSheet.vue'
 import MarkerFormModal from '../components/map/MarkerFormModal.vue'
 import { useMapCampaign } from '../composables/useMapCampaign'
 import type { MapPin } from '../composables/useLeafletMap'
+import { useMapTilePrefetch } from '../composables/useMapTilePrefetch'
 import { useRealtimeSync } from '../composables/useRealtimeSync'
 import { useMapStore } from '../stores/map'
 import type { MapFlyTarget, MapMarker, MarkerDraft } from '../types/map'
@@ -24,6 +26,8 @@ const {
   typesById,
   showBase,
   showCampaign,
+  showCities,
+  cities,
   hiddenTypeIds,
   query,
   selectedId,
@@ -35,6 +39,9 @@ const {
   writeError,
 } = storeToRefs(store)
 const { campaignId, role, userId } = useMapCampaign()
+const { state: prefetchState, start: startPrefetch, cancel: cancelPrefetch } = useMapTilePrefetch()
+const selectedCityId = ref<number | null>(null)
+const selectedCity = computed(() => cities.value.find((city) => city.id === selectedCityId.value) ?? null)
 
 const flyTarget = ref<MapFlyTarget | null>(null)
 const formOpen = ref(false)
@@ -56,7 +63,24 @@ const pins = computed<MapPin[]>(() =>
 const visibilities = computed(() => allowedVisibilities(role.value))
 const canEditSelected = computed(() => (selectedMarker.value ? canEditMarker(selectedMarker.value, userId.value, role.value) : false))
 
+function selectMarker(id: string | null): void {
+  if (id) selectedCityId.value = null
+  store.select(id)
+}
+
+function selectCity(id: number): void {
+  store.select(null)
+  selectedCityId.value = id
+}
+
+function centerCity(): void {
+  if (selectedCity.value) {
+    flyTarget.value = { lat: selectedCity.value.lat, lng: selectedCity.value.lng, zoom: FOCUS_ZOOM, nonce: Date.now() }
+  }
+}
+
 function focusMarker(marker: MapMarker): void {
+  selectedCityId.value = null
   store.select(marker.id)
   flyTarget.value = { lat: marker.lat, lng: marker.lng, zoom: FOCUS_ZOOM, nonce: Date.now() }
 }
@@ -115,6 +139,14 @@ watch(
   { immediate: true }
 )
 
+watch(
+  showCities,
+  (visible) => {
+    if (visible) void store.loadCities()
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   void store.loadBase()
 })
@@ -126,9 +158,17 @@ onMounted(() => {
       <input id="map-layers-drawer" type="checkbox" class="drawer-toggle" aria-label="Afficher les calques" />
 
       <div class="drawer-content relative size-full">
-        <MapCanvas :pins="pins" :fly-target="flyTarget" @select="store.select" @contextmenu="onMapContextMenu" />
+        <MapCanvas
+          :pins="pins"
+          :cities="cities"
+          :show-cities="showCities"
+          :fly-target="flyTarget"
+          @select="selectMarker"
+          @select-city="selectCity"
+          @contextmenu="onMapContextMenu"
+        />
 
-        <div class="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex items-start gap-2 p-3">
+        <div class="pointer-events-none absolute top-0 inset-s-14 right-0 z-20 flex items-start gap-2 p-3">
           <div class="pointer-events-auto w-full max-w-md">
             <MapSearch v-model="query" :results="searchResults" @select="focusMarker" />
           </div>
@@ -137,12 +177,14 @@ onMounted(() => {
           </label>
         </div>
 
-        <div class="pointer-events-none absolute inset-x-0 top-16 z-[1000] flex flex-col items-center gap-2 px-3">
+        <div class="pointer-events-none absolute inset-x-0 top-16 z-20 flex flex-col items-center gap-2 px-3">
           <p v-if="loading" class="badge badge-neutral pointer-events-auto">Chargement des lieux…</p>
           <p v-if="error" role="alert" class="alert alert-error alert-soft pointer-events-auto py-2 text-sm">{{ error }}</p>
           <p v-if="writeError" role="alert" class="alert alert-error alert-soft pointer-events-auto py-2 text-sm">{{ writeError }}</p>
           <p v-if="hint" role="status" class="alert alert-info alert-soft pointer-events-auto py-2 text-sm">{{ hint }}</p>
         </div>
+
+        <CityDetailSheet v-if="selectedCity && !selectedMarker" :city="selectedCity" @close="selectedCityId = null" @center="centerCity" />
 
         <MarkerDetailSheet
           v-if="selectedMarker"
@@ -156,16 +198,20 @@ onMounted(() => {
         />
       </div>
 
-      <div class="drawer-side z-[1200]">
+      <div class="drawer-side z-50">
         <label for="map-layers-drawer" class="drawer-overlay" aria-label="Fermer les calques" />
         <div class="min-h-full w-72 bg-base-100">
           <MapLayerPanel
             v-model:show-base="showBase"
             v-model:show-campaign="showCampaign"
+            v-model:show-cities="showCities"
             :types="types"
             :hidden-type-ids="hiddenTypeIds"
             :has-campaign="campaignId !== null"
+            :prefetch="prefetchState"
             @toggle-type="store.toggleType"
+            @prefetch="startPrefetch"
+            @cancel-prefetch="cancelPrefetch"
           />
         </div>
       </div>
