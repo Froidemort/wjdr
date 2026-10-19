@@ -34,12 +34,13 @@ CREATE TABLE IF NOT EXISTS public.map_marker_types (
 
 ALTER TABLE public.map_marker_types ENABLE ROW LEVEL SECURITY;
 
-GRANT SELECT ON public.map_marker_types TO anon, authenticated;
+REVOKE ALL ON public.map_marker_types FROM anon;
+GRANT SELECT ON public.map_marker_types TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.map_marker_types TO service_role;
 
 DROP POLICY IF EXISTS select_map_marker_types ON public.map_marker_types;
 CREATE POLICY select_map_marker_types ON public.map_marker_types
-    FOR SELECT TO anon, authenticated
+    FOR SELECT TO authenticated
     USING (true);
 
 DROP POLICY IF EXISTS service_role_all_map_marker_types ON public.map_marker_types;
@@ -56,7 +57,7 @@ INSERT INTO public.map_marker_types (code, label, icon, color) VALUES
     ('objective', 'Objectif', 'Flag', '#7c3aed')
 ON CONFLICT (code) DO NOTHING;
 
--- Generic base layer, readable by everyone, written by service_role only.
+-- Generic base layer, readable by authenticated users, written by service_role only.
 CREATE TABLE IF NOT EXISTS public.map_markers (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     type_id uuid NOT NULL REFERENCES public.map_marker_types (id) ON DELETE RESTRICT,
@@ -72,18 +73,33 @@ CREATE INDEX IF NOT EXISTS map_markers_type_id_idx ON public.map_markers (type_i
 
 ALTER TABLE public.map_markers ENABLE ROW LEVEL SECURITY;
 
-GRANT SELECT ON public.map_markers TO anon, authenticated;
+REVOKE ALL ON public.map_markers FROM anon;
+GRANT SELECT ON public.map_markers TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.map_markers TO service_role;
 
 DROP POLICY IF EXISTS select_map_markers ON public.map_markers;
 CREATE POLICY select_map_markers ON public.map_markers
-    FOR SELECT TO anon, authenticated
+    FOR SELECT TO authenticated
     USING (true);
 
 DROP POLICY IF EXISTS service_role_all_map_markers ON public.map_markers;
 CREATE POLICY service_role_all_map_markers ON public.map_markers
     FOR ALL TO service_role
     USING (true) WITH CHECK (true);
+
+-- Private tile bucket (z/x/y.jpg); egress is budgeted, hence authenticated-only reads.
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('map-tiles', 'map-tiles', false, 1048576, ARRAY['image/jpeg'])
+ON CONFLICT (id) DO UPDATE SET
+    public = EXCLUDED.public,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- No write policy: uploads go through service_role, which bypasses RLS.
+DROP POLICY IF EXISTS select_map_tiles ON storage.objects;
+CREATE POLICY select_map_tiles ON storage.objects
+    FOR SELECT TO authenticated
+    USING (bucket_id = 'map-tiles');
 
 -- Campaign markers: visibility 'mj' (MJ only), 'players' (whole campaign), 'private' (creator only).
 CREATE TABLE IF NOT EXISTS public.campaign_markers (
@@ -113,7 +129,7 @@ DROP POLICY IF EXISTS select_campaign_markers ON public.campaign_markers;
 CREATE POLICY select_campaign_markers ON public.campaign_markers
     FOR SELECT TO authenticated
     USING (
-        created_by = auth.uid()
+        (created_by = auth.uid() AND (public.is_campaign_member(campaign_id) OR public.is_session_mj(campaign_id)))
         OR (visibility = 'players' AND public.is_campaign_member(campaign_id))
         OR (visibility <> 'private' AND public.is_session_mj(campaign_id))
     );
@@ -133,12 +149,13 @@ DROP POLICY IF EXISTS update_campaign_markers ON public.campaign_markers;
 CREATE POLICY update_campaign_markers ON public.campaign_markers
     FOR UPDATE TO authenticated
     USING (
-        created_by = auth.uid()
+        (created_by = auth.uid() AND (public.is_campaign_member(campaign_id) OR public.is_session_mj(campaign_id)))
         OR (visibility <> 'private' AND public.is_session_mj(campaign_id))
     )
     WITH CHECK (
         (
             created_by = auth.uid()
+            AND (public.is_campaign_member(campaign_id) OR public.is_session_mj(campaign_id))
             AND (public.is_session_mj(campaign_id) OR visibility = 'private')
         )
         OR (visibility <> 'private' AND public.is_session_mj(campaign_id))
@@ -148,7 +165,7 @@ DROP POLICY IF EXISTS delete_campaign_markers ON public.campaign_markers;
 CREATE POLICY delete_campaign_markers ON public.campaign_markers
     FOR DELETE TO authenticated
     USING (
-        created_by = auth.uid()
+        (created_by = auth.uid() AND (public.is_campaign_member(campaign_id) OR public.is_session_mj(campaign_id)))
         OR (visibility <> 'private' AND public.is_session_mj(campaign_id))
     );
 

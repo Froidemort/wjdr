@@ -13,7 +13,10 @@ const meta: Meta<typeof MapLayerPanel> = {
     hasCampaign: true,
     showBase: true,
     showCampaign: true,
+    showCities: true,
     onToggleType: fn(),
+    onPrefetch: fn(),
+    onCancelPrefetch: fn(),
   },
 }
 
@@ -47,5 +50,46 @@ export const TogglingATypeEmitsItsId: Story = {
   play: async ({ canvas, args }) => {
     await userEvent.click(canvas.getByLabelText('Note'))
     await expect(args.onToggleType).toHaveBeenCalledWith('t-note')
+  },
+}
+
+export const CitiesToggle: Story = {
+  play: async ({ canvas }) => {
+    const toggle = canvas.getByLabelText('Villes et lieux-dits')
+    await expect(toggle).toBeChecked()
+    await userEvent.click(toggle)
+    await expect(toggle).not.toBeChecked()
+  },
+}
+
+export const PrefetchIdle: Story = {
+  args: { prefetch: { running: false, done: 0, total: 0, failed: 0, message: null } },
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /Précharger la carte/ }))
+    await expect(args.onPrefetch).toHaveBeenCalledOnce()
+  },
+}
+
+export const PrefetchRunning: Story = {
+  args: { prefetch: { running: true, done: 340, total: 1360, failed: 0, message: null } },
+  play: async ({ canvas, args }) => {
+    await expect(canvas.getByText('340 / 1360 tuiles')).toBeVisible()
+    await expect(canvas.queryByRole('button', { name: /Précharger/ })).toBeNull()
+    await userEvent.click(canvas.getByRole('button', { name: 'Annuler' }))
+    await expect(args.onCancelPrefetch).toHaveBeenCalledOnce()
+  },
+}
+
+export const PrefetchDone: Story = {
+  args: { prefetch: { running: false, done: 1360, total: 1360, failed: 0, message: 'Carte préchargée.' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Carte préchargée.')).toBeVisible()
+  },
+}
+
+export const PrefetchAuthRequired: Story = {
+  args: { prefetch: { running: false, done: 12, total: 1360, failed: 0, message: 'Connecte-toi pour précharger la carte.' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Connecte-toi pour précharger la carte.')).toBeVisible()
   },
 }
