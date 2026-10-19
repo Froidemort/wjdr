@@ -173,6 +173,7 @@ onMounted(() => {
           :pins="pins"
           :cities="cities"
           :show-cities="showCities"
+          :selected-city-id="selectedMarker ? null : selectedCityId"
           :fly-target="flyTarget"
           @select="selectMarker"
           @select-city="selectCity"

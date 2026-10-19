@@ -55,6 +55,8 @@ export function useLeafletMap(container: Ref<HTMLElement | null>, handlers: Leaf
   let pins: MapPin[] = []
   let cities: City[] = []
   let citiesVisible = true
+  let selectedCityId: number | null = null
+  let selectionMarker: Leaflet.Marker | null = null
 
   function createCachedTileLayer(leaflet: typeof Leaflet, cache: TileCache): Leaflet.TileLayer {
     class CachedTileLayer extends leaflet.TileLayer {
@@ -163,11 +165,13 @@ export function useLeafletMap(container: Ref<HTMLElement | null>, handlers: Leaf
   function setCities(next: City[]): void {
     cities = next
     renderCities()
+    renderSelection()
   }
 
   function setCitiesVisible(visible: boolean): void {
     citiesVisible = visible
     renderCities()
+    renderSelection()
   }
 
   function syncTileLayer(): void {
@@ -190,6 +194,35 @@ export function useLeafletMap(container: Ref<HTMLElement | null>, handlers: Leaf
   function setPins(next: MapPin[]): void {
     pins = next
     renderPins()
+    renderSelection()
+  }
+
+  function setSelectedCity(id: number | null): void {
+    selectedCityId = id
+    renderSelection()
+  }
+
+  /** CSS-animated DOM ring: the pulse stays off the canvas, so it never forces a redraw of every marker. */
+  function renderSelection(): void {
+    selectionMarker?.remove()
+    selectionMarker = null
+    if (!L || !map.value) return
+
+    const pin = pins.find((candidate) => candidate.selected)
+    const city = !pin && citiesVisible && selectedCityId !== null ? cities.find((candidate) => candidate.id === selectedCityId) : undefined
+    const target = pin ?? city
+    if (!target) return
+
+    selectionMarker = L.marker([target.lat, target.lng], {
+      icon: L.divIcon({
+        className: 'map-selection-pulse',
+        html: '<span class="map-selection-pulse__ring"></span>',
+        iconSize: [44, 44],
+      }),
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: -1000,
+    }).addTo(map.value)
   }
 
   function flyTo(lat: number, lng: number, zoom?: number): void {
@@ -253,6 +286,7 @@ export function useLeafletMap(container: Ref<HTMLElement | null>, handlers: Leaf
   onBeforeUnmount(() => {
     map.value?.remove()
     map.value = null
+    selectionMarker = null
     pinLayer = null
     cityLayer = null
     tileLayer = null
@@ -260,5 +294,5 @@ export function useLeafletMap(container: Ref<HTMLElement | null>, handlers: Leaf
     ready.value = false
   })
 
-  return { ready, error, authRequired, map, setPins, setCities, setCitiesVisible, flyTo, invalidateSize }
+  return { ready, error, authRequired, map, setPins, setCities, setCitiesVisible, setSelectedCity, flyTo, invalidateSize }
 }

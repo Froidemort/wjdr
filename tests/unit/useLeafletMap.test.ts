@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => {
   const hooks: { mounted?: () => Promise<void> } = {}
   const layers: Array<{ createTile: (coords: { z: number; x: number; y: number }, done: (e?: Error, t?: unknown) => void) => unknown }> = []
   const markers: Array<{ bindTooltip: ReturnType<typeof vi.fn> }> = []
+  const selections: Array<{ latlng: [number, number]; remove: ReturnType<typeof vi.fn> }> = []
   const chain = () => ({ addTo: vi.fn().mockReturnThis(), clearLayers: vi.fn(), on: vi.fn().mockReturnThis() })
 
   class TileLayer {
@@ -24,6 +25,12 @@ const mocks = vi.hoisted(() => {
     CRS: { EPSG3857: {} },
     map: () => ({ on: vi.fn(), remove: vi.fn(), getZoom: () => 3, flyTo: vi.fn(), invalidateSize: vi.fn() }),
     canvas: () => ({}),
+    divIcon: (options: object) => options,
+    marker: (latlng: [number, number]) => {
+      const selection = { latlng, remove: vi.fn(), addTo: vi.fn().mockReturnThis() }
+      selections.push(selection)
+      return selection
+    },
     layerGroup: chain,
     circleMarker: () => {
       const marker = { ...chain(), bindTooltip: vi.fn() }
@@ -37,6 +44,7 @@ const mocks = vi.hoisted(() => {
     hooks,
     layers,
     markers,
+    selections,
     leaflet,
     cache: { getTile: vi.fn(), purgeOldVersions: vi.fn().mockResolvedValue(undefined) },
     auth: { isAuthenticated: undefined as unknown, initialized: undefined as unknown },
@@ -100,6 +108,7 @@ describe('useLeafletMap', () => {
   beforeEach(() => {
     mocks.layers.length = 0
     mocks.markers.length = 0
+    mocks.selections.length = 0
     mocks.hooks.mounted = undefined
     mocks.cache.getTile.mockReset()
     vi.stubGlobal('document', { createElement: fakeElement })
@@ -177,5 +186,31 @@ describe('useLeafletMap', () => {
     const label = mocks.markers[0].bindTooltip.mock.calls[0][0] as FakeElement
     expect(typeof label).toBe('object')
     expect(label.textContent).toBe(name)
+  })
+
+  it('adds a pulse marker on the selected pin and removes it on deselect', async () => {
+    const { setPins } = await mount()
+    const pin = { id: '1', name: 'A', lat: 1, lng: 2, color: 'red', selected: true }
+
+    setPins([pin])
+    expect(mocks.selections).toHaveLength(1)
+    expect(mocks.selections[0].latlng).toEqual([1, 2])
+
+    setPins([{ ...pin, selected: false }])
+    expect(mocks.selections[0].remove).toHaveBeenCalled()
+    expect(mocks.selections).toHaveLength(1)
+  })
+
+  it('pulses the selected city only while cities are visible', async () => {
+    const { setCities, setSelectedCity, setCitiesVisible } = await mount()
+
+    setCities([{ id: 7, name: 'Altdorf', lat: 3, lng: 4, type: 'Cité', population: 1, region: 'Reikland', country: null, subregion: null, url: null, pending: false, hidden: false, source: null }])
+    setSelectedCity(7)
+    expect(mocks.selections.at(-1)?.latlng).toEqual([3, 4])
+
+    const count = mocks.selections.length
+    setCitiesVisible(false)
+    expect(mocks.selections).toHaveLength(count)
+    expect(mocks.selections[count - 1].remove).toHaveBeenCalled()
   })
 })

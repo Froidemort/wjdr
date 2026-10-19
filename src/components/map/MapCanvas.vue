@@ -8,6 +8,7 @@ const props = defineProps<{
   pins: MapPin[]
   cities?: City[]
   showCities?: boolean
+  selectedCityId?: number | null
   flyTarget: MapFlyTarget | null
 }>()
 
@@ -18,7 +19,7 @@ const emit = defineEmits<{
 }>()
 
 const container = ref<HTMLElement | null>(null)
-const { ready, error, authRequired, setPins, setCities, setCitiesVisible, flyTo } = useLeafletMap(container, {
+const { ready, error, authRequired, setPins, setCities, setCitiesVisible, setSelectedCity, flyTo } = useLeafletMap(container, {
   onSelect: (id) => emit('select', id),
   onCitySelect: (id) => emit('selectCity', id),
   onContextMenu: (lat, lng) => emit('contextmenu', lat, lng),
@@ -27,6 +28,7 @@ const { ready, error, authRequired, setPins, setCities, setCitiesVisible, flyTo 
 watch([() => props.pins, ready], () => setPins(props.pins), { immediate: true })
 watch([() => props.cities, ready], () => setCities(props.cities ?? []), { immediate: true })
 watch([() => props.showCities, ready], () => setCitiesVisible(props.showCities ?? true), { immediate: true })
+watch([() => props.selectedCityId, ready], () => setSelectedCity(props.selectedCityId ?? null), { immediate: true })
 watch(
   () => props.flyTarget,
   (target) => {
