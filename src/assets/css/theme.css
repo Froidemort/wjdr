@@ -1089,6 +1089,121 @@ html.app-splash-active body {
   max-height: none !important;
 }
 
+/* ============================================================================
+   LEAFLET : contrôles et info-bulles suivent le thème daisyUI
+   ============================================================================
+*/
+/* leaflet.css is injected after this file: selectors are heavier to win. */
+div.leaflet-container {
+  background: var(--color-base-300);
+  color: var(--color-base-content);
+  font-family: inherit;
+}
+
+div.leaflet-container .leaflet-bar {
+  border: var(--border) solid var(--color-base-300);
+  border-radius: var(--radius-field);
+  box-shadow: 0 1px 4px color-mix(in oklab, var(--color-neutral) 40%, transparent);
+}
+
+.leaflet-container .leaflet-bar a[role="button"] {
+  background-color: var(--color-base-100);
+  border-bottom-color: var(--color-base-300);
+  color: var(--color-base-content);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.leaflet-container .leaflet-bar a[role="button"]:hover {
+  background-color: var(--color-base-300);
+}
+
+.leaflet-container .leaflet-bar a[role="button"]:active {
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.leaflet-container .leaflet-bar a[role="button"]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.leaflet-container .leaflet-bar a[role="button"].leaflet-disabled {
+  background-color: var(--color-base-200);
+  color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+  cursor: not-allowed;
+}
+
+.leaflet-container .leaflet-bar a:first-child {
+  border-top-left-radius: var(--radius-field);
+  border-top-right-radius: var(--radius-field);
+}
+
+.leaflet-container .leaflet-bar a:last-child {
+  border-bottom-left-radius: var(--radius-field);
+  border-bottom-right-radius: var(--radius-field);
+  border-bottom: none;
+}
+
+@media (pointer: coarse) {
+  .leaflet-container .leaflet-bar a[role="button"] {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+}
+
+.leaflet-container .leaflet-control-attribution {
+  background: color-mix(in oklab, var(--color-base-100) 80%, transparent);
+  color: var(--color-base-content);
+}
+
+.leaflet-container .leaflet-control-attribution a {
+  color: var(--color-primary);
+}
+
+.leaflet-container .leaflet-control-attribution a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.leaflet-container .leaflet-tooltip {
+  background: var(--color-base-100);
+  border: var(--border) solid var(--color-base-300);
+  border-radius: var(--radius-field);
+  color: var(--color-base-content);
+  box-shadow: 0 1px 4px color-mix(in oklab, var(--color-neutral) 40%, transparent);
+}
+
+.leaflet-container .leaflet-tooltip-top::before {
+  border-top-color: var(--color-base-300);
+}
+
+.leaflet-container .leaflet-tooltip-bottom::before {
+  border-bottom-color: var(--color-base-300);
+}
+
+.leaflet-container .leaflet-tooltip-left::before {
+  border-left-color: var(--color-base-300);
+}
+
+.leaflet-container .leaflet-tooltip-right::before {
+  border-right-color: var(--color-base-300);
+}
+
+.leaflet-container .leaflet-popup-content-wrapper,
+.leaflet-container .leaflet-popup-tip {
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+}
+
+.leaflet-container .leaflet-popup-content-wrapper {
+  border-radius: var(--radius-box);
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--color-base-content);
+}
+
 /* Selected marker: slow pulsing ring (compositor-only transform/opacity). */
 .map-selection-pulse {
   background: none;
