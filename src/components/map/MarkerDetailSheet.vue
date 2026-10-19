@@ -31,10 +31,10 @@ watch(
 
 <template>
   <aside
-    class="absolute inset-x-0 bottom-0 z-20 max-h-[60%] overflow-y-auto rounded-t-box border border-base-300 bg-base-100 p-4 shadow-xl lg:inset-x-auto lg:bottom-8 lg:right-4 lg:w-96 lg:rounded-box"
+    class="absolute inset-x-2 bottom-2 z-20 max-h-[min(60%,calc(100%-5rem))] overflow-y-auto overscroll-contain rounded-box border border-base-300 bg-base-100 p-4 shadow-xl lg:inset-x-auto lg:bottom-8 lg:right-4 lg:w-96"
     aria-labelledby="marker-detail-title"
   >
-    <header class="flex items-start justify-between gap-2">
+    <header class="sticky -top-4 z-10 -mx-4 -mt-4 flex items-start justify-between gap-2 bg-base-100 p-4 pb-2">
       <div class="min-w-0">
         <h2 id="marker-detail-title" class="truncate text-lg font-bold">{{ marker.name }}</h2>
         <p class="text-sm opacity-70">
