@@ -11,7 +11,6 @@ const meta: Meta<typeof MapLayerPanel> = {
     types: markerTypes,
     hiddenTypeIds: [],
     hasCampaign: true,
-    showBase: true,
     showCampaign: true,
     showCities: true,
     onToggleType: fn(),

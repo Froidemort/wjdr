@@ -3,7 +3,6 @@ import { resolveMarkerIcon } from '../../config/mapMarkerIcons'
 import type { MapPrefetchState } from '../../composables/useMapTilePrefetch'
 import type { MarkerType } from '../../types/map'
 
-const showBase = defineModel<boolean>('showBase', { required: true })
 const showCampaign = defineModel<boolean>('showCampaign', { required: true })
 const showCities = defineModel<boolean>('showCities', { default: true })
 
@@ -23,14 +22,10 @@ defineEmits<{
 
 <template>
   <section class="flex flex-col gap-5 p-4" aria-labelledby="map-layers-title">
-    <h2 id="map-layers-title" class="text-lg font-bold">Calques</h2>
+    <h2 id="map-layers-title" class="text-lg font-bold">Le Vieux Monde</h2>
 
     <fieldset class="flex flex-col gap-2">
       <legend class="mb-1 text-xs font-bold uppercase tracking-wider opacity-70">Calques</legend>
-      <label class="label min-h-11 cursor-pointer justify-between gap-3">
-        <span>Carte du Vieux Monde</span>
-        <input v-model="showBase" type="checkbox" class="toggle toggle-primary" />
-      </label>
       <label class="label min-h-11 cursor-pointer justify-between gap-3">
         <span>Villes et lieux-dits</span>
         <input v-model="showCities" type="checkbox" class="toggle toggle-primary" />

@@ -24,7 +24,6 @@ const store = useMapStore()
 const {
   types,
   typesById,
-  showBase,
   showCampaign,
   showCities,
   cities,
@@ -214,7 +213,6 @@ onMounted(() => {
         <label for="map-layers-drawer" class="drawer-overlay" aria-label="Fermer les calques" />
         <div class="min-h-full w-72 bg-base-100">
           <MapLayerPanel
-            v-model:show-base="showBase"
             v-model:show-campaign="showCampaign"
             v-model:show-cities="showCities"
             :types="types"

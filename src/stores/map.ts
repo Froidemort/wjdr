@@ -25,7 +25,6 @@ export const useMapStore = defineStore('map', () => {
   const campaignId = ref<string | null>(null)
   const cities = ref<City[]>([])
 
-  const showBase = useStorage('wjdr:map:show-base', true)
   const showCampaign = useStorage('wjdr:map:show-campaign', true)
   const showCities = useStorage('wjdr:map:show-cities', true)
   const hiddenTypeIds = useStorage<string[]>('wjdr:map:hidden-types', [])
@@ -39,7 +38,6 @@ export const useMapStore = defineStore('map', () => {
   const allMarkers = computed(() => mergeMarkers(baseMarkers.value, campaignMarkers.value))
   const visibleMarkers = computed(() =>
     filterMarkers(allMarkers.value, {
-      showBase: showBase.value,
       showCampaign: showCampaign.value,
       hiddenTypeIds: hiddenTypeIds.value,
     })
@@ -190,7 +188,6 @@ export const useMapStore = defineStore('map', () => {
     campaignMarkers,
     campaignId,
     cities,
-    showBase,
     showCampaign,
     showCities,
     hiddenTypeIds,

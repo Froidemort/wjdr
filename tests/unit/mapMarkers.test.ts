@@ -42,16 +42,16 @@ describe('filterMarkers', () => {
   const base = marker({ id: 'b', source: 'base', typeId: 't1' })
   const camp = marker({ id: 'c', source: 'campaign', typeId: 't2' })
 
-  it('hides base markers when showBase is false', () => {
-    expect(filterMarkers([base, camp], { showBase: false, showCampaign: true, hiddenTypeIds: [] })).toEqual([camp])
+  it('always keeps base markers', () => {
+    expect(filterMarkers([base, camp], { showCampaign: true, hiddenTypeIds: [] })).toEqual([base, camp])
   })
 
   it('hides campaign markers when showCampaign is false', () => {
-    expect(filterMarkers([base, camp], { showBase: true, showCampaign: false, hiddenTypeIds: [] })).toEqual([base])
+    expect(filterMarkers([base, camp], { showCampaign: false, hiddenTypeIds: [] })).toEqual([base])
   })
 
   it('hides markers of hidden types', () => {
-    expect(filterMarkers([base, camp], { showBase: true, showCampaign: true, hiddenTypeIds: ['t2'] })).toEqual([base])
+    expect(filterMarkers([base, camp], { showCampaign: true, hiddenTypeIds: ['t2'] })).toEqual([base])
   })
 })
 
