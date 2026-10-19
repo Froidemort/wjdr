@@ -12,7 +12,8 @@ import {
 } from '../services/mapRepository'
 import type { City } from '../types/cities'
 import type { MapMarker, MarkerDraft, MarkerType } from '../types/map'
-import { filterMarkers, mergeMarkers, searchMarkers } from '../utils/mapMarkers'
+import { filterMarkers, mergeMarkers } from '../utils/mapMarkers'
+import { searchPlaces } from '../utils/mapSearch'
 
 const LOAD_ERROR = 'Impossible de charger la carte. Réessaie dans un instant.'
 const WRITE_ERROR = 'Le marqueur n\'a pas pu être enregistré. Vérifie ta connexion et tes droits.'
@@ -43,7 +44,7 @@ export const useMapStore = defineStore('map', () => {
       hiddenTypeIds: hiddenTypeIds.value,
     })
   )
-  const searchResults = computed(() => searchMarkers(visibleMarkers.value, query.value))
+  const searchResults = computed(() => searchPlaces(visibleMarkers.value, cities.value, query.value))
   const selectedMarker = computed(() => allMarkers.value.find((marker) => marker.id === selectedId.value) ?? null)
   const typesById = computed(() => new Map(types.value.map((type) => [type.id, type])))
 

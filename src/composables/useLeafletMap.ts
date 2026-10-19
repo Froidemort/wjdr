@@ -1,3 +1,4 @@
+import { useResizeObserver } from '@vueuse/core'
 import type * as Leaflet from 'leaflet'
 import { storeToRefs } from 'pinia'
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch, type Ref } from 'vue'
@@ -245,6 +246,9 @@ export function useLeafletMap(container: Ref<HTMLElement | null>, handlers: Leaf
   })
 
   watch([isAuthenticated, initialized], syncTileLayer)
+
+  // Leaflet only listens to window resize; the container also changes with layout (dock, navbar, orientation).
+  useResizeObserver(container, invalidateSize)
 
   onBeforeUnmount(() => {
     map.value?.remove()

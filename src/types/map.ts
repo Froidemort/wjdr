@@ -42,3 +42,7 @@ export interface MapFlyTarget {
   /** Changes on every request so the same target can be flown to twice. */
   nonce: number
 }
+
+export type MapSearchResult =
+  | { kind: 'marker'; key: string; name: string; id: string }
+  | { kind: 'city'; key: string; name: string; id: number }

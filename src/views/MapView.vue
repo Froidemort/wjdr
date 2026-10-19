@@ -13,7 +13,7 @@ import type { MapPin } from '../composables/useLeafletMap'
 import { useMapTilePrefetch } from '../composables/useMapTilePrefetch'
 import { useRealtimeSync } from '../composables/useRealtimeSync'
 import { useMapStore } from '../stores/map'
-import type { MapFlyTarget, MapMarker, MarkerDraft } from '../types/map'
+import type { MapFlyTarget, MapMarker, MapSearchResult, MarkerDraft } from '../types/map'
 import { allowedVisibilities, canEditMarker } from '../utils/mapMarkers'
 import { normalizeLatLng } from '../utils/mapCoordinates'
 
@@ -85,6 +85,24 @@ function focusMarker(marker: MapMarker): void {
   flyTarget.value = { lat: marker.lat, lng: marker.lng, zoom: FOCUS_ZOOM, nonce: Date.now() }
 }
 
+function selectResult(result: MapSearchResult): void {
+  if (result.kind === 'marker') {
+    const marker = selectedMarkerById(result.id)
+    if (marker) focusMarker(marker)
+    return
+  }
+
+  const city = cities.value.find((item) => item.id === result.id)
+  if (!city) return
+  store.select(null)
+  selectedCityId.value = city.id
+  flyTarget.value = { lat: city.lat, lng: city.lng, zoom: FOCUS_ZOOM, nonce: Date.now() }
+}
+
+function selectedMarkerById(id: string): MapMarker | undefined {
+  return store.allMarkers.find((marker) => marker.id === id)
+}
+
 function onMapContextMenu(lat: number, lng: number): void {
   if (!role.value) {
     hint.value = 'Connecte-toi et choisis une campagne pour ajouter des marqueurs.'
@@ -139,21 +157,15 @@ watch(
   { immediate: true }
 )
 
-watch(
-  showCities,
-  (visible) => {
-    if (visible) void store.loadCities()
-  },
-  { immediate: true }
-)
-
 onMounted(() => {
   void store.loadBase()
+  // Cities are searchable even when their layer is hidden.
+  void store.loadCities()
 })
 </script>
 
 <template>
-  <main id="map-page" class="h-[calc(100dvh-7.5rem)] lg:h-[calc(100dvh-4rem)]">
+  <main id="map-page" class="h-[calc(100dvh-var(--grim-chrome-height,0px))] overflow-hidden">
     <div class="drawer lg:drawer-open size-full">
       <input id="map-layers-drawer" type="checkbox" class="drawer-toggle" aria-label="Afficher les calques" />
 
@@ -170,7 +182,7 @@ onMounted(() => {
 
         <div class="pointer-events-none absolute top-0 inset-s-14 right-0 z-20 flex items-start gap-2 p-3">
           <div class="pointer-events-auto w-full max-w-md">
-            <MapSearch v-model="query" :results="searchResults" @select="focusMarker" />
+            <MapSearch v-model="query" :results="searchResults" @select="selectResult" />
           </div>
           <label for="map-layers-drawer" class="btn btn-square min-h-11 min-w-11 pointer-events-auto lg:hidden" aria-label="Calques">
             <Layers class="size-5" aria-hidden="true" />
