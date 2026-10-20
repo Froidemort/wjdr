@@ -53,6 +53,7 @@ export function useCompendiumSpellFilters<TSpell extends FilterableSpell>(
     } else {
       minDifficulty.value = Math.max(minDifficulty.value, next.min)
       maxDifficulty.value = Math.min(maxDifficulty.value, next.max)
+      if (minDifficulty.value > maxDifficulty.value) minDifficulty.value = maxDifficulty.value
     }
   })
 

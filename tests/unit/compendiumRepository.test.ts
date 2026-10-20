@@ -183,6 +183,102 @@ describe('compendiumRepository', () => {
     expect(builder.range).toHaveBeenNthCalledWith(2, 1000, 1999)
   })
 
+  it('maps spells, defaults null columns and sorts by name', async () => {
+    const builder = createSupabaseQueryBuilder({
+      data: [
+        {
+          id: 2,
+          name: 'Zéphyr',
+          category: null,
+          difficulty: null,
+          casting_time: null,
+          range: null,
+          duration: null,
+          bonus_ingredient: null,
+          bonus: null,
+          description: null,
+        },
+        {
+          id: 1,
+          name: ' Boule de feu ',
+          category: 'Feu',
+          difficulty: 12,
+          casting_time: '1 action',
+          range: ' 12 m ',
+          duration: '  ',
+          bonus_ingredient: 'Soufre',
+          bonus: 2,
+          description: ' Brûle. ',
+        },
+      ],
+      error: null,
+    })
+    fromMock.mockReturnValue(builder)
+
+    const result = await repository.fetchCompendiumSpells()
+
+    expect(fromMock).toHaveBeenCalledWith('spells')
+    expect(builder.range).toHaveBeenCalledWith(0, 999)
+    expect(result).toEqual([
+      {
+        id: '1',
+        name: 'Boule de feu',
+        category: 'Feu',
+        difficulty: 12,
+        castingTime: '1 action',
+        range: '12 m',
+        duration: null,
+        bonusIngredient: 'Soufre',
+        bonus: 2,
+        description: 'Brûle.',
+      },
+      {
+        id: '2',
+        name: 'Zéphyr',
+        category: 'Autre',
+        difficulty: 0,
+        castingTime: null,
+        range: null,
+        duration: null,
+        bonusIngredient: null,
+        bonus: null,
+        description: null,
+      },
+    ])
+  })
+
+  it('paginates spells beyond 1000 rows', async () => {
+    const row = (id: number) => ({
+      id,
+      name: `Sort ${id}`,
+      category: 'Feu',
+      difficulty: 5,
+      casting_time: null,
+      range: null,
+      duration: null,
+      bonus_ingredient: null,
+      bonus: null,
+      description: null,
+    })
+    const fullPage = Array.from({ length: 1000 }, (_, index) => row(index))
+    const builder = createSupabaseQueryBuilder({ data: fullPage, error: null })
+    builder.returns.mockResolvedValueOnce({ data: fullPage, error: null })
+    builder.returns.mockResolvedValueOnce({ data: [row(1000)], error: null })
+    fromMock.mockReturnValue(builder)
+
+    const result = await repository.fetchCompendiumSpells()
+
+    expect(result).toHaveLength(1001)
+    expect(builder.range).toHaveBeenNthCalledWith(2, 1000, 1999)
+  })
+
+  it('throws supabase errors when fetching spells', async () => {
+    const error = new Error('boom')
+    fromMock.mockReturnValue(createSupabaseQueryBuilder({ data: null, error }))
+
+    await expect(repository.fetchCompendiumSpells()).rejects.toBe(error)
+  })
+
   it('throws supabase errors', async () => {
     const error = new Error('boom')
     fromMock.mockReturnValue(createSupabaseQueryBuilder({ data: null, error }))
@@ -195,6 +291,7 @@ describe('compendiumRepository', () => {
       'fetchCompendiumArmors',
       'fetchCompendiumItems',
       'fetchCompendiumSkills',
+      'fetchCompendiumSpells',
       'fetchCompendiumTalents',
       'fetchCompendiumWeapons',
     ])

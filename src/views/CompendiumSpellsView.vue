@@ -19,6 +19,7 @@ function difficultyBadgeClass(difficulty: number): string {
 
 const store = useCompendiumSpellsStore()
 const { spells, loading, loaded, error } = storeToRefs(store)
+void store.loadSpells()
 
 const {
   searchQuery,
@@ -65,8 +66,6 @@ onBeforeUnmount(() => {
 function scrollToTop(): void {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-
-void store.loadSpells()
 
 // Description truncated to 150 chars per card, toggled open on demand.
 const DESCRIPTION_LIMIT = 150
