@@ -1,6 +1,7 @@
 import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { listCities } from '../services/citiesRepository'
 import {
   createCampaignMarker,
   deleteCampaignMarker,
@@ -9,8 +10,10 @@ import {
   listMarkerTypes,
   updateCampaignMarker,
 } from '../services/mapRepository'
+import type { City } from '../types/cities'
 import type { MapMarker, MarkerDraft, MarkerType } from '../types/map'
-import { filterMarkers, mergeMarkers, searchMarkers } from '../utils/mapMarkers'
+import { filterMarkers, mergeMarkers } from '../utils/mapMarkers'
+import { searchPlaces } from '../utils/mapSearch'
 
 const LOAD_ERROR = 'Impossible de charger la carte. Réessaie dans un instant.'
 const WRITE_ERROR = 'Le marqueur n\'a pas pu être enregistré. Vérifie ta connexion et tes droits.'
@@ -20,9 +23,10 @@ export const useMapStore = defineStore('map', () => {
   const baseMarkers = ref<MapMarker[]>([])
   const campaignMarkers = ref<MapMarker[]>([])
   const campaignId = ref<string | null>(null)
+  const cities = ref<City[]>([])
 
-  const showBase = useStorage('wjdr:map:show-base', true)
   const showCampaign = useStorage('wjdr:map:show-campaign', true)
+  const showCities = useStorage('wjdr:map:show-cities', true)
   const hiddenTypeIds = useStorage<string[]>('wjdr:map:hidden-types', [])
   const query = ref('')
   const selectedId = ref<string | null>(null)
@@ -34,12 +38,11 @@ export const useMapStore = defineStore('map', () => {
   const allMarkers = computed(() => mergeMarkers(baseMarkers.value, campaignMarkers.value))
   const visibleMarkers = computed(() =>
     filterMarkers(allMarkers.value, {
-      showBase: showBase.value,
       showCampaign: showCampaign.value,
       hiddenTypeIds: hiddenTypeIds.value,
     })
   )
-  const searchResults = computed(() => searchMarkers(visibleMarkers.value, query.value))
+  const searchResults = computed(() => searchPlaces(visibleMarkers.value, cities.value, query.value))
   const selectedMarker = computed(() => allMarkers.value.find((marker) => marker.id === selectedId.value) ?? null)
   const typesById = computed(() => new Map(types.value.map((type) => [type.id, type])))
 
@@ -66,6 +69,17 @@ export const useMapStore = defineStore('map', () => {
       })
 
     return pendingBase
+  }
+
+  /** Lazy: fetched once, only when the cities layer is shown. */
+  async function loadCities(): Promise<void> {
+    if (cities.value.length > 0) return
+
+    try {
+      cities.value = await listCities()
+    } catch {
+      error.value = LOAD_ERROR
+    }
   }
 
   /** Loads markers of a campaign, or clears them when `id` is null. */
@@ -173,8 +187,9 @@ export const useMapStore = defineStore('map', () => {
     baseMarkers,
     campaignMarkers,
     campaignId,
-    showBase,
+    cities,
     showCampaign,
+    showCities,
     hiddenTypeIds,
     query,
     selectedId,
@@ -187,6 +202,7 @@ export const useMapStore = defineStore('map', () => {
     searchResults,
     loadBase,
     loadCampaign,
+    loadCities,
     toggleType,
     select,
     addMarker,

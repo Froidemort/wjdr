@@ -18,6 +18,8 @@ dependencies = [
     "questionary",
     "pydantic-ai",
     "pydantic-ai-slim[google]>=2.54.0",
+    "pillow>=12.3.0",
+    "requests>=2.34.2",
 ]
 
 [project.scripts]

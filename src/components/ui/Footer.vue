@@ -1,29 +1,30 @@
 <script setup lang="ts">
+import { version as appVersion } from '../../../package.json'
+
 defineOptions({ name: 'AppFooter' })
 
-const appVersion = '0.0.9'
 const currentYear = new Date().getFullYear()
 </script>
 
 <template>
 <footer class="footer w-full border-t border-base-300 bg-base-200 text-base-content p-4 footer-vertical sm:footer-horizontal sm:items-center sm:justify-between">
   <aside class="flex items-center gap-2">
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="28" 
-      height="28" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      stroke-width="2" 
-      stroke-linecap="round" 
-      stroke-linejoin="round" 
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
       class="text-primary"
     >
       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
       <path d="M6 6h10M6 10h10"/>
     </svg>
-    
+
     <div class="flex items-center gap-2">
       <p class="font-bold">Grimorium</p>
       <span class="text-primary">v{{ appVersion }}</span>
@@ -33,12 +34,12 @@ const currentYear = new Date().getFullYear()
         {{ currentYear }} - Sous licence MIT
       </p>
     </div>
-    
+
     <nav class="flex items-end gap-4 self-end sm:self-auto" aria-label="Liens externes">
-      <a 
-      href="https://github.com/Froidemort/wjdr" 
-      target="_blank" 
-      rel="noopener noreferrer" 
+      <a
+      href="https://github.com/Froidemort/wjdr"
+      target="_blank"
+      rel="noopener noreferrer"
       class="btn btn-ghost btn-circle min-h-11 min-w-11"
       aria-label="GitHub Repository"
       >

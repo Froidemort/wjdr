@@ -77,7 +77,10 @@ async function onLogout(): Promise<void> {
 
 <template>
   <!-- --grim-nav-height:0 — mobile header is sticky, not overlaid, so the hero does not pull up under it -->
-  <div class="flex min-h-screen flex-col bg-base-100 [--grim-nav-height:0px] [--grim-dock-height:4rem]">
+  <div
+    class="flex min-h-dvh flex-col bg-base-100 [--grim-nav-height:0px] [--grim-dock-height:4rem]"
+    :class="isAuthenticated ? '[--grim-chrome-height:calc(7.5rem_+_env(safe-area-inset-bottom,0px))]' : '[--grim-chrome-height:3.5rem]'"
+  >
     <header
       class="sticky top-0 z-40 navbar min-h-14 border-b border-transparent px-3 transition-[background-color,border-color,box-shadow] duration-300 ease-out motion-reduce:transition-none"
       :class="

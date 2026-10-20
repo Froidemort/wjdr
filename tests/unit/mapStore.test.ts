@@ -220,5 +220,16 @@ describe('map store', () => {
 
       expect(store.searchResults).toEqual([])
     })
+
+    it('also searches loaded cities, even with the cities layer hidden', () => {
+      const store = useMapStore()
+      store.showCities = false
+      store.cities = [
+        { id: 7, name: 'Altdorf', lat: 1, lng: 2, type: null, population: null, region: null, country: null, subregion: null, url: null, pending: false, hidden: false, source: null },
+      ]
+      store.query = 'ALTD'
+
+      expect(store.searchResults).toEqual([{ kind: 'city', key: 'city-7', name: 'Altdorf', id: 7 }])
+    })
   })
 })
