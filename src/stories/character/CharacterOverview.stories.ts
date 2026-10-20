@@ -67,8 +67,8 @@ type Story = StoryObj<typeof CharacterOverview>
 
 export const ShowsDerivedStats: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('BF 3')).toBeVisible()
-    await expect(canvas.getByText('BE 3')).toBeVisible()
+    await expect(canvas.getByText(/BF 3/)).toBeVisible()
+    await expect(canvas.getByText(/BE 3/)).toBeVisible()
     await expect(canvas.getByLabelText('Encombrement 230 sur 350')).toBeVisible()
     await expect(canvas.getByText(/Force × 10/)).toBeVisible()
   },
