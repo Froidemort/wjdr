@@ -687,7 +687,7 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
   }
 
   if (existingCharacter) {
-    throw new Error('Vous avez deja un personnage dans cette campagne.')
+    throw new Error('Vous avez déjà un personnage dans cette campagne.')
   }
 
   const careerId = await resolveDefaultCareerId()

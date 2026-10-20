@@ -16,6 +16,6 @@ export async function assertCampaignWritable(campaignId: string): Promise<void> 
   }
 
   if (data.is_archived) {
-    throw new Error('Campagne archivee: action interdite.')
+    throw new Error('Campagne archivée : action interdite.')
   }
 }

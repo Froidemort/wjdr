@@ -327,6 +327,23 @@ describe('useCharacterSheet', () => {
       expect(deps.enqueueOfflineUpdate).not.toHaveBeenCalled()
     })
 
+    it('retrySave replays a failed save and returns the state to ok', async () => {
+      deps.updateCharacterCore.mockRejectedValueOnce(new Error('forbidden'))
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onQuickValueChange('pvCurrent', 5)
+      await vi.advanceTimersByTimeAsync(600)
+      expect(sheet.globalState.value).toBe('error')
+
+      deps.updateCharacterCore.mockResolvedValue(undefined)
+      await sheet.retrySave()
+
+      expect(sheet.globalState.value).toBe('ok')
+      expect(sheet.errorMessage.value).toBeNull()
+      expect(deps.updateCharacterCore).toHaveBeenLastCalledWith('char-1', expect.objectContaining({ pv_current: 5 }))
+    })
+
     it('saves two different stats ticked within the debounce window', async () => {
       const sheet = await setup()
       vi.useFakeTimers()

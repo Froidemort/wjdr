@@ -271,7 +271,7 @@ function slotButtonClass(opts: {
             <span class="inline-flex min-w-0 items-center gap-1 text-[0.62rem] font-bold uppercase leading-tight tracking-wider text-base-content/70">
               {{ view.slot.label }}
             </span>
-            <span class="shrink-0 text-[0.6rem] tabular-nums leading-none tracking-wide opacity-50">
+            <span class="shrink-0 text-[0.6rem] tabular-nums leading-none tracking-wide opacity-70">
               {{ view.slot.hitRange }}
             </span>
           </span>
@@ -307,12 +307,12 @@ function slotButtonClass(opts: {
                 >
                   {{ armor.name }}
                 </span>
-                <span v-if="view.stacked" class="text-[0.58rem] font-bold tabular-nums leading-none opacity-55">
+                <span v-if="view.stacked" class="text-[0.58rem] font-bold tabular-nums leading-none opacity-70">
                   {{ armor.armorPoints }}
                 </span>
               </span>
             </template>
-            <span v-else class="pt-0.5 text-[0.72rem] italic leading-tight opacity-40">Vide</span>
+            <span v-else class="pt-0.5 text-[0.72rem] italic leading-tight opacity-70">Vide</span>
           </span>
 
           <span
@@ -320,7 +320,7 @@ function slotButtonClass(opts: {
           >
             <span
               v-if="view.stacked"
-              class="text-[0.58rem] font-semibold uppercase tracking-wide opacity-50"
+              class="text-[0.58rem] font-semibold uppercase tracking-wide opacity-70"
             >
               {{ view.layers.length }} couches
             </span>
@@ -457,7 +457,7 @@ function slotButtonClass(opts: {
               >
                 {{ view.weapon.name }}
               </span>
-              <span v-else class="pt-0.5 text-[0.72rem] italic leading-tight opacity-40">Vide</span>
+              <span v-else class="pt-0.5 text-[0.72rem] italic leading-tight opacity-70">Vide</span>
             </span>
 
             <span
@@ -465,7 +465,7 @@ function slotButtonClass(opts: {
             >
               <span
                 v-if="view.filled && view.encumbrance !== null"
-                class="text-[0.58rem] font-semibold tabular-nums tracking-wide opacity-50"
+                class="text-[0.58rem] font-semibold tabular-nums tracking-wide opacity-70"
               >
                 Enc. {{ view.encumbrance }}
               </span>
@@ -489,10 +489,10 @@ function slotButtonClass(opts: {
       </div>
     </div>
 
-    <p v-if="editable" class="mt-2 text-center text-[0.7rem] leading-snug tracking-wide opacity-60">
+    <p v-if="editable" class="mt-2 text-center text-[0.7rem] leading-snug tracking-wide opacity-80">
       Cliquez un emplacement · jusqu’à {{ MAX_ARMORS_PER_LOCATION }} couches d’armure
     </p>
-    <p v-else class="mt-2 text-center text-[0.7rem] leading-snug tracking-wide opacity-60">
+    <p v-else class="mt-2 text-center text-[0.7rem] leading-snug tracking-wide opacity-80">
       Lecture seule
     </p>
 
@@ -536,7 +536,7 @@ function slotButtonClass(opts: {
 
 @media (max-width: 420px) {
   .equip-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
       "figure  figure"
       "tete    corps"

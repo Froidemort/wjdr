@@ -78,6 +78,33 @@ test.describe('Character sheet (authenticated, mobile)', () => {
     await expect(page.getByRole('heading', { name: 'Aperçu' })).toBeVisible()
   })
 
+  test('shows the sync status and fits a 320px viewport without horizontal scroll', async ({ page }) => {
+    await expect(page.getByTestId('sync-status')).toContainText('Enregistré')
+
+    await page.setViewportSize({ width: 320, height: 640 })
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(overflow).toBeLessThanOrEqual(0)
+  })
+
+  test('a failed save shows the error state with a retry action', async ({ page }) => {
+    await page.route('**/rest/v1/characters*', (route) =>
+      route.request().method() === 'PATCH'
+        ? route.fulfill({
+            status: 400,
+            contentType: 'application/json',
+            body: JSON.stringify({ code: '42501', message: 'denied', details: '', hint: null }),
+          })
+        : route.fallback()
+    )
+
+    await page.getByRole('button', { name: 'Augmenter les points de blessures' }).click()
+
+    const status = page.getByTestId('sync-status')
+    await expect(status).toContainText('Erreur de sauvegarde')
+    await expect(status.getByRole('button', { name: 'Réessayer' })).toBeVisible()
+  })
+
   test('add and career-edit buttons are disabled offline', async ({ page, context, backend }) => {
     const careerEdit = page.getByRole('button', { name: 'Modifier la carrière' })
     await expect(careerEdit).toBeEnabled()

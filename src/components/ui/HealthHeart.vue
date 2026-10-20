@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Minus, Plus } from '@lucide/vue'
-import { computed, ref, watch } from 'vue';
+import { computed, ref, useId, watch } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -21,6 +21,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', value: number): void;
 }>();
+
+const valueId = useId();
 
 const resolvedMaxHp = computed(() => Math.max(0, Math.floor(props.maxHp)));
 const clampedCurrentHp = computed(() =>
@@ -108,34 +110,39 @@ watch(
         type="button"
         @click="decrease"
         :disabled="currentHp <= 0"
-        class="btn btn-circle btn-sm min-h-11 min-w-11 border border-base-300 bg-base-100 text-base-content transition-transform active:scale-95"
+        class="btn btn-circle btn-sm min-h-11 min-w-11 border border-base-300 bg-base-100 text-base-content transition-transform active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
         :aria-label="`Diminuer les ${label.toLowerCase()}`"
+        :aria-describedby="valueId"
       >
           <Minus class="text-primary" :class="{ 'disabled opacity-30': currentHp <= 0 }"/>
       </button>
 
+      <span :id="valueId" class="sr-only">{{ clampedCurrentHp }} sur {{ resolvedMaxHp }}</span>
+
       <!-- Conteneur Cœur central agrandi -->
       <div
-        class="relative mx-auto aspect-square w-full max-w-36 sm:max-w-44 md:max-w-48 transition-transform duration-300"
+        class="relative mx-auto aspect-square w-full max-w-36 sm:max-w-44 md:max-w-48 transition-transform duration-300 motion-reduce:transition-none"
         :class="{ 'animate-heartbeat': isBeating }"
       >
         <!-- Cœur d'arrière-plan (Vide / Muted) -->
         <svg
           class="absolute inset-0 w-full h-full text-base-300 fill-current drop-shadow-xl"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
         </svg>
 
         <!-- Cœur de remplissage (Niveau dynamique de bas en haut) -->
         <div
-          class="absolute inset-0 overflow-hidden transition-[clip-path] duration-500 ease-out"
+          class="absolute inset-0 overflow-hidden transition-[clip-path] duration-500 ease-out motion-reduce:transition-none"
           :style="{ clipPath: `inset(${100 - hpPercentage}% 0 0 0)` }"
         >
           <svg
             class="absolute inset-0 h-full w-full fill-current transition-colors duration-300"
             :class="hpColorClass"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
           </svg>
@@ -154,7 +161,7 @@ watch(
               min="0"
               :max="resolvedMaxHp"
               aria-label="Points de vie actuels"
-              class="w-16 h-8 bg-transparent text-center text-4xl font-black[appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none sm:h-16 sm:w-20 sm:text-5xl"
+              class="w-16 h-8 bg-transparent text-center text-4xl font-black rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none sm:h-16 sm:w-20 sm:text-5xl"
             />
             <span
               v-else
@@ -171,8 +178,9 @@ watch(
         type="button"
         @click="increase"
         :disabled="currentHp >= maxHp"
-        class="btn btn-circle btn-sm min-h-11 min-w-11 border border-base-300 bg-base-100 text-base-content transition-transform active:scale-95"
+        class="btn btn-circle btn-sm min-h-11 min-w-11 border border-base-300 bg-base-100 text-base-content transition-transform active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100"
         :aria-label="`Augmenter les ${label.toLowerCase()}`"
+        :aria-describedby="valueId"
       >
           <Plus class="text-primary" :class="{ 'disabled opacity-30': currentHp >= maxHp }"/>
       </button>
@@ -204,5 +212,11 @@ watch(
 
 .animate-heartbeat {
   animation: heartbeat v-bind(heartBeatFrequency) ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-heartbeat {
+    animation: none;
+  }
 }
 </style>

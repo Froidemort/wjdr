@@ -28,13 +28,12 @@
         @edit-career="openCareerModal"
       />
 
-      <div v-if="globalState !== 'ok'" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
-        <div :class="['alert py-3 px-4 min-h-0 shadow-lg gap-2 border-0', globalState === 'error' ? 'bg-error text-error-content' : 'bg-warning text-warning-content']" role="status" aria-live="polite">
-          <LoaderCircle v-if="globalState === 'loading'" class="h-5 w-5 flex-shrink-0 animate-spin" />
-          <CircleX v-else class="h-5 w-5 flex-shrink-0" />
-          <span class="text-sm sm:text-base font-medium">{{ globalStateLabel }}</span>
-        </div>
-      </div>
+      <CharacterSyncStatus
+        :state="globalState"
+        :queued-count="queuedCount"
+        :online="isOnline"
+        @retry="retrySave"
+      />
 
       <div v-if="actionSuccessMessage" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
         <div class="alert bg-success text-success-content py-3 px-4 min-h-0 shadow-lg gap-2 border-0" role="status" aria-live="polite">
@@ -191,7 +190,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronLeft, CircleX, LoaderCircle, Users } from '@lucide/vue'
+import { ChevronLeft, Users } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import type { CharacterTabId } from '../types/characterSheet'
 import CareerChangeModal from '../components/character/CareerChangeModal.vue'
@@ -201,6 +200,7 @@ import CharacterOverview from '../components/character/CharacterOverview.vue'
 import CharacterInventoryPanel from '../components/character/CharacterInventoryPanel.vue'
 import CharacterProfilePanel from '../components/character/CharacterProfilePanel.vue'
 import CharacterSkillsTalentsPanel from '../components/character/CharacterSkillsTalentsPanel.vue'
+import CharacterSyncStatus from '../components/character/CharacterSyncStatus.vue'
 import CharacterSummaryHeader from '../components/character/CharacterSummaryHeader.vue'
 import CharacterTabs from '../components/character/CharacterTabs.vue'
 import DescriptionModal from '../components/character/DescriptionModal.vue'
@@ -208,6 +208,8 @@ import { useCharacterCareer } from '../composables/useCharacterCareer'
 import { useCharacterCatalogActions } from '../composables/useCharacterCatalogActions'
 import { useCharacterDescriptionModal } from '../composables/useCharacterDescriptionModal'
 import { useCharacterSheet } from '../composables/useCharacterSheet'
+import { useIsOnline } from '../composables/useIsOnline'
+import { useQueuedUpdatesCount } from '../composables/useQueuedUpdatesCount'
 
 const activeCharacterTab = ref<CharacterTabId>('stats')
 const {
@@ -219,7 +221,7 @@ const {
   actionBusyKey,
   actionSuccessMessage,
   globalState,
-  globalStateLabel,
+  retrySave,
   characterWeapons,
   characterArmors,
   characterItems,
@@ -256,6 +258,8 @@ const {
   getSectionSuccessMessage,
   confirmDestructiveAction,
 } = useCharacterSheet()
+const isOnline = useIsOnline()
+const { queuedCount } = useQueuedUpdatesCount()
 
 const careerModal = ref<InstanceType<typeof CareerChangeModal> | null>(null)
 const careerConfirmModal = ref<InstanceType<typeof CareerConfirmModal> | null>(null)

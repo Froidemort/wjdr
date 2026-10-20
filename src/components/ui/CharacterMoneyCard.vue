@@ -89,7 +89,7 @@ function confirmSubtract(): void {
     <div class="card-body p-4 gap-4">
       <div class="flex items-center justify-between">
         <div class="tooltip" data-tip="Monnaie">
-          <Coins class="text-accent h-6 w-6" />
+          <Coins class="text-accent h-6 w-6" aria-hidden="true" />
         </div>
         <button
           v-if="editable"
@@ -98,7 +98,7 @@ function confirmSubtract(): void {
           aria-label="Soustraire de l'argent"
           @click="openSubtractDialog"
         >
-          <BanknoteArrowDown class="h-6 w-6" />
+          <BanknoteArrowDown class="h-6 w-6" aria-hidden="true" />
         </button>
       </div>
 
@@ -110,7 +110,7 @@ function confirmSubtract(): void {
               type="number"
               min="0"
               class="input input-sm h-11 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              aria-label="Couronnes d or"
+              aria-label="Couronnes d'or"
               @input="onGoldInput"
               @blur="onMoneyFieldBlur"
             />
@@ -128,7 +128,7 @@ function confirmSubtract(): void {
               type="number"
               min="0"
               class="input input-sm h-11 w-full border-base-300 bg-base-100 text-center text-2xl font-black font-warhammer [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              aria-label="Pistoles d argent"
+              aria-label="Pistoles d'argent"
               @input="onSilverInput"
               @blur="onMoneyFieldBlur"
             />
@@ -171,7 +171,7 @@ function confirmSubtract(): void {
             v-model.number="subtractSilver"
             type="number"
             min="0"
-            class="input input-sm"
+            class="input input-sm min-h-11"
             aria-label="Pistoles à soustraire"
           />
         </label>
@@ -182,15 +182,15 @@ function confirmSubtract(): void {
             v-model.number="subtractCopper"
             type="number"
             min="0"
-            class="input input-sm"
+            class="input input-sm min-h-11"
             aria-label="Sous à soustraire"
           />
         </label>
       </div>
 
       <div class="grim-modal-actions mt-5 flex items-center justify-end gap-2">
-        <button type="button" class="btn btn-sm btn-ghost" @click="closeSubtractDialog">Annuler</button>
-        <button type="button" class="btn btn-sm" @click="confirmSubtract">Soustraire</button>
+        <button type="button" class="btn btn-sm btn-ghost min-h-11" @click="closeSubtractDialog">Annuler</button>
+        <button type="button" class="btn btn-sm min-h-11" @click="confirmSubtract">Soustraire</button>
       </div>
     </div>
 

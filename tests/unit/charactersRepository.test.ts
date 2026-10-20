@@ -219,7 +219,7 @@ describe('charactersRepository', () => {
   })
 
   it.each([
-    ['personnage existant', [builder({ id: 'existing' })], 'Vous avez deja un personnage dans cette campagne.'],
+    ['personnage existant', [builder({ id: 'existing' })], 'Vous avez déjà un personnage dans cette campagne.'],
     ['carriere absente', [builder(null), builder(null)], 'Carrière par défaut introuvable.'],
     ['statique vide', [builder(null), builder({ id: 'career-1' }), builder({ id: 'character-1' }), builder([]), builder(null), builder()], null],
   ] as const)('gere la creation avec %s', async (_name, characterBuilders, message) => {
@@ -231,7 +231,7 @@ describe('charactersRepository', () => {
           static_stats: [characterBuilders[3]!],
           character_stat_values: [characterBuilders[4]!, characterBuilders[5]!],
         }
-    const sequence = message === 'Vous avez deja un personnage dans cette campagne.' ? [characterBuilders[0]] : message ? [characterBuilders[0]!, characterBuilders[1]!] : characterBuilders
+    const sequence = message === 'Vous avez déjà un personnage dans cette campagne.' ? [characterBuilders[0]] : message ? [characterBuilders[0]!, characterBuilders[1]!] : characterBuilders
     mockTables(tables, sequence)
     const operation = createCharacterForCampaign({ name: 'Ada', campaignId: 'campaign-1', userId: 'user-1', race: 'human', gender: 'féminin' })
     if (message) {

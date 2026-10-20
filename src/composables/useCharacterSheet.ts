@@ -233,6 +233,7 @@ export function useCharacterSheet() {
   const {
     status: statSaveStatus,
     update: triggerStatSave,
+    flush: triggerStatSaveNow,
   } = useOptimisticUpdate<{ stats: Record<string, StatPatch> }>({
     onSave: async (payload) => {
       if (!character.value) {
@@ -1111,6 +1112,15 @@ export function useCharacterSheet() {
     triggerSave(dirtyFields)
   }
 
+  async function retrySave(): Promise<void> {
+    errorMessage.value = null
+    const results = await Promise.allSettled([triggerSaveNow(), triggerStatSaveNow()])
+    const failed = results.find((result) => result.status === 'rejected')
+    if (failed) {
+      errorMessage.value = modificationErrorMessage(failed.reason)
+    }
+  }
+
   function setActionSuccess(message: string): void {
     actionSuccessMessage.value = message
     stopActionSuccessReset()
@@ -1214,6 +1224,7 @@ export function useCharacterSheet() {
     actionSuccessMessage,
     globalState,
     globalStateLabel,
+    retrySave,
     characterSkills,
     characterTalents,
     characterWeapons,

@@ -228,7 +228,7 @@ export async function requestJoinCampaign(campaignId: string, requesterId: strin
 
   const mjId = String(ownerId ?? '')
   if (!mjId) {
-    throw new Error('Campagne introuvable ou archivee.')
+    throw new Error('Campagne introuvable ou archivée.')
   }
 
   if (mjId === requesterId) {
@@ -298,7 +298,7 @@ export async function requestCampaignJoinByCode(userId: string, code: string): P
   }
 
   if (!campaignId) {
-    throw new Error('Campagne introuvable ou archivee.')
+    throw new Error('Campagne introuvable ou archivée.')
   }
 
   await requestJoinCampaign(String(campaignId), userId)
@@ -378,4 +378,3 @@ export async function notifyJoinRequestRejected(
     throw error
   }
 }
-
