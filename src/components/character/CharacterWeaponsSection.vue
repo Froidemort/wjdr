@@ -68,7 +68,7 @@ function attributesKey(weapon: CharacterWeapon): string {
       <button
         v-for="option in filters"
         :key="option.id"
-        class="btn btn-xs ui-critical-action join-item"
+        class="btn btn-xs min-h-11 ui-critical-action join-item"
         :class="filter === option.id ? 'btn-active' : ''"
         @click="filter = option.id"
       >

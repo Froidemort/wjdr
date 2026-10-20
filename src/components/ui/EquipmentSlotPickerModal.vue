@@ -313,7 +313,7 @@ function armorActionLabel(armor: CharacterArmor): string {
         </div>
         <button
           type="button"
-          class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3"
+          class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3 min-h-11 min-w-11"
           aria-label="Fermer"
           @click="closeModal"
         >
@@ -360,7 +360,7 @@ function armorActionLabel(armor: CharacterArmor): string {
           <button
             v-if="equippedArmors.length > 0 && editable"
             type="button"
-            class="btn btn-ghost btn-xs uppercase tracking-wide hover:border-error/45 hover:bg-error/10"
+            class="btn btn-ghost btn-xs min-h-11 uppercase tracking-wide hover:border-error/45 hover:bg-error/10"
             :disabled="busy"
             @click="onUnequipAllArmors"
           >
@@ -402,7 +402,7 @@ function armorActionLabel(armor: CharacterArmor): string {
         >
           <button
             type="button"
-            class="btn btn-ghost btn-xs uppercase tracking-wide hover:border-error/45 hover:bg-error/10"
+            class="btn btn-ghost btn-xs min-h-11 uppercase tracking-wide hover:border-error/45 hover:bg-error/10"
             :disabled="busy"
             @click="onUnequipWeapon"
           >

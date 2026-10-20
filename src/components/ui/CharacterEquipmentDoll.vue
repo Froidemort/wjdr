@@ -204,7 +204,7 @@ function slotButtonClass(opts: {
   weapon?: boolean
 }): string[] {
   return [
-    'relative flex h-full min-h-0 w-full flex-col gap-1 overflow-hidden rounded-box border bg-base-100 px-2 py-1.5 text-left transition',
+    'relative flex h-full min-h-11 w-full min-w-0 flex-col gap-1 overflow-hidden rounded-box border bg-base-100 px-2 py-1.5 text-left transition',
     'border-base-content/15',
     'enabled:hover:-translate-y-px enabled:hover:border-accent/55 enabled:hover:bg-accent/10 enabled:hover:shadow-sm',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',

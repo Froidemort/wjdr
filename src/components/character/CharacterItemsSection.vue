@@ -75,7 +75,7 @@ const filtered = computed(() => {
         <button
           v-for="option in filters"
           :key="option.id"
-          class="btn btn-xs ui-critical-action join-item"
+          class="btn btn-xs min-h-11 ui-critical-action join-item"
           :class="qualityFilter === option.id ? 'btn-active' : ''"
           @click="qualityFilter = option.id"
         >
