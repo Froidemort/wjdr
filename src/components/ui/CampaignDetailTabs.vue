@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Crown, Eye, FileText, List, Users } from '@lucide/vue'
 import { useVModel } from '@vueuse/core'
+import { computed } from 'vue'
 
 type CampaignTab = 'overview' | 'management' | 'table' | 'sessions' | 'notes'
 
@@ -15,24 +16,43 @@ const emit = defineEmits<{
 }>()
 
 const model = useVModel(props, 'modelValue', emit)
+
+const mobileTabs = computed(() => {
+  const tabs = [
+    { key: 'overview', label: 'Aperçu', ariaLabel: 'Aperçu', icon: Eye },
+    { key: 'management', label: 'Gestion', ariaLabel: 'Gestion MJ', icon: Crown },
+    { key: 'table', label: 'Table', ariaLabel: 'Table', icon: Users },
+    { key: 'sessions', label: 'Sessions', ariaLabel: 'Sessions', icon: List },
+    { key: 'notes', label: 'Notes', ariaLabel: 'Notes', icon: FileText },
+  ] as const
+  return tabs.filter((tab) => props.isMj || (tab.key !== 'management' && tab.key !== 'table'))
+})
 </script>
 
 <template>
   <div class="rounded-box border border-base-300 bg-base-100 p-3 sm:p-4">
-    <div v-if="isMobile">
-      <label class="form-control">
-        <span class="label-text mb-2">Section</span>
-        <select
-          v-model="model"
-          class="select select-bordered ui-critical-control w-full"
-        >
-          <option value="overview">Aperçu</option>
-          <option v-if="isMj" value="management">Gestion MJ</option>
-          <option v-if="isMj" value="table">Table</option>
-          <option value="sessions">Sessions</option>
-          <option value="notes">Notes</option>
-        </select>
-      </label>
+    <div
+      v-if="isMobile"
+      role="tablist"
+      aria-label="Sections de campagne"
+      class="tabs tabs-box w-full flex-nowrap"
+    >
+      <button
+        v-for="tab in mobileTabs"
+        :id="`campaign-tab-${tab.key}`"
+        :key="tab.key"
+        type="button"
+        role="tab"
+        :aria-selected="model === tab.key ? 'true' : 'false'"
+        :aria-controls="`campaign-panel-${tab.key}`"
+        :aria-label="tab.ariaLabel"
+        class="tab min-h-11 flex-1 flex-col gap-0.5 px-1 text-xs ui-critical-action"
+        :class="model === tab.key ? 'tab-active' : ''"
+        @click="model = tab.key"
+      >
+        <component :is="tab.icon" class="h-4 w-4" />
+        {{ tab.label }}
+      </button>
     </div>
 
     <div
