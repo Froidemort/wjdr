@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Info, Plus, Trash2 } from '@lucide/vue'
-import { useNetwork } from '@vueuse/core'
+import { useIsOnline } from '../../composables/useIsOnline'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import type { CharacterSkill } from '../../types/domain'
@@ -22,7 +22,7 @@ const emit = defineEmits<{
   'show-description': [title: string, description: string | null]
 }>()
 
-const { isOnline } = useNetwork()
+const isOnline = useIsOnline()
 
 const MASTERY_LEVELS: readonly MasteryLevel[] = [1, 2, 3]
 const activeMasteryId = ref<string | null>(null)

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useId } from 'vue'
+import { useIsOnline } from '../../composables/useIsOnline'
 
 defineProps<{
   careerName: string | null
@@ -14,13 +15,15 @@ const emit = defineEmits<{
   apply: [applyCharacteristics: boolean]
 }>()
 
+const isOnline = useIsOnline()
+const titleId = useId()
 const dialog = ref<HTMLDialogElement | null>(null)
 
 defineExpose({ dialog })
 </script>
 
 <template>
-  <dialog ref="dialog" class="modal modal-top sm:modal-middle" @close="emit('closed')">
+  <dialog ref="dialog" class="modal modal-top sm:modal-middle" :aria-labelledby="titleId" @close="emit('closed')">
     <div class="modal-box grim-modal-box p-6">
       <button
         type="button"
@@ -30,7 +33,7 @@ defineExpose({ dialog })
       >
         ✕
       </button>
-      <h3 class="grim-modal-title mb-2 px-8 text-center text-2xl sm:text-3xl">Appliquer le profil de carrière</h3>
+      <h3 :id="titleId" class="grim-modal-title mb-2 px-8 text-center text-2xl sm:text-3xl">Appliquer le profil de carrière</h3>
 
       <p class="text-sm opacity-80">
         Nouvelle carrière: <span class="font-semibold">{{ careerName }}</span>
@@ -58,14 +61,14 @@ defineExpose({ dialog })
       </div>
 
       <div class="grim-modal-actions mt-4 flex flex-wrap items-center justify-end gap-2">
-        <button type="button" class="btn btn-sm min-h-11 ui-critical-action" :disabled="busy" @click="emit('close')">
+        <button type="button" class="btn btn-sm min-h-11 ui-critical-action" :disabled="busy || !isOnline" @click="emit('close')">
           Annuler
         </button>
-        <button type="button" class="btn btn-sm min-h-11 ui-critical-action" :disabled="busy" @click="emit('apply', false)">
+        <button type="button" class="btn btn-sm min-h-11 ui-critical-action" :disabled="busy || !isOnline" @click="emit('apply', false)">
           <span v-if="busy" class="loading loading-spinner loading-xs" aria-hidden="true" />
           Ne pas appliquer
         </button>
-        <button type="button" class="btn btn-sm min-h-11 ui-critical-action" :disabled="busy" @click="emit('apply', true)">
+        <button type="button" class="btn btn-sm min-h-11 ui-critical-action" :disabled="busy || !isOnline" @click="emit('apply', true)">
           <span v-if="busy" class="loading loading-spinner loading-xs" aria-hidden="true" />
           Appliquer
         </button>
@@ -73,7 +76,7 @@ defineExpose({ dialog })
     </div>
 
     <form method="dialog" class="modal-backdrop">
-      <button>Fermer</button>
+      <button tabindex="-1">Fermer</button>
     </form>
   </dialog>
 </template>

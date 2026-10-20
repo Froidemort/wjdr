@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus, Shield, Trash2, Weight } from '@lucide/vue'
-import { useNetwork } from '@vueuse/core'
+import { useIsOnline } from '../../composables/useIsOnline'
 import { computed, ref } from 'vue'
 import type { CharacterArmor } from '../../types/domain'
 import {
@@ -23,7 +23,7 @@ const emit = defineEmits<{
   'quality-change': [armor: CharacterArmor, value: string | boolean | null]
 }>()
 
-const { isOnline } = useNetwork()
+const isOnline = useIsOnline()
 
 const filter = ref<'all' | 'equipped' | 'inventory'>('all')
 const filters = [

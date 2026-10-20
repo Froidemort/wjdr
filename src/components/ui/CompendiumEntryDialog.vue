@@ -63,7 +63,7 @@ watch(() => props.open, syncDialog, { flush: 'post' })
       </div>
     </div>
     <form method="dialog" class="modal-backdrop">
-      <button aria-label="Fermer">Fermer</button>
+      <button tabindex="-1" aria-label="Fermer">Fermer</button>
     </form>
   </dialog>
 </template>

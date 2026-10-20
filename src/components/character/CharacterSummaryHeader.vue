@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Mars, UserPen, Venus } from '@lucide/vue'
-import { useNetwork } from '@vueuse/core'
+import { useIsOnline } from '../../composables/useIsOnline'
 import type { CharacterGender, CharacterRace } from '../../types/character'
 
 defineProps<{
@@ -15,7 +15,7 @@ const emit = defineEmits<{
   'edit-career': []
 }>()
 
-const { isOnline } = useNetwork()
+const isOnline = useIsOnline()
 </script>
 
 <template>

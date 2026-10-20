@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Info, Plus, Trash2, Weight } from '@lucide/vue'
-import { useNetwork } from '@vueuse/core'
+import { useIsOnline } from '../../composables/useIsOnline'
 import { computed, ref } from 'vue'
 import type { CharacterItem } from '../../types/domain'
 import {
@@ -28,7 +28,7 @@ const emit = defineEmits<{
   'show-description': [title: string, description: string | null]
 }>()
 
-const { isOnline } = useNetwork()
+const isOnline = useIsOnline()
 
 const qualityFilter = ref<QualityFilter>('all')
 const query = ref('')

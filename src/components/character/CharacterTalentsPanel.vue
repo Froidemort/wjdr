@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Info, Plus, Trash2 } from '@lucide/vue'
-import { useNetwork } from '@vueuse/core'
+import { useIsOnline } from '../../composables/useIsOnline'
 import type { CharacterTalent } from '../../types/domain'
 import { formatNamedWithSpecialization } from '../../utils/characterSheet'
 
@@ -17,7 +17,7 @@ const emit = defineEmits<{
   'show-description': [title: string, description: string | null]
 }>()
 
-const { isOnline } = useNetwork()
+const isOnline = useIsOnline()
 </script>
 
 <template>

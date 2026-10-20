@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useId } from 'vue'
 import type { NewItemForm } from '../../composables/useCharacterCatalogActions'
 import type { CatalogItem } from '../../types/domain'
 import { ITEM_QUALITY_OPTIONS } from '../../utils/inventoryQuality'
 import SearchInput from '../ui/SearchInput.vue'
+import { useIsOnline } from '../../composables/useIsOnline'
 
 type ItemQuality = (typeof ITEM_QUALITY_OPTIONS)[number]
 
@@ -36,13 +37,15 @@ const itemsQuality = defineModel<ItemQuality>('itemsQuality', { required: true }
 const itemsQuantity = defineModel<number>('itemsQuantity', { required: true })
 const form = defineModel<NewItemForm>('form', { required: true })
 
+const isOnline = useIsOnline()
+const titleId = useId()
 const dialog = ref<HTMLDialogElement | null>(null)
 
 defineExpose({ dialog })
 </script>
 
 <template>
-  <dialog ref="dialog" class="modal modal-top sm:modal-middle" @close="emit('closed')">
+  <dialog ref="dialog" class="modal modal-top sm:modal-middle" :aria-labelledby="titleId" @close="emit('closed')">
     <div class="modal-box grim-modal-box flex max-h-[calc(100vh-2rem)] w-11/12 max-w-2xl flex-col overflow-hidden p-4 sm:p-6">
       <button
         type="button"
@@ -52,7 +55,7 @@ defineExpose({ dialog })
       >
         ✕
       </button>
-      <h3 class="grim-modal-title mb-4 px-10 text-center text-2xl text-primary sm:text-3xl">
+      <h3 :id="titleId" class="grim-modal-title mb-4 px-10 text-center text-2xl text-primary sm:text-3xl">
         Ajouter des {{ sectionLabel }}
       </h3>
 
@@ -84,7 +87,7 @@ defineExpose({ dialog })
           <div class="grid gap-3">
             <label class="fieldset">
               <span class="fieldset-legend">Nom</span>
-              <input v-model="form.name" type="text" class="input" maxlength="100" placeholder="Nom de l'équipement" />
+              <input v-model="form.name" type="text" class="input min-h-11" maxlength="100" placeholder="Nom de l'équipement" />
             </label>
 
             <label class="fieldset">
@@ -100,20 +103,20 @@ defineExpose({ dialog })
             <div class="grid gap-3 sm:grid-cols-2">
               <label class="fieldset">
                 <span class="fieldset-legend">Qualité</span>
-                <select v-model="form.quality" class="select">
+                <select v-model="form.quality" class="select min-h-11">
                   <option v-for="quality in ITEM_QUALITY_OPTIONS" :key="quality" :value="quality">{{ quality }}</option>
                 </select>
               </label>
 
               <label class="fieldset">
                 <span class="fieldset-legend">Encombrement</span>
-                <input v-model.number="form.encumbrance" type="number" min="0" class="input" />
+                <input v-model.number="form.encumbrance" type="number" min="0" class="input min-h-11" />
               </label>
             </div>
 
             <label class="fieldset">
               <span class="fieldset-legend">Quantité</span>
-              <input v-model.number="form.quantity" type="number" min="1" class="input" />
+              <input v-model.number="form.quantity" type="number" min="1" class="input min-h-11" />
             </label>
           </div>
         </template>
@@ -177,14 +180,14 @@ defineExpose({ dialog })
             <div class="grid gap-3 sm:grid-cols-2">
               <label class="fieldset">
                 <span class="fieldset-legend">Qualité</span>
-                <select v-model="itemsQuality" class="select">
+                <select v-model="itemsQuality" class="select min-h-11">
                   <option v-for="quality in ITEM_QUALITY_OPTIONS" :key="quality" :value="quality">{{ quality }}</option>
                 </select>
               </label>
 
               <label class="fieldset">
                 <span class="fieldset-legend">Quantité</span>
-                <input v-model.number="itemsQuantity" type="number" min="1" class="input" />
+                <input v-model.number="itemsQuantity" type="number" min="1" class="input min-h-11" />
               </label>
             </div>
           </div>
@@ -221,7 +224,7 @@ defineExpose({ dialog })
           v-if="section === 'items' && mode === 'create'"
           type="button"
           class="btn btn-sm min-h-11 ui-critical-action"
-          :disabled="creating"
+          :disabled="creating || !isOnline"
           @click="emit('confirm-create')"
         >
           <span v-if="creating" class="loading loading-spinner loading-xs" aria-hidden="true" />
@@ -231,7 +234,7 @@ defineExpose({ dialog })
           v-else
           type="button"
           class="btn btn-sm min-h-11 ui-critical-action"
-          :disabled="adding || selectedIds.length === 0"
+          :disabled="adding || !isOnline || selectedIds.length === 0"
           @click="emit('confirm-add')"
         >
           <span v-if="adding" class="loading loading-spinner loading-xs" aria-hidden="true" />
@@ -241,7 +244,7 @@ defineExpose({ dialog })
     </div>
 
     <form method="dialog" class="modal-backdrop">
-      <button>Fermer</button>
+      <button tabindex="-1">Fermer</button>
     </form>
   </dialog>
 </template>

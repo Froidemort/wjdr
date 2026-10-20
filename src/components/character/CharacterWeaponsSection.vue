@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus, Sword, Trash2, Weight } from '@lucide/vue'
-import { useNetwork } from '@vueuse/core'
+import { useIsOnline } from '../../composables/useIsOnline'
 import { computed, ref } from 'vue'
 import type { CharacterWeapon } from '../../types/domain'
 import {
@@ -23,7 +23,7 @@ const emit = defineEmits<{
   'quality-change': [weapon: CharacterWeapon, value: string | boolean | null]
 }>()
 
-const { isOnline } = useNetwork()
+const isOnline = useIsOnline()
 
 const HAND_LABELS: Record<string, string> = {
   'd&g': 'Équipée',

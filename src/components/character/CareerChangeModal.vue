@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import type { CatalogItem } from '../../types/domain'
 import SearchInput from '../ui/SearchInput.vue'
+import { useIsOnline } from '../../composables/useIsOnline'
 
 const props = defineProps<{
   options: CatalogItem[]
@@ -25,6 +26,8 @@ const emit = defineEmits<{
 const filterMode = defineModel<'paths' | 'all'>('filterMode', { required: true })
 const query = defineModel<string>('query', { required: true })
 
+const isOnline = useIsOnline()
+const titleId = useId()
 const dialog = ref<HTMLDialogElement | null>(null)
 
 defineExpose({ dialog })
@@ -48,7 +51,7 @@ const emptyMessage = computed(() => {
 </script>
 
 <template>
-  <dialog ref="dialog" class="modal modal-top sm:modal-middle" @close="emit('closed')">
+  <dialog ref="dialog" class="modal modal-top sm:modal-middle" :aria-labelledby="titleId" @close="emit('closed')">
     <div class="modal-box grim-modal-box p-6">
       <button
         type="button"
@@ -58,7 +61,7 @@ const emptyMessage = computed(() => {
       >
         ✕
       </button>
-      <h3 class="grim-modal-title mb-4 px-8 text-center text-2xl sm:text-3xl">Changer de carrière</h3>
+      <h3 :id="titleId" class="grim-modal-title mb-4 px-8 text-center text-2xl sm:text-3xl">Changer de carrière</h3>
 
       <div class="space-y-3">
         <div class="join" role="group" aria-label="Filtre des carrières">
@@ -113,7 +116,7 @@ const emptyMessage = computed(() => {
 
         <div class="grim-modal-actions flex items-center justify-end gap-2">
           <button type="button" class="btn btn-sm min-h-11 ui-critical-action" @click="emit('close')">Annuler</button>
-          <button type="button" class="btn btn-sm min-h-11 ui-critical-action" :disabled="busy" @click="emit('confirm')">
+          <button type="button" class="btn btn-sm min-h-11 ui-critical-action" :disabled="busy || !isOnline" @click="emit('confirm')">
             <span v-if="busy" class="loading loading-spinner loading-xs" aria-hidden="true" />
             Valider
           </button>
@@ -122,7 +125,7 @@ const emptyMessage = computed(() => {
     </div>
 
     <form method="dialog" class="modal-backdrop">
-      <button>Fermer</button>
+      <button tabindex="-1">Fermer</button>
     </form>
   </dialog>
 </template>

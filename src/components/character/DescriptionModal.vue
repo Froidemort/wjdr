@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useId } from 'vue'
 
 defineProps<{
   title: string | null
@@ -11,13 +11,14 @@ const emit = defineEmits<{
   closed: []
 }>()
 
+const titleId = useId()
 const dialog = ref<HTMLDialogElement | null>(null)
 
 defineExpose({ dialog })
 </script>
 
 <template>
-  <dialog ref="dialog" class="modal modal-top sm:modal-middle" @close="emit('closed')">
+  <dialog ref="dialog" class="modal modal-top sm:modal-middle" :aria-labelledby="titleId" @close="emit('closed')">
     <div class="modal-box grim-modal-box max-w-lg p-6">
       <button
         type="button"
@@ -27,11 +28,11 @@ defineExpose({ dialog })
       >
         ✕
       </button>
-      <h3 class="grim-modal-title pr-12 text-2xl">{{ title || 'Description' }}</h3>
+      <h3 :id="titleId" class="grim-modal-title pr-12 text-2xl">{{ title || 'Description' }}</h3>
       <p class="mt-3 whitespace-pre-line text-sm opacity-90">{{ content || 'Aucune description.' }}</p>
     </div>
     <form method="dialog" class="modal-backdrop">
-      <button>Fermer</button>
+      <button tabindex="-1">Fermer</button>
     </form>
   </dialog>
 </template>

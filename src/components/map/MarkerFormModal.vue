@@ -121,7 +121,7 @@ function onSubmit(): void {
     </div>
 
     <form method="dialog" class="modal-backdrop">
-      <button>Fermer</button>
+      <button tabindex="-1">Fermer</button>
     </form>
   </dialog>
 </template>

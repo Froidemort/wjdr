@@ -160,9 +160,9 @@ function confirmSubtract(): void {
     </div>
   </article>
 
-  <dialog ref="subtractDialogRef" class="modal modal-top sm:modal-middle" @close="onSubtractDialogClosed">
+  <dialog ref="subtractDialogRef" class="modal modal-top sm:modal-middle" aria-labelledby="money-subtract-title" @close="onSubtractDialogClosed">
     <div class="modal-box grim-modal-box p-5 max-w-md">
-      <h3 class="grim-modal-title text-2xl text-center">Soustraire de l'argent</h3>
+      <h3 id="money-subtract-title" class="grim-modal-title text-2xl text-center">Soustraire de l'argent</h3>
 
       <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label class="fieldset">
@@ -195,7 +195,7 @@ function confirmSubtract(): void {
     </div>
 
     <form method="dialog" class="modal-backdrop">
-      <button>Fermer</button>
+      <button tabindex="-1">Fermer</button>
     </form>
   </dialog>
 </template>
