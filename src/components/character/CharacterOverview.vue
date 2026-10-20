@@ -55,19 +55,14 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
     <h2 id="character-overview-title" class="text-lg font-semibold">Aperçu</h2>
 
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-      <div class="space-y-1">
-        <HealthHeart
-          :model-value="values.pvCurrent"
-          :max-hp="values.pvMax"
-          label="Points de Blessures"
-          mobile-label="Blessures"
-          :editable="editable"
-          @update:model-value="emit('quick-change', 'pvCurrent', $event)"
-        />
-        <p class="px-1 text-xs opacity-70">
-          PV max {{ values.pvMax }} : valeur de la caractéristique Blessures (B), non modifiable ici.
-        </p>
-      </div>
+      <HealthHeart
+        :model-value="values.pvCurrent"
+        :max-hp="values.pvMax"
+        label="Points de Blessures"
+        mobile-label="Blessures"
+        :editable="editable"
+        @update:model-value="emit('quick-change', 'pvCurrent', $event)"
+      />
       <FortuneClover
         label="Fortune"
         :model-value="values.fortuneCurrent"
@@ -110,18 +105,9 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
           :max="Math.max(maxEncumbrance, 1)"
           aria-hidden="true"
         />
-        <p class="mt-1 text-xs opacity-70">Max : Force × {{ encumbranceMultiplier }}</p>
-      </article>
-
-      <article class="rounded-box border border-base-300 bg-base-100 p-3 text-center">
-        <p class="text-sm font-semibold">Bonus de Force</p>
-        <p class="text-2xl font-black leading-tight text-accent">BF {{ bonusForce }}</p>
-        <p class="text-xs opacity-70">F ÷ 10</p>
-      </article>
-      <article class="rounded-box border border-base-300 bg-base-100 p-3 text-center">
-        <p class="text-sm font-semibold">Bonus d'Endurance</p>
-        <p class="text-2xl font-black leading-tight text-accent">BE {{ bonusEndurance }}</p>
-        <p class="text-xs opacity-70">E ÷ 10</p>
+        <p class="mt-1 text-xs opacity-70">
+          Max : Force × {{ encumbranceMultiplier }} · BF {{ bonusForce }} · BE {{ bonusEndurance }}
+        </p>
       </article>
 
       <CharacterValueCard
