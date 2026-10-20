@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CircleCheck, Eye, Hourglass, Pencil, Trash2 } from '@lucide/vue'
 import type { SessionSummary } from '../../types/domain'
+import MarkdownContent from '../campaign/MarkdownContent.vue'
 
 interface SessionEditForm {
   date: string
@@ -111,12 +112,10 @@ function onSessionEditFieldInput(
             </button>
           </div>
         </div>
-        <p v-if="sessionItem.description" class="text-sm whitespace-pre-line opacity-80">
-          {{ sessionItem.description }}
-        </p>
+        <MarkdownContent v-if="sessionItem.description" :source="sessionItem.description" class="opacity-80" />
 
         <div
-          v-if="props.sessionEditId === sessionItem.id"
+          v-if="props.isMj && props.sessionEditId === sessionItem.id"
           class="rounded-box border border-base-300 bg-base-100 p-4 space-y-3"
         >
           <div class="grid gap-3 lg:grid-cols-2">

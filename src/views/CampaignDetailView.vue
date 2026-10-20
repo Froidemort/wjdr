@@ -25,6 +25,13 @@
 
       <CampaignDetailTabs v-model="activeCampaignTab" :is-mj="isMj" :is-mobile="isMobile" />
 
+      <NextSessionHero
+        v-show="activeCampaignTab === 'overview' || activeCampaignTab === 'sessions'"
+        :session="nextSession"
+        :today-key="todaySessionDate"
+        @take-note="focusNotesPanel(nextSession ?? undefined)"
+      />
+
       <CampaignOverviewSection
         v-show="activeCampaignTab === 'overview'"
         :session="session"
@@ -67,7 +74,7 @@
         :session-create-error="sessionCreateError"
         :session-create-date-error="sessionCreateDateError"
         :session-create-form="sessionCreateForm"
-        :is-mobile="isMobile"
+        :today-key="todaySessionDate"
         :format-campaign-session-date="formatCampaignSessionDate"
         :format-campaign-session-date-compact="formatCampaignSessionDateCompact"
         :format-campaign-session-title="formatCampaignSessionTitle"
@@ -82,6 +89,7 @@
         @save-session-edit="saveSessionEdit"
         @cancel-session-edit="cancelSessionEdit"
         @create-session="createCampaignSession"
+        @reset-session-create-form="resetSessionCreateForm"
       />
 
       <section
@@ -206,6 +214,7 @@ import type { CharacterSummary, CampaignSummary, SessionSummary } from '../types
 import AppCard from '../components/ui/AppCard.vue'
 import CharacterCreateModal from '../components/ui/CharacterCreateModal.vue'
 import CampaignTableSection from '../components/campaign/CampaignTableSection.vue'
+import NextSessionHero from '../components/campaign/NextSessionHero.vue'
 import CampaignDetailTabs from '../components/ui/CampaignDetailTabs.vue'
 import CampaignManagementSection from '../components/ui/CampaignManagementSection.vue'
 import CampaignOverviewSection from '../components/ui/CampaignOverviewSection.vue'
@@ -219,6 +228,7 @@ import { useConfirmAction } from '../composables/useConfirmAction'
 import { useCopyFeedback } from '../composables/useCopyFeedback'
 import { useDeviceBreakpoint } from '../composables/useDeviceBreakpoint'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
+import { shouldLandOnSessionsTab } from '../utils/campaignSessions'
 
 const authStore = useAuthStore()
 const lastActive = useLastActiveStore()
@@ -232,6 +242,7 @@ type CampaignTab = 'overview' | 'management' | 'table' | 'sessions' | 'notes'
 const campaignTabs: readonly CampaignTab[] = ['overview', 'management', 'table', 'sessions', 'notes']
 const MJ_ONLY_TABS: readonly CampaignTab[] = ['management', 'table']
 const activeCampaignTab = ref<CampaignTab>('overview')
+let landingTabResolved = false
 const characters = ref<CharacterSummary[]>([])
 const sessions = ref<SessionSummary[]>([])
 const sessionInfoOpen = ref(true)
@@ -315,6 +326,7 @@ const {
   sessionActionSuccessMessage,
   timelineSessions,
   nextSession,
+  todaySessionDate,
   timelineStats,
   getSessionDateStatus,
   formatCampaignSessionDate,
@@ -322,6 +334,7 @@ const {
   formatCampaignSessionTitle,
   buildCampaignSessionDetailLink,
   createCampaignSession,
+  resetSessionCreateForm,
   startSessionEdit,
   cancelSessionEdit,
   saveSessionEdit,
@@ -483,6 +496,13 @@ async function loadSessionDetail(options: { background?: boolean } = {}): Promis
     }
 
     const userIsMj = currentUserId === session.value.mjId
+
+    if (!landingTabResolved) {
+      landingTabResolved = true
+      if (!route.query.tab && shouldLandOnSessionsTab(sessions.value, todaySessionDate.value, userIsMj)) {
+        activeCampaignTab.value = 'sessions'
+      }
+    }
 
     if (userIsMj) {
       void refreshMjData()

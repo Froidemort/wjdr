@@ -1,3 +1,5 @@
+"""Extract spells from the compendium PDF and enrich their range and duration."""
+
 import asyncio
 import json
 import logging
@@ -36,17 +38,23 @@ UNKNOWN_MARKERS = {"<UNKNOWN>", "UNKNOWN"}
 
 
 class SpellResult(BaseModel):
+    """Range and duration of a spell."""
+
     range: str = Field(description="Portée du sort")
     duration: str | None = Field(description="Durée du sort")
 
 
 class SpellFixResult(BaseModel):
+    """Corrected range and duration of an indexed spell."""
+
     index: int = Field(description="1-based position of the spell in the full input list")
     range: str = Field(description="Corrected concise French range")
     duration: str | None = Field(description="Corrected concise French duration")
 
 
 class Spell(SpellResult):
+    """Spell extracted from the compendium."""
+
     category: str  # The section title (e.g., "Magie commune de Manann")
     name: str  # Spell name
     difficulty: int  # Minimum roll required (Diff)
@@ -60,6 +68,7 @@ class Spell(SpellResult):
     @field_validator("category", mode="after")
     @classmethod
     def strip_category(cls, value: str) -> str:
+        """Remove the section numbering and surrounding whitespace."""
         return TITLE_PATTERN.sub("", value.strip())
 
     @field_validator(
@@ -72,11 +81,13 @@ class Spell(SpellResult):
     )
     @classmethod
     def strip_text(cls, value: str) -> str:
+        """Strip surrounding whitespace."""
         return value.strip()
 
     @field_validator("duration", mode="after")
     @classmethod
     def strip_duration(cls, value: str | None) -> str | None:
+        """Strip whitespace and map empty values to None."""
         return value.strip() if value else None
 
 
@@ -84,35 +95,33 @@ def clean_text(text: str | None) -> str:
     """Normalize whitespace and common PDF punctuation."""
     if not text:
         return ""
-    return " ".join(
-        text.replace("’", "'").replace("“", '"').replace("”", '"').split()
-    ).strip()
+    return " ".join(text.replace("’", "'").replace("“", '"').replace("”", '"').split()).strip()
 
 
 SpellsList = TypeAdapter(list[Spell])
 
 
 def is_unresolved(value: str | None) -> bool:
+    """Return whether a value is blank or an unknown marker."""
     return value is None or not value.strip() or value.strip().upper() in UNKNOWN_MARKERS
 
 
 def unresolved_fields(spell: Spell) -> list[str]:
+    """Return the range/duration fields of a spell that are unresolved."""
     return [field for field in ("range", "duration") if is_unresolved(getattr(spell, field))]
 
 
-def get_spells(
-    json_from: list[dict[str, Any]], json_to: list[dict[str, Any]]
-) -> list[tuple[Spell, Spell]]:
+def get_spells(json_from: list[dict[str, Any]], json_to: list[dict[str, Any]]) -> list[tuple[Spell, Spell]]:
+    """Validate two spell lists and pair them by position."""
     spells_from = SpellsList.validate_python(json_from)
     spells_to = SpellsList.validate_python(json_to)
     if len(spells_from) != len(spells_to):
-        raise ValueError(
-            f"Spell count mismatch: source has {len(spells_from)}, target has {len(spells_to)}."
-        )
+        raise ValueError(f"Spell count mismatch: source has {len(spells_from)}, target has {len(spells_to)}.")
     return list(zip(spells_from, spells_to, strict=True))
 
 
 def compare(spells_pairs: list[tuple[Spell, Spell]]) -> dict[str, list[str]]:
+    """Return range/duration differences per spell name."""
     differences: dict[str, list[str]] = {}
     for spell_from, spell_to in spells_pairs:
         diff = []
@@ -126,6 +135,7 @@ def compare(spells_pairs: list[tuple[Spell, Spell]]) -> dict[str, list[str]]:
 
 
 def pprint_diff(json_from_path: Path, json_to_path: Path) -> None:
+    """Log range/duration differences between two spell files."""
     json_from = json.loads(json_from_path.read_text(encoding="utf-8"))
     json_to = json.loads(json_to_path.read_text(encoding="utf-8"))
     spell_pairs = get_spells(json_from, json_to)
@@ -154,51 +164,34 @@ def write_spells_json(path: Path, spells: list[Spell]) -> None:
 
 
 def validate_fixed_spells(original: list[Spell], fixed: list[Spell]) -> None:
+    """Check that fixed spells only changed range/duration and are all resolved."""
     if len(original) != len(fixed):
-        raise ValueError(
-            f"Fixer changed spell count: expected {len(original)}, received {len(fixed)}."
-        )
+        raise ValueError(f"Fixer changed spell count: expected {len(original)}, received {len(fixed)}.")
 
     unresolved: list[str] = []
     for index, (source, result) in enumerate(zip(original, fixed, strict=True), start=1):
         if (source.category, source.name) != (result.category, result.name):
-            raise ValueError(
-                f"Fixer changed spell identity/order at item {index}: "
-                f"expected '{source.category} / {source.name}', received "
-                f"'{result.category} / {result.name}'."
-            )
-        if source.model_dump(exclude={"range", "duration"}) != result.model_dump(
-            exclude={"range", "duration"}
-        ):
-            raise ValueError(
-                f"Fixer modified fields other than range/duration for '{source.name}'."
-            )
+            raise ValueError(f"Fixer changed spell identity/order at item {index}: expected '{source.category} / {source.name}', received '{result.category} / {result.name}'.")
+        if source.model_dump(exclude={"range", "duration"}) != result.model_dump(exclude={"range", "duration"}):
+            raise ValueError(f"Fixer modified fields other than range/duration for '{source.name}'.")
         fields = unresolved_fields(result)
         if fields:
             unresolved.append(f"{result.name} ({', '.join(fields)})")
 
     if unresolved:
-        raise ValueError(
-            "Unresolved spell fields remain; fixed output was not written: "
-            + "; ".join(unresolved)
-        )
+        raise ValueError("Unresolved spell fields remain; fixed output was not written: " + "; ".join(unresolved))
 
 
-def apply_spell_fix_results(
-    original: list[Spell], results: list[SpellFixResult], start_index: int
-) -> list[Spell]:
+def apply_spell_fix_results(original: list[Spell], results: list[SpellFixResult], start_index: int) -> list[Spell]:
+    """Apply fixer results to a batch of spells."""
     if len(original) != len(results):
-        raise ValueError(
-            f"Fixer changed batch count: expected {len(original)}, received {len(results)}."
-        )
+        raise ValueError(f"Fixer changed batch count: expected {len(original)}, received {len(results)}.")
 
     fixed: list[Spell] = []
     for offset, (source, result) in enumerate(zip(original, results, strict=True)):
         expected_index = start_index + offset + 1
         if result.index != expected_index:
-            raise ValueError(
-                f"Expected result index {expected_index}, received {result.index}."
-            )
+            raise ValueError(f"Expected result index {expected_index}, received {result.index}.")
         fixed.append(
             source.model_copy(
                 update={
@@ -214,50 +207,56 @@ def apply_spell_fix_results(
 
 @cache
 def initialize_spell_filler_agent() -> Agent[object, SpellResult]:
-    provider = GitHubCopilotProvider(
-        api_key=os.getenv("GITHUB_TOKEN")
-    )
+    """Build the agent that fills spell range and duration."""
+    provider = GitHubCopilotProvider(api_key=os.getenv("GITHUB_TOKEN"))
     model = GitHubCopilotModel(MODEL_NAME, provider=provider)
     spell_filler_agent = Agent(
         model=model,
         output_type=SpellResult,
-        system_prompt="""You extract Warhammer Fantasy Roleplay spell range and duration from French source text.
-
-Return concise French values grounded in the supplied spell data. Prefer an explicit value in the description or existing table fields. Use the other fields only to resolve clear references; do not invent mechanics or infer a value solely from the spell's name or category.
-
-Normalize equivalent wording consistently: "Instantané" and "Immédiat" mean the same duration; "Personnel" and "Contact (vous)" mean the same range, while "Contact" alone is distinct. Express a duration based on the value of magic as "X/Mag". Use "Spécial" only when the source describes a conditional, variable, or otherwise special value.
-
-Never return an empty value, null, "UNKNOWN", or "<UNKNOWN>". If the supplied text does not support a value, make the best evidence-based inference from the complete spell entry and state the concise result rather than copying a placeholder.""",
+        system_prompt=(
+            "You extract Warhammer Fantasy Roleplay spell range and duration from French source text.\n\n"
+            "Return concise French values grounded in the supplied spell data. Prefer an explicit value in the description or existing table fields. Use the other fields only to resolve clear references; do not "
+            "invent mechanics or infer a value solely from the spell's name or category.\n\n"
+            'Normalize equivalent wording consistently: "Instantané" and "Immédiat" mean the same duration; "Personnel" and "Contact (vous)" mean the same range, while "Contact" alone is distinct. Express a '
+            'duration based on the value of magic as "X/Mag". Use "Spécial" only when the source describes a conditional, variable, or otherwise special value.\n\n'
+            'Never return an empty value, null, "UNKNOWN", or "<UNKNOWN>". If the supplied text does not support a value, make the best evidence-based inference from the complete spell entry and state the concise '
+            "result rather than copying a placeholder."
+        ),
     )
     return spell_filler_agent
 
+
 def initialize_spells_fixer_agent() -> Agent[object, list[SpellFixResult]]:
-    provider = GitHubCopilotProvider(
-        api_key=os.getenv("GITHUB_TOKEN")
-    )
+    """Build the agent that normalizes spell range and duration."""
+    provider = GitHubCopilotProvider(api_key=os.getenv("GITHUB_TOKEN"))
     model = GitHubCopilotModel(MODEL_NAME, provider=provider)
     spells_fixer_agent = Agent(
         model=model,
         output_type=list[SpellFixResult],
-        system_prompt="""You normalize range and duration for Warhammer Fantasy Roleplay spells in French.
-
-    Process only the spell entries in the current input batch. Resolve every blank, null, "UNKNOWN", or "<UNKNOWN>" range/duration using that spell's description and explicit evidence from comparable entries. Do not use the spell name or category alone to guess. Keep already supported values unless a clear inconsistency requires canonical normalization.
-
-    Use concise values. Normalize "Instantané" and "Immédiat" consistently. Normalize "Personnel" and "Contact (vous)" as equivalent, but do not conflate either with "Contact". Express duration tied to the value of magic as "X/Mag". Use "Spécial" only for a value the text makes conditional, variable, or genuinely special. Never return blank, null, "UNKNOWN", or "<UNKNOWN>"; make the strongest evidence-based resolution available.
-
-    Return a JSON array with exactly one object per input entry, in the same order. Each object contains only its exact input index, range, and duration. Copy the index exactly. Do not return names or any other spell fields.""",
+        system_prompt=(
+            "You normalize range and duration for Warhammer Fantasy Roleplay spells in French.\n\n"
+            '    Process only the spell entries in the current input batch. Resolve every blank, null, "UNKNOWN", or "<UNKNOWN>" range/duration using that spell\'s description and explicit evidence from comparable '
+            "entries. Do not use the spell name or category alone to guess. Keep already supported values unless a clear inconsistency requires canonical normalization.\n\n"
+            '    Use concise values. Normalize "Instantané" and "Immédiat" consistently. Normalize "Personnel" and "Contact (vous)" as equivalent, but do not conflate either with "Contact". Express duration tied '
+            'to the value of magic as "X/Mag". Use "Spécial" only for a value the text makes conditional, variable, or genuinely special. Never return blank, null, "UNKNOWN", or "<UNKNOWN>"; make the strongest '
+            "evidence-based resolution available.\n\n"
+            "    Return a JSON array with exactly one object per input entry, in the same order. Each object contains only its exact input index, range, and duration. Copy the index exactly. Do not return names "
+            "or any other spell fields."
+        ),
     )
     return spells_fixer_agent
 
+
 async def fill_spell_duration_range(spell: Spell) -> SpellResult:
+    """Ask the model for a spell's range and duration."""
     context_text = f"""
     Entrée du sort :
     Nom : {spell.name}
     Catégorie : {spell.category}
     Difficulté : {spell.difficulty}
     Temps d'incantation : {spell.casting_time}
-    Portée actuelle : {spell.range or '<UNKNOWN>'}
-    Durée actuelle : {spell.duration or '<UNKNOWN>'}
+    Portée actuelle : {spell.range or "<UNKNOWN>"}
+    Durée actuelle : {spell.duration or "<UNKNOWN>"}
     Description : {spell.description}
 
     Remplace uniquement les valeurs absentes ou incorrectes de portée et durée. Réponds avec des valeurs françaises courtes, jamais avec un marqueur inconnu.
@@ -265,11 +264,11 @@ async def fill_spell_duration_range(spell: Spell) -> SpellResult:
     result = await initialize_spell_filler_agent().run(context_text)
     return SpellResult.model_validate(result.output)
 
+
 def extract_row_fields(
     cleaned_row: list[str],
 ) -> tuple[str, str, str, str, str | None, str, str] | None:
-    """
-    Maps a cleaned table row to (name, diff_raw, casting_time, ingredient, duration, range, description).
+    """Map a cleaned table row to (name, diff_raw, casting_time, ingredient, duration, range, description).
 
     Spell tables come in two layouts depending on the section:
     - 8 columns: Nom, Diff, Tps, Ingrédient, Durée, Portée, Description, Source
@@ -301,14 +300,13 @@ def extract_row_fields(
 
 
 def stream_spells(pdf_path: str | Path) -> Generator[Spell]:
-    """
-    Sequentially parses the PDF, extracts table rows, cleans the text data,
-    and constructs Spell model objects on-the-fly.
+    """Sequentially parse the PDF, extract table rows, clean the text data.
+
+    Constructs Spell model objects on-the-fly.
 
     Yields:
         Generator[Spell, None, None]: Individual initialized Spell instances.
     """
-
     # Regex to catch bonuses like (+1) or (+2) inside ingredient strings
     bonus_pattern = re.compile(r"\(\s*\+\s*(\d+)\s*\)")
 
@@ -377,9 +375,7 @@ def stream_spells(pdf_path: str | Path) -> Generator[Spell]:
                         name=name,
                         difficulty=int(diff_raw),
                         casting_time=casting_time,
-                        bonus_ingredient=ingredient_name
-                        if ingredient_name
-                        else "Aucun",
+                        bonus_ingredient=ingredient_name if ingredient_name else "Aucun",
                         bonus=bonus_value,
                         duration=duration,
                         range=spell_range,
@@ -405,12 +401,16 @@ def stream_spells(pdf_path: str | Path) -> Generator[Spell]:
 
 
 class SlidingWindowRateLimiter:
+    """Limit requests per minute over a sliding window."""
+
     def __init__(self, max_requests_per_minute: int) -> None:
+        """Initialize the limiter."""
         self.max_rpm = max_requests_per_minute
         self.requests: list[float] = []
         self.lock = asyncio.Lock()
 
     async def wait_if_needed(self) -> None:
+        """Sleep until a request slot is available."""
         async with self.lock:
             now = time.monotonic()
             self.requests = [t for t in self.requests if now - t < 60]
@@ -433,9 +433,8 @@ class SlidingWindowRateLimiter:
             self.requests.append(time.monotonic())
 
 
-async def process_with_rate_limit(
-    limiter: SlidingWindowRateLimiter, spell: Spell
-) -> Spell:
+async def process_with_rate_limit(limiter: SlidingWindowRateLimiter, spell: Spell) -> Spell:
+    """Enrich a spell with the model, respecting the rate limit."""
     await limiter.wait_if_needed()
     LOGGER.info("Enriching '%s' (%s).", spell.name, spell.category)
     try:
@@ -476,6 +475,7 @@ async def process_with_rate_limit(
 
 
 async def execute_spell_enrichment() -> list[Spell]:
+    """Extract spells from the PDF and enrich unresolved range/duration values."""
     if not PDF_FILE_PATH.is_file():
         raise FileNotFoundError(f"Spell PDF not found: {PDF_FILE_PATH}")
 
@@ -511,23 +511,12 @@ async def execute_spell_enrichment() -> list[Spell]:
 
 
 async def execute_spells_fixes(spells: list[Spell]) -> list[Spell]:
+    """Normalize range and duration of all spells in batches."""
     if not spells:
         return []
 
-    known_ranges = sorted(
-        {
-            spell.range.strip()
-            for spell in spells
-            if not is_unresolved(spell.range)
-        }
-    )[:30]
-    known_durations = sorted(
-        {
-            spell.duration.strip()
-            for spell in spells
-            if spell.duration and not is_unresolved(spell.duration)
-        }
-    )[:30]
+    known_ranges = sorted({spell.range.strip() for spell in spells if not is_unresolved(spell.range)})[:30]
+    known_durations = sorted({spell.duration.strip() for spell in spells if spell.duration and not is_unresolved(spell.duration)})[:30]
     reference_values = json.dumps(
         {"range": known_ranges, "duration": known_durations},
         ensure_ascii=False,
@@ -554,10 +543,7 @@ async def execute_spells_fixes(spells: list[Spell]) -> list[Spell]:
             len(batch),
         )
         await limiter.wait_if_needed()
-        indexed_batch = [
-            {"index": start + offset + 1, "spell": spell.model_dump(mode="json")}
-            for offset, spell in enumerate(batch)
-        ]
+        indexed_batch = [{"index": start + offset + 1, "spell": spell.model_dump(mode="json")} for offset, spell in enumerate(batch)]
         context = f"""Resolve range and duration for this batch only.
 Use these values already present elsewhere only as normalization references, not as assumptions: {reference_values}
 Return exactly {len(batch)} result objects, preserving the supplied indices and order. Each result must contain only index, range, and duration.
@@ -569,10 +555,7 @@ Indexed batch data:
         try:
             fixed_batch = apply_spell_fix_results(batch, result.output, start)
         except ValueError as error:
-            raise ValueError(
-                f"Fixer returned an invalid result for batch {batch_index}/{batch_count} "
-                f"(spells {start + 1}-{end}): {error}"
-            ) from error
+            raise ValueError(f"Fixer returned an invalid result for batch {batch_index}/{batch_count} (spells {start + 1}-{end}): {error}") from error
 
         fixed_spells.extend(fixed_batch)
         LOGGER.info(
@@ -587,14 +570,13 @@ Indexed batch data:
 
 
 async def main_async() -> None:
+    """Run extraction, enrichment and the fixer pass."""
     if not os.getenv("GITHUB_TOKEN"):
         raise RuntimeError("GITHUB_TOKEN is required for spell enrichment.")
 
     if OUTPUT_PATH.exists():
         LOGGER.info("Loading existing extraction data: %s", OUTPUT_PATH)
-        spell_list = SpellsList.validate_python(
-            json.loads(OUTPUT_PATH.read_text(encoding="utf-8"))
-        )
+        spell_list = SpellsList.validate_python(json.loads(OUTPUT_PATH.read_text(encoding="utf-8")))
     else:
         spell_list = await execute_spell_enrichment()
 
@@ -615,6 +597,7 @@ async def main_async() -> None:
 
 
 def main() -> None:
+    """Run the spell extraction pipeline."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",

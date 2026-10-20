@@ -1,10 +1,38 @@
-import { reactive, ref } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
+import { computed, reactive, ref, toValue, type MaybeRefOrGetter } from 'vue'
 import type { SessionNote } from '../types/domain'
 
 interface SessionNoteDraft {
   title: string
   contentText: string
   sessionId: string
+}
+
+export function buildNoteDraftKey(campaignId: string, sessionId: string | null | undefined): string {
+  return `wjdr:note-draft:${campaignId}:${sessionId || 'none'}`
+}
+
+export function useSessionNoteDraft(
+  campaignId: MaybeRefOrGetter<string>,
+  sessionId: MaybeRefOrGetter<string | null | undefined>
+) {
+  const draft = useLocalStorage(
+    computed(() => buildNoteDraftKey(toValue(campaignId), toValue(sessionId))),
+    ''
+  )
+
+  function clearDraft(): void {
+    draft.value = ''
+  }
+
+  // The draft survives a failed save and is cleared only once `save` resolves.
+  async function clearOnSuccess<T>(save: () => Promise<T>): Promise<T> {
+    const result = await save()
+    clearDraft()
+    return result
+  }
+
+  return { draft, clearDraft, clearOnSuccess }
 }
 
 export function useSessionNoteEditor() {

@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { SessionNote, SessionSummary } from '../../types/domain'
+import MarkdownContent from '../campaign/MarkdownContent.vue'
 import AppCard from './AppCard.vue'
 import DataGrid from './DataGrid.vue'
 import SearchInput from './SearchInput.vue'
@@ -45,6 +47,21 @@ const emit = defineEmits<{
   'save-edit': [noteId: string]
   'cancel-edit': []
 }>()
+
+const CLAMP_CHAR_THRESHOLD = 280
+const expandedNoteIds = ref<Set<string>>(new Set())
+
+function isLongNote(content: string): boolean {
+  return content.length > CLAMP_CHAR_THRESHOLD || content.split('\n').length > 6
+}
+
+function toggleExpanded(noteId: string): void {
+  const next = new Set(expandedNoteIds.value)
+  if (!next.delete(noteId)) {
+    next.add(noteId)
+  }
+  expandedNoteIds.value = next
+}
 
 function onLinkedSessionFilterChange(event: Event): void {
   const value = (event.target as HTMLSelectElement).value as 'all' | 'none' | string
@@ -131,7 +148,23 @@ function onEditDraftFieldInput(
             </div>
           </div>
 
-          <p class="whitespace-pre-wrap text-sm">{{ resolveNoteMainContent(note) }}</p>
+          <div>
+            <MarkdownContent
+              :id="`note-content-${note.id}`"
+              :source="resolveNoteMainContent(note)"
+              :class="{ 'line-clamp-6': isLongNote(resolveNoteMainContent(note)) && !expandedNoteIds.has(note.id) }"
+            />
+            <button
+              v-if="isLongNote(resolveNoteMainContent(note))"
+              type="button"
+              class="btn btn-ghost btn-sm mt-1 min-h-11"
+              :aria-expanded="expandedNoteIds.has(note.id) ? 'true' : 'false'"
+              :aria-controls="`note-content-${note.id}`"
+              @click="toggleExpanded(note.id)"
+            >
+              {{ expandedNoteIds.has(note.id) ? 'Voir moins' : 'Voir plus' }}
+            </button>
+          </div>
 
           <template v-if="canManageNote(note)">
             <div class="flex flex-wrap items-center gap-2">

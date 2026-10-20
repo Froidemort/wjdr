@@ -101,6 +101,25 @@ describe('useCampaignSessions', () => {
     expect(sessions.sessionActionSuccessMessage.value).toBe('Session creee.')
   })
 
+  it('prefills the create form with the next free date and clears previous errors on reset', () => {
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date(2026, 8, 10, 12))
+      const sessions = createSessions({ sessions: [existingSession, { ...existingSession, id: 'session-2', date: '2026-09-11' }] })
+      sessions.sessionCreateError.value = 'Echec'
+      sessions.sessionCreateDateError.value = 'Date'
+      sessions.sessionCreateForm.value = { date: '2026-01-01', name: 'x', description: 'y' }
+
+      sessions.resetSessionCreateForm()
+
+      expect(sessions.sessionCreateForm.value).toEqual({ date: '2026-09-12', name: '', description: '' })
+      expect(sessions.sessionCreateError.value).toBeNull()
+      expect(sessions.sessionCreateDateError.value).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('maps creation permission failures and guards archived campaigns', async () => {
     dependencies.createSession.mockRejectedValue(Object.assign(new Error('permission denied'), { status: 403 }))
     const sessions = createSessions({ sessions: [] })
@@ -164,6 +183,25 @@ describe('useCampaignSessions', () => {
     expect(sessions.formatCampaignSessionDate('invalide')).toBe('invalide')
     expect(sessions.formatCampaignSessionTitle(sessions.nextSession.value!)).toContain('Session du')
     expect(sessions.buildCampaignSessionDetailLink('session-2')).toBe('/campaigns/campaign-1/timeline/session-2')
+  })
+
+  it('prefers a session dated today over later ones', () => {
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date(2026, 8, 10, 12))
+      const sessions = createSessions({
+        sessions: [
+          { ...existingSession, id: 'later', date: '2026-09-12' },
+          { ...existingSession, id: 'today', date: '2026-09-10' },
+          { ...existingSession, id: 'past', date: '2026-09-01' },
+        ],
+      })
+
+      expect(sessions.todaySessionDate.value).toBe('2026-09-10')
+      expect(sessions.nextSession.value?.id).toBe('today')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('maps invalid database creation errors and retains edit state when saving fails', async () => {

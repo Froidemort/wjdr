@@ -1,3 +1,5 @@
+"""Set weapon attributes and melee status in the database."""
+
 import json
 import logging
 import os
@@ -12,9 +14,7 @@ from postgrest.types import JSON
 from supabase import Client, PostgrestAPIResponse, create_client
 
 LOGGER = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.WARNING, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s - %(levelname)s - %(message)s")
 LOGGER.setLevel(logging.DEBUG)
 
 dotenv.load_dotenv(dotenv.find_dotenv())
@@ -26,7 +26,7 @@ supabase: Client = create_client(url, key)
 
 
 def wrap_query(query: SyncQueryRequestBuilder) -> list[JSON]:
-    """Wraps a Supabase query and returns the data as a list of dictionaries."""
+    """Wrap a Supabase query and returns the data as a list of dictionaries."""
     try:
         response = query.execute()
     except APIError as e:
@@ -36,6 +36,7 @@ def wrap_query(query: SyncQueryRequestBuilder) -> list[JSON]:
 
 
 def get_weapons(client: Client) -> list[JSON]:
+    """Fetch all weapons."""
     try:
         response = wrap_query(client.table("weapons").select("*"))
         return response
@@ -45,6 +46,7 @@ def get_weapons(client: Client) -> list[JSON]:
 
 
 def get_weapon_attributes(client: Client) -> list[JSON]:
+    """Fetch all weapon attributes."""
     try:
         response = wrap_query(client.table("weapon_attributes").select("*"))
         return response
@@ -60,9 +62,8 @@ def populate_database(
     weapon_id_map: dict[str, int],
     attribute_id_map: dict[str, int],
 ) -> None:
-    questionary.print(
-        "Updating weapon attributes in the database...", style="bold fg:yellow"
-    )
+    """Update weapons and their attribute mappings in the database."""
+    questionary.print("Updating weapon attributes in the database...", style="bold fg:yellow")
     try:
         for weapon, attributes in selected_attributes.items():
             questionary.print(
@@ -73,21 +74,12 @@ def populate_database(
             attribute_ids = [attribute_id_map[attr] for attr in attributes]
             is_melee_value = is_melee[weapon]
             # Update the weapon's attributes and melee status in the database
-            client.table("weapons").update({"is_melee": is_melee_value}).eq(
-                "id", weapon_id
-            ).execute()
-            data_attributes = [
-                {"weapon_id": weapon_id, "attribute_id": attr_id}
-                for attr_id in attribute_ids
-            ]
+            client.table("weapons").update({"is_melee": is_melee_value}).eq("id", weapon_id).execute()
+            data_attributes = [{"weapon_id": weapon_id, "attribute_id": attr_id} for attr_id in attribute_ids]
             LOGGER.debug(f"Inserting weapon attribute mappings: {data_attributes}")
             if data_attributes:
-                client.table("weapon_attribute_mappings").insert(
-                    data_attributes, upsert=True
-                ).execute()
-        questionary.print(
-            "Weapon attributes updated successfully!", style="bold fg:green"
-        )
+                client.table("weapon_attribute_mappings").insert(data_attributes, upsert=True).execute()
+        questionary.print("Weapon attributes updated successfully!", style="bold fg:green")
     except APIError as e:
         LOGGER.error(f"Error updating weapon attributes: {e}")
         questionary.print(f"Error updating weapon attributes: {e}", style="bold fg:red")
@@ -117,15 +109,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     json_file_path = Path(args.json_file)
     if json_file_path.exists():
-        with open(json_file_path, "r") as f:
+        with open(json_file_path) as f:
             data = json.load(f)
             for element in data:
                 weapon = element["weapon"]
                 selected_attributes[weapon] = element["selected_attributes"]
                 is_melee[weapon] = element["is_melee"]
-            populate_database(
-                supabase, selected_attributes, is_melee, weapon_id_map, attribute_id_map
-            )
+            populate_database(supabase, selected_attributes, is_melee, weapon_id_map, attribute_id_map)
         sys.exit(0)
 
     # if no JSON or json does not exists.
@@ -138,18 +128,14 @@ if __name__ == "__main__":
             f"Selected attributes for weapon '{weapon_name}': {selected_attributes}",
             style="bold fg:green",
         )
-        is_melee[weapon_name] = questionary.confirm(
-            f"Is the weapon {weapon_name} a melee weapon?"
-        ).ask()
+        is_melee[weapon_name] = questionary.confirm(f"Is the weapon {weapon_name} a melee weapon?").ask()
         questionary.print(
             f"Weapon '{weapon_name}' is melee: {'yes' if is_melee[weapon_name] else 'no'}",
             style="bold fg:blue",
         )
 
     # Summary :
-    questionary.print(
-        "\nSummary of selected attributes and melee status:", style="bold fg:cyan"
-    )
+    questionary.print("\nSummary of selected attributes and melee status:", style="bold fg:cyan")
     questionary.print(
         "Please check the summary below and confirm if everything is correct. If you want to modify any weapon's attributes or melee status, you will have the opportunity to do so.",
         style="bold fg:cyan",
@@ -192,9 +178,7 @@ if __name__ == "__main__":
                 style="bold fg:green",
             )
         elif choice == "Melee/Ranged Status":
-            is_melee[weapon_to_modify] = questionary.confirm(
-                f"Is the weapon {weapon_to_modify} a melee weapon?"
-            ).ask()
+            is_melee[weapon_to_modify] = questionary.confirm(f"Is the weapon {weapon_to_modify} a melee weapon?").ask()
             questionary.print(
                 f"Updated melee status for weapon '{weapon_to_modify}': {'yes' if is_melee[weapon_to_modify] else 'no'}",
                 style="bold fg:blue",
@@ -208,9 +192,7 @@ if __name__ == "__main__":
                 f"Updated selected attributes for weapon '{weapon_to_modify}': {selected_attributes[weapon_to_modify]}",
                 style="bold fg:green",
             )
-            is_melee[weapon_to_modify] = questionary.confirm(
-                f"Is the weapon {weapon_to_modify} a melee weapon?"
-            ).ask()
+            is_melee[weapon_to_modify] = questionary.confirm(f"Is the weapon {weapon_to_modify} a melee weapon?").ask()
             questionary.print(
                 f"Updated melee status for weapon '{weapon_to_modify}': {'yes' if is_melee[weapon_to_modify] else 'no'}",
                 style="bold fg:blue",
@@ -219,9 +201,7 @@ if __name__ == "__main__":
             "Is everything correct now, or do you want to modify another weapon ?",
             default=True,
         ).ask()
-    if (
-        display_final_summary
-    ):  # We display the final summary only if the user modified something
+    if display_final_summary:  # We display the final summary only if the user modified something
         # Final table :
         questionary.print(
             "\nFinal summary of selected attributes and melee status after modifications:",

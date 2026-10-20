@@ -2,7 +2,7 @@ import { test as base, type BrowserContext, type Page, type Route } from '@playw
 
 export const E2E_USER_ID = 'user-e2e'
 export const E2E_CHARACTER_ID = 'char-e2e'
-const E2E_CAMPAIGN_ID = 'camp-e2e'
+export const E2E_CAMPAIGN_ID = 'camp-e2e'
 
 export interface RecordedRequest {
   method: string
@@ -24,6 +24,29 @@ interface ArmorLink {
     encumbrance: number
     armor_points: number
   }
+}
+
+interface SessionRow {
+  id: string
+  campaign_id: string
+  date: string
+  name: string | null
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+interface SessionNoteRow {
+  id: string
+  campaign_id: string
+  session_id: string | null
+  author_user_id: string | null
+  title: string
+  content_text: string | null
+  is_visible: boolean
+  is_archived: boolean
+  created_at: string
+  updated_at: string
 }
 
 export class FakeBackend {
@@ -85,6 +108,21 @@ export class FakeBackend {
     },
   ]
 
+  readonly campaign = {
+    id: E2E_CAMPAIGN_ID,
+    name: 'Campagne Test',
+    code: 'TESTCODE',
+    description: null as string | null,
+    is_archived: false,
+    mj_id: 'mj-e2e-other',
+    created_at: '2024-01-01T00:00:00.000Z',
+  }
+
+  readonly sessions: SessionRow[] = []
+  readonly sessionNotes: SessionNoteRow[] = []
+  private nextSessionId = 1
+  private nextNoteId = 1
+
   patchesTo(table: string): RecordedRequest[] {
     return this.requests.filter((request) => request.method === 'PATCH' && request.table === table)
   }
@@ -95,7 +133,20 @@ export class FakeBackend {
       case 'characters':
         return select.startsWith('campaign_id') ? [{ campaign_id: E2E_CAMPAIGN_ID }] : [this.character]
       case 'campaigns':
-        return [{ is_archived: false }]
+        return [this.campaign]
+      case 'sessions':
+        return [...this.sessions].sort((left, right) => right.date.localeCompare(left.date))
+      case 'session_notes': {
+        let rows = this.sessionNotes
+        const sessionIdFilter = query.get('session_id')
+        if (sessionIdFilter) {
+          rows = rows.filter((row) => `eq.${row.session_id}` === sessionIdFilter)
+        }
+        if (query.get('is_visible') === 'eq.true') {
+          rows = rows.filter((row) => row.is_visible)
+        }
+        return [...rows].sort((left, right) => right.created_at.localeCompare(left.created_at))
+      }
       case 'character_stat_values':
         return query.has('stat_code')
           ? this.stats.filter((stat) => `eq.${stat.stat_code}` === query.get('stat_code'))
@@ -123,6 +174,40 @@ export class FakeBackend {
     }
   }
 
+  private applyInsert(table: string, body: Record<string, unknown>): Record<string, unknown> | null {
+    const now = new Date().toISOString()
+    if (table === 'sessions') {
+      const row: SessionRow = {
+        id: `session-${this.nextSessionId++}`,
+        campaign_id: (body.campaign_id as string | undefined) ?? E2E_CAMPAIGN_ID,
+        date: body.date as string,
+        name: (body.name as string | null | undefined) ?? null,
+        description: (body.description as string | null | undefined) ?? null,
+        created_at: now,
+        updated_at: now,
+      }
+      this.sessions.push(row)
+      return row
+    }
+    if (table === 'session_notes') {
+      const row: SessionNoteRow = {
+        id: `note-${this.nextNoteId++}`,
+        campaign_id: (body.campaign_id as string | undefined) ?? E2E_CAMPAIGN_ID,
+        session_id: (body.session_id as string | null | undefined) ?? null,
+        author_user_id: E2E_USER_ID,
+        title: (body.title as string | undefined) ?? '',
+        content_text: (body.content_text as string | null | undefined) ?? null,
+        is_visible: Boolean(body.is_visible),
+        is_archived: false,
+        created_at: now,
+        updated_at: now,
+      }
+      this.sessionNotes.push(row)
+      return row
+    }
+    return null
+  }
+
   async handleRest(route: Route): Promise<void> {
     if (this.offline) {
       await route.abort('internetdisconnected')
@@ -141,6 +226,18 @@ export class FakeBackend {
       return
     }
 
+    const wantsObject = (request.headers()['accept'] ?? '').includes('vnd.pgrst.object+json')
+
+    if (method === 'POST' && body) {
+      const created = this.applyInsert(table, body)
+      if (created && wantsObject) {
+        await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(created) })
+        return
+      }
+      await route.fulfill({ status: 204 })
+      return
+    }
+
     if (method !== 'GET') {
       if (method === 'PATCH' && body) {
         this.applyPatch(table, url.searchParams, body)
@@ -150,7 +247,6 @@ export class FakeBackend {
     }
 
     const rows = this.rowsFor(table, url.searchParams)
-    const wantsObject = (request.headers()['accept'] ?? '').includes('vnd.pgrst.object+json')
     if (wantsObject) {
       await route.fulfill(
         rows.length === 1

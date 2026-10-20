@@ -1,3 +1,5 @@
+"""Insert missing spells from the compendium JSON into Supabase."""
+
 import json
 import logging
 import os
@@ -27,6 +29,7 @@ SPELL_COLUMNS = {
 
 
 def load_spells(path: Path) -> list[dict[str, Any]]:
+    """Load and validate spells from a JSON file."""
     if not path.is_file():
         raise FileNotFoundError(f"Spell data file not found: {path}")
 
@@ -40,10 +43,7 @@ def load_spells(path: Path) -> list[dict[str, Any]]:
             raise TypeError(f"Spell at array position {index} is not a JSON object.")
         unknown_fields = set(spell) - SPELL_COLUMNS
         if unknown_fields:
-            raise ValueError(
-                f"Spell at array position {index} has unsupported fields: "
-                f"{', '.join(sorted(unknown_fields))}."
-            )
+            raise ValueError(f"Spell at array position {index} has unsupported fields: {', '.join(sorted(unknown_fields))}.")
         if not isinstance(spell.get("name"), str) or not spell["name"].strip():
             raise ValueError(f"Spell at array position {index} has no valid name.")
         category = spell.get("category")
@@ -56,24 +56,19 @@ def load_spells(path: Path) -> list[dict[str, Any]]:
 
 
 def spell_key(spell: dict[str, Any]) -> tuple[str | None, str]:
+    """Return the normalized (category, name) key of a spell."""
     category = spell.get("category")
     normalized_category = category.strip() or None if isinstance(category, str) else None
     return normalized_category, spell["name"].strip()
 
 
 def get_existing_spell_keys(client: Client) -> set[tuple[str | None, str]]:
+    """Return the keys of spells already in the database."""
     existing_keys: set[tuple[str | None, str]] = set()
     offset = 0
 
     while True:
-        response = (
-            client.table("spells")
-            .select("category,name")
-            .order("category")
-            .order("name")
-            .range(offset, offset + EXISTING_PAGE_SIZE - 1)
-            .execute()
-        )
+        response = client.table("spells").select("category,name").order("category").order("name").range(offset, offset + EXISTING_PAGE_SIZE - 1).execute()
         rows = response.data
         for row in rows:
             if not isinstance(row, dict):
@@ -92,6 +87,7 @@ def get_existing_spell_keys(client: Client) -> set[tuple[str | None, str]]:
 
 
 def insert_missing_spells(client: Client, spells: list[dict[str, Any]]) -> int:
+    """Insert spells absent from the database and return the inserted count."""
     existing_keys = get_existing_spell_keys(client)
     pending: list[dict[str, Any]] = []
     seen_input_keys: set[tuple[str | None, str]] = set()
@@ -122,8 +118,7 @@ def insert_missing_spells(client: Client, spells: list[dict[str, Any]]) -> int:
             ).execute()
         except Exception:
             LOGGER.exception(
-                "Insert failed for batch %d/%d (%d spells). Earlier batches remain "
-                "committed; rerunning will skip their existing spell keys.",
+                "Insert failed for batch %d/%d (%d spells). Earlier batches remain committed; rerunning will skip their existing spell keys.",
                 batch_number,
                 batch_count,
                 len(batch),
@@ -149,6 +144,7 @@ def insert_missing_spells(client: Client, spells: list[dict[str, Any]]) -> int:
 
 
 def main() -> None:
+    """Run the spell import."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",

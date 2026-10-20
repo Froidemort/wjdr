@@ -3,4 +3,3 @@
 
 alter table characters
 add column destiny_max integer not null default 0;
-

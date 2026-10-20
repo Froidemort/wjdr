@@ -1239,3 +1239,71 @@ div.leaflet-container .leaflet-bar {
     opacity: 0.9;
   }
 }
+
+/* ============================================================================
+   Markdown rendu (notes de session, descriptions)
+   ============================================================================ */
+.markdown-body {
+  overflow-wrap: anywhere;
+}
+
+.markdown-body > * + * {
+  margin-top: 0.5rem;
+}
+
+.markdown-body h3,
+.markdown-body h4 {
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+.markdown-body h3 {
+  font-size: 1.125rem;
+}
+
+.markdown-body h4 {
+  font-size: 1rem;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.25rem;
+}
+
+.markdown-body ul {
+  list-style: disc;
+}
+
+.markdown-body ol {
+  list-style: decimal;
+}
+
+.markdown-body blockquote {
+  border-left: 4px solid var(--color-base-300);
+  padding-left: 0.75rem;
+  color: color-mix(in oklab, var(--color-base-content) 80%, transparent);
+}
+
+.markdown-body code {
+  border-radius: var(--radius-field);
+  background-color: var(--color-base-300);
+  padding: 0.0625rem 0.25rem;
+  font-size: 0.875em;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  border-radius: var(--radius-box);
+  background-color: var(--color-base-300);
+  padding: 0.5rem 0.75rem;
+}
+
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-body a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}

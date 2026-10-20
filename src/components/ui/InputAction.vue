@@ -4,16 +4,16 @@
 			<span>{{ props.helperMessage }}</span>
 		</div>
 		<form :class="props.compact ? 'flex flex-col items-center gap-2 sm:flex-row sm:items-end sm:justify-start' : 'flex flex-col gap-3 sm:flex-row'" @submit.prevent="emit('submit')">
-			<input 
+			<input
 				v-model="model"
-				type="text" 
+				type="text"
 				:maxlength="props.maxLength"
 				:class="['input bg-base-100 ui-critical-control', props.errorMessage ? 'input-error' : '', props.inputClass]"
 				:placeholder="props.placeholder"
 				:disabled="Boolean(props.disabled || props.loading)"
 				:aria-invalid="props.errorMessage ? 'true' : 'false'"
 			/>
-			<button 
+			<button
 				type="submit"
 				:class="props.compact ? 'btn btn-sm ui-critical-action min-h-11 w-full sm:w-auto' : 'btn btn-sm ui-critical-action min-h-11'"
 				:disabled="Boolean(props.disabled || props.loading)"
