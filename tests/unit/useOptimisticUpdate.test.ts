@@ -66,6 +66,25 @@ describe('useOptimisticUpdate', () => {
     vi.useRealTimers()
   })
 
+  it('recovers after a failed save so a later flush runs', async () => {
+    const failure = new Error('boom')
+    const onSave = vi.fn().mockRejectedValueOnce(failure).mockResolvedValue(undefined)
+    const { flush, status } = useOptimisticUpdate<{ qty: number }>({
+      onSave,
+      debounceMs: 50,
+      flushOnUnmount: false,
+    })
+
+    await expect(flush({ qty: 1 })).rejects.toBe(failure)
+    expect(status.value).toBe('error')
+
+    await flush({ qty: 2 })
+
+    expect(onSave).toHaveBeenCalledTimes(2)
+    expect(onSave).toHaveBeenLastCalledWith({ qty: 2 })
+    expect(status.value).toBe('idle')
+  })
+
   it('sets error status and invokes onError on save failure', async () => {
     vi.useFakeTimers()
 
@@ -87,6 +106,36 @@ describe('useOptimisticUpdate', () => {
     expect(status.value).toBe('error')
     expect(error.value).toBe(failure)
     expect(onError).toHaveBeenCalledWith(failure)
+
+    vi.useRealTimers()
+  })
+
+  it('keeps patches added during a failing save, newer edits winning', async () => {
+    vi.useFakeTimers()
+
+    let rejectSave: (reason: Error) => void = () => undefined
+    const onSave = vi
+      .fn()
+      .mockImplementationOnce(
+        () => new Promise<void>((_resolve, reject) => { rejectSave = reject })
+      )
+      .mockResolvedValue(undefined)
+
+    const { update, flush } = useOptimisticUpdate<{ a: number; b: number }>({
+      onSave,
+      debounceMs: 50,
+      flushOnUnmount: false,
+    })
+
+    update({ a: 1, b: 1 })
+    await vi.advanceTimersByTimeAsync(50)
+    update({ b: 2 })
+    rejectSave(new Error('boom'))
+    await vi.advanceTimersByTimeAsync(0)
+
+    await flush()
+
+    expect(onSave).toHaveBeenLastCalledWith({ a: 1, b: 2 })
 
     vi.useRealTimers()
   })

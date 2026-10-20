@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Info, Plus, Trash2 } from '@lucide/vue'
+import { useIsOnline } from '../../composables/useIsOnline'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import type { CharacterSkill } from '../../types/domain'
@@ -20,6 +21,8 @@ const emit = defineEmits<{
   'change-mastery': [skillId: string, level: MasteryLevel]
   'show-description': [title: string, description: string | null]
 }>()
+
+const isOnline = useIsOnline()
 
 const MASTERY_LEVELS: readonly MasteryLevel[] = [1, 2, 3]
 const activeMasteryId = ref<string | null>(null)
@@ -84,13 +87,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section
-    id="character-panel-skills"
-    role="tabpanel"
-    aria-labelledby="character-tab-skills"
-    class="rounded-box border border-base-300 bg-base-100 p-4"
-  >
-    <h2 class="mb-3 text-lg font-semibold">Compétences</h2>
+  <section aria-labelledby="character-skills-title">
+    <h3 id="character-skills-title" class="mb-3 text-base font-semibold">Compétences</h3>
     <div v-if="successMessage" role="status" class="alert alert-success alert-soft mb-3 text-sm">
       <span>{{ successMessage }}</span>
     </div>
@@ -98,6 +96,8 @@ onBeforeUnmount(() => {
       <button
         class="btn btn-sm btn-square min-h-11 min-w-11"
         aria-label="Ajouter des compétences"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click.stop.prevent="emit('add')"
       >
         <Plus class="h-4 w-4" />

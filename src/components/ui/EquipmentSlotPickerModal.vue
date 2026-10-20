@@ -288,7 +288,7 @@ function armorActionLabel(armor: CharacterArmor): string {
 </script>
 
 <template>
-  <dialog ref="dialogRef" class="modal modal-top sm:modal-middle" @close="onDialogClose">
+  <dialog ref="dialogRef" class="modal modal-top sm:modal-middle" aria-labelledby="equipment-slot-picker-title" @close="onDialogClose">
     <div
       class="modal-box grim-modal-box flex max-h-[calc(100vh-2rem)] w-11/12 max-w-lg flex-col overflow-hidden p-0"
     >
@@ -299,7 +299,7 @@ function armorActionLabel(armor: CharacterArmor): string {
           <p class="mb-0.5 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-base-content/55">
             Équiper
           </p>
-          <h3 class="m-0 font-[family-name:var(--font-grim-title)] text-[1.65rem] leading-tight tracking-wide text-primary">
+          <h3 id="equipment-slot-picker-title" class="m-0 font-[family-name:var(--font-grim-title)] text-[1.65rem] leading-tight tracking-wide text-primary">
             {{ slotLabel }}
           </h3>
           <p v-if="slotHitRange" class="mt-1.5 text-[0.78rem] leading-snug opacity-70">
@@ -313,7 +313,7 @@ function armorActionLabel(armor: CharacterArmor): string {
         </div>
         <button
           type="button"
-          class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3"
+          class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3 min-h-11 min-w-11"
           aria-label="Fermer"
           @click="closeModal"
         >
@@ -360,7 +360,7 @@ function armorActionLabel(armor: CharacterArmor): string {
           <button
             v-if="equippedArmors.length > 0 && editable"
             type="button"
-            class="btn btn-ghost btn-xs uppercase tracking-wide hover:border-error/45 hover:bg-error/10"
+            class="btn btn-ghost btn-xs min-h-11 uppercase tracking-wide hover:border-error/45 hover:bg-error/10"
             :disabled="busy"
             @click="onUnequipAllArmors"
           >
@@ -402,7 +402,7 @@ function armorActionLabel(armor: CharacterArmor): string {
         >
           <button
             type="button"
-            class="btn btn-ghost btn-xs uppercase tracking-wide hover:border-error/45 hover:bg-error/10"
+            class="btn btn-ghost btn-xs min-h-11 uppercase tracking-wide hover:border-error/45 hover:bg-error/10"
             :disabled="busy"
             @click="onUnequipWeapon"
           >
@@ -629,7 +629,7 @@ function armorActionLabel(armor: CharacterArmor): string {
     </div>
 
     <form method="dialog" class="modal-backdrop">
-      <button type="submit" aria-label="Fermer">close</button>
+      <button type="submit" tabindex="-1" aria-label="Fermer">close</button>
     </form>
   </dialog>
 </template>

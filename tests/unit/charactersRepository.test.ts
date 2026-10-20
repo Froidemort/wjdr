@@ -90,8 +90,8 @@ describe('charactersRepository', () => {
   })
 
   it.each([
-    ['career', () => updateCharacterCareer('character-1', '   '), 'Carriere invalide.'],
-    ['stat', () => updateCharacterStatValues('character-1', ' ', {}), 'Caracteristique invalide.'],
+    ['career', () => updateCharacterCareer('character-1', '   '), 'Carrière invalide.'],
+    ['stat', () => updateCharacterStatValues('character-1', ' ', {}), 'Caractéristique invalide.'],
     ['character', () => replaceCharacterTotalAdvancedValues(' ', {}), 'Personnage invalide.'],
     ['name', () => createCharacterForCampaign({ name: ' ', campaignId: 'c', userId: 'u', race: 'human', gender: 'masculin' }), 'Nom de personnage obligatoire.'],
   ])('rejects an invalid %s before querying Supabase', async (_field, operation, message) => {
@@ -101,7 +101,7 @@ describe('charactersRepository', () => {
 
   it('rejects writes when the campaign is archived', async () => {
     mockTables({ characters: [builder({ campaign_id: 'campaign-1' })], campaigns: [builder({ is_archived: true })] })
-    await expect(updateCharacterCareer('character-1', 'career-2')).rejects.toThrow('Campagne archivee')
+    await expect(updateCharacterCareer('character-1', 'career-2')).rejects.toThrow('Campagne archivée')
     expect(fromMock).toHaveBeenCalledTimes(2)
   })
 
@@ -219,8 +219,8 @@ describe('charactersRepository', () => {
   })
 
   it.each([
-    ['personnage existant', [builder({ id: 'existing' })], 'Vous avez deja un personnage dans cette campagne.'],
-    ['carriere absente', [builder(null), builder(null)], 'Carriere par defaut introuvable.'],
+    ['personnage existant', [builder({ id: 'existing' })], 'Vous avez déjà un personnage dans cette campagne.'],
+    ['carriere absente', [builder(null), builder(null)], 'Carrière par défaut introuvable.'],
     ['statique vide', [builder(null), builder({ id: 'career-1' }), builder({ id: 'character-1' }), builder([]), builder(null), builder()], null],
   ] as const)('gere la creation avec %s', async (_name, characterBuilders, message) => {
     const tables: Record<string, Builder[]> = message
@@ -231,7 +231,7 @@ describe('charactersRepository', () => {
           static_stats: [characterBuilders[3]!],
           character_stat_values: [characterBuilders[4]!, characterBuilders[5]!],
         }
-    const sequence = message === 'Vous avez deja un personnage dans cette campagne.' ? [characterBuilders[0]] : message ? [characterBuilders[0]!, characterBuilders[1]!] : characterBuilders
+    const sequence = message === 'Vous avez déjà un personnage dans cette campagne.' ? [characterBuilders[0]] : message ? [characterBuilders[0]!, characterBuilders[1]!] : characterBuilders
     mockTables(tables, sequence)
     const operation = createCharacterForCampaign({ name: 'Ada', campaignId: 'campaign-1', userId: 'user-1', race: 'human', gender: 'féminin' })
     if (message) {

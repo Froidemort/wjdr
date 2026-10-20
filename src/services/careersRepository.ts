@@ -1,6 +1,7 @@
 import { supabase } from '../db/supabase'
 import type { CareerCharacteristic, CareerPathCareer } from '../types/career'
 import type { CareerCharacteristicRow, CareerPathRow, CareerRow } from '../types/db'
+import { normalizeStatCode } from '../utils/characterSheet'
 
 export type { CareerCharacteristic, CareerPathCareer } from '../types/career'
 
@@ -13,10 +14,6 @@ function normalizeCareerId(careerId: string): string {
   }
 
   return trimmedCareerId
-}
-
-function normalizeStatCode(value: string): string {
-  return value.trim().toUpperCase()
 }
 
 function mapCareerPathCareer(row: CareerRow): CareerPathCareer | null {

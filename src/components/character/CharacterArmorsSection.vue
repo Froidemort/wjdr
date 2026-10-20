@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Plus, Shield, Trash2, Weight } from '@lucide/vue'
+import { useIsOnline } from '../../composables/useIsOnline'
 import { computed, ref } from 'vue'
 import type { CharacterArmor } from '../../types/domain'
 import {
@@ -19,19 +20,15 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: []
   delete: [linkId: string]
-  'state-change': [armor: CharacterArmor, value: string | boolean | null]
   'quality-change': [armor: CharacterArmor, value: string | boolean | null]
 }>()
 
-const EQUIPPED_OPTIONS = [
-  { value: false, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: true, label: 'Équipée', badgeClass: 'btn-success' },
-] as const
+const isOnline = useIsOnline()
 
 const filter = ref<'all' | 'equipped' | 'inventory'>('all')
 const filters = [
   { id: 'all', label: 'Toutes' },
-  { id: 'equipped', label: 'Equipees' },
+  { id: 'equipped', label: 'Équipées' },
   { id: 'inventory', label: 'Inventaire' },
 ] as const
 
@@ -57,14 +54,14 @@ const filtered = computed(() => {
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <span class="badge badge-outline">Total: {{ stats.total }}</span>
-      <span class="badge badge-outline">Equipees: {{ stats.equipped }}</span>
+      <span class="badge badge-outline">Équipées: {{ stats.equipped }}</span>
       <span class="badge badge-outline">Inventaire: {{ stats.total - stats.equipped }}</span>
     </div>
     <div class="join join-vertical sm:join-horizontal">
       <button
         v-for="option in filters"
         :key="option.id"
-        class="btn btn-xs ui-critical-action join-item"
+        class="btn btn-xs min-h-11 ui-critical-action join-item"
         :class="filter === option.id ? 'btn-active' : ''"
         @click="filter = option.id"
       >
@@ -75,6 +72,8 @@ const filtered = computed(() => {
       <button
         class="btn btn-sm btn-square min-h-11 min-w-11"
         aria-label="Ajouter des armures"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click.stop.prevent="emit('add')"
       >
         <Plus class="h-4 w-4" />
@@ -105,13 +104,7 @@ const filtered = computed(() => {
           </div>
           <p v-if="armor.description" class="text-sm opacity-70">{{ armor.description }}</p>
           <div class="flex flex-wrap items-center gap-2">
-            <StateCycleBadge
-              v-if="editable"
-              :value="armor.isEquipped"
-              :options="EQUIPPED_OPTIONS"
-              @change="emit('state-change', armor, $event)"
-            />
-            <span v-else class="badge badge-sm" :class="armor.isEquipped ? 'badge-success' : 'badge-outline'">
+            <span class="badge badge-sm" :class="armor.isEquipped ? 'badge-success' : 'badge-outline'">
               {{ armor.isEquipped ? 'Équipée' : 'Inventaire' }}
             </span>
             <StateCycleBadge

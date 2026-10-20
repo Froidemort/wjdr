@@ -14,7 +14,7 @@ describe('campaign guards', () => {
   it.each([
     [{ id: 'campaign-1', is_archived: false }, null, undefined],
     [null, null, 'Campagne introuvable.'],
-    [{ id: 'campaign-1', is_archived: true }, null, 'Campagne archivee: action interdite.'],
+    [{ id: 'campaign-1', is_archived: true }, null, 'Campagne archivée : action interdite.'],
     [null, new Error('Indisponible'), 'Indisponible'],
   ])('handles campaign write state', async (data, error, message) => {
     fromMock.mockReturnValue(createSupabaseQueryBuilder({ data, error }))

@@ -48,21 +48,21 @@ function setPoints(index: number): void {
       <div class="card-body h-full gap-3 p-3 sm:gap-4 sm:p-4 md:min-h-64">
         <div class="flex items-center justify-between gap-2">
           <p class="text-sm font-semibold leading-tight text-base-content/85 sm:text-base">{{ label }}</p>
-          <div class="flex items-center gap-1.5 text-base font-semibold tabular-nums text-base-content/80 sm:text-lg" :aria-label="`${label}: ${resolvedPoints} sur ${resolvedMaxPoints} points`">
+          <div class="flex items-center gap-1.5 text-base font-semibold tabular-nums text-base-content/80 sm:text-lg">
             <span>Max :</span>
-            <input v-if="editable && maxPointsEditable" :value="resolvedMaxPoints" type="number" min="0" inputmode="numeric" class="input input-xs h-9 w-14 text-center text-base font-bold [appearance:textfield] sm:h-10 sm:w-16 sm:text-lg" :aria-label="`Maximum de ${label.toLowerCase()}`" @change="onMaxPointsInput" />
+            <input v-if="editable && maxPointsEditable" :value="resolvedMaxPoints" type="number" min="0" inputmode="numeric" class="input input-xs h-11 w-14 text-center text-base font-bold [appearance:textfield] sm:w-16 sm:text-lg" :aria-label="`Maximum de ${label.toLowerCase()}`" @change="onMaxPointsInput" />
             <span v-else>{{ resolvedMaxPoints }}</span>
           </div>
         </div>
         <div v-if="resolvedMaxPoints > 0" class="grid flex-1 content-center items-center gap-1 sm:gap-2 md:gap-3" :style="tokenGridStyle" role="group" :aria-label="`${label}: ${resolvedPoints} sur ${resolvedMaxPoints}`">
           <template v-for="index in resolvedMaxPoints" :key="index">
-            <button v-if="editable" type="button" class="btn btn-ghost btn-circle btn-sm min-h-11 min-w-11 justify-self-center p-0 transition-transform active:scale-95 sm:min-h-12 sm:min-w-12 md:min-h-14 md:min-w-14" :class="variant === 'destin' ? 'border border-base-300 bg-base-200/70' : ''" :aria-label="`${label}, point ${index}`" @click="setPoints(index)">
+            <button v-if="editable" type="button" class="btn btn-ghost btn-circle btn-sm min-h-11 min-w-11 justify-self-center p-0 transition-transform active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100 sm:min-h-12 sm:min-w-12 md:min-h-14 md:min-w-14" :class="variant === 'destin' ? 'border border-base-300 bg-base-200/70' : ''" :aria-label="`${label}, point ${index}`" :aria-pressed="index <= resolvedPoints" @click="setPoints(index)">
               <svg class="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14" :class="index <= resolvedPoints ? activeTokenClass : 'text-base-300 fill-base-200 stroke-base-300'" viewBox="0 0 32 32" aria-hidden="true"><path v-if="variant === 'destin'" d="m16 2.5 3.5 7.1 7.8 1.1-5.7 5.5 1.4 7.8-7-3.7-7 3.7 1.4-7.8-5.7-5.5 7.8-1.1L16 2.5z" /><path v-else d="M12 11.2c-1.7-2.9-5-4-7.5-2.5S2.8 13 4.5 15.3c1.7 2.3 5.2 2.6 7.3 1.2-1.4 2.1-1.1 5.6 1.2 7.3 2.3 1.7 5.6 1.2 7.1-1.3 1.5-2.5.4-5.8-2.5-7.3 2.9-1.5 4-4.8 2.5-7.1-1.5-2.3-4.8-2.6-7.1-1.1-2.3 1.5-2.6 5-1.2 7.1z" /></svg>
             </button>
             <span v-else class="inline-flex justify-self-center" :aria-label="`${label}, point ${index}`"><svg class="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14" :class="index <= resolvedPoints ? activeTokenClass : 'text-base-300 fill-base-200 stroke-base-300'" viewBox="0 0 32 32" aria-hidden="true"><path v-if="variant === 'destin'" d="m16 2.5 3.5 7.1 7.8 1.1-5.7 5.5 1.4 7.8-7-3.7-7 3.7 1.4-7.8-5.7-5.5 7.8-1.1L16 2.5z" /><path v-else d="M12 11.2c-1.7-2.9-5-4-7.5-2.5S2.8 13 4.5 15.3c1.7 2.3 5.2 2.6 7.3 1.2-1.4 2.1-1.1 5.6 1.2 7.3 2.3 1.7 5.6 1.2 7.1-1.3 1.5-2.5.4-5.8-2.5-7.3 2.9-1.5 4-4.8 2.5-7.1-1.5-2.3-4.8-2.6-7.1-1.1-2.3-1.5-2.6-5-1.2 7.1z" /></svg></span>
           </template>
         </div>
-        <p v-else class="flex flex-1 items-center justify-center text-sm text-base-content/60">Aucun point défini</p>
+        <p v-else class="flex flex-1 items-center justify-center text-sm text-base-content/80">Aucun point défini</p>
       </div>
     </div>
   </template>

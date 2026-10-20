@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Plus, Sword, Trash2, Weight } from '@lucide/vue'
+import { useIsOnline } from '../../composables/useIsOnline'
 import { computed, ref } from 'vue'
 import type { CharacterWeapon } from '../../types/domain'
-import { isTwoHandedWeapon } from '../../utils/equipmentSlots'
 import {
   ITEM_QUALITY_STATE_OPTIONS,
   qualityBadgeClass,
@@ -20,20 +20,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: []
   delete: [linkId: string]
-  'state-change': [weapon: CharacterWeapon, value: string | boolean | null]
   'quality-change': [weapon: CharacterWeapon, value: string | boolean | null]
 }>()
 
-const ONE_HANDED_OPTIONS = [
-  { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: 'droite', label: 'Droite', badgeClass: 'btn-secondary' },
-  { value: 'gauche', label: 'Gauche', badgeClass: 'btn-secondary' },
-] as const
-
-const TWO_HANDED_OPTIONS = [
-  { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: 'd&g', label: 'Équipée', badgeClass: 'btn-secondary' },
-] as const
+const isOnline = useIsOnline()
 
 const HAND_LABELS: Record<string, string> = {
   'd&g': 'Équipée',
@@ -44,7 +34,7 @@ const HAND_LABELS: Record<string, string> = {
 const filter = ref<'all' | 'equipped' | 'inventory'>('all')
 const filters = [
   { id: 'all', label: 'Toutes' },
-  { id: 'equipped', label: 'Equipees' },
+  { id: 'equipped', label: 'Équipées' },
   { id: 'inventory', label: 'Inventaire' },
 ] as const
 
@@ -62,10 +52,6 @@ const filtered = computed(() => {
   )
 })
 
-function equippedOptions(weapon: CharacterWeapon) {
-  return isTwoHandedWeapon(weapon) ? TWO_HANDED_OPTIONS : ONE_HANDED_OPTIONS
-}
-
 function attributesKey(weapon: CharacterWeapon): string {
   return weapon.attributes.length === 0 ? 'none' : weapon.attributes.map((a) => a.id).join('|')
 }
@@ -78,14 +64,14 @@ function attributesKey(weapon: CharacterWeapon): string {
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <span class="badge badge-outline">Total: {{ stats.total }}</span>
-      <span class="badge badge-outline">Equipees: {{ stats.equipped }}</span>
+      <span class="badge badge-outline">Équipées: {{ stats.equipped }}</span>
       <span class="badge badge-outline">Inventaire: {{ stats.total - stats.equipped }}</span>
     </div>
     <div class="join join-vertical sm:join-horizontal">
       <button
         v-for="option in filters"
         :key="option.id"
-        class="btn btn-xs ui-critical-action join-item"
+        class="btn btn-xs min-h-11 ui-critical-action join-item"
         :class="filter === option.id ? 'btn-active' : ''"
         @click="filter = option.id"
       >
@@ -96,6 +82,8 @@ function attributesKey(weapon: CharacterWeapon): string {
       <button
         class="btn btn-sm btn-square min-h-11 min-w-11"
         aria-label="Ajouter des armes"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click.stop.prevent="emit('add')"
       >
         <Plus class="h-4 w-4" />
@@ -126,13 +114,7 @@ function attributesKey(weapon: CharacterWeapon): string {
           </div>
           <p v-if="weapon.description" class="text-sm opacity-70">{{ weapon.description }}</p>
           <div class="flex flex-wrap items-center gap-2">
-            <StateCycleBadge
-              v-if="editable"
-              :value="weapon.equipped"
-              :options="equippedOptions(weapon)"
-              @change="emit('state-change', weapon, $event)"
-            />
-            <span v-else class="badge badge-sm" :class="weapon.equipped ? 'badge-secondary' : 'badge-outline'">
+            <span class="badge badge-sm" :class="weapon.equipped ? 'badge-secondary' : 'badge-outline'">
               {{ weapon.equipped ? HAND_LABELS[weapon.equipped] : 'Inventaire' }}
             </span>
             <StateCycleBadge

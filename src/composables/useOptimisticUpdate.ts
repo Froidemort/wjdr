@@ -48,7 +48,9 @@ export function useOptimisticUpdate<T>(options: UseOptimisticUpdateOptions<T>) {
         error.value = null
         lastSavedAt.value = Date.now()
       } catch (saveError) {
-        pendingPatch.value = payload
+        pendingPatch.value = pendingPatch.value
+          ? mergePatch(payload, pendingPatch.value)
+          : payload
         status.value = 'error'
         error.value = saveError
         options.onError?.(saveError)
@@ -60,8 +62,9 @@ export function useOptimisticUpdate<T>(options: UseOptimisticUpdateOptions<T>) {
   }
 
   function queueSave(): Promise<void> {
-    saveQueue = saveQueue.then(runSaveCycle)
-    return saveQueue
+    const run = saveQueue.then(runSaveCycle)
+    saveQueue = run.catch(() => undefined)
+    return run
   }
 
   const debouncedQueueSave = useDebounceFn(() => {
@@ -113,7 +116,7 @@ export function useOptimisticUpdate<T>(options: UseOptimisticUpdateOptions<T>) {
   if (getCurrentInstance()) {
     onBeforeUnmount(() => {
       if (options.flushOnUnmount ?? true) {
-        void flush()
+        void flush().catch(() => undefined)
         return
       }
 

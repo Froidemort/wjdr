@@ -58,6 +58,19 @@ describe('offlineSyncService', () => {
     expect(result).toEqual({ applied: 1, reconciled: 0, dropped: 0, pending: 0 })
   })
 
+  it('ignores a derived pvMax in a queued core patch', async () => {
+    await enqueueOfflineUpdate({
+      entityType: 'character',
+      entityId: 'char-1',
+      payload: { kind: 'character-core', patch: { pvMax: 12, pvCurrent: 7 } },
+    })
+
+    await replayOfflineQueue()
+
+    expect(updateCharacterCoreMock).toHaveBeenCalledTimes(1)
+    expect(updateCharacterCoreMock.mock.calls[0]![1]).toEqual({ pv_current: 7 })
+  })
+
   it('keeps entry when replay fails with transient error', async () => {
     updateCharacterCoreMock.mockRejectedValueOnce(new Error('network timeout'))
 

@@ -1,8 +1,8 @@
 <template>
-	<dialog ref="dialogRef" class="modal modal-middle" @close="onClose">
+	<dialog ref="dialogRef" class="modal modal-middle" aria-labelledby="character-create-title" @close="onClose">
 		<div class="modal-box grim-modal-box p-6 sm:p-7">
 			<button class="btn btn-circle min-h-11 min-w-11 grim-modal-close absolute right-3 top-3" @click="close" aria-label="Fermer">✕</button>
-			<h3 class="grim-modal-title mb-4 text-center text-3xl">Créer mon personnage</h3>
+			<h3 id="character-create-title" class="grim-modal-title mb-4 text-center text-3xl">Créer mon personnage</h3>
 
 			<form class="flex flex-col space-y-4" @submit.prevent="submit">
 				<label class="form-control">
@@ -41,7 +41,7 @@
 		</div>
 
 		<form method="dialog" class="modal-backdrop">
-			<button>Fermer</button>
+			<button tabindex="-1">Fermer</button>
 		</form>
 	</dialog>
 </template>

@@ -46,7 +46,7 @@ function cycleState(): void {
     class="btn btn-sm min-h-11 px-3 normal-case tracking-wide"
     :class="currentOption?.badgeClass ?? 'btn-outline'"
     :disabled="disabled"
-    :aria-label="`Etat actuel: ${currentOption?.label ?? 'N/A'}. Activer pour changer.`"
+    :aria-label="`État actuel: ${currentOption?.label ?? 'N/A'}. Activer pour changer.`"
     :aria-disabled="disabled ? 'true' : 'false'"
     @click="cycleState"
   >

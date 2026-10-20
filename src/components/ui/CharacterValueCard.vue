@@ -67,18 +67,18 @@ function onMaxInput(event: Event): void {
               type="number"
               min="0"
               inputmode="numeric"
-              class="input input-xs h-10 w-14 text-center text-base font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:input-sm sm:w-16 sm:text-lg"
+              class="input input-xs h-11 w-14 text-center text-base font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:input-sm sm:w-16 sm:text-lg"
               :aria-label="currentAriaLabel"
               @change="onCurrentInput"
             />
-            <span v-if="hasMax" class="text-base opacity-60 sm:text-lg">/</span>
+            <span v-if="hasMax" class="text-base opacity-80 sm:text-lg" aria-hidden="true">/</span>
             <input
               v-if="hasMax && maxEditable"
               :value="max"
               type="number"
               min="0"
               inputmode="numeric"
-              class="input input-xs h-10 w-14 text-center text-base font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:input-sm sm:w-16 sm:text-lg"
+              class="input input-xs h-11 w-14 text-center text-base font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:input-sm sm:w-16 sm:text-lg"
               :aria-label="maxAriaLabel || label"
               @change="onMaxInput"
             />
@@ -90,7 +90,7 @@ function onMaxInput(event: Event): void {
               class="font-black leading-none"
               :class="highlighted ? 'text-3xl sm:text-5xl' : 'text-2xl sm:text-4xl'"
             >{{ current }}</span>
-            <span v-if="hasMax" class="text-base opacity-50 sm:text-xl">/</span>
+            <span v-if="hasMax" class="text-base opacity-80 sm:text-xl" aria-hidden="true">/</span>
             <span
               v-if="hasMax"
               class="font-bold leading-none opacity-80"

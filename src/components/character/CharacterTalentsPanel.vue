@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Info, Plus, Trash2 } from '@lucide/vue'
+import { useIsOnline } from '../../composables/useIsOnline'
 import type { CharacterTalent } from '../../types/domain'
 import { formatNamedWithSpecialization } from '../../utils/characterSheet'
 
@@ -15,16 +16,13 @@ const emit = defineEmits<{
   delete: [talentId: string]
   'show-description': [title: string, description: string | null]
 }>()
+
+const isOnline = useIsOnline()
 </script>
 
 <template>
-  <section
-    id="character-panel-talents"
-    role="tabpanel"
-    aria-labelledby="character-tab-talents"
-    class="rounded-box border border-base-300 bg-base-100 p-4"
-  >
-    <h2 class="mb-3 text-lg font-semibold">Talents</h2>
+  <section aria-labelledby="character-talents-title">
+    <h3 id="character-talents-title" class="mb-3 text-base font-semibold">Talents</h3>
     <div v-if="successMessage" role="status" class="alert alert-success alert-soft mb-3 text-sm">
       <span>{{ successMessage }}</span>
     </div>
@@ -32,6 +30,8 @@ const emit = defineEmits<{
       <button
         class="btn btn-sm btn-square min-h-11 min-w-11"
         aria-label="Ajouter des talents"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click.stop.prevent="emit('add')"
       >
         <Plus class="h-4 w-4" />
