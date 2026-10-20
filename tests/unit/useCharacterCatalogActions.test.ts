@@ -1,4 +1,4 @@
-import { computed, effectScope, ref } from 'vue'
+import { computed, effectScope, nextTick, ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CatalogItem } from '../../src/types/domain'
 
@@ -269,6 +269,53 @@ describe('useCharacterCatalogActions', () => {
       expect(api.catalogError.value).toBe('denied')
       expect(repo.addCharacterItems).not.toHaveBeenCalled()
       expect(api.creatingItem.value).toBe(false)
+    })
+
+    it('reuses the created item on retry after the link step failed', async () => {
+      const { api } = setup()
+      api.newItemForm.value.name = 'Torche'
+      repo.addCharacterItems.mockRejectedValueOnce(new Error('link down'))
+
+      await api.confirmItemCreate()
+      await api.confirmItemCreate()
+
+      expect(repo.createCatalogItem).toHaveBeenCalledOnce()
+      expect(repo.addCharacterItems).toHaveBeenCalledTimes(2)
+      expect(repo.addCharacterItems).toHaveBeenLastCalledWith('char-1', ['new-1'], 1, 'normal')
+    })
+
+    it('creates a new item when the form changed after a failed link', async () => {
+      const { api } = setup()
+      api.newItemForm.value.name = 'Torche'
+      repo.addCharacterItems.mockRejectedValueOnce(new Error('link down'))
+
+      await api.confirmItemCreate()
+      api.newItemForm.value.name = 'Lanterne'
+      await nextTick()
+      await api.confirmItemCreate()
+
+      expect(repo.createCatalogItem).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('catalog search failure', () => {
+    it('flags the failure instead of an empty result', async () => {
+      vi.useFakeTimers()
+      try {
+        const { api } = setup()
+        api.openCatalogModal('skills')
+        repo.searchCatalog.mockRejectedValueOnce(new Error('down'))
+
+        api.catalogQuery.value = 'sa'
+        await nextTick()
+        await vi.advanceTimersByTimeAsync(250)
+
+        expect(api.catalogSearchFailed.value).toBe(true)
+        expect(api.catalogOptions.value).toEqual([])
+        expect(api.catalogSearchLoading.value).toBe(false)
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 

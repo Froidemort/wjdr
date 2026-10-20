@@ -84,6 +84,9 @@ export function useCharacterCatalogActions({
   const itemCatalogMode = ref<'search' | 'create'>('search')
   const creatingItem = ref(false)
   const catalogSearchLoading = ref(false)
+  const catalogSearchFailed = ref(false)
+  // Created catalog item kept so a retry after a failed link does not duplicate it
+  let createdItemId: string | null = null
   const selectedItemsQuality = ref<ItemQuality>('normal')
   const selectedItemsQuantity = ref(1)
   const newItemForm = ref<NewItemForm>({
@@ -101,6 +104,7 @@ export function useCharacterCatalogActions({
   const scheduleCatalogSearch = useDebounceFn(
     async (trimmed: string, requestId: number, section: CatalogSection) => {
       catalogSearchLoading.value = true
+      catalogSearchFailed.value = false
       try {
         const results = await searchCatalog(section, trimmed)
         if (requestId !== catalogSearchSequence) {
@@ -114,6 +118,7 @@ export function useCharacterCatalogActions({
         }
 
         catalogOptions.value = []
+        catalogSearchFailed.value = true
       } finally {
         if (requestId === catalogSearchSequence) {
           catalogSearchLoading.value = false
@@ -128,6 +133,7 @@ export function useCharacterCatalogActions({
   }
 
   function resetNewItemForm(): void {
+    createdItemId = null
     newItemForm.value = {
       name: '',
       description: '',
@@ -150,6 +156,7 @@ export function useCharacterCatalogActions({
     selectedCatalogLabels.value = {}
     catalogError.value = null
     catalogSearchLoading.value = false
+    catalogSearchFailed.value = false
     itemCatalogMode.value = 'search'
     creatingItem.value = false
     resetSelectedItemsSettings()
@@ -162,6 +169,7 @@ export function useCharacterCatalogActions({
     selectedCatalogLabels.value = {}
     catalogError.value = null
     catalogSearchLoading.value = false
+    catalogSearchFailed.value = false
     itemCatalogMode.value = 'search'
     creatingItem.value = false
     resetSelectedItemsSettings()
@@ -293,15 +301,18 @@ export function useCharacterCatalogActions({
     creatingItem.value = true
     catalogError.value = null
     try {
-      const createdItem = await createCatalogItem({
-        name: trimmedName,
-        description: newItemForm.value.description || null,
-        encumbrance: normalizedEncumbrance,
-      })
+      if (!createdItemId) {
+        const createdItem = await createCatalogItem({
+          name: trimmedName,
+          description: newItemForm.value.description || null,
+          encumbrance: normalizedEncumbrance,
+        })
+        createdItemId = createdItem.id
+      }
 
       await addCharacterItems(
         character.value.id,
-        [createdItem.id],
+        [createdItemId],
         normalizedQuantity,
         newItemForm.value.quality
       )
@@ -313,8 +324,17 @@ export function useCharacterCatalogActions({
     }
   }
 
+  // Editing the identity fields makes the created item stale
+  watch(
+    () => [newItemForm.value.name, newItemForm.value.description, newItemForm.value.encumbrance],
+    () => {
+      createdItemId = null
+    }
+  )
+
   watch(catalogQuery, async (value) => {
     scheduleCatalogSearch.cancel()
+    catalogSearchFailed.value = false
 
     if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
       catalogOptions.value = []
@@ -349,6 +369,7 @@ export function useCharacterCatalogActions({
     itemCatalogMode,
     creatingItem,
     catalogSearchLoading,
+    catalogSearchFailed,
     selectedItemsQuality,
     selectedItemsQuantity,
     newItemForm,

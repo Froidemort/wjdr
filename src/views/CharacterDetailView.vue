@@ -164,6 +164,7 @@
       :selected-ids="selectedCatalogIds"
       :selected-labels="selectedCatalogLabels"
       :search-loading="catalogSearchLoading"
+      :search-failed="catalogSearchFailed"
       :error="catalogError"
       :adding="addingCatalog"
       :creating="creatingItem"
@@ -310,6 +311,7 @@ const {
   itemCatalogMode,
   creatingItem,
   catalogSearchLoading,
+  catalogSearchFailed,
   selectedItemsQuality,
   selectedItemsQuantity,
   newItemForm,

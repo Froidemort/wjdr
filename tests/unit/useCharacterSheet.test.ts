@@ -548,6 +548,27 @@ describe('useCharacterSheet', () => {
       expect(sheet.errorMessage.value).toBe('forbidden')
     })
 
+    it('hides Postgrest messages behind generic copy', async () => {
+      deps.updateCharacterCore.mockRejectedValue(
+        Object.assign(new Error('violates constraint "characters_pkey"'), { code: '23505' })
+      )
+      const sheet = await setup()
+
+      sheet.onQuickValueChange('moneyGold', 5)
+      await sheet.onMoneyCommit()
+
+      expect(sheet.errorMessage.value).toBe('Modification impossible.')
+    })
+
+    it('maps network failures to a connectivity message', async () => {
+      deps.removeCharacterItem.mockRejectedValue(new TypeError('Failed to fetch'))
+      const sheet = await setup()
+
+      await sheet.onDeleteItem('item-1')
+
+      expect(sheet.errorMessage.value).toBe('Connexion indisponible.')
+    })
+
     it('reports a refresh failure, not a delete failure, when the reload fails', async () => {
       deps.removeCharacterItem.mockResolvedValue(undefined)
       const sheet = await setup()

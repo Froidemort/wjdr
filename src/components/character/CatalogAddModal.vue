@@ -16,6 +16,7 @@ defineProps<{
   selectedIds: string[]
   selectedLabels: Record<string, string>
   searchLoading: boolean
+  searchFailed?: boolean
   error: string | null
   adding: boolean
   creating: boolean
@@ -161,7 +162,13 @@ defineExpose({ dialog })
                 </li>
               </ul>
               <p v-else class="py-8 text-center text-sm opacity-70">
-                {{ query.trim().length < 2 ? 'Saisissez au moins 2 caractères.' : 'Aucun élément trouvé.' }}
+                {{
+                  searchFailed
+                    ? 'Recherche impossible. Réessayez.'
+                    : query.trim().length < 2
+                      ? 'Saisissez au moins 2 caractères.'
+                      : 'Aucun élément trouvé.'
+                }}
               </p>
             </div>
           </div>

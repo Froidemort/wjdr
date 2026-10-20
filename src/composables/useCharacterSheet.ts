@@ -84,15 +84,14 @@ type CorePatch = Partial<Record<CoreField, number>>
 const CORE_FIELDS = Object.keys(CORE_COLUMNS) as CoreField[]
 
 function modificationErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message
+  // Postgrest errors carry `code` and may leak schema names: never show their message
+  const isBackendError = typeof error === 'object' && error !== null && 'code' in error
+  if (error instanceof TypeError) {
+    return 'Connexion indisponible.'
   }
 
-  if (typeof error === 'object' && error !== null && 'message' in error) {
-    const { message } = error
-    if (typeof message === 'string' && message) {
-      return message
-    }
+  if (error instanceof Error && !isBackendError && error.message) {
+    return error.message
   }
 
   return 'Modification impossible.'
