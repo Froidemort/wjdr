@@ -97,3 +97,29 @@ export interface CompendiumTalentRow extends CompendiumLinkRow {
   description: string | null
   skills_talents?: Array<{ skills: CompendiumLinkRow | null }> | null
 }
+
+export interface CompendiumSpell {
+  id: string
+  name: string
+  category: string
+  difficulty: number
+  castingTime: string | null
+  range: string | null
+  duration: string | null
+  bonusIngredient: string | null
+  bonus: number | null
+  description: string | null
+}
+
+export interface CompendiumSpellRow {
+  id: number
+  name: string | null
+  category: string | null
+  difficulty: number | null
+  casting_time: string | null
+  range: string | null
+  duration: string | null
+  bonus_ingredient: string | null
+  bonus: number | null
+  description: string | null
+}

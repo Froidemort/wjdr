@@ -1,11 +1,11 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 
 export type SpellSortOrder = 'name' | 'difficulty-asc' | 'difficulty-desc'
 
 interface FilterableSpell {
   name: string
-  description?: string
+  description?: string | null
   category: string
   difficulty: number
 }
@@ -45,6 +45,16 @@ export function useCompendiumSpellFilters<TSpell extends FilterableSpell>(
     maxDifficulty.value = difficultyBounds.value.max
   }
   resetDifficultyRange()
+
+  // Data may arrive after setup: follow the new bounds unless the user narrowed the range.
+  watch(difficultyBounds, (next, previous) => {
+    if (minDifficulty.value === previous.min && maxDifficulty.value === previous.max) {
+      resetDifficultyRange()
+    } else {
+      minDifficulty.value = Math.max(minDifficulty.value, next.min)
+      maxDifficulty.value = Math.min(maxDifficulty.value, next.max)
+    }
+  })
 
   const categories = computed(() => {
     const counts = new Map<string, number>()

@@ -1,26 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useWindowScroll } from '@vueuse/core'
 import { ArrowUp, ListFilter, RotateCcw, ArrowDownUp } from '@lucide/vue'
+import { useCompendiumSpellsStore } from '../stores/compendiumSpells'
 import { useCompendiumSpellFilters } from '../composables/useCompendiumSpellFilters'
 import { useIncrementalReveal } from '../composables/useIncrementalReveal'
 import DataGrid from '../components/ui/DataGrid.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
-import { slugify } from '../utils/slugify'
-
-// TODO : Put these types definition in type directory
-
-interface Spell {
-    category: string;
-    name: string;
-    difficulty: number;
-    casting_time: string;
-    bonus_ingredient: string;
-    bonus: number;
-    duration?: string;
-    range?: string;
-    description?: string;
-}
 
 // green <10, orange 10-20, red 20-30, purple >30
 function difficultyBadgeClass(difficulty: number): string {
@@ -30,14 +17,11 @@ function difficultyBadgeClass(difficulty: number): string {
   return 'badge badge-success'
 }
 
-// Example data for the compendium of spells, must be replaced by Supabase calls later.
-const rawData: Array<Spell> = []
-// DataGrid needs a stable identifier, kept separate from the Spell shape.
-const data = rawData.map((spell) => ({ ...spell, id: `${slugify(spell.category)}-${slugify(spell.name)}` }))
+const store = useCompendiumSpellsStore()
+const { spells, loading, loaded, error } = storeToRefs(store)
 
 const {
   searchQuery,
-  selectedCategories,
   categories,
   sortBy,
   minDifficulty,
@@ -48,21 +32,9 @@ const {
   toggleCategory,
   isCategorySelected,
   resetFilters,
-} = useCompendiumSpellFilters({ spells: ref(data) })
+} = useCompendiumSpellFilters({ spells })
 
-// Simulated filtering delay: keeps a loading state to show skeleton cards while
-// filters are applied. This is the hook point for a real async fetch once the
-// data source moves to Supabase (toggle isFiltering around the request instead).
-const isFiltering = ref(false)
-const FILTER_LOADING_DELAY = 250
-let filterLoadingTimeout: ReturnType<typeof setTimeout> | undefined
-watch([searchQuery, selectedCategories, minDifficulty, maxDifficulty, sortBy], () => {
-  isFiltering.value = true
-  clearTimeout(filterLoadingTimeout)
-  filterLoadingTimeout = setTimeout(() => {
-    isFiltering.value = false
-  }, FILTER_LOADING_DELAY)
-})
+const isLoading = computed(() => loading.value || (!loaded.value && !error.value))
 
 const scrollTargetRef = ref<HTMLElement | null>(null)
 const { visibleItems } = useIncrementalReveal(filteredSpells, scrollTargetRef, { pageSize: 10 })
@@ -88,18 +60,19 @@ watch(scrollY, () => {
 })
 onBeforeUnmount(() => {
   clearTimeout(scrollIdleTimeout)
-  clearTimeout(filterLoadingTimeout)
 })
 
 function scrollToTop(): void {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+void store.loadSpells()
+
 // Description truncated to 150 chars per card, toggled open on demand.
 const DESCRIPTION_LIMIT = 150
 const expandedDescriptions = ref(new Set<string>())
 
-function isDescriptionLong(description?: string): boolean {
+function isDescriptionLong(description: string | null): boolean {
   return !!description && description.length > DESCRIPTION_LIMIT
 }
 
@@ -114,7 +87,7 @@ function toggleDescription(id: string): void {
   expandedDescriptions.value = next
 }
 
-function displayedDescription(spell: { id: string; description?: string }): string {
+function displayedDescription(spell: { id: string; description: string | null }): string {
   const description = spell.description ?? ''
   if (!isDescriptionLong(description) || isDescriptionExpanded(spell.id)) return description
   return `${description.slice(0, DESCRIPTION_LIMIT).trimEnd()}…`
@@ -237,19 +210,15 @@ function displayedDescription(spell: { id: string; description?: string }): stri
     </div>
 
     <div class="p-4">
-      <div v-if="isFiltering" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <div v-for="n in 6" :key="n" class="card card-border bg-base-200 p-5 gap-3">
-          <div class="skeleton h-5 w-2/3"></div>
-          <div class="skeleton h-4 w-1/3"></div>
-          <div class="skeleton h-4 w-1/4"></div>
-          <div class="skeleton h-4 w-full"></div>
-          <div class="skeleton h-4 w-5/6"></div>
-        </div>
+      <div v-if="error" role="alert" class="alert alert-error alert-soft">
+        <span>{{ error }}</span>
+        <button type="button" class="btn btn-sm" @click="store.loadSpells(true)">Réessayer</button>
       </div>
 
       <DataGrid
         v-else
         :items="visibleItems"
+        :loading="isLoading"
         empty-message="Aucun sort ne correspond à ces filtres."
         grid-class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 items-start"
       >
@@ -273,11 +242,11 @@ function displayedDescription(spell: { id: string; description?: string }): stri
                 </button>
               </p>
               <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm opacity-90 mt-1">
-                <span v-if="spell.casting_time">Temps : {{ spell.casting_time }}</span>
+                <span v-if="spell.castingTime">Temps : {{ spell.castingTime }}</span>
                 <span v-if="spell.range">Portée : {{ spell.range }}</span>
                 <span v-if="spell.duration">Durée : {{ spell.duration }}</span>
               </div>
-              <p v-if="spell.bonus_ingredient" class="text-xs opacity-60">Ingrédient bonus : {{ spell.bonus_ingredient }} (+{{spell.bonus}})</p>
+              <p v-if="spell.bonusIngredient" class="text-xs opacity-60">Ingrédient bonus : {{ spell.bonusIngredient }}<template v-if="spell.bonus !== null"> (+{{ spell.bonus }})</template></p>
             </div>
           </div>
         </template>

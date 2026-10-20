@@ -8,6 +8,8 @@ import type {
   CompendiumLink,
   CompendiumSkill,
   CompendiumSkillRow,
+  CompendiumSpell,
+  CompendiumSpellRow,
   CompendiumTalent,
   CompendiumTalentRow,
   CompendiumWeapon,
@@ -145,7 +147,10 @@ function mapTalent(row: CompendiumTalentRow): CompendiumTalent {
   }
 }
 
-async function fetchAllRows<Row>(table: 'skills' | 'talents', select: string): Promise<Row[]> {
+async function fetchAllRows<Row>(
+  table: 'skills' | 'talents' | 'spells',
+  select: string
+): Promise<Row[]> {
   const rows: Row[] = []
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await supabase
@@ -172,4 +177,27 @@ export async function fetchCompendiumSkills(): Promise<CompendiumSkill[]> {
 export async function fetchCompendiumTalents(): Promise<CompendiumTalent[]> {
   const rows = await fetchAllRows<CompendiumTalentRow>('talents', TALENT_SELECT)
   return rows.map(mapTalent).sort(compareByName)
+}
+
+const SPELL_SELECT =
+  'id, name, category, difficulty, casting_time, range, duration, bonus_ingredient, bonus, description'
+
+function mapSpell(row: CompendiumSpellRow): CompendiumSpell {
+  return {
+    id: String(row.id),
+    name: row.name?.trim() || 'Sort sans nom',
+    category: row.category?.trim() || 'Autre',
+    difficulty: row.difficulty ?? 0,
+    castingTime: row.casting_time?.trim() || null,
+    range: row.range?.trim() || null,
+    duration: row.duration?.trim() || null,
+    bonusIngredient: row.bonus_ingredient?.trim() || null,
+    bonus: row.bonus,
+    description: row.description?.trim() || null,
+  }
+}
+
+export async function fetchCompendiumSpells(): Promise<CompendiumSpell[]> {
+  const rows = await fetchAllRows<CompendiumSpellRow>('spells', SPELL_SELECT)
+  return rows.map(mapSpell).sort((a, b) => a.name.localeCompare(b.name, 'fr'))
 }
