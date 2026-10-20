@@ -240,7 +240,7 @@ async function assertCharacterCampaignWritable(characterId: string): Promise<voi
   }
 
   if (campaignMeta?.is_archived) {
-    throw new Error('Campagne archivee: action interdite.')
+    throw new Error('Campagne archivée : action interdite.')
   }
 }
 
@@ -257,7 +257,7 @@ async function resolveDefaultCareerId(): Promise<string> {
 
   const career = data as CareerRow | null
   if (!career?.id) {
-    throw new Error('Carriere par defaut introuvable.')
+    throw new Error('Carrière par défaut introuvable.')
   }
 
   return career.id
@@ -520,7 +520,7 @@ export async function updateCharacterCore(
 export async function updateCharacterCareer(characterId: string, careerId: string): Promise<void> {
   const trimmedCareerId = careerId.trim()
   if (!trimmedCareerId) {
-    throw new Error('Carriere invalide.')
+    throw new Error('Carrière invalide.')
   }
 
   await assertCharacterCampaignWritable(characterId)
@@ -554,7 +554,7 @@ export async function updateCharacterStatValues(
 ): Promise<void> {
   const trimmedStatCode = statCode.trim()
   if (!trimmedStatCode) {
-    throw new Error('Caracteristique invalide.')
+    throw new Error('Caractéristique invalide.')
   }
 
   await assertCharacterCampaignWritable(characterId)
