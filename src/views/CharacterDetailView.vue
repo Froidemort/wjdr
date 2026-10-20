@@ -483,26 +483,7 @@
 
 <script setup lang="ts">
 import { ChevronLeft, CircleX, LoaderCircle, Users } from '@lucide/vue'
-import { useDebounceFn } from '@vueuse/core'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { createCatalogItem, searchCatalog } from '../services/catalogRepository'
-import {
-  listCareerCharacteristicsByCareerId,
-  listCareerPathCareersByFromCareerId,
-  type CareerCharacteristic,
-} from '../services/careersRepository'
-import {
-  addCharacterArmors,
-  addCharacterItems,
-  addCharacterSkills,
-  addCharacterTalents,
-  addCharacterWeapons,
-} from '../services/characterLinksRepository'
-import {
-  replaceCharacterTotalAdvancedValues,
-  updateCharacterCareer,
-} from '../services/charactersRepository'
-import type { CatalogItem } from '../types/domain'
+import { ref } from 'vue'
 import type { CharacterTabId } from '../types/characterSheet'
 import CharacterOverview from '../components/character/CharacterOverview.vue'
 import CharacterInventoryPanel from '../components/character/CharacterInventoryPanel.vue'
@@ -511,22 +492,11 @@ import CharacterSkillsTalentsPanel from '../components/character/CharacterSkills
 import CharacterSummaryHeader from '../components/character/CharacterSummaryHeader.vue'
 import CharacterTabs from '../components/character/CharacterTabs.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
+import { useCharacterCareer } from '../composables/useCharacterCareer'
+import { useCharacterCatalogActions } from '../composables/useCharacterCatalogActions'
+import { useCharacterDescriptionModal } from '../composables/useCharacterDescriptionModal'
 import { useCharacterSheet } from '../composables/useCharacterSheet'
-import {
-  formatNamedWithSpecialization,
-  sortStatsByCharacteristicOrder,
-} from '../utils/characterSheet'
 import { ITEM_QUALITY_OPTIONS } from '../utils/inventoryQuality'
-
-type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
-
-const CATALOG_LABELS: Record<CatalogSection, string> = {
-  skills: 'compétences',
-  talents: 'talents',
-  weapons: 'armes',
-  armors: 'armures',
-  items: 'équipements',
-}
 
 const activeCharacterTab = ref<CharacterTabId>('stats')
 const {
@@ -578,579 +548,80 @@ const {
 
 const careerDialogRef = ref<HTMLDialogElement | null>(null)
 const careerConfirmDialogRef = ref<HTMLDialogElement | null>(null)
-const careerQuery = ref('')
-const careerOptions = ref<CatalogItem[]>([])
-const careerPathOptions = ref<CatalogItem[]>([])
-const careerFilterMode = ref<'paths' | 'all'>('paths')
-const selectedCareerId = ref<string | null>(null)
-const selectedCareerName = ref<string | null>(null)
-const pendingCareerId = ref<string | null>(null)
-const pendingCareerName = ref<string | null>(null)
-const pendingCareerCharacteristics = ref<CareerCharacteristic[]>([])
-const careerError = ref<string | null>(null)
-const careerConfirmError = ref<string | null>(null)
-const changingCareer = ref(false)
-
 const catalogDialogRef = ref<HTMLDialogElement | null>(null)
 const descriptionDialogRef = ref<HTMLDialogElement | null>(null)
-const catalogSection = ref<CatalogSection>('skills')
-const catalogQuery = ref('')
-const catalogOptions = ref<CatalogItem[]>([])
-const selectedCatalogIds = ref<string[]>([])
-const selectedCatalogLabels = ref<Record<string, string>>({})
-const catalogError = ref<string | null>(null)
-const addingCatalog = ref(false)
-const itemCatalogMode = ref<'search' | 'create'>('search')
-const creatingItem = ref(false)
-const MAX_CATALOG_RESULTS = 8
-let catalogSearchSequence = 0
-const selectedItemsQuality = ref<(typeof ITEM_QUALITY_OPTIONS)[number]>('normal')
-const selectedItemsQuantity = ref(1)
-const newItemForm = ref({
-  name: '',
-  description: '',
-  quality: 'normal' as (typeof ITEM_QUALITY_OPTIONS)[number],
-  encumbrance: 0,
-  quantity: 1,
-})
-const descriptionTitle = ref<string | null>(null)
-const descriptionContent = ref<string | null>(null)
 
-const careerSearchLoading = ref(false)
-const careerPathLoading = ref(false)
-const careerCharacteristicsLoading = ref(false)
-const catalogSearchLoading = ref(false)
-
-const modalSectionLabel = computed(() => CATALOG_LABELS[catalogSection.value])
-const scheduleCatalogSearch = useDebounceFn(
-  async (trimmed: string, requestId: number, section: CatalogSection) => {
-    catalogSearchLoading.value = true
-    try {
-      const results = await searchCatalog(section, trimmed)
-      if (requestId !== catalogSearchSequence) {
-        return
-      }
-
-      catalogOptions.value = results
-    } catch {
-      if (requestId !== catalogSearchSequence) {
-        return
-      }
-
-      catalogOptions.value = []
-    } finally {
-      if (requestId === catalogSearchSequence) {
-        catalogSearchLoading.value = false
-      }
-    }
-  },
-  180
-)
-const displayedCatalogOptions = computed(() => catalogOptions.value.slice(0, MAX_CATALOG_RESULTS))
-
-
-const allStatsSorted = computed(() =>
-  character.value ? sortStatsByCharacteristicOrder(character.value.stats) : []
-)
-
-const pendingCareerCharacteristicRows = computed(() => {
-  const valuesByCode = new Map(
-    pendingCareerCharacteristics.value.map((entry) => [entry.statCode.toUpperCase(), entry.value])
-  )
-  const orderedCodes = allStatsSorted.value.map((entry) => entry.statCode.toUpperCase())
-  const unknownCodes = Array.from(valuesByCode.keys()).filter((code) => !orderedCodes.includes(code))
-  unknownCodes.sort((left, right) => left.localeCompare(right, 'fr', { sensitivity: 'base' }))
-
-  return [...orderedCodes, ...unknownCodes].map((statCode) => ({
-    statCode,
-    value: valuesByCode.get(statCode) ?? 0,
-  }))
+const {
+  careerQuery,
+  careerOptions,
+  careerPathOptions,
+  careerFilterMode,
+  selectedCareerId,
+  selectedCareerName,
+  pendingCareerName,
+  pendingCareerCharacteristicRows,
+  careerError,
+  careerConfirmError,
+  changingCareer,
+  careerSearchLoading,
+  careerPathLoading,
+  careerCharacteristicsLoading,
+  openCareerModal,
+  closeCareerModal,
+  onCareerDialogClosed,
+  selectCareer,
+  closeCareerConfirmModal,
+  onCareerConfirmDialogClosed,
+  confirmCareerChange,
+  applyCareerChange,
+} = useCharacterCareer({
+  character,
+  canEditQuickSection,
+  loadCharacter,
+  setSectionSuccess,
+  careerDialogRef,
+  careerConfirmDialogRef,
 })
 
-function resetNewItemForm(): void {
-  newItemForm.value = {
-    name: '',
-    description: '',
-    quality: 'normal',
-    encumbrance: 0,
-    quantity: 1,
-  }
-}
-
-function resetSelectedItemsSettings(): void {
-  selectedItemsQuality.value = 'normal'
-  selectedItemsQuantity.value = 1
-}
-
-
-async function refreshCareerOptions(): Promise<void> {
-  const trimmed = careerQuery.value.trim()
-
-  if (careerFilterMode.value === 'paths') {
-    careerSearchLoading.value = false
-    const normalizedQuery = trimmed.toLocaleLowerCase('fr')
-    if (!normalizedQuery) {
-      careerOptions.value = [...careerPathOptions.value]
-      return
-    }
-
-    careerOptions.value = careerPathOptions.value.filter((option) =>
-      option.name.toLocaleLowerCase('fr').includes(normalizedQuery)
-    )
-    return
-  }
-
-  if (trimmed.length < 2) {
-    careerSearchLoading.value = false
-    careerOptions.value = []
-    return
-  }
-
-  careerSearchLoading.value = true
-  try {
-    careerOptions.value = await searchCatalog('careers', trimmed)
-  } catch {
-    careerOptions.value = []
-  } finally {
-    careerSearchLoading.value = false
-  }
-}
-
-async function loadCareerPathOptions(): Promise<void> {
-  if (!character.value?.careerId) {
-    careerPathOptions.value = []
-    return
-  }
-
-  careerPathLoading.value = true
-  try {
-    const paths = await listCareerPathCareersByFromCareerId(character.value.careerId)
-    careerPathOptions.value = paths.map((path) => ({
-      id: path.id,
-      name: path.name,
-      description: null,
-      specialization: null,
-      encumbrance: null,
-      damageFormula: null,
-      armorPoints: null,
-    }))
-  } finally {
-    careerPathLoading.value = false
-  }
-}
-
-async function openCareerModal(): Promise<void> {
-  careerError.value = null
-  careerConfirmError.value = null
-  selectedCareerId.value = null
-  selectedCareerName.value = null
-  careerFilterMode.value = 'paths'
-  careerQuery.value = ''
-  careerOptions.value = []
-  careerPathOptions.value = []
-  careerSearchLoading.value = false
-  careerPathLoading.value = false
-  careerCharacteristicsLoading.value = false
-
-  try {
-    await loadCareerPathOptions()
-    await refreshCareerOptions()
-  } catch (error) {
-    careerError.value =
-      error instanceof Error ? error.message : 'Chargement des débouchés impossible.'
-  }
-
-  if (!careerDialogRef.value) {
-    return
-  }
-
-  careerDialogRef.value.showModal()
-}
-
-function closeCareerModal(): void {
-  if (careerDialogRef.value?.open) {
-    careerDialogRef.value.close()
-    return
-  }
-  resetCareerModalState()
-}
-
-function resetCareerModalState(): void {
-  selectedCareerId.value = null
-  selectedCareerName.value = null
-  careerError.value = null
-  careerSearchLoading.value = false
-  careerPathLoading.value = false
-}
-
-function onCareerDialogClosed(): void {
-  resetCareerModalState()
-}
-
-function selectCareer(id: string, name: string): void {
-  selectedCareerId.value = id
-  selectedCareerName.value = name
-  careerError.value = null
-}
-
-function resetPendingCareerChange(): void {
-  pendingCareerId.value = null
-  pendingCareerName.value = null
-  pendingCareerCharacteristics.value = []
-  careerConfirmError.value = null
-}
-
-function closeCareerConfirmModal(): void {
-  if (careerConfirmDialogRef.value?.open) {
-    careerConfirmDialogRef.value.close()
-    return
-  }
-  careerCharacteristicsLoading.value = false
-  resetPendingCareerChange()
-}
-
-function onCareerConfirmDialogClosed(): void {
-  careerCharacteristicsLoading.value = false
-  resetPendingCareerChange()
-}
-
-async function confirmCareerChange(): Promise<void> {
-  if (!character.value || !canEditQuickSection.value || changingCareer.value) {
-    return
-  }
-
-  if (!selectedCareerId.value) {
-    careerError.value = 'Veuillez sélectionner une carrière.'
-    return
-  }
-
-  if (selectedCareerId.value === character.value.careerId) {
-    closeCareerModal()
-    return
-  }
-
-  careerError.value = null
-  careerConfirmError.value = null
-  careerCharacteristicsLoading.value = true
-  try {
-    pendingCareerId.value = selectedCareerId.value
-    pendingCareerName.value = selectedCareerName.value
-    pendingCareerCharacteristics.value = await listCareerCharacteristicsByCareerId(selectedCareerId.value)
-    closeCareerModal()
-    careerConfirmDialogRef.value?.showModal()
-  } catch (error) {
-    careerError.value =
-      error instanceof Error ? error.message : 'Modification de carrière impossible.'
-  } finally {
-    careerCharacteristicsLoading.value = false
-  }
-}
-
-async function applyCareerChange(applyCareerCharacteristics: boolean): Promise<void> {
-  if (!character.value || !pendingCareerId.value || changingCareer.value) {
-    return
-  }
-
-  changingCareer.value = true
-  careerConfirmError.value = null
-  let careerUpdated = false
-
-  try {
-    await updateCharacterCareer(character.value.id, pendingCareerId.value)
-    careerUpdated = true
-
-    if (applyCareerCharacteristics) {
-      const totalAdvancedByStatCode = pendingCareerCharacteristics.value.reduce<
-        Record<string, number>
-      >((accumulator, entry) => {
-        accumulator[entry.statCode] = entry.value
-        return accumulator
-      }, {})
-      await replaceCharacterTotalAdvancedValues(character.value.id, totalAdvancedByStatCode)
-    }
-
-    await loadCharacter()
-    setSectionSuccess(
-      'career',
-      applyCareerCharacteristics
-        ? 'Carrière et caractéristiques mises à jour.'
-        : 'Carrière mise à jour.'
-    )
-    closeCareerConfirmModal()
-  } catch (error) {
-    if (careerUpdated) {
-      await loadCharacter().catch(() => undefined)
-      careerConfirmError.value =
-        error instanceof Error
-          ? `Carrière mise à jour, mais profil de carrière non appliqué : ${error.message}`
-          : 'Carrière mise à jour, mais profil de carrière non appliqué.'
-      return
-    }
-
-    careerConfirmError.value =
-      error instanceof Error ? error.message : 'Modification de carrière impossible.'
-  } finally {
-    changingCareer.value = false
-  }
-}
-
-function openCatalogModal(section: CatalogSection): void {
-  catalogSection.value = section
-  catalogQuery.value = ''
-  catalogOptions.value = []
-  selectedCatalogIds.value = []
-  selectedCatalogLabels.value = {}
-  catalogError.value = null
-  catalogSearchLoading.value = false
-  itemCatalogMode.value = 'search'
-  creatingItem.value = false
-  resetSelectedItemsSettings()
-  resetNewItemForm()
-  if (!catalogDialogRef.value) {
-    return
-  }
-
-  catalogDialogRef.value.showModal()
-}
-
-function openDescriptionModal(title: string, description: string | null): void {
-  descriptionTitle.value = title
-  descriptionContent.value = description?.trim() ?? null
-  descriptionDialogRef.value?.showModal()
-}
-
-function closeDescriptionModal(): void {
-  if (descriptionDialogRef.value?.open) {
-    descriptionDialogRef.value.close()
-    return
-  }
-  resetDescriptionModalState()
-}
-
-function resetDescriptionModalState(): void {
-  descriptionTitle.value = null
-  descriptionContent.value = null
-}
-
-function onDescriptionDialogClosed(): void {
-  resetDescriptionModalState()
-}
-
-function closeCatalogModal(): void {
-  if (catalogDialogRef.value?.open) {
-    catalogDialogRef.value.close()
-    return
-  }
-  resetCatalogModalState()
-}
-
-function resetCatalogModalState(): void {
-  selectedCatalogIds.value = []
-  selectedCatalogLabels.value = {}
-  catalogError.value = null
-  catalogSearchLoading.value = false
-  itemCatalogMode.value = 'search'
-  creatingItem.value = false
-  resetSelectedItemsSettings()
-  resetNewItemForm()
-}
-
-function onCatalogDialogClosed(): void {
-  resetCatalogModalState()
-}
-
-function toggleCatalogSelection(id: string): void {
-  if (selectedCatalogIds.value.includes(id)) {
-    removeCatalogSelection(id)
-    return
-  }
-
-  const option = catalogOptions.value.find((candidate) => candidate.id === id)
-  if (option) {
-    selectedCatalogLabels.value = {
-      ...selectedCatalogLabels.value,
-      [id]: formatCatalogOptionLabel(option),
-    }
-  }
-
-  selectedCatalogIds.value = [...selectedCatalogIds.value, id]
-  catalogQuery.value = ''
-  catalogOptions.value = []
-}
-
-function removeCatalogSelection(id: string): void {
-  selectedCatalogIds.value = selectedCatalogIds.value.filter((selectedId) => selectedId !== id)
-  const nextLabels = { ...selectedCatalogLabels.value }
-  delete nextLabels[id]
-  selectedCatalogLabels.value = nextLabels
-}
-
-async function confirmCatalogAdd(): Promise<void> {
-  if (!character.value || !canEditQuickSection.value || addingCatalog.value) {
-    return
-  }
-
-  if (selectedCatalogIds.value.length === 0) {
-    catalogError.value = 'Veuillez sélectionner au moins un élément.'
-    return
-  }
-
-  if (
-    !(await confirmDestructiveAction(
-      `Ajouter ${selectedCatalogIds.value.length} élément(s) à la fiche ?`
-    ))
-  ) {
-    return
-  }
-
-  addingCatalog.value = true
-  catalogError.value = null
-  try {
-    if (catalogSection.value === 'skills') {
-      await addCharacterSkills(character.value.id, selectedCatalogIds.value)
-    } else if (catalogSection.value === 'talents') {
-      await addCharacterTalents(character.value.id, selectedCatalogIds.value)
-    } else if (catalogSection.value === 'weapons') {
-      await addCharacterWeapons(character.value.id, selectedCatalogIds.value)
-    } else if (catalogSection.value === 'armors') {
-      await addCharacterArmors(character.value.id, selectedCatalogIds.value)
-    } else if (catalogSection.value === 'items') {
-      await addCharacterItems(
-        character.value.id,
-        selectedCatalogIds.value,
-        Math.max(1, Math.floor(selectedItemsQuantity.value || 1)),
-        selectedItemsQuality.value
-      )
-    }
-
-    invalidateCurrentLinksCache()
-    await loadCharacterLinks(character.value.id, { force: true })
-    setSectionSuccess('catalog', `${selectedCatalogIds.value.length} élément(s) ajouté(s).`)
-    closeCatalogModal()
-  } catch (error) {
-    catalogError.value = error instanceof Error ? error.message : 'Ajout impossible.'
-  } finally {
-    addingCatalog.value = false
-  }
-}
-
-async function confirmItemCreate(): Promise<void> {
-  if (!character.value || !canEditQuickSection.value || creatingItem.value) {
-    return
-  }
-
-  const trimmedName = newItemForm.value.name.trim()
-  if (!trimmedName) {
-    catalogError.value = 'Le nom de l\'équipement est obligatoire.'
-    return
-  }
-
-  const normalizedEncumbrance = Math.max(0, Math.floor(newItemForm.value.encumbrance || 0))
-  const normalizedQuantity = Math.max(1, Math.floor(newItemForm.value.quantity || 1))
-
-  if (!(await confirmDestructiveAction('Créer puis ajouter cet équipement à la fiche ?'))) {
-    return
-  }
-
-  creatingItem.value = true
-  catalogError.value = null
-  try {
-    const createdItem = await createCatalogItem({
-      name: trimmedName,
-      description: newItemForm.value.description || null,
-      encumbrance: normalizedEncumbrance,
-    })
-
-    await addCharacterItems(
-      character.value.id,
-      [createdItem.id],
-      normalizedQuantity,
-      newItemForm.value.quality
-    )
-    invalidateCurrentLinksCache()
-    await loadCharacterLinks(character.value.id, { force: true })
-    setSectionSuccess('catalog', 'Équipement créé et ajouté.')
-    closeCatalogModal()
-  } catch (error) {
-    catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
-  } finally {
-    creatingItem.value = false
-  }
-}
-
-watch(careerQuery, async () => {
-  await refreshCareerOptions()
+const {
+  catalogSection,
+  catalogQuery,
+  catalogOptions,
+  displayedCatalogOptions,
+  selectedCatalogIds,
+  selectedCatalogLabels,
+  catalogError,
+  addingCatalog,
+  itemCatalogMode,
+  creatingItem,
+  catalogSearchLoading,
+  selectedItemsQuality,
+  selectedItemsQuantity,
+  newItemForm,
+  modalSectionLabel,
+  formatCatalogOptionLabel,
+  openCatalogModal,
+  closeCatalogModal,
+  onCatalogDialogClosed,
+  toggleCatalogSelection,
+  removeCatalogSelection,
+  confirmCatalogAdd,
+  confirmItemCreate,
+} = useCharacterCatalogActions({
+  character,
+  canEditQuickSection,
+  invalidateCurrentLinksCache,
+  loadCharacterLinks,
+  setSectionSuccess,
+  confirmDestructiveAction,
+  catalogDialogRef,
 })
 
-watch(careerFilterMode, async () => {
-  careerError.value = null
-  selectedCareerId.value = null
-  selectedCareerName.value = null
-  await refreshCareerOptions()
-})
-
-watch(catalogQuery, async (value) => {
-  scheduleCatalogSearch.cancel()
-
-  if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
-    catalogOptions.value = []
-    catalogSearchLoading.value = false
-    return
-  }
-
-  const trimmed = value.trim()
-  if (trimmed.length < 2) {
-    catalogOptions.value = []
-    catalogSearchLoading.value = false
-    return
-  }
-
-  const requestId = ++catalogSearchSequence
-  void scheduleCatalogSearch(trimmed, requestId, catalogSection.value)
-})
-
-
-function formatCatalogOptionLabel(option: CatalogItem): string {
-  if (catalogSection.value === 'skills' || catalogSection.value === 'talents') {
-    return formatNamedWithSpecialization(option.name, option.specialization ?? null)
-  }
-
-  if (catalogSection.value === 'weapons') {
-    const details: string[] = []
-    if (typeof option.encumbrance === 'number') {
-      details.push(`enc. ${option.encumbrance}`)
-    }
-
-    const meta = details.length > 0 ? ` (${details.join(', ')})` : ''
-    const damage = option.damageFormula ? ` - ${option.damageFormula}` : ''
-    return `${option.name}${meta}${damage}`
-  }
-
-  if (catalogSection.value === 'armors') {
-    const details: string[] = []
-    if (typeof option.encumbrance === 'number') {
-      details.push(`enc. ${option.encumbrance}`)
-    }
-
-    const meta = details.length > 0 ? ` (${details.join(', ')})` : ''
-    const armorPoints = typeof option.armorPoints === 'number' ? ` - PA ${option.armorPoints}` : ''
-    return `${option.name}${meta}${armorPoints}`
-  }
-
-  if (catalogSection.value === 'items') {
-    const details: string[] = []
-    if (typeof option.encumbrance === 'number') {
-      details.push(`enc. ${option.encumbrance}`)
-    }
-
-    return details.length > 0 ? `${option.name} (${details.join(', ')})` : option.name
-  }
-
-  return option.name
-}
-
-
-onBeforeUnmount(() => {
-  scheduleCatalogSearch.cancel()
-})
+const {
+  descriptionTitle,
+  descriptionContent,
+  openDescriptionModal,
+  closeDescriptionModal,
+  onDescriptionDialogClosed,
+} = useCharacterDescriptionModal(descriptionDialogRef)
 </script>
