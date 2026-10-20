@@ -8,6 +8,7 @@ const deps = vi.hoisted(() => ({
   updateCharacterStatValues: vi.fn(),
   listCharacterLinksBundle: vi.fn(),
   updateCharacterArmorEquipped: vi.fn(),
+  removeCharacterItem: vi.fn(),
   enqueueOfflineUpdate: vi.fn(),
   setCharacter: vi.fn(),
   setCampaign: vi.fn(),
@@ -44,7 +45,7 @@ vi.mock('../../src/services/characterLinksRepository', () => ({
   listCharacterLinksBundle: deps.listCharacterLinksBundle,
   updateCharacterArmorEquipped: deps.updateCharacterArmorEquipped,
   removeCharacterArmor: vi.fn(),
-  removeCharacterItem: vi.fn(),
+  removeCharacterItem: deps.removeCharacterItem,
   removeCharacterSkill: vi.fn(),
   removeCharacterTalent: vi.fn(),
   removeCharacterWeapon: vi.fn(),
@@ -533,6 +534,41 @@ describe('useCharacterSheet', () => {
 
       expect(deps.updateCharacterArmorEquipped).toHaveBeenCalledWith('a1', false)
       expect(sheet.characterArmors.value[0].isEquipped).toBe(false)
+    })
+  })
+
+  describe('error handling', () => {
+    it('reports the error without throwing when the money save fails', async () => {
+      deps.updateCharacterCore.mockRejectedValue(new Error('forbidden'))
+      const sheet = await setup()
+
+      sheet.onQuickValueChange('moneyGold', 5)
+      await expect(sheet.onMoneyCommit()).resolves.toBeUndefined()
+
+      expect(sheet.errorMessage.value).toBe('forbidden')
+    })
+
+    it('reports a refresh failure, not a delete failure, when the reload fails', async () => {
+      deps.removeCharacterItem.mockResolvedValue(undefined)
+      const sheet = await setup()
+      deps.listCharacterLinksBundle.mockRejectedValue(new Error('reload down'))
+
+      await sheet.onDeleteItem('item-1')
+
+      expect(deps.removeCharacterItem).toHaveBeenCalledWith('item-1')
+      expect(sheet.errorMessage.value).toBe('Actualisation impossible, rechargez la page.')
+    })
+
+    it('clears a stale error when starting a new action', async () => {
+      deps.removeCharacterItem.mockRejectedValueOnce(new Error('boom'))
+      deps.removeCharacterItem.mockResolvedValueOnce(undefined)
+      const sheet = await setup()
+
+      await sheet.onDeleteItem('item-1')
+      expect(sheet.errorMessage.value).toBe('boom')
+
+      await sheet.onDeleteItem('item-1')
+      expect(sheet.errorMessage.value).toBeNull()
     })
   })
 })

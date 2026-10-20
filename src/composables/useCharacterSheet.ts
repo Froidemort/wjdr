@@ -338,8 +338,10 @@ export function useCharacterSheet() {
     return (
       status.value === 'pending' ||
       status.value === 'saving' ||
+      status.value === 'error' ||
       statSaveStatus.value === 'pending' ||
-      statSaveStatus.value === 'saving'
+      statSaveStatus.value === 'saving' ||
+      statSaveStatus.value === 'error'
     )
   }
 
@@ -535,8 +537,13 @@ export function useCharacterSheet() {
       return
     }
 
-    await saveQuickFields({ immediate: true })
-    isMoneyEditing.value = false
+    try {
+      await saveQuickFields({ immediate: true })
+    } catch (error) {
+      errorMessage.value = modificationErrorMessage(error)
+    } finally {
+      isMoneyEditing.value = false
+    }
   }
 
   function onMoneySubtract(value: { silver: number; copper: number }): void {
@@ -560,7 +567,7 @@ export function useCharacterSheet() {
     editable.value.moneyCopper = normalized.copper
     isMoneyEditing.value = false
 
-    void saveQuickFields({ immediate: true })
+    void saveQuickFields({ immediate: true }).catch(() => undefined)
   }
 
   function onStatTick(statCode: string, step: number): void {
@@ -669,11 +676,11 @@ export function useCharacterSheet() {
       return
     }
 
-    actionBusyKey.value = `skill-${skillId}`
+    beginAction(`skill-${skillId}`)
     try {
       await removeCharacterSkill(character.value.id, skillId)
       invalidateCurrentLinksCache()
-      await loadCharacterLinks(character.value.id, { force: true })
+      await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('skills', 'Compétence supprimée.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
@@ -691,11 +698,11 @@ export function useCharacterSheet() {
       return
     }
 
-    actionBusyKey.value = `talent-${talentId}`
+    beginAction(`talent-${talentId}`)
     try {
       await removeCharacterTalent(character.value.id, talentId)
       invalidateCurrentLinksCache()
-      await loadCharacterLinks(character.value.id, { force: true })
+      await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('talents', 'Talent supprimé.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
@@ -713,11 +720,11 @@ export function useCharacterSheet() {
       return
     }
 
-    actionBusyKey.value = `weapon-${linkId}`
+    beginAction(`weapon-${linkId}`)
     try {
       await removeCharacterWeapon(linkId)
       invalidateCurrentLinksCache()
-      await loadCharacterLinks(character.value.id, { force: true })
+      await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('weapons', 'Arme supprimée.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
@@ -765,11 +772,11 @@ export function useCharacterSheet() {
       return
     }
 
-    actionBusyKey.value = `armor-${linkId}`
+    beginAction(`armor-${linkId}`)
     try {
       await removeCharacterArmor(linkId)
       invalidateCurrentLinksCache()
-      await loadCharacterLinks(character.value.id, { force: true })
+      await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('armors', 'Armure supprimée.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
@@ -994,11 +1001,11 @@ export function useCharacterSheet() {
       return
     }
 
-    actionBusyKey.value = `item-${linkId}`
+    beginAction(`item-${linkId}`)
     try {
       await removeCharacterItem(linkId)
       invalidateCurrentLinksCache()
-      await loadCharacterLinks(character.value.id, { force: true })
+      await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('items', 'Équipement supprimé.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
@@ -1136,8 +1143,17 @@ export function useCharacterSheet() {
       return false
     }
 
+    errorMessage.value = null
     actionBusyKey.value = key
     return true
+  }
+
+  async function reloadLinksAfterDelete(id: string): Promise<void> {
+    try {
+      await loadCharacterLinks(id, { force: true })
+    } catch {
+      errorMessage.value = 'Actualisation impossible, rechargez la page.'
+    }
   }
 
   function endAction(): void {

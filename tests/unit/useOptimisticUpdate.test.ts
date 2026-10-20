@@ -109,4 +109,34 @@ describe('useOptimisticUpdate', () => {
 
     vi.useRealTimers()
   })
+
+  it('keeps patches added during a failing save, newer edits winning', async () => {
+    vi.useFakeTimers()
+
+    let rejectSave: (reason: Error) => void = () => undefined
+    const onSave = vi
+      .fn()
+      .mockImplementationOnce(
+        () => new Promise<void>((_resolve, reject) => { rejectSave = reject })
+      )
+      .mockResolvedValue(undefined)
+
+    const { update, flush } = useOptimisticUpdate<{ a: number; b: number }>({
+      onSave,
+      debounceMs: 50,
+      flushOnUnmount: false,
+    })
+
+    update({ a: 1, b: 1 })
+    await vi.advanceTimersByTimeAsync(50)
+    update({ b: 2 })
+    rejectSave(new Error('boom'))
+    await vi.advanceTimersByTimeAsync(0)
+
+    await flush()
+
+    expect(onSave).toHaveBeenLastCalledWith({ a: 1, b: 2 })
+
+    vi.useRealTimers()
+  })
 })
