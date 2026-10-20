@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { useCompendiumSpellFilters } from '../../src/composables/useCompendiumSpellFilters'
 
 interface TestSpell {
   name: string
-  description?: string
+  description?: string | null
   category: string
   difficulty: number
 }
@@ -108,5 +108,54 @@ describe('useCompendiumSpellFilters', () => {
     expect(filters.categories.value).toEqual([])
     expect(filters.difficultyBounds.value).toEqual({ min: 0, max: 0 })
     expect(filters.filteredSpells.value).toEqual([])
+  })
+
+  it('syncs the difficulty range once data arrives after setup', async () => {
+    const spells = ref<TestSpell[]>([])
+    const filters = useCompendiumSpellFilters({ spells })
+
+    spells.value = makeSpells()
+    await nextTick()
+
+    expect(filters.minDifficulty.value).toBe(5)
+    expect(filters.maxDifficulty.value).toBe(35)
+    expect(filters.filteredSpells.value).toHaveLength(4)
+  })
+
+  it('keeps a user-narrowed range when bounds widen', async () => {
+    const spells = ref<TestSpell[]>(makeSpells())
+    const filters = useCompendiumSpellFilters({ spells })
+
+    filters.minDifficulty.value = 10
+    filters.maxDifficulty.value = 30
+    spells.value = [...makeSpells(), { name: 'Mineur', category: 'Feu', difficulty: 1 }]
+    await nextTick()
+
+    expect(filters.minDifficulty.value).toBe(10)
+    expect(filters.maxDifficulty.value).toBe(30)
+  })
+
+  it('clamps a narrowed range to shrunken bounds and pulls min down to max', async () => {
+    const spells = ref<TestSpell[]>(makeSpells())
+    const filters = useCompendiumSpellFilters({ spells })
+
+    filters.minDifficulty.value = 30
+    filters.maxDifficulty.value = 35
+    spells.value = makeSpells().filter((spell) => spell.difficulty <= 12)
+    await nextTick()
+
+    expect(filters.maxDifficulty.value).toBe(12)
+    expect(filters.minDifficulty.value).toBe(12)
+  })
+
+  it('accepts spells with a null description', () => {
+    const filters = useCompendiumSpellFilters({
+      spells: ref<TestSpell[]>([{ name: 'Nul', description: null, category: 'Feu', difficulty: 3 }]),
+    })
+
+    filters.searchQuery.value = 'nul'
+    expect(filters.filteredSpells.value).toHaveLength(1)
+    filters.searchQuery.value = 'absent'
+    expect(filters.filteredSpells.value).toHaveLength(0)
   })
 })

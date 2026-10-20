@@ -41,7 +41,7 @@ describe('application routes', () => {
     expect(careers?.meta).toMatchObject({ requiresAuth: false, skipSplash: true })
   })
 
-  it.each(['/compendium/skills', '/compendium/talents'])('exposes the public %s route', (path) => {
+  it.each(['/compendium/skills', '/compendium/talents', '/compendium/spells'])('exposes the public %s route', (path) => {
     const route = appRoutes.find((entry) => entry.path === path)
 
     expect(route?.meta).toMatchObject({
