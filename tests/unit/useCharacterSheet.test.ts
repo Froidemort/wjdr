@@ -328,7 +328,7 @@ describe('useCharacterSheet', () => {
     })
 
     it('retrySave replays a failed save and returns the state to ok', async () => {
-      deps.updateCharacterCore.mockRejectedValueOnce(new Error('forbidden'))
+      deps.updateCharacterCore.mockRejectedValue(new Error('forbidden'))
       const sheet = await setup()
       vi.useFakeTimers()
 

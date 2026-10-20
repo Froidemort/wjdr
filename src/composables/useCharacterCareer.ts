@@ -11,6 +11,7 @@ import {
 } from '../services/charactersRepository'
 import type { CatalogItem } from '../types/domain'
 import { normalizeStatCode, sortStatsByCharacteristicOrder } from '../utils/characterSheet'
+import { safeErrorMessage } from '../utils/errorMessages'
 import type { FeedbackSection } from './useCharacterSheet'
 
 interface CareerCharacter {
@@ -91,10 +92,12 @@ export function useCharacterCareer({
     }
 
     careerSearchLoading.value = true
+    careerError.value = null
     try {
       careerOptions.value = await searchCatalog('careers', trimmed)
-    } catch {
+    } catch (error) {
       careerOptions.value = []
+      careerError.value = safeErrorMessage(error, 'Recherche des carrières impossible.')
     } finally {
       careerSearchLoading.value = false
     }
@@ -140,8 +143,7 @@ export function useCharacterCareer({
       await loadCareerPathOptions()
       await refreshCareerOptions()
     } catch (error) {
-      careerError.value =
-        error instanceof Error ? error.message : 'Chargement des débouchés impossible.'
+      careerError.value = safeErrorMessage(error, 'Chargement des débouchés impossible.')
     }
 
     if (!careerDialogRef.value) {
@@ -223,8 +225,7 @@ export function useCharacterCareer({
       closeCareerModal()
       careerConfirmDialogRef.value?.showModal()
     } catch (error) {
-      careerError.value =
-        error instanceof Error ? error.message : 'Modification de carrière impossible.'
+      careerError.value = safeErrorMessage(error, 'Modification de carrière impossible.')
     } finally {
       careerCharacteristicsLoading.value = false
     }
@@ -240,20 +241,41 @@ export function useCharacterCareer({
     let careerUpdated = false
 
     try {
-      await updateCharacterCareer(character.value.id, pendingCareerId.value)
-      careerUpdated = true
+      try {
+        await updateCharacterCareer(character.value.id, pendingCareerId.value)
+        careerUpdated = true
 
-      if (applyCareerCharacteristics) {
-        const totalAdvancedByStatCode = pendingCareerCharacteristics.value.reduce<
-          Record<string, number>
-        >((accumulator, entry) => {
-          accumulator[entry.statCode] = entry.value
-          return accumulator
-        }, {})
-        await replaceCharacterTotalAdvancedValues(character.value.id, totalAdvancedByStatCode)
+        if (applyCareerCharacteristics) {
+          const totalAdvancedByStatCode = pendingCareerCharacteristics.value.reduce<
+            Record<string, number>
+          >((accumulator, entry) => {
+            accumulator[entry.statCode] = entry.value
+            return accumulator
+          }, {})
+          await replaceCharacterTotalAdvancedValues(character.value.id, totalAdvancedByStatCode)
+        }
+      } catch (error) {
+        if (careerUpdated) {
+          await loadCharacter().catch(() => undefined)
+          const prefix = 'Carrière mise à jour, mais profil de carrière non appliqué'
+          const message = safeErrorMessage(error, '')
+          careerConfirmError.value = message ? `${prefix} : ${message}` : `${prefix}.`
+          return
+        }
+
+        careerConfirmError.value = safeErrorMessage(error, 'Modification de carrière impossible.')
+        return
       }
 
-      await loadCharacter()
+      try {
+        await loadCharacter()
+      } catch {
+        careerConfirmError.value = applyCareerCharacteristics
+          ? 'Carrière et caractéristiques mises à jour, mais actualisation impossible.'
+          : 'Carrière mise à jour, mais actualisation impossible.'
+        return
+      }
+
       setSectionSuccess(
         'career',
         applyCareerCharacteristics
@@ -261,18 +283,6 @@ export function useCharacterCareer({
           : 'Carrière mise à jour.'
       )
       closeCareerConfirmModal()
-    } catch (error) {
-      if (careerUpdated) {
-        await loadCharacter().catch(() => undefined)
-        careerConfirmError.value =
-          error instanceof Error
-            ? `Carrière mise à jour, mais profil de carrière non appliqué : ${error.message}`
-            : 'Carrière mise à jour, mais profil de carrière non appliqué.'
-        return
-      }
-
-      careerConfirmError.value =
-        error instanceof Error ? error.message : 'Modification de carrière impossible.'
     } finally {
       changingCareer.value = false
     }

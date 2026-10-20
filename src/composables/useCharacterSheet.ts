@@ -40,6 +40,7 @@ import {
 } from '../utils/equipmentSlots'
 import { normalizeStatCode } from '../utils/characterSheet'
 import { isInventoryQuality } from '../utils/inventoryQuality'
+import { safeErrorMessage } from '../utils/errorMessages'
 import { useConfirmAction } from './useConfirmAction'
 import { useMoneyCoercion } from './useMoneyCoercion'
 import { useOptimisticUpdate } from './useOptimisticUpdate'
@@ -82,20 +83,6 @@ type CoreField = keyof typeof CORE_COLUMNS
 type CorePatch = Partial<Record<CoreField, number>>
 
 const CORE_FIELDS = Object.keys(CORE_COLUMNS) as CoreField[]
-
-function modificationErrorMessage(error: unknown): string {
-  // Postgrest errors carry `code` and may leak schema names: never show their message
-  const isBackendError = typeof error === 'object' && error !== null && 'code' in error
-  if (error instanceof TypeError) {
-    return 'Connexion indisponible.'
-  }
-
-  if (error instanceof Error && !isBackendError && error.message) {
-    return error.message
-  }
-
-  return 'Modification impossible.'
-}
 
 export function useCharacterSheet() {
   const authStore = useAuthStore()
@@ -488,7 +475,7 @@ export function useCharacterSheet() {
     } catch (error) {
       if (!isBackgroundRefresh || !character.value) {
         errorMessage.value =
-          error instanceof Error ? error.message : 'Impossible de charger le personnage.'
+          safeErrorMessage(error, 'Impossible de charger le personnage.')
       }
     } finally {
       if (!isBackgroundRefresh) {
@@ -540,7 +527,7 @@ export function useCharacterSheet() {
     try {
       await saveQuickFields({ immediate: true })
     } catch (error) {
-      errorMessage.value = modificationErrorMessage(error)
+      errorMessage.value = safeErrorMessage(error)
     } finally {
       isMoneyEditing.value = false
     }
@@ -662,7 +649,7 @@ export function useCharacterSheet() {
         setSectionSuccess('skills', 'Niveau de maîtrise mis à jour.')
       } catch (error) {
         errorMessage.value =
-          error instanceof Error ? error.message : 'Modification du niveau de maîtrise impossible.'
+          safeErrorMessage(error, 'Modification du niveau de maîtrise impossible.')
       }
     })
   }
@@ -683,7 +670,7 @@ export function useCharacterSheet() {
       await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('skills', 'Compétence supprimée.')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+      errorMessage.value = safeErrorMessage(error, 'Suppression impossible.')
     } finally {
       endAction()
     }
@@ -705,7 +692,7 @@ export function useCharacterSheet() {
       await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('talents', 'Talent supprimé.')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+      errorMessage.value = safeErrorMessage(error, 'Suppression impossible.')
     } finally {
       endAction()
     }
@@ -727,7 +714,7 @@ export function useCharacterSheet() {
       await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('weapons', 'Arme supprimée.')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+      errorMessage.value = safeErrorMessage(error, 'Suppression impossible.')
     } finally {
       endAction()
     }
@@ -758,7 +745,7 @@ export function useCharacterSheet() {
         await loadCharacterLinks(currentCharacter.id, { force: true })
         setSectionSuccess('weapons', 'Qualité de l\'arme mise à jour.')
       } catch (error) {
-        errorMessage.value = modificationErrorMessage(error)
+        errorMessage.value = safeErrorMessage(error)
       }
     })
   }
@@ -779,7 +766,7 @@ export function useCharacterSheet() {
       await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('armors', 'Armure supprimée.')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+      errorMessage.value = safeErrorMessage(error, 'Suppression impossible.')
     } finally {
       endAction()
     }
@@ -817,7 +804,7 @@ export function useCharacterSheet() {
       invalidateCurrentLinksCache()
       setSectionSuccess('armors', 'Armure équipée (couche ajoutée).')
     } catch (error) {
-      errorMessage.value = modificationErrorMessage(error)
+      errorMessage.value = safeErrorMessage(error)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
     } finally {
@@ -845,7 +832,7 @@ export function useCharacterSheet() {
       invalidateCurrentLinksCache()
       setSectionSuccess('armors', 'Armure déséquipée.')
     } catch (error) {
-      errorMessage.value = modificationErrorMessage(error)
+      errorMessage.value = safeErrorMessage(error)
     } finally {
       endAction()
     }
@@ -879,7 +866,7 @@ export function useCharacterSheet() {
         armorsToUnequip.length > 1 ? 'Couches d’armure déséquipées.' : 'Armure déséquipée.'
       )
     } catch (error) {
-      errorMessage.value = modificationErrorMessage(error)
+      errorMessage.value = safeErrorMessage(error)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
     } finally {
@@ -927,7 +914,7 @@ export function useCharacterSheet() {
         conflicts.length > 0 ? 'Arme équipée (remplacement).' : 'Arme équipée.'
       )
     } catch (error) {
-      errorMessage.value = modificationErrorMessage(error)
+      errorMessage.value = safeErrorMessage(error)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
     } finally {
@@ -955,7 +942,7 @@ export function useCharacterSheet() {
       invalidateCurrentLinksCache()
       setSectionSuccess('weapons', 'Arme déséquipée.')
     } catch (error) {
-      errorMessage.value = modificationErrorMessage(error)
+      errorMessage.value = safeErrorMessage(error)
     } finally {
       endAction()
     }
@@ -986,7 +973,7 @@ export function useCharacterSheet() {
         await loadCharacterLinks(currentCharacter.id, { force: true })
         setSectionSuccess('armors', 'Qualité de l\'armure mise à jour.')
       } catch (error) {
-        errorMessage.value = modificationErrorMessage(error)
+        errorMessage.value = safeErrorMessage(error)
       }
     })
   }
@@ -1008,7 +995,7 @@ export function useCharacterSheet() {
       await reloadLinksAfterDelete(character.value.id)
       setSectionSuccess('items', 'Équipement supprimé.')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
+      errorMessage.value = safeErrorMessage(error, 'Suppression impossible.')
     } finally {
       endAction()
     }
@@ -1034,7 +1021,7 @@ export function useCharacterSheet() {
       invalidateCurrentLinksCache()
       setSectionSuccess('items', 'Quantité mise à jour.')
     } catch (error) {
-      errorMessage.value = modificationErrorMessage(error)
+      errorMessage.value = safeErrorMessage(error)
     } finally {
       endAction()
     }
@@ -1063,7 +1050,7 @@ export function useCharacterSheet() {
         invalidateCurrentLinksCache()
         setSectionSuccess('items', 'Qualité de l\'équipement mise à jour.')
       } catch (error) {
-        errorMessage.value = modificationErrorMessage(error)
+        errorMessage.value = safeErrorMessage(error)
       }
     })
   }
@@ -1117,7 +1104,7 @@ export function useCharacterSheet() {
     const results = await Promise.allSettled([triggerSaveNow(), triggerStatSaveNow()])
     const failed = results.find((result) => result.status === 'rejected')
     if (failed) {
-      errorMessage.value = modificationErrorMessage(failed.reason)
+      errorMessage.value = safeErrorMessage(failed.reason)
     }
   }
 

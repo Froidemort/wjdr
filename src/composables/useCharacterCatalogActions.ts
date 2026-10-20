@@ -10,6 +10,7 @@ import {
 } from '../services/characterLinksRepository'
 import type { CatalogItem } from '../types/domain'
 import { formatNamedWithSpecialization } from '../utils/characterSheet'
+import { safeErrorMessage } from '../utils/errorMessages'
 import type { FeedbackSection } from './useCharacterSheet'
 import type { ITEM_QUALITY_OPTIONS } from '../utils/inventoryQuality'
 
@@ -112,13 +113,14 @@ export function useCharacterCatalogActions({
         }
 
         catalogOptions.value = results
-      } catch {
+      } catch (error) {
         if (requestId !== catalogSearchSequence) {
           return
         }
 
         catalogOptions.value = []
         catalogSearchFailed.value = true
+        catalogError.value = safeErrorMessage(error, 'Recherche impossible. Réessayez.')
       } finally {
         if (requestId === catalogSearchSequence) {
           catalogSearchLoading.value = false
@@ -274,7 +276,7 @@ export function useCharacterCatalogActions({
         `${selectedCatalogIds.value.length} élément(s) ajouté(s).`
       )
     } catch (error) {
-      catalogError.value = error instanceof Error ? error.message : 'Ajout impossible.'
+      catalogError.value = safeErrorMessage(error, 'Ajout impossible.')
     } finally {
       addingCatalog.value = false
     }
@@ -318,7 +320,7 @@ export function useCharacterCatalogActions({
       )
       await refreshAfterAdd(character.value.id, 'Équipement créé et ajouté.')
     } catch (error) {
-      catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
+      catalogError.value = safeErrorMessage(error, 'Création impossible.')
     } finally {
       creatingItem.value = false
     }
@@ -335,6 +337,7 @@ export function useCharacterCatalogActions({
   watch(catalogQuery, async (value) => {
     scheduleCatalogSearch.cancel()
     catalogSearchFailed.value = false
+    catalogError.value = null
 
     if (catalogSection.value === 'items' && itemCatalogMode.value === 'create') {
       catalogOptions.value = []

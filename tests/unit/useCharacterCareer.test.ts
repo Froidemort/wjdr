@@ -86,6 +86,20 @@ describe('useCharacterCareer', () => {
       expect(api.careerPathLoading.value).toBe(false)
     })
 
+    it('uses a safe fallback when loading path options rejects a coded backend error', async () => {
+      repo.listCareerPathCareersByFromCareerId.mockRejectedValueOnce({
+        code: '42P01',
+        message: 'relation public.career_paths does not exist',
+      })
+      const { api } = setup()
+
+      await api.openCareerModal()
+
+      expect(api.careerError.value).toBe('Chargement des débouchés impossible.')
+      expect(api.careerError.value).not.toContain('career_paths')
+      expect(api.careerPathLoading.value).toBe(false)
+    })
+
     it('in all mode requires 2+ characters before searching the catalog', async () => {
       const { api } = setup()
       await api.openCareerModal()
@@ -105,7 +119,10 @@ describe('useCharacterCareer', () => {
     it('in all mode clears options when the catalog search fails', async () => {
       const { api } = setup()
       await api.openCareerModal()
-      repo.searchCatalog.mockRejectedValue(new Error('x'))
+      repo.searchCatalog.mockRejectedValue({
+        code: '42P01',
+        message: 'relation public.careers does not exist',
+      })
 
       api.careerFilterMode.value = 'all'
       api.careerQuery.value = 'abc'
@@ -113,6 +130,8 @@ describe('useCharacterCareer', () => {
 
       await vi.waitFor(() => expect(api.careerSearchLoading.value).toBe(false))
       expect(api.careerOptions.value).toEqual([])
+      expect(api.careerError.value).toBe('Recherche des carrières impossible.')
+      expect(api.careerError.value).not.toContain('public.careers')
     })
   })
 
@@ -163,6 +182,21 @@ describe('useCharacterCareer', () => {
 
       expect(api.careerError.value).toBe('nope')
     })
+
+    it('uses a safe fallback for coded characteristics loading errors', async () => {
+      const { api } = setup()
+      repo.listCareerCharacteristicsByCareerId.mockRejectedValueOnce({
+        code: '42501',
+        message: 'permission denied for table career_characteristics',
+      })
+      api.selectCareer('c1', 'Soldat')
+
+      await api.confirmCareerChange()
+
+      expect(api.careerError.value).toBe('Modification de carrière impossible.')
+      expect(api.careerError.value).not.toContain('career_characteristics')
+      expect(api.careerCharacteristicsLoading.value).toBe(false)
+    })
   })
 
   describe('applyCareerChange', () => {
@@ -200,6 +234,24 @@ describe('useCharacterCareer', () => {
       )
     })
 
+    it('reports refresh failure after all career writes succeed', async () => {
+      const { api, deps } = setup()
+      await prepareConfirm(api)
+      deps.loadCharacter.mockRejectedValueOnce(new Error('reload'))
+
+      await api.applyCareerChange(true)
+
+      expect(repo.updateCharacterCareer).toHaveBeenCalledOnce()
+      expect(repo.replaceCharacterTotalAdvancedValues).toHaveBeenCalledWith('char-1', { cc: 5 })
+      expect(deps.loadCharacter).toHaveBeenCalledOnce()
+      expect(api.careerConfirmError.value).toBe(
+        'Carrière et caractéristiques mises à jour, mais actualisation impossible.'
+      )
+      expect(api.careerConfirmError.value).not.toContain('profil de carrière non appliqué')
+      expect(deps.setSectionSuccess).not.toHaveBeenCalled()
+      expect(api.changingCareer.value).toBe(false)
+    })
+
     it('reports a plain error when the career update itself fails', async () => {
       const { api, deps } = setup()
       await prepareConfirm(api)
@@ -212,18 +264,38 @@ describe('useCharacterCareer', () => {
       expect(api.changingCareer.value).toBe(false)
     })
 
+    it('uses a safe fallback when applying a career change fails before the write', async () => {
+      const { api, deps } = setup()
+      await prepareConfirm(api)
+      repo.updateCharacterCareer.mockRejectedValueOnce({
+        code: '42501',
+        message: 'permission denied for table characters',
+      })
+
+      await api.applyCareerChange(true)
+
+      expect(api.careerConfirmError.value).toBe('Modification de carrière impossible.')
+      expect(api.careerConfirmError.value).not.toContain('characters')
+      expect(deps.loadCharacter).not.toHaveBeenCalled()
+      expect(api.changingCareer.value).toBe(false)
+    })
+
     it('reloads and reports partial success when the profile update fails', async () => {
       const { api, deps } = setup()
       await prepareConfirm(api)
-      repo.replaceCharacterTotalAdvancedValues.mockRejectedValueOnce(new Error('rls'))
+      repo.replaceCharacterTotalAdvancedValues.mockRejectedValueOnce({
+        code: '42501',
+        message: 'new row violates row-level security policy for table character_stats',
+      })
 
       await api.applyCareerChange(true)
 
       expect(repo.updateCharacterCareer).toHaveBeenCalledOnce()
       expect(deps.loadCharacter).toHaveBeenCalledOnce()
       expect(api.careerConfirmError.value).toBe(
-        'Carrière mise à jour, mais profil de carrière non appliqué : rls'
+        'Carrière mise à jour, mais profil de carrière non appliqué.'
       )
+      expect(api.careerConfirmError.value).not.toContain('character_stats')
       expect(deps.setSectionSuccess).not.toHaveBeenCalled()
       expect(api.changingCareer.value).toBe(false)
     })

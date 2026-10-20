@@ -189,6 +189,23 @@ describe('useCharacterCatalogActions', () => {
 
       expect(api.catalogError.value).toBe('Ajout impossible.')
     })
+
+    it('uses the safe add fallback for coded backend errors', async () => {
+      const { api, deps } = setup()
+      api.openCatalogModal('skills')
+      api.selectedCatalogIds.value = ['s1']
+      repo.addCharacterSkills.mockRejectedValueOnce({
+        code: '42501',
+        message: 'permission denied for table character_skills',
+      })
+
+      await api.confirmCatalogAdd()
+
+      expect(api.catalogError.value).toBe('Ajout impossible.')
+      expect(api.catalogError.value).not.toContain('character_skills')
+      expect(api.selectedCatalogIds.value).toEqual(['s1'])
+      expect(deps.setSectionSuccess).not.toHaveBeenCalled()
+    })
   })
 
   describe('confirmItemCreate', () => {
@@ -271,6 +288,22 @@ describe('useCharacterCatalogActions', () => {
       expect(api.creatingItem.value).toBe(false)
     })
 
+    it('uses the safe create fallback for coded backend errors', async () => {
+      const { api } = setup()
+      api.newItemForm.value.name = 'Torche'
+      repo.createCatalogItem.mockRejectedValueOnce({
+        code: '42501',
+        message: 'new row violates row-level security policy for table catalog_items',
+      })
+
+      await api.confirmItemCreate()
+
+      expect(api.catalogError.value).toBe('Création impossible.')
+      expect(api.catalogError.value).not.toContain('catalog_items')
+      expect(repo.addCharacterItems).not.toHaveBeenCalled()
+      expect(api.creatingItem.value).toBe(false)
+    })
+
     it('reuses the created item on retry after the link step failed', async () => {
       const { api } = setup()
       api.newItemForm.value.name = 'Torche'
@@ -304,7 +337,10 @@ describe('useCharacterCatalogActions', () => {
       try {
         const { api } = setup()
         api.openCatalogModal('skills')
-        repo.searchCatalog.mockRejectedValueOnce(new Error('down'))
+        repo.searchCatalog.mockRejectedValueOnce({
+          code: '42P01',
+          message: 'relation public.skills does not exist',
+        })
 
         api.catalogQuery.value = 'sa'
         await nextTick()
@@ -312,6 +348,8 @@ describe('useCharacterCatalogActions', () => {
 
         expect(api.catalogSearchFailed.value).toBe(true)
         expect(api.catalogOptions.value).toEqual([])
+        expect(api.catalogError.value).toBe('Recherche impossible. Réessayez.')
+        expect(api.catalogError.value).not.toContain('public.skills')
         expect(api.catalogSearchLoading.value).toBe(false)
       } finally {
         vi.useRealTimers()
@@ -327,7 +365,10 @@ describe('useCharacterCatalogActions', () => {
       api.openCatalogModal('skills')
       api.catalogOptions.value = [option({ id: 's1', name: 'Soins' })]
       api.toggleCatalogSelection('s1')
-      deps.loadCharacterLinks.mockRejectedValueOnce(new Error('offline'))
+      deps.loadCharacterLinks.mockRejectedValueOnce({
+        code: '42P01',
+        message: 'relation public.character_skills does not exist',
+      })
 
       await api.confirmCatalogAdd()
 

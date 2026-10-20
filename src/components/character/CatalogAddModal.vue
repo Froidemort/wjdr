@@ -161,7 +161,7 @@ defineExpose({ dialog })
                   </label>
                 </li>
               </ul>
-              <p v-else class="py-8 text-center text-sm opacity-70">
+              <p v-else-if="!error" class="py-8 text-center text-sm opacity-70">
                 {{
                   searchFailed
                     ? 'Recherche impossible. Réessayez.'
