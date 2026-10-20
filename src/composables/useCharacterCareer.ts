@@ -10,7 +10,7 @@ import {
   updateCharacterCareer,
 } from '../services/charactersRepository'
 import type { CatalogItem } from '../types/domain'
-import { sortStatsByCharacteristicOrder } from '../utils/characterSheet'
+import { normalizeStatCode, sortStatsByCharacteristicOrder } from '../utils/characterSheet'
 import type { FeedbackSection } from './useCharacterSheet'
 
 interface CareerCharacter {
@@ -55,9 +55,9 @@ export function useCharacterCareer({
   const pendingCareerCharacteristicRows = computed(() => {
     const allStatsSorted = character.value ? sortStatsByCharacteristicOrder(character.value.stats) : []
     const valuesByCode = new Map(
-      pendingCareerCharacteristics.value.map((entry) => [entry.statCode.toUpperCase(), entry.value])
+      pendingCareerCharacteristics.value.map((entry) => [normalizeStatCode(entry.statCode), entry.value])
     )
-    const orderedCodes = allStatsSorted.map((entry) => entry.statCode.toUpperCase())
+    const orderedCodes = allStatsSorted.map((entry) => normalizeStatCode(entry.statCode))
     const unknownCodes = Array.from(valuesByCode.keys()).filter((code) => !orderedCodes.includes(code))
     unknownCodes.sort((left, right) => left.localeCompare(right, 'fr', { sensitivity: 'base' }))
 

@@ -61,6 +61,28 @@ interface StatPatch {
   totalAdvanced?: number
 }
 
+type CoreColumns = Parameters<typeof updateCharacterCore>[1]
+
+// pvMax is derived from the wounds stat (no DB column), so it is never saved
+const CORE_COLUMNS = {
+  pvCurrent: 'pv_current',
+  fortuneMax: 'fortune_max',
+  fortuneCurrent: 'fortune_current',
+  destinyCurrent: 'destiny_current',
+  destinyMax: 'destiny_max',
+  xpTotal: 'xp_total',
+  xpAvailable: 'xp_available',
+  insanityPoints: 'insanity_points',
+  moneyGold: 'money_gold',
+  moneySilver: 'money_silver',
+  moneyCopper: 'money_copper',
+} as const satisfies Record<string, keyof CoreColumns>
+
+type CoreField = keyof typeof CORE_COLUMNS
+type CorePatch = Partial<Record<CoreField, number>>
+
+const CORE_FIELDS = Object.keys(CORE_COLUMNS) as CoreField[]
+
 export function useCharacterSheet() {
   const authStore = useAuthStore()
   const lastActive = useLastActiveStore()
@@ -152,53 +174,43 @@ export function useCharacterSheet() {
   const sortedCharacterArmors = computed(() => sortByName(characterArmors.value))
   const sortedCharacterItems = computed(() => sortByName(characterItems.value))
 
-  const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpdate<
-    typeof editable.value
-  >({
+  const { status, update: triggerSave, flush: triggerSaveNow } = useOptimisticUpdate<CorePatch>({
     onSave: async (payload) => {
       if (!character.value) {
         return
       }
 
-      const normalizedPayload = {
-        ...editable.value,
-        ...payload,
+      const columns: CoreColumns = {}
+      for (const field of CORE_FIELDS) {
+        const value = payload[field]
+        if (typeof value === 'number') {
+          columns[CORE_COLUMNS[field]] = value
+        }
+      }
+
+      if (Object.keys(columns).length === 0) {
+        return
       }
 
       try {
-        await updateCharacterCore(character.value.id, {
-          pv_current: normalizedPayload.pvCurrent,
-          fortune_max: normalizedPayload.fortuneMax,
-          fortune_current: normalizedPayload.fortuneCurrent,
-          destiny_current: normalizedPayload.destinyCurrent,
-          destiny_max: normalizedPayload.destinyMax,
-          xp_total: normalizedPayload.xpTotal,
-          xp_available: Math.min(normalizedPayload.xpAvailable, normalizedPayload.xpTotal),
-          insanity_points: Math.max(0, normalizedPayload.insanityPoints),
-          money_gold: normalizedPayload.moneyGold,
-          money_silver: normalizedPayload.moneySilver,
-          money_copper: normalizedPayload.moneyCopper,
-        })
-        markSavedEditable(normalizedPayload)
+        await updateCharacterCore(character.value.id, columns)
+        markSavedEditable(payload)
       } catch (error) {
         if (!isTransientError(error)) {
           throw error
         }
-
-        // pvMax is derived (no DB column); queue only the changed fields
-        const { pvMax: _derivedPvMax, ...queuedPatch } = payload
 
         await enqueueOfflineUpdate({
           entityType: 'character',
           entityId: character.value.id,
           payload: {
             kind: 'character-core',
-            patch: queuedPatch,
+            patch: payload,
           },
           baseUpdatedAt: null,
           localUpdatedAt: Date.now(),
         })
-        markSavedEditable(normalizedPayload)
+        markSavedEditable(payload)
       }
     },
     debounceMs: 500,
@@ -241,6 +253,9 @@ export function useCharacterSheet() {
             localUpdatedAt: Date.now(),
           })
         }
+
+        // On a later failure the retry must not replay stats already saved or queued
+        delete payload.stats?.[statCode]
       }
     },
     // Pending saves are keyed per stat so ticking another stat never drops a save
@@ -285,28 +300,23 @@ export function useCharacterSheet() {
     return ''
   })
 
-  function isEditableEqual(
-    left: typeof editable.value,
-    right: typeof lastSavedEditable.value
-  ): boolean {
-    return (
-      left.pvMax === right.pvMax &&
-      left.pvCurrent === right.pvCurrent &&
-      left.fortuneMax === right.fortuneMax &&
-      left.fortuneCurrent === right.fortuneCurrent &&
-      left.destinyCurrent === right.destinyCurrent &&
-      left.destinyMax === right.destinyMax &&
-      left.xpTotal === right.xpTotal &&
-      left.xpAvailable === right.xpAvailable &&
-      left.insanityPoints === right.insanityPoints &&
-      left.moneyGold === right.moneyGold &&
-      left.moneySilver === right.moneySilver &&
-      left.moneyCopper === right.moneyCopper
-    )
+  function collectDirtyFields(): CorePatch {
+    const dirty: CorePatch = {}
+    for (const field of CORE_FIELDS) {
+      if (editable.value[field] !== lastSavedEditable.value[field]) {
+        dirty[field] = editable.value[field]
+      }
+    }
+
+    if (dirty.xpAvailable !== undefined) {
+      dirty.xpAvailable = Math.min(dirty.xpAvailable, editable.value.xpTotal)
+    }
+
+    return dirty
   }
 
-  function markSavedEditable(snapshot: typeof editable.value): void {
-    lastSavedEditable.value = { ...snapshot }
+  function markSavedEditable(snapshot: Partial<typeof editable.value>): void {
+    lastSavedEditable.value = { ...lastSavedEditable.value, ...snapshot }
   }
 
   function isSavingInProgress(): boolean {
@@ -324,7 +334,7 @@ export function useCharacterSheet() {
     }
 
     const woundsStat = character.value.stats.find(
-      (stat) => stat.statCode.trim().toUpperCase() === 'B'
+      (stat) => normalizeStatCode(stat.statCode) === 'B'
     )
 
     return Math.max(
@@ -553,7 +563,7 @@ export function useCharacterSheet() {
     const nextAdvanced = Math.max(0, target.currentAdvanced + step)
     target.currentAdvanced = nextAdvanced
 
-    if (statCode.trim().toUpperCase() === 'B') {
+    if (normalizeStatCode(statCode) === 'B') {
       syncEditablePvFromWoundsValue()
     }
 
@@ -579,7 +589,7 @@ export function useCharacterSheet() {
 
     target.baseValue = nextBase
 
-    if (statCode.trim().toUpperCase() === 'B') {
+    if (normalizeStatCode(statCode) === 'B') {
       syncEditablePvFromWoundsValue()
     }
 
@@ -627,10 +637,10 @@ export function useCharacterSheet() {
           target.masteryLevel = level
         }
         invalidateCurrentLinksCache()
-        setSectionSuccess('skills', 'Niveau de maitrise mis a jour.')
+        setSectionSuccess('skills', 'Niveau de maîtrise mis à jour.')
       } catch (error) {
         errorMessage.value =
-          error instanceof Error ? error.message : 'Modification du niveau de maitrise impossible.'
+          error instanceof Error ? error.message : 'Modification du niveau de maîtrise impossible.'
       }
     })
   }
@@ -640,7 +650,7 @@ export function useCharacterSheet() {
       return
     }
 
-    if (!(await confirmDestructiveAction('Supprimer cette competence ?'))) {
+    if (!(await confirmDestructiveAction('Supprimer cette compétence ?'))) {
       return
     }
 
@@ -649,7 +659,7 @@ export function useCharacterSheet() {
       await removeCharacterSkill(character.value.id, skillId)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
-      setSectionSuccess('skills', 'Competence supprimee.')
+      setSectionSuccess('skills', 'Compétence supprimée.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
     } finally {
@@ -671,7 +681,7 @@ export function useCharacterSheet() {
       await removeCharacterTalent(character.value.id, talentId)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
-      setSectionSuccess('talents', 'Talent supprime.')
+      setSectionSuccess('talents', 'Talent supprimé.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
     } finally {
@@ -693,7 +703,7 @@ export function useCharacterSheet() {
       await removeCharacterWeapon(linkId)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
-      setSectionSuccess('weapons', 'Arme supprimee.')
+      setSectionSuccess('weapons', 'Arme supprimée.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
     } finally {
@@ -724,7 +734,7 @@ export function useCharacterSheet() {
         await updateCharacterWeaponQuality(weapon.id, quality)
         invalidateCurrentLinksCache()
         await loadCharacterLinks(currentCharacter.id, { force: true })
-        setSectionSuccess('weapons', 'Qualite de l arme mise a jour.')
+        setSectionSuccess('weapons', 'Qualité de l\'arme mise à jour.')
       } catch (error) {
         errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
       }
@@ -745,7 +755,7 @@ export function useCharacterSheet() {
       await removeCharacterArmor(linkId)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
-      setSectionSuccess('armors', 'Armure supprimee.')
+      setSectionSuccess('armors', 'Armure supprimée.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
     } finally {
@@ -952,7 +962,7 @@ export function useCharacterSheet() {
         await updateCharacterArmorQuality(armor.id, quality)
         invalidateCurrentLinksCache()
         await loadCharacterLinks(currentCharacter.id, { force: true })
-        setSectionSuccess('armors', 'Qualite de l armure mise a jour.')
+        setSectionSuccess('armors', 'Qualité de l\'armure mise à jour.')
       } catch (error) {
         errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
       }
@@ -965,7 +975,7 @@ export function useCharacterSheet() {
       return
     }
 
-    if (!(await confirmDestructiveAction('Supprimer cet equipement ?'))) {
+    if (!(await confirmDestructiveAction('Supprimer cet équipement ?'))) {
       return
     }
 
@@ -974,7 +984,7 @@ export function useCharacterSheet() {
       await removeCharacterItem(linkId)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
-      setSectionSuccess('items', 'Equipement supprime.')
+      setSectionSuccess('items', 'Équipement supprimé.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Suppression impossible.'
     } finally {
@@ -1000,7 +1010,7 @@ export function useCharacterSheet() {
       await updateCharacterItemQuantity(item.id, nextQuantity)
       item.quantity = nextQuantity
       invalidateCurrentLinksCache()
-      setSectionSuccess('items', 'Quantite mise a jour.')
+      setSectionSuccess('items', 'Quantité mise à jour.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
     } finally {
@@ -1029,7 +1039,7 @@ export function useCharacterSheet() {
         await updateCharacterItemQuality(item.id, quality)
         item.quality = quality
         invalidateCurrentLinksCache()
-        setSectionSuccess('items', 'Qualite de l equipement mise a jour.')
+        setSectionSuccess('items', 'Qualité de l\'équipement mise à jour.')
       } catch (error) {
         errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
       }
@@ -1067,16 +1077,17 @@ export function useCharacterSheet() {
     editable.value.moneySilver = coercedMoney.silver
     editable.value.moneyCopper = coercedMoney.copper
 
-    if (isEditableEqual(editable.value, lastSavedEditable.value)) {
+    const dirtyFields = collectDirtyFields()
+    if (Object.keys(dirtyFields).length === 0) {
       return
     }
 
     if (options.immediate) {
-      await triggerSaveNow({ ...editable.value })
+      await triggerSaveNow(dirtyFields)
       return
     }
 
-    triggerSave({ ...editable.value })
+    triggerSave(dirtyFields)
   }
 
   function setActionSuccess(message: string): void {

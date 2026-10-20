@@ -239,10 +239,10 @@ describe('useCharacterSheet', () => {
       await vi.advanceTimersByTimeAsync(600)
 
       expect(deps.updateCharacterCore).toHaveBeenCalledTimes(1)
-      expect(deps.updateCharacterCore).toHaveBeenCalledWith(
-        'char-1',
-        expect.objectContaining({ pv_current: 5, fortune_current: 1, destiny_current: 1 })
-      )
+      expect(deps.updateCharacterCore).toHaveBeenCalledWith('char-1', {
+        pv_current: 5,
+        fortune_current: 1,
+      })
     })
 
     it('does not save when the value is unchanged', async () => {
@@ -262,10 +262,7 @@ describe('useCharacterSheet', () => {
       sheet.onQuickValueChange('xpAvailable', 500)
       await vi.advanceTimersByTimeAsync(600)
 
-      expect(deps.updateCharacterCore).toHaveBeenCalledWith(
-        'char-1',
-        expect.objectContaining({ xp_total: 100, xp_available: 100 })
-      )
+      expect(deps.updateCharacterCore).toHaveBeenCalledWith('char-1', { xp_available: 100 })
     })
 
     it('does not save when the user does not own the character', async () => {
