@@ -88,13 +88,13 @@ CREATE POLICY "User can delete own users_campaigns." ON public.users_campaigns F
 -- ============================================================================
 
 -- Sessions can be read by: MJ of the campaign OR active members of the campaign
-CREATE POLICY "MJ can manage sessions" ON public.sessions FOR ALL TO authenticated 
+CREATE POLICY "MJ can manage sessions" ON public.sessions FOR ALL TO authenticated
     USING (EXISTS (
-        SELECT 1 FROM public.campaigns c 
+        SELECT 1 FROM public.campaigns c
         WHERE c.id = sessions.campaign_id AND c.mj_id = auth.uid()
     ))
     WITH CHECK (EXISTS (
-        SELECT 1 FROM public.campaigns c 
+        SELECT 1 FROM public.campaigns c
         WHERE c.id = sessions.campaign_id AND c.mj_id = auth.uid()
     ));
 
@@ -102,8 +102,8 @@ CREATE POLICY "MJ can manage sessions" ON public.sessions FOR ALL TO authenticat
 CREATE POLICY "Campaign members can read sessions" ON public.sessions FOR SELECT TO authenticated USING (
     EXISTS (
         SELECT 1 FROM public.users_campaigns uc
-        WHERE uc.campaign_id = sessions.campaign_id 
-            AND uc.user_id = auth.uid() 
+        WHERE uc.campaign_id = sessions.campaign_id
+            AND uc.user_id = auth.uid()
             AND uc.active = true
     )
 );
@@ -121,51 +121,51 @@ DROP POLICY IF EXISTS "Authors or MJ can delete session_notes" ON public.session
 DROP POLICY IF EXISTS "Campaign members can insert session_notes" ON public.session_notes;
 
 -- MJ can read all notes in their campaign (all visibility levels)
-CREATE POLICY "MJ can read session_notes" ON public.session_notes FOR SELECT TO authenticated 
+CREATE POLICY "MJ can read session_notes" ON public.session_notes FOR SELECT TO authenticated
     USING (EXISTS (
         SELECT 1 FROM public.campaigns c
         WHERE c.id = session_notes.campaign_id AND c.mj_id = auth.uid()
     ));
 
 -- Players can read visible notes in their campaign (if active member)
-CREATE POLICY "Players can read visible session_notes" ON public.session_notes FOR SELECT TO authenticated 
+CREATE POLICY "Players can read visible session_notes" ON public.session_notes FOR SELECT TO authenticated
     USING (
         (is_visible = true) AND (EXISTS (
             SELECT 1 FROM public.users_campaigns uc
-            WHERE uc.campaign_id = session_notes.campaign_id 
-                AND uc.user_id = auth.uid() 
+            WHERE uc.campaign_id = session_notes.campaign_id
+                AND uc.user_id = auth.uid()
                 AND uc.active = true
         ))
     );
 
 -- Campaign members can create notes in non-archived campaigns
-CREATE POLICY "Campaign members can insert session_notes" ON public.session_notes FOR INSERT TO authenticated 
+CREATE POLICY "Campaign members can insert session_notes" ON public.session_notes FOR INSERT TO authenticated
     WITH CHECK (
-        (auth.uid() IS NOT NULL) 
-        AND (author_user_id = auth.uid()) 
-        AND (COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0) 
+        (auth.uid() IS NOT NULL)
+        AND (author_user_id = auth.uid())
+        AND (COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0)
         AND (EXISTS (
             SELECT 1 FROM (public.users_campaigns uc JOIN public.campaigns c ON (c.id = uc.campaign_id))
-            WHERE uc.campaign_id = session_notes.campaign_id 
-                AND uc.user_id = auth.uid() 
-                AND uc.active = true 
+            WHERE uc.campaign_id = session_notes.campaign_id
+                AND uc.user_id = auth.uid()
+                AND uc.active = true
                 AND c.is_archived = false
         ))
     );
 
 -- Authors or MJ can update notes (with content validation)
-CREATE POLICY "Authors or MJ can update session_notes" ON public.session_notes FOR UPDATE TO authenticated 
+CREATE POLICY "Authors or MJ can update session_notes" ON public.session_notes FOR UPDATE TO authenticated
     USING (
-        (author_user_id = auth.uid()) 
+        (author_user_id = auth.uid())
         OR (EXISTS (
             SELECT 1 FROM public.campaigns c
             WHERE c.id = session_notes.campaign_id AND c.mj_id = auth.uid()
         ))
-    ) 
+    )
     WITH CHECK (
-        (COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0) 
+        (COALESCE(length(TRIM(BOTH FROM content_text)), 0) > 0)
         AND (
-            (author_user_id = auth.uid()) 
+            (author_user_id = auth.uid())
             OR (EXISTS (
                 SELECT 1 FROM public.campaigns c
                 WHERE c.id = session_notes.campaign_id AND c.mj_id = auth.uid()
@@ -174,9 +174,9 @@ CREATE POLICY "Authors or MJ can update session_notes" ON public.session_notes F
     );
 
 -- Authors or MJ can delete notes
-CREATE POLICY "Authors or MJ can delete session_notes" ON public.session_notes FOR DELETE TO authenticated 
+CREATE POLICY "Authors or MJ can delete session_notes" ON public.session_notes FOR DELETE TO authenticated
     USING (
-        (author_user_id = auth.uid()) 
+        (author_user_id = auth.uid())
         OR (EXISTS (
             SELECT 1 FROM public.campaigns c
             WHERE c.id = session_notes.campaign_id AND c.mj_id = auth.uid()

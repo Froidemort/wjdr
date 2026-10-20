@@ -40,7 +40,7 @@ alter table public.armors
 drop constraint if exists armors_category_check;
 
 alter table public.armors
-add constraint armors_category_check 
+add constraint armors_category_check
 check (
     category = any (
         array[

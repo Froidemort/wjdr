@@ -41,7 +41,7 @@ ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.sessions TO authenticated;
 
 -- Step 5: Add session_id column to session_notes (nullable, as notes can be untagged)
-ALTER TABLE public.session_notes 
+ALTER TABLE public.session_notes
         ADD COLUMN IF NOT EXISTS session_id uuid;
 
 -- Step 6: Add FK constraint for session_notes.session_id

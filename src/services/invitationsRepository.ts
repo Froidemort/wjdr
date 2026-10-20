@@ -158,4 +158,3 @@ export async function createCampaignInvitations(
     throw error
   }
 }
-

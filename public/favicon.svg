@@ -27,13 +27,13 @@
   <g filter="url(#dropShadow)">
     <!-- Tranche des pages (arrière) -->
     <path d="M 145 105 L 395 105 A 15 15 0 0 1 410 120 L 410 400 A 15 15 0 0 1 395 415 L 145 415 Z" fill="#EAD6B5"/>
-    
+
     <!-- Couverture du grimoire -->
     <rect x="110" y="90" width="280" height="332" rx="16" fill="#1C1411" stroke="url(#goldGrad)" stroke-width="6"/>
-    
+
     <!-- Dos de reliure (dos du livre à gauche) -->
     <path d="M 110 90 C 95 90 85 105 85 120 L 85 392 C 85 407 95 422 110 422 Z" fill="#120D0A" stroke="url(#goldGrad)" stroke-width="6"/>
-    
+
     <!-- Nervures du dos -->
     <line x1="85" y1="150" x2="110" y2="150" stroke="url(#goldGrad)" stroke-width="5"/>
     <line x1="85" y1="220" x2="110" y2="220" stroke="url(#goldGrad)" stroke-width="5"/>
@@ -54,7 +54,7 @@
 
       <!-- Queue gauche -->
       <path d="M -12 -20 C -25 20, -50 60, -70 95 C -40 70, -15 35, 0 -10 Z" fill="url(#goldGrad)"/>
-      
+
       <!-- Queue droite -->
       <path d="M 12 -20 C 25 20, 50 60, 70 95 C 40 70, 15 35, 0 -10 Z" fill="url(#goldGrad)"/>
 

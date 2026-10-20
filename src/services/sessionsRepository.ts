@@ -71,7 +71,7 @@ export async function updateSession(
   payload: Partial<CreateSessionInput>
 ): Promise<void> {
   const updateData: Record<string, unknown> = {}
-  
+
   if (payload.date !== undefined) updateData.date = payload.date
   if (payload.name !== undefined) updateData.name = payload.name || null
   if (payload.description !== undefined) updateData.description = payload.description || null
