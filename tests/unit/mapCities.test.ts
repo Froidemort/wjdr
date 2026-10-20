@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { City } from '../../src/types/cities'
-import { cityMinZoom, visibleCities } from '../../src/utils/mapCities'
+import { cityMinZoom, cityTypeOf, cityTypesOf, filterCitiesByType, visibleCities } from '../../src/utils/mapCities'
 
 function city(overrides: Partial<City> = {}): City {
   return {
@@ -49,5 +49,42 @@ describe('visibleCities', () => {
 
   it('returns nothing below the lowest threshold', () => {
     expect(visibleCities(cities, 1)).toEqual([])
+  })
+})
+
+describe('cityTypeOf', () => {
+  it('falls back to "Autre" for a null type', () => {
+    expect(cityTypeOf({ type: null })).toBe('Autre')
+  })
+
+  it('returns the city type as-is otherwise', () => {
+    expect(cityTypeOf({ type: 'Ville' })).toBe('Ville')
+  })
+})
+
+describe('cityTypesOf', () => {
+  it('lists each distinct type once, in a stable order', () => {
+    const types = cityTypesOf([{ type: 'Village' }, { type: 'Cité' }, { type: 'Village' }, { type: null }])
+    expect(types).toEqual(['Cité', 'Village', 'Autre'])
+  })
+
+  it('returns an empty list for no cities', () => {
+    expect(cityTypesOf([])).toEqual([])
+  })
+})
+
+describe('filterCitiesByType', () => {
+  const cities = [city({ id: 1, type: 'Cité' }), city({ id: 2, type: 'Village' }), city({ id: 3, type: null })]
+
+  it('keeps every city when nothing is hidden', () => {
+    expect(filterCitiesByType(cities, [])).toEqual(cities)
+  })
+
+  it('excludes cities whose type is hidden', () => {
+    expect(filterCitiesByType(cities, ['Village']).map((c) => c.id)).toEqual([1, 3])
+  })
+
+  it('matches a null type against the "Autre" bucket', () => {
+    expect(filterCitiesByType(cities, ['Autre']).map((c) => c.id)).toEqual([1, 2])
   })
 })

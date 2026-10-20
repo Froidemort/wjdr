@@ -3,6 +3,8 @@ import { normalizeSearchText } from './searchText'
 
 export interface MarkerFilters {
   showCampaign: boolean
+  /** Master switch of the base layer (points d'intérêt). */
+  showPois: boolean
   hiddenTypeIds: readonly string[]
   query: string
 }
@@ -18,8 +20,8 @@ export function mergeMarkers(base: readonly MapMarker[], campaign: readonly MapM
 export function filterMarkers(markers: readonly MapMarker[], filters: Omit<MarkerFilters, 'query'>): MapMarker[] {
   const hidden = new Set(filters.hiddenTypeIds)
   return markers.filter((marker) => {
-    if (marker.source === 'campaign' && !filters.showCampaign) return false
-    return !hidden.has(marker.typeId)
+    if (marker.source === 'campaign') return filters.showCampaign
+    return filters.showPois && !hidden.has(marker.typeId)
   })
 }
 
