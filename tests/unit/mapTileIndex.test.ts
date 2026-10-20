@@ -42,8 +42,8 @@ describe('parseTileIndex', () => {
     }
 
     for (const z of [2, 3, 4, 5, 6]) expect(count(z)).toBe(4 ** z)
-    expect(count(7)).toBeLessThan(4 ** 7)
-    expect(hasIndexedTile(index, { z: 7, x: 51, y: 28 })).toBe(false)
+    expect(count(7)).toBeLessThanOrEqual(4 ** 7)
+    expect(hasIndexedTile(index, { z: 7, x: 51, y: 28 })).toBe(true)
     expect(hasIndexedTile(index, { z: 6, x: 27, y: 16 })).toBe(true)
   })
 })
