@@ -1,4 +1,4 @@
-import { useTimeoutFn } from '@vueuse/core'
+import { useNow, useTimeoutFn } from '@vueuse/core'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { CampaignSummary, SessionSummary } from '../types/domain'
@@ -11,6 +11,8 @@ import {
   filterCampaignSessions,
   getCampaignSessionDateStatus,
   getCampaignSessionTodayKey,
+  getNextCampaignSession,
+  getNextFreeCampaignSessionDate,
   sortCampaignSessionsByDate,
 } from '../utils/campaignSessions'
 
@@ -113,7 +115,8 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
       { immediate: false }
     )
 
-  const todaySessionDate = computed(() => getCampaignSessionTodayKey())
+  const now = useNow({ interval: 60_000 })
+  const todaySessionDate = computed(() => getCampaignSessionTodayKey(now.value))
 
   function getSessionDateStatus(value: string): 'today' | 'upcoming' | 'past' {
     return getCampaignSessionDateStatus(value, todaySessionDate.value)
@@ -126,13 +129,9 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
     )
   })
 
-  const nextSession = computed(() => {
-    const upcoming = options.sessions.value
-      .filter((sessionItem) => getSessionDateStatus(sessionItem.date) !== 'past')
-      .sort((left, right) => left.date.localeCompare(right.date))
-
-    return upcoming[0] ?? null
-  })
+  const nextSession = computed(() =>
+    getNextCampaignSession(options.sessions.value, todaySessionDate.value)
+  )
 
   const timelineStats = computed(() => {
     const upcoming = options.sessions.value.filter((sessionItem) => getSessionDateStatus(sessionItem.date) !== 'past').length
@@ -205,9 +204,10 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
   }
 
   function resetSessionCreateForm(): void {
+    sessionCreateError.value = null
     sessionCreateDateError.value = null
     sessionCreateForm.value = {
-      date: todaySessionDate.value,
+      date: getNextFreeCampaignSessionDate(options.sessions.value, todaySessionDate.value),
       name: '',
       description: '',
     }
@@ -378,6 +378,7 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
     sessionActionSuccessMessage,
     timelineSessions,
     nextSession,
+    todaySessionDate,
     timelineStats,
     getSessionDateStatus,
     formatCampaignSessionDate,
@@ -385,6 +386,7 @@ export function useCampaignSessions(options: UseCampaignSessionsOptions) {
     formatCampaignSessionTitle,
     buildCampaignSessionDetailLink,
     createCampaignSession,
+    resetSessionCreateForm,
     startSessionEdit,
     cancelSessionEdit,
     saveSessionEdit,

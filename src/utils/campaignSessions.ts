@@ -61,13 +61,72 @@ export function getCampaignSessionDateStatus(
     return 'upcoming'
   }
 
-  const parsedKey = parsed.toISOString().slice(0, 10)
-  const todayKey = today.toISOString().slice(0, 10)
-  if (parsedKey === todayKey) {
+  if (value === todayValue) {
     return 'today'
   }
 
-  return parsed > today ? 'upcoming' : 'past'
+  return value > todayValue ? 'upcoming' : 'past'
+}
+
+export function getNextCampaignSession(
+  sessions: SessionSummary[],
+  todayKey: string
+): SessionSummary | null {
+  const candidates = sessions
+    .filter((sessionItem) => sessionItem.date >= todayKey)
+    .sort((left, right) => left.date.localeCompare(right.date) || left.id.localeCompare(right.id))
+
+  return candidates[0] ?? null
+}
+
+export function shouldLandOnSessionsTab(
+  sessions: SessionSummary[],
+  todayKey: string,
+  isMj: boolean
+): boolean {
+  return !isMj && sessions.some((sessionItem) => sessionItem.date === todayKey)
+}
+
+export function getNextFreeCampaignSessionDate(
+  sessions: SessionSummary[],
+  todayKey: string
+): string {
+  const start = parseCampaignSessionDate(todayKey)
+  if (!start) {
+    return todayKey
+  }
+
+  const usedDates = new Set(sessions.map((sessionItem) => sessionItem.date))
+  const candidate = new Date(start)
+  let key = todayKey
+  while (usedDates.has(key)) {
+    candidate.setDate(candidate.getDate() + 1)
+    key = formatCampaignSessionDateKey(
+      candidate.getFullYear(),
+      candidate.getMonth() + 1,
+      candidate.getDate()
+    )
+  }
+
+  return key
+}
+
+export function getCampaignSessionRelativeLabel(date: string, todayKey: string): string {
+  const parsed = parseCampaignSessionDate(date)
+  const today = parseCampaignSessionDate(todayKey)
+  if (!parsed || !today) {
+    return ''
+  }
+
+  // Both parsed at noon local time, so rounding absorbs DST shifts.
+  const diffDays = Math.round((parsed.getTime() - today.getTime()) / 86_400_000)
+  if (diffDays < 0) {
+    return 'Passée'
+  }
+  if (diffDays === 0) {
+    return "Aujourd'hui"
+  }
+  return diffDays === 1 ? 'Demain' : `Dans ${diffDays} jours`
 }
 
 export function sortCampaignSessionsByDate(sessions: SessionSummary[]): SessionSummary[] {
