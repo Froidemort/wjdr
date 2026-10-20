@@ -13,7 +13,6 @@ type ReplayOutcome = 'applied' | 'reconciled' | 'noop'
 function mapCharacterCorePatch(
   patch: Record<string, unknown>
 ): Partial<{
-  pv_max: number
   pv_current: number
   fortune_max: number
   fortune_current: number
@@ -28,7 +27,6 @@ function mapCharacterCorePatch(
 }> {
   const mapped: Record<string, number> = {}
 
-  if (typeof patch.pvMax === 'number') mapped.pv_max = patch.pvMax
   if (typeof patch.pvCurrent === 'number') mapped.pv_current = patch.pvCurrent
   if (typeof patch.fortuneMax === 'number') mapped.fortune_max = patch.fortuneMax
   if (typeof patch.fortuneCurrent === 'number') mapped.fortune_current = patch.fortuneCurrent

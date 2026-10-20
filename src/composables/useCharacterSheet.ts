@@ -38,6 +38,7 @@ import {
   type WeaponHand,
   type WeaponPreferredHand,
 } from '../utils/equipmentSlots'
+import { normalizeStatCode } from '../utils/characterSheet'
 import { isInventoryQuality } from '../utils/inventoryQuality'
 import { useConfirmAction } from './useConfirmAction'
 import { useMoneyCoercion } from './useMoneyCoercion'
@@ -53,6 +54,12 @@ export type FeedbackSection =
   | 'stats'
   | 'career'
   | 'catalog'
+
+interface StatPatch {
+  currentAdvanced?: number
+  baseValue?: number
+  totalAdvanced?: number
+}
 
 export function useCharacterSheet() {
   const authStore = useAuthStore()
@@ -158,32 +165,35 @@ export function useCharacterSheet() {
         ...payload,
       }
 
-      await updateCharacterCore(character.value.id, {
-        pv_current: normalizedPayload.pvCurrent,
-        fortune_max: normalizedPayload.fortuneMax,
-        fortune_current: normalizedPayload.fortuneCurrent,
-        destiny_current: normalizedPayload.destinyCurrent,
-        destiny_max: normalizedPayload.destinyMax,
-        xp_total: normalizedPayload.xpTotal,
-        xp_available: Math.min(normalizedPayload.xpAvailable, normalizedPayload.xpTotal),
-        insanity_points: Math.max(0, normalizedPayload.insanityPoints),
-        money_gold: normalizedPayload.moneyGold,
-        money_silver: normalizedPayload.moneySilver,
-        money_copper: normalizedPayload.moneyCopper
-      })
       try {
+        await updateCharacterCore(character.value.id, {
+          pv_current: normalizedPayload.pvCurrent,
+          fortune_max: normalizedPayload.fortuneMax,
+          fortune_current: normalizedPayload.fortuneCurrent,
+          destiny_current: normalizedPayload.destinyCurrent,
+          destiny_max: normalizedPayload.destinyMax,
+          xp_total: normalizedPayload.xpTotal,
+          xp_available: Math.min(normalizedPayload.xpAvailable, normalizedPayload.xpTotal),
+          insanity_points: Math.max(0, normalizedPayload.insanityPoints),
+          money_gold: normalizedPayload.moneyGold,
+          money_silver: normalizedPayload.moneySilver,
+          money_copper: normalizedPayload.moneyCopper,
+        })
         markSavedEditable(normalizedPayload)
       } catch (error) {
         if (!isTransientError(error)) {
           throw error
         }
 
+        // pvMax is derived (no DB column); queue only the changed fields
+        const { pvMax: _derivedPvMax, ...queuedPatch } = payload
+
         await enqueueOfflineUpdate({
           entityType: 'character',
           entityId: character.value.id,
           payload: {
             kind: 'character-core',
-            patch: normalizedPayload,
+            patch: queuedPatch,
           },
           baseUpdatedAt: null,
           localUpdatedAt: Date.now(),
@@ -197,55 +207,56 @@ export function useCharacterSheet() {
   const {
     status: statSaveStatus,
     update: triggerStatSave,
-  } = useOptimisticUpdate<{
-      statCode: string
-      currentAdvanced?: number
-      baseValue?: number
-      totalAdvanced?: number
-    }>({
+  } = useOptimisticUpdate<{ stats: Record<string, StatPatch> }>({
     onSave: async (payload) => {
       if (!character.value) {
         return
       }
 
-      if (!payload.statCode) {
-        return
-      }
+      for (const [statCode, patch] of Object.entries(payload.stats ?? {})) {
+        try {
+          await updateCharacterStatValues(character.value.id, statCode, {
+            current_advanced: patch.currentAdvanced,
+            base_value: patch.baseValue,
+            total_advanced: patch.totalAdvanced,
+          })
+        } catch (error) {
+          if (!isTransientError(error)) {
+            throw error
+          }
 
-      if (!payload.statCode) {
-        return
-      }
-
-      try {
-        await updateCharacterStatValues(character.value.id, payload.statCode, {
-          current_advanced: payload.currentAdvanced,
-          base_value: payload.baseValue,
-          total_advanced: payload.totalAdvanced,
-        })
-      } catch (error) {
-        if (!isTransientError(error)) {
-          throw error
-        }
-
-        await enqueueOfflineUpdate({
-          entityType: 'character',
-          entityId: character.value.id,
-          payload: {
-            kind: 'character-stat',
-            statCode: payload.statCode,
-            patch: {
-              currentAdvanced: payload.currentAdvanced,
-              baseValue: payload.baseValue,
-              totalAdvanced: payload.totalAdvanced,
+          await enqueueOfflineUpdate({
+            entityType: 'character',
+            entityId: character.value.id,
+            payload: {
+              kind: 'character-stat',
+              statCode,
+              patch: {
+                currentAdvanced: patch.currentAdvanced,
+                baseValue: patch.baseValue,
+                totalAdvanced: patch.totalAdvanced,
+              },
             },
-          },
-          baseUpdatedAt: null,
-          localUpdatedAt: Date.now(),
-        })
+            baseUpdatedAt: null,
+            localUpdatedAt: Date.now(),
+          })
+        }
       }
+    },
+    // Pending saves are keyed per stat so ticking another stat never drops a save
+    mergePatch: (current, next) => {
+      const stats = { ...current.stats }
+      for (const [code, patch] of Object.entries(next.stats ?? {})) {
+        stats[code] = { ...stats[code], ...patch }
+      }
+      return { stats }
     },
     debounceMs: 350,
   })
+
+  function queueStatSave(statCode: string, patch: StatPatch): void {
+    triggerStatSave({ stats: { [normalizeStatCode(statCode)]: patch } })
+  }
 
   const globalState = computed<'ok' | 'loading' | 'error'>(() => {
     if (status.value === 'error' || statSaveStatus.value === 'error') {
@@ -532,7 +543,9 @@ export function useCharacterSheet() {
       return
     }
 
-    const target = character.value.stats.find((stat) => stat.statCode === statCode)
+    const target = character.value.stats.find(
+      (stat) => normalizeStatCode(stat.statCode) === normalizeStatCode(statCode)
+    )
     if (!target) {
       return
     }
@@ -544,7 +557,7 @@ export function useCharacterSheet() {
       syncEditablePvFromWoundsValue()
     }
 
-    triggerStatSave({ statCode, currentAdvanced: nextAdvanced })
+    queueStatSave(statCode, { currentAdvanced: nextAdvanced })
   }
 
   function onStatBaseChange(statCode: string, baseValue: number): void {
@@ -552,7 +565,9 @@ export function useCharacterSheet() {
       return
     }
 
-    const target = character.value.stats.find((stat) => stat.statCode === statCode)
+    const target = character.value.stats.find(
+      (stat) => normalizeStatCode(stat.statCode) === normalizeStatCode(statCode)
+    )
     if (!target) {
       return
     }
@@ -568,7 +583,7 @@ export function useCharacterSheet() {
       syncEditablePvFromWoundsValue()
     }
 
-    triggerStatSave({ statCode, baseValue: nextBase })
+    queueStatSave(statCode, { baseValue: nextBase })
   }
 
   function onStatTotalAdvancedChange(statCode: string, totalAdvanced: number): void {
@@ -576,7 +591,9 @@ export function useCharacterSheet() {
       return
     }
 
-    const target = character.value.stats.find((stat) => stat.statCode === statCode)
+    const target = character.value.stats.find(
+      (stat) => normalizeStatCode(stat.statCode) === normalizeStatCode(statCode)
+    )
     if (!target) {
       return
     }
@@ -588,7 +605,7 @@ export function useCharacterSheet() {
 
     target.totalAdvanced = nextTotalAdvanced
 
-    triggerStatSave({ statCode, totalAdvanced: nextTotalAdvanced })
+    queueStatSave(statCode, { totalAdvanced: nextTotalAdvanced })
   }
 
   async function onChangeSkillMastery(skillId: string, level: 1 | 2 | 3): Promise<void> {
