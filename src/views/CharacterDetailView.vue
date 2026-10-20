@@ -7,6 +7,18 @@
     </div>
 
     <template v-else-if="character">
+      <div v-if="errorMessage" role="alert" class="alert alert-error alert-soft">
+        <span class="min-w-0 flex-1">{{ errorMessage }}</span>
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
+          aria-label="Fermer le message d'erreur"
+          @click="errorMessage = null"
+        >
+          ✕
+        </button>
+      </div>
+
       <CharacterSummaryHeader
         :name="character.name"
         :race="character.race"
@@ -99,374 +111,70 @@
         @show-description="openDescriptionModal"
       />
 
-      <dialog ref="descriptionDialogRef" class="modal modal-top sm:modal-middle" @close="onDescriptionDialogClosed">
-        <div class="modal-box grim-modal-box p-6 max-w-lg">
-          <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeDescriptionModal" aria-label="Fermer">✕</button>
-          <h3 class="grim-modal-title text-2xl pr-8">{{ descriptionTitle || 'Description' }}</h3>
-          <p class="mt-3 whitespace-pre-line text-sm opacity-90">{{ descriptionContent || 'Aucune description.' }}</p>
-        </div>
-        <form method="dialog" class="modal-backdrop">
-          <button>Fermer</button>
-        </form>
-      </dialog>
+      <DescriptionModal
+        ref="descriptionModal"
+        :title="descriptionTitle"
+        :content="descriptionContent"
+        @close="closeDescriptionModal"
+        @closed="onDescriptionDialogClosed"
+      />
     </template>
 
-		<dialog ref="careerDialogRef" class="modal modal-top sm:modal-middle" @close="onCareerDialogClosed">
-      <div class="modal-box grim-modal-box p-6">
-        <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeCareerModal" aria-label="Fermer">✕</button>
-        <h3 class="grim-modal-title mb-4 text-center text-3xl">Changer de carrière</h3>
+    <CareerChangeModal
+      ref="careerModal"
+      v-model:filter-mode="careerFilterMode"
+      v-model:query="careerQuery"
+      :options="careerOptions"
+      :path-options-count="careerPathOptions.length"
+      :path-loading="careerPathLoading"
+      :search-loading="careerSearchLoading"
+      :selected-id="selectedCareerId"
+      :selected-name="selectedCareerName"
+      :error="careerError"
+      :success-message="getSectionSuccessMessage('career')"
+      :busy="changingCareer || careerCharacteristicsLoading"
+      @select="selectCareer"
+      @confirm="confirmCareerChange"
+      @close="closeCareerModal"
+      @closed="onCareerDialogClosed"
+    />
 
-				<div class="space-y-3">
-          <div class="join" role="group" aria-label="Filtre des carrières">
-            <button
-              type="button"
-              class="btn btn-sm join-item ui-critical-action"
-              :class="careerFilterMode === 'paths' ? 'btn-active' : ''"
-              :aria-pressed="careerFilterMode === 'paths'"
-              @click="careerFilterMode = 'paths'"
-            >
-              Débouchés
-            </button>
-            <button
-              type="button"
-              class="btn btn-sm join-item ui-critical-action"
-              :class="careerFilterMode === 'all' ? 'btn-active' : ''"
-              :aria-pressed="careerFilterMode === 'all'"
-              @click="careerFilterMode = 'all'"
-            >
-              Toutes
-            </button>
-          </div>
-					<SearchInput v-model="careerQuery" placeholder="Chercher une carrière" />
-          <p class="text-xs opacity-70">
-            {{ careerFilterMode === 'all' ? 'Saisissez au moins 2 caractères.' : 'Filtre actif: débouchés de la carrière actuelle.' }}
-          </p>
-          <div v-if="careerPathLoading" class="flex items-center gap-2 text-sm opacity-70">
-            <span class="loading loading-spinner loading-xs" aria-hidden="true" />
-            Chargement des débouchés...
-          </div>
-          <div v-if="careerSearchLoading" class="flex items-center gap-2 text-sm opacity-70">
-            <span class="loading loading-spinner loading-xs" aria-hidden="true" />
-            Recherche des carrières...
-          </div>
+    <CareerConfirmModal
+      ref="careerConfirmModal"
+      :career-name="pendingCareerName"
+      :rows="pendingCareerCharacteristicRows"
+      :error="careerConfirmError"
+      :busy="changingCareer"
+      @apply="applyCareerChange"
+      @close="closeCareerConfirmModal"
+      @closed="onCareerConfirmDialogClosed"
+    />
 
-					<div class="max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
-						<ul v-if="careerOptions.length > 0" class="menu menu-sm">
-							<li v-for="option in careerOptions" :key="option.id">
-								<button
-									class="justify-start"
-									:class="selectedCareerId === option.id ? 'menu-active' : ''"
-									@click="selectCareer(option.id, option.name)"
-								>
-									{{ option.name }}
-								</button>
-							</li>
-						</ul>
-            <p v-else class="text-sm opacity-70 px-2 py-1">
-              {{
-                careerFilterMode === 'all'
-                  ? careerQuery.trim().length < 2
-                    ? 'Commencez à taper pour rechercher une carrière.'
-                    : 'Aucune carrière trouvée.'
-                  : careerPathOptions.length === 0
-                    ? 'Aucun débouché disponible pour la carrière actuelle.'
-                    : 'Aucune carrière ne correspond à votre recherche.'
-              }}
-            </p>
-					</div>
-
-					<p v-if="selectedCareerName" class="text-sm opacity-80">Sélection: {{ selectedCareerName }}</p>
-          <div v-if="getSectionSuccessMessage('career')" role="status" class="alert alert-success alert-soft text-sm">
-            <span>{{ getSectionSuccessMessage('career') }}</span>
-          </div>
-					<div v-if="careerError" role="alert" class="alert alert-error alert-soft text-sm">
-						<span>{{ careerError }}</span>
-					</div>
-
-          <div class="grim-modal-actions flex items-center justify-end gap-2">
-						<button class="btn btn-sm ui-critical-action" @click="closeCareerModal">Annuler</button>
-            <button class="btn btn-sm ui-critical-action" :disabled="changingCareer || careerCharacteristicsLoading" @click="confirmCareerChange">
-              <span v-if="changingCareer || careerCharacteristicsLoading" class="loading loading-spinner loading-xs" aria-hidden="true" />
-							Valider
-						</button>
-					</div>
-				</div>
-			</div>
-
-			<form method="dialog" class="modal-backdrop">
-				<button>Fermer</button>
-			</form>
-		</dialog>
-
-		<dialog ref="careerConfirmDialogRef" class="modal modal-top sm:modal-middle" @close="onCareerConfirmDialogClosed">
-      <div class="modal-box grim-modal-box p-6">
-        <button class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3" @click="closeCareerConfirmModal()" aria-label="Fermer">✕</button>
-        <h3 class="grim-modal-title mb-2 text-center text-3xl">Appliquer le profil de carrière</h3>
-
-        <p class="text-sm opacity-80">
-          Nouvelle carrière: <span class="font-semibold">{{ pendingCareerName }}</span>
-        </p>
-        <p class="mt-1 text-sm opacity-80">
-          Choisissez si vous souhaitez remplacer les avancées totales du personnage avec le profil de cette carrière.
-        </p>
-
-        <div class="mt-4 rounded-box border border-base-300 bg-base-100 p-3">
-          <p class="mb-2 text-xs opacity-70">Profil de carrière proposé (avancées totales)</p>
-          <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-            <div v-for="entry in pendingCareerCharacteristicRows" :key="`career-profile-${entry.statCode}`" class="rounded-lg border border-base-300 bg-base-200 px-2 py-1 text-center">
-              <p class="text-xs font-semibold">{{ entry.statCode }}</p>
-              <p class="text-sm tabular-nums">{{ entry.value }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="careerConfirmError" role="alert" class="alert alert-error alert-soft mt-4 text-sm">
-          <span>{{ careerConfirmError }}</span>
-        </div>
-
-        <div class="grim-modal-actions mt-4 flex flex-wrap items-center justify-end gap-2">
-          <button class="btn btn-sm ui-critical-action" :disabled="changingCareer" @click="closeCareerConfirmModal()">Annuler</button>
-          <button class="btn btn-sm ui-critical-action" :disabled="changingCareer" @click="applyCareerChange(false)">
-            <span v-if="changingCareer" class="loading loading-spinner loading-xs" aria-hidden="true" />
-            Ne pas appliquer
-          </button>
-          <button class="btn btn-sm ui-critical-action" :disabled="changingCareer" @click="applyCareerChange(true)">
-            <span v-if="changingCareer" class="loading loading-spinner loading-xs" aria-hidden="true" />
-            Appliquer
-          </button>
-        </div>
-      </div>
-
-			<form method="dialog" class="modal-backdrop">
-				<button>Fermer</button>
-			</form>
-		</dialog>
-
-		<dialog ref="catalogDialogRef" class="modal modal-top sm:modal-middle" @close="onCatalogDialogClosed">
-      <div class="modal-box grim-modal-box w-11/12 max-w-2xl p-4 sm:p-6 max-h-[calc(100vh-2rem)] overflow-hidden flex flex-col">
-        <button class="btn btn-sm btn-circle grim-modal-close absolute right-4 top-4" @click="closeCatalogModal" aria-label="Fermer">✕</button>
-        <h3 class="grim-modal-title mb-4 pr-8 text-center text-2xl sm:text-3xl text-primary">Ajouter des {{ modalSectionLabel }}</h3>
-
-				<div v-if="catalogSection === 'items'" class="mb-4 flex justify-center">
-					<div class="join">
-            <button
-							type="button"
-              class="btn btn-sm join-item ui-critical-action"
-							:class="itemCatalogMode === 'search' ? 'btn-active' : ''"
-							@click="itemCatalogMode = 'search'"
-						>
-							Recherche
-						</button>
-            <button
-							type="button"
-              class="btn btn-sm join-item ui-critical-action"
-							:class="itemCatalogMode === 'create' ? 'btn-active' : ''"
-							@click="itemCatalogMode = 'create'"
-						>
-							Création
-						</button>
-					</div>
-				</div>
-
-        <div class="space-y-4 overflow-y-auto pr-1">
-					<template v-if="catalogSection === 'items' && itemCatalogMode === 'create'">
-						<div class="grid gap-3">
-							<label class="fieldset">
-								<span class="fieldset-legend">Nom</span>
-								<input
-									v-model="newItemForm.name"
-									type="text"
-									class="input"
-									maxlength="100"
-									placeholder="Nom de l'équipement"
-								/>
-							</label>
-
-							<label class="fieldset">
-								<span class="fieldset-legend">Description</span>
-								<textarea
-									v-model="newItemForm.description"
-									class="textarea min-h-24"
-									maxlength="3000"
-									placeholder="Description (optionnelle)"
-								></textarea>
-							</label>
-
-							<div class="grid gap-3 sm:grid-cols-2">
-								<label class="fieldset">
-									<span class="fieldset-legend">Qualité</span>
-									<select v-model="newItemForm.quality" class="select">
-										<option v-for="quality in ITEM_QUALITY_OPTIONS" :key="quality" :value="quality">{{ quality }}</option>
-									</select>
-								</label>
-
-								<label class="fieldset">
-									<span class="fieldset-legend">Encombrement</span>
-									<input
-										v-model.number="newItemForm.encumbrance"
-										type="number"
-										min="0"
-										class="input"
-									/>
-								</label>
-							</div>
-
-							<label class="fieldset">
-								<span class="fieldset-legend">Quantité</span>
-								<input
-									v-model.number="newItemForm.quantity"
-									type="number"
-									min="1"
-									class="input"
-								/>
-							</label>
-						</div>
-					</template>
-
-					<template v-else>
-						<!-- Search Input -->
-            <div class="sticky top-0 z-10 bg-base-100/95 backdrop-blur py-1">
-							<SearchInput
-								v-model="catalogQuery"
-								:placeholder="`Chercher des ${modalSectionLabel}`"
-								class="w-full"
-							/>
-              <p class="mt-2 text-xs opacity-70">Saisissez au moins 2 caractères pour lancer la recherche.</p>
-						</div>
-
-            <div v-if="catalogSearchLoading" class="flex items-center gap-2 text-sm opacity-70">
-              <span class="loading loading-spinner loading-xs" aria-hidden="true" />
-              Recherche en cours...
-            </div>
-
-						<!-- Catalog Options List -->
-            <div class="rounded-lg border border-base-300 bg-base-100 overflow-hidden">
-              <div class="max-h-64 overflow-y-auto">
-                <ul v-if="displayedCatalogOptions.length > 0" class="menu menu-compact">
-									<li
-                    v-for="option in displayedCatalogOptions"
-										:key="option.id"
-										:class="[
-											'transition-colors border-l-4',
-											selectedCatalogIds.includes(option.id)
-												? 'bg-base-300 border-l-warning'
-												: 'border-l-transparent hover:bg-base-200'
-										]"
-									>
-										<label class="label cursor-pointer justify-start gap-3 px-4 py-3 rounded-none">
-                      <input
-												type="checkbox"
-                        class="checkbox checkbox-md"
-												:checked="selectedCatalogIds.includes(option.id)"
-												@change="toggleCatalogSelection(option.id)"
-											/>
-											<div class="flex-1 min-w-0">
-												<div class="flex flex-wrap items-center gap-2 min-w-0">
-													<span class="font-medium break-words leading-tight">{{ formatCatalogOptionLabel(option) }}</span>
-													<span
-														v-if="selectedCatalogIds.includes(option.id)"
-														class="badge badge-warning badge-sm"
-													>
-														Sélectionné
-													</span>
-												</div>
-												<p v-if="option.specialization" class="text-xs opacity-60">{{ option.specialization }}</p>
-											</div>
-										</label>
-									</li>
-								</ul>
-                <p v-else class="text-center text-sm opacity-70 py-8">{{ catalogQuery.trim().length < 2 ? 'Saisissez au moins 2 caractères.' : 'Aucun élément trouvé.' }}</p>
-							</div>
-						</div>
-
-            <p v-if="catalogOptions.length > displayedCatalogOptions.length" class="text-xs opacity-70 px-1">
-              Affichage limité aux {{ displayedCatalogOptions.length }} premiers résultats. Précisez votre recherche pour affiner.
-            </p>
-
-            <div
-              v-if="catalogSection === 'items'"
-              class="rounded-lg border border-base-300 bg-base-200 p-4"
-            >
-              <div class="mb-3">
-                <p class="text-sm font-semibold">Paramètres appliqués à toute la sélection</p>
-                <p class="text-xs opacity-70">La même qualité et la même quantité seront attribuées à tous les équipements sélectionnés.</p>
-              </div>
-              <div class="grid gap-3 sm:grid-cols-2">
-                <label class="fieldset">
-                  <span class="fieldset-legend">Qualité</span>
-                  <select v-model="selectedItemsQuality" class="select">
-                    <option v-for="quality in ITEM_QUALITY_OPTIONS" :key="quality" :value="quality">{{ quality }}</option>
-                  </select>
-                </label>
-
-                <label class="fieldset">
-                  <span class="fieldset-legend">Quantité</span>
-                  <input
-                    v-model.number="selectedItemsQuantity"
-                    type="number"
-                    min="1"
-                    class="input"
-                  />
-                </label>
-              </div>
-            </div>
-
-						<!-- Selection Summary -->
-						<div v-if="selectedCatalogIds.length > 0" class="rounded-lg border border-base-300 bg-base-200 p-4">
-							<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-								<p class="text-sm font-semibold">{{ selectedCatalogIds.length }} sélectionné(s)</p>
-								<p class="text-xs opacity-70">Cliquez sur un badge pour le retirer.</p>
-							</div>
-							<div class="flex flex-wrap gap-2">
-                <button
-									v-for="selectedId in selectedCatalogIds"
-									:key="selectedId"
-									type="button"
-                  class="btn btn-sm btn-outline btn-neutral h-auto min-h-11 max-w-full justify-start gap-2 px-3 py-2 normal-case whitespace-normal text-left"
-									:aria-label="`Retirer ${selectedCatalogLabels[selectedId] || selectedId} de la sélection`"
-									@click="removeCatalogSelection(selectedId)"
-								>
-									<span class="break-words">{{ selectedCatalogLabels[selectedId] || selectedId }}</span>
-									<span aria-hidden="true" class="text-xs opacity-70">✕</span>
-								</button>
-							</div>
-						</div>
-					</template>
-					</div>
-
-					<!-- Error Message -->
-					<div v-if="catalogError" role="alert" class="alert alert-error alert-soft">
-						<span>{{ catalogError }}</span>
-					</div>
-
-          <!-- Action Buttons -->
-          <div class="grim-modal-actions mt-3 border-t border-base-300 bg-base-100/95 backdrop-blur sticky bottom-0 flex items-center justify-end gap-3 pt-3">
-            <button class="btn btn-sm btn-ghost ui-critical-action" @click="closeCatalogModal">Annuler</button>
-						<button
-							v-if="catalogSection === 'items' && itemCatalogMode === 'create'"
-              class="btn btn-sm ui-critical-action"
-							:disabled="creatingItem"
-							@click="confirmItemCreate"
-						>
-							<span v-if="creatingItem" class="loading loading-spinner loading-xs" aria-hidden="true" />
-							Créer et ajouter
-						</button>
-						<button
-							v-else
-              class="btn btn-sm ui-critical-action"
-							:disabled="addingCatalog || selectedCatalogIds.length === 0"
-							@click="confirmCatalogAdd"
-						>
-							<span v-if="addingCatalog" class="loading loading-spinner loading-xs" aria-hidden="true" />
-							Ajouter ({{ selectedCatalogIds.length }})
-						</button>
-					</div>
-				</div>
-
-			<form method="dialog" class="modal-backdrop">
-				<button>Fermer</button>
-			</form>
-		</dialog>
+    <CatalogAddModal
+      ref="catalogModal"
+      v-model:query="catalogQuery"
+      v-model:mode="itemCatalogMode"
+      v-model:items-quality="selectedItemsQuality"
+      v-model:items-quantity="selectedItemsQuantity"
+      v-model:form="newItemForm"
+      :section="catalogSection"
+      :section-label="modalSectionLabel"
+      :options="displayedCatalogOptions"
+      :hidden-options-count="catalogOptions.length - displayedCatalogOptions.length"
+      :selected-ids="selectedCatalogIds"
+      :selected-labels="selectedCatalogLabels"
+      :search-loading="catalogSearchLoading"
+      :error="catalogError"
+      :adding="addingCatalog"
+      :creating="creatingItem"
+      :format-label="formatCatalogOptionLabel"
+      @toggle="toggleCatalogSelection"
+      @remove="removeCatalogSelection"
+      @confirm-add="confirmCatalogAdd"
+      @confirm-create="confirmItemCreate"
+      @close="closeCatalogModal"
+      @closed="onCatalogDialogClosed"
+    />
 
     <footer class="flex flex-wrap gap-2">
       <router-link v-if="character" class="btn btn-sm min-h-11 flex-1" :to="`/campaigns/${character.campaignId}`">
@@ -478,25 +186,27 @@
         Tous les personnages
       </router-link>
     </footer>
-	</main>
+  </main>
 </template>
 
 <script setup lang="ts">
 import { ChevronLeft, CircleX, LoaderCircle, Users } from '@lucide/vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { CharacterTabId } from '../types/characterSheet'
+import CareerChangeModal from '../components/character/CareerChangeModal.vue'
+import CareerConfirmModal from '../components/character/CareerConfirmModal.vue'
+import CatalogAddModal from '../components/character/CatalogAddModal.vue'
 import CharacterOverview from '../components/character/CharacterOverview.vue'
 import CharacterInventoryPanel from '../components/character/CharacterInventoryPanel.vue'
 import CharacterProfilePanel from '../components/character/CharacterProfilePanel.vue'
 import CharacterSkillsTalentsPanel from '../components/character/CharacterSkillsTalentsPanel.vue'
 import CharacterSummaryHeader from '../components/character/CharacterSummaryHeader.vue'
 import CharacterTabs from '../components/character/CharacterTabs.vue'
-import SearchInput from '../components/ui/SearchInput.vue'
+import DescriptionModal from '../components/character/DescriptionModal.vue'
 import { useCharacterCareer } from '../composables/useCharacterCareer'
 import { useCharacterCatalogActions } from '../composables/useCharacterCatalogActions'
 import { useCharacterDescriptionModal } from '../composables/useCharacterDescriptionModal'
 import { useCharacterSheet } from '../composables/useCharacterSheet'
-import { ITEM_QUALITY_OPTIONS } from '../utils/inventoryQuality'
 
 const activeCharacterTab = ref<CharacterTabId>('stats')
 const {
@@ -546,10 +256,15 @@ const {
   confirmDestructiveAction,
 } = useCharacterSheet()
 
-const careerDialogRef = ref<HTMLDialogElement | null>(null)
-const careerConfirmDialogRef = ref<HTMLDialogElement | null>(null)
-const catalogDialogRef = ref<HTMLDialogElement | null>(null)
-const descriptionDialogRef = ref<HTMLDialogElement | null>(null)
+const careerModal = ref<InstanceType<typeof CareerChangeModal> | null>(null)
+const careerConfirmModal = ref<InstanceType<typeof CareerConfirmModal> | null>(null)
+const catalogModal = ref<InstanceType<typeof CatalogAddModal> | null>(null)
+const descriptionModal = ref<InstanceType<typeof DescriptionModal> | null>(null)
+
+const careerDialogRef = computed(() => careerModal.value?.dialog ?? null)
+const careerConfirmDialogRef = computed(() => careerConfirmModal.value?.dialog ?? null)
+const catalogDialogRef = computed(() => catalogModal.value?.dialog ?? null)
+const descriptionDialogRef = computed(() => descriptionModal.value?.dialog ?? null)
 
 const {
   careerQuery,
