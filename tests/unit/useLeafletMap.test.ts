@@ -65,6 +65,7 @@ vi.mock('../../src/composables/useMapTileCache', () => ({ useMapTileCache: () =>
 vi.mock('../../src/stores/auth', () => ({ useAuthStore: () => mocks.auth }))
 
 import { useLeafletMap } from '../../src/composables/useLeafletMap'
+import { MAP_OVERSCALE_LEVELS } from '../../src/config/map'
 import { TileRequestError } from '../../src/utils/mapTileCache'
 
 interface FakeElement {
@@ -138,7 +139,11 @@ describe('useLeafletMap', () => {
   })
 
   it('draws a missing tile from its ancestor instead of leaving a hole', async () => {
-    mocks.cache.getTile.mockRejectedValueOnce(new TileRequestError(404)).mockRejectedValueOnce(new TileRequestError(400)).mockResolvedValueOnce(new Blob(['x']))
+    const start = { z: 7, x: 51, y: 28 }
+    const expectedCalls = Array.from({ length: MAP_OVERSCALE_LEVELS + 1 }, (_, level) => ({ z: start.z - level, x: start.x >> level, y: start.y >> level }))
+    mocks.cache.getTile.mockRejectedValueOnce(new TileRequestError(404))
+    for (let level = 1; level < MAP_OVERSCALE_LEVELS; level++) mocks.cache.getTile.mockRejectedValueOnce(new TileRequestError(400))
+    mocks.cache.getTile.mockResolvedValueOnce(new Blob(['x']))
     vi.stubGlobal('createImageBitmap', async () => ({ close: vi.fn() }))
     vi.stubGlobal('document', {
       createElement: (tag: string) =>
@@ -147,11 +152,11 @@ describe('useLeafletMap', () => {
     await mount()
 
     const { error } = await new Promise<{ error?: Error }>((resolve) => {
-      mocks.layers[0].createTile({ z: 7, x: 51, y: 28 }, (e) => resolve({ error: e }))
+      mocks.layers[0].createTile(start, (e) => resolve({ error: e }))
     })
 
     expect(error).toBeUndefined()
-    expect(mocks.cache.getTile.mock.calls.map(([c]) => c)).toEqual([{ z: 7, x: 51, y: 28 }, { z: 6, x: 25, y: 14 }, { z: 5, x: 12, y: 7 }])
+    expect(mocks.cache.getTile.mock.calls.map(([c]) => c)).toEqual(expectedCalls)
   })
 
   it('reports the tile error when no ancestor exists', async () => {

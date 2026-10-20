@@ -4,7 +4,7 @@ export const MAP_MIN_ZOOM = 2
 export const MAP_MAX_ZOOM = 7
 export const MAP_DEFAULT_ZOOM = 3
 /** A missing tile is drawn from an ancestor at most this many zooms up. */
-export const MAP_OVERSCALE_LEVELS = 2
+export const MAP_OVERSCALE_LEVELS = 1
 /** [lat, lng] */
 export const MAP_DEFAULT_CENTER: readonly [number, number] = [66.5, -31]
 /** [[south, west], [north, east]]; the tile set is not wrapped horizontally. */
