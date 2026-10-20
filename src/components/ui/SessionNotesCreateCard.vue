@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+import { useDeviceBreakpoint } from '../../composables/useDeviceBreakpoint'
 import type { SessionSummary } from '../../types/domain'
 import AppCard from './AppCard.vue'
+import SessionNoteCreateFields from './SessionNoteCreateFields.vue'
 
 interface SessionNoteCreateForm {
   title: string
@@ -27,18 +30,18 @@ const emit = defineEmits<{
   'patch:createForm': [patch: Partial<SessionNoteCreateForm>]
 }>()
 
-function onCreateFieldInput(
-  key: keyof SessionNoteCreateForm,
-  event: Event
-): void {
-  const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-  const nextValue = key === 'isVisible' && 'checked' in target ? target.checked : target.value
-  emit('patch:createForm', { [key]: nextValue })
-}
+// Tailwind `md:` starts at 768px.
+const { isMobile } = useDeviceBreakpoint({ mobileMaxWidth: 767 })
+const dialogRef = ref<HTMLDialogElement | null>(null)
 
-function onCreate(): void {
-  emit('create')
-}
+watch(
+  () => props.creating,
+  (isCreating, wasCreating) => {
+    if (wasCreating && !isCreating && !props.createError) {
+      dialogRef.value?.close()
+    }
+  }
+)
 </script>
 
 <template>
@@ -48,74 +51,61 @@ function onCreate(): void {
         <span>Campagne archivée: ajout de note indisponible.</span>
       </div>
 
-      <label class="form-control w-full">
-        <span class="label-text mb-2">Titre</span>
-        <input
-          :value="props.createForm.title"
-          type="text"
-          class="input input-bordered ui-critical-control w-full"
-          :aria-invalid="createContentError ? 'true' : 'false'"
-          placeholder="Titre de la note"
-          @input="onCreateFieldInput('title', $event)"
-        />
-      </label>
-
-      <label class="form-control w-full">
-        <span class="label-text mb-2">Contenu texte</span>
-        <textarea
-          :value="props.createForm.contentText"
-          class="textarea textarea-bordered ui-critical-control min-h-24 w-full"
-          :aria-invalid="createContentError ? 'true' : 'false'"
-          :aria-errormessage="createContentError ? 'notes-create-content-error' : undefined"
-          :aria-describedby="createContentError ? 'notes-create-content-error' : undefined"
-          placeholder="Message, indice, contexte..."
-          @input="onCreateFieldInput('contentText', $event)"
-        />
-      </label>
-      <p v-if="createContentError" id="notes-create-content-error" class="label text-error text-xs">
-        {{ createContentError }}
-      </p>
-
-      <label v-if="sessions.length && !selectedSessionId" class="form-control w-full">
-        <span class="label-text mb-2">Session liée</span>
-        <select
-          :value="props.createForm.sessionId"
-          class="select select-bordered ui-critical-control w-full"
-          :aria-invalid="createContentError ? 'true' : 'false'"
-          @change="onCreateFieldInput('sessionId', $event)"
-        >
-          <option value="">Sans session liée</option>
-          <option v-for="session in sessions" :key="session.id" :value="session.id">
-            {{ formatSessionLabel(session) }}
-          </option>
-        </select>
-      </label>
-
-      <label v-if="isMj" class="label cursor-pointer justify-start gap-3">
-        <input
-          :checked="props.createForm.isVisible"
-          type="checkbox"
-          class="toggle toggle-sm"
-          @change="onCreateFieldInput('isVisible', $event)"
-        />
-        <span class="label-text">Visible par les joueurs</span>
-      </label>
-
-      <div class="flex items-center gap-2">
+      <template v-if="isMobile">
         <button
-          class="btn btn-sm ui-critical-action"
-          :disabled="creating || isSessionArchived"
-          :aria-busy="creating ? 'true' : 'false'"
-          @click="onCreate"
+          type="button"
+          class="btn btn-sm min-h-11 w-full ui-critical-action"
+          :disabled="isSessionArchived"
+          @click="dialogRef?.showModal()"
         >
-          <span v-if="creating" class="loading loading-spinner loading-xs" aria-hidden="true" />
-          Créer la note
+          {{ createForm.contentText.trim() ? 'Reprendre le brouillon' : 'Ajouter une note' }}
         </button>
-      </div>
 
-      <div v-if="createError" role="alert" class="alert alert-error alert-soft text-sm">
-        <span>{{ createError }}</span>
-      </div>
+        <dialog ref="dialogRef" class="modal modal-top" aria-labelledby="notes-create-title">
+          <div class="modal-box grim-modal-box max-h-[calc(100vh-2rem)] w-11/12 overflow-y-auto p-4">
+            <button
+              type="button"
+              class="btn btn-circle min-h-11 min-w-11 grim-modal-close absolute right-3 top-3"
+              aria-label="Fermer la modale"
+              @click="dialogRef?.close()"
+            >
+              ✕
+            </button>
+            <h3 id="notes-create-title" class="grim-modal-title mb-3 pr-12 text-xl">{{ title }}</h3>
+            <SessionNoteCreateFields
+              :is-session-archived="isSessionArchived"
+              :is-mj="isMj"
+              :creating="creating"
+              :create-error="createError"
+              :create-content-error="createContentError"
+              :create-form="createForm"
+              :sessions="sessions"
+              :selected-session-id="selectedSessionId"
+              :format-session-label="formatSessionLabel"
+              @create="emit('create')"
+              @patch:create-form="emit('patch:createForm', $event)"
+            />
+          </div>
+          <form method="dialog" class="modal-backdrop">
+            <button tabindex="-1">Fermer</button>
+          </form>
+        </dialog>
+      </template>
+
+      <SessionNoteCreateFields
+        v-else
+        :is-session-archived="isSessionArchived"
+        :is-mj="isMj"
+        :creating="creating"
+        :create-error="createError"
+        :create-content-error="createContentError"
+        :create-form="createForm"
+        :sessions="sessions"
+        :selected-session-id="selectedSessionId"
+        :format-session-label="formatSessionLabel"
+        @create="emit('create')"
+        @patch:create-form="emit('patch:createForm', $event)"
+      />
     </div>
   </AppCard>
 </template>

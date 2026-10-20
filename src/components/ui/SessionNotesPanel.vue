@@ -17,7 +17,8 @@ import {
   useSessionNotesFiltering,
   formatSessionLabel,
 } from '../../composables/useSessionNotesFiltering'
-import { useSessionNoteEditor } from '../../composables/useSessionNoteEditor'
+import { useSessionNoteDraft, useSessionNoteEditor } from '../../composables/useSessionNoteEditor'
+import { deriveNoteTitle } from '../../utils/sessionNoteTitle'
 import SessionNotesCreateCard from './SessionNotesCreateCard.vue'
 import SessionNotesListCard from './SessionNotesListCard.vue'
 
@@ -55,7 +56,6 @@ const selectedSessionIdRef = computed(() => props.selectedSessionId ?? null)
 const isMjRef = toRef(props, 'isMj')
 const createForm = reactive({
   title: '',
-  contentText: '',
   isVisible: false,
   sessionId: '',
 })
@@ -88,6 +88,11 @@ const canCreateNote = computed(
   () => Boolean(props.currentUserId && !props.isSessionArchived)
 )
 const effectiveSessionId = computed(() => props.selectedSessionId ?? null)
+const { draft, clearOnSuccess } = useSessionNoteDraft(() => props.campaignId, effectiveSessionId)
+const createFormView = computed<SessionNoteCreateForm>(() => ({
+  ...createForm,
+  contentText: draft.value,
+}))
 const notesSectionTitle = computed(() =>
   effectiveSessionId.value ? 'Notes de session' : 'Notes de campagne'
 )
@@ -140,7 +145,6 @@ function formatDateTime(value: string): string {
 
 function resetCreateForm(): void {
   createForm.title = ''
-  createForm.contentText = ''
   createForm.isVisible = false
   createForm.sessionId = effectiveSessionId.value ?? ''
   if (!effectiveSessionId.value) {
@@ -149,7 +153,11 @@ function resetCreateForm(): void {
 }
 
 function patchCreateForm(patch: Partial<SessionNoteCreateForm>): void {
-  Object.assign(createForm, patch)
+  const { contentText, ...rest } = patch
+  if (contentText !== undefined) {
+    draft.value = contentText
+  }
+  Object.assign(createForm, rest)
 }
 
 function patchEditDraft(patch: Partial<SessionNoteEditForm>): void {
@@ -186,20 +194,24 @@ async function handleCreate(): Promise<void> {
     return
   }
 
-  createError.value = validateContent(createForm.contentText)
+  createError.value = validateContent(draft.value)
   if (createError.value) {
     return
   }
 
   creating.value = true
   try {
-    await createSessionNote({
-      campaignId: props.campaignId,
-      sessionId: createForm.sessionId || null,
-      title: createForm.title,
-      contentText: createForm.contentText,
-      isVisible: props.isMj ? createForm.isVisible : true,
-    })
+    const linkedSessionId = createForm.sessionId || null
+    const sessionDate = sessionsRef.value.find((session) => session.id === linkedSessionId)?.date
+    await clearOnSuccess(() =>
+      createSessionNote({
+        campaignId: props.campaignId,
+        sessionId: linkedSessionId,
+        title: createForm.title.trim() || deriveNoteTitle(draft.value, sessionDate),
+        contentText: draft.value,
+        isVisible: props.isMj ? createForm.isVisible : true,
+      })
+    )
     resetCreateForm()
     await loadNotes()
   } catch (error) {
@@ -326,7 +338,7 @@ watch(
       :creating="creating"
       :create-error="createError"
       :create-content-error="createContentError"
-      :create-form="createForm"
+      :create-form="createFormView"
       :sessions="sessions ?? []"
       :selected-session-id="selectedSessionId"
       :format-session-label="formatSessionLabel"
