@@ -39,9 +39,7 @@
             <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
               <div class="space-y-2">
                 <p class="text-xs font-semibold uppercase tracking-[0.18em] opacity-60">Détail</p>
-                <p v-if="sessionItem.description" class="whitespace-pre-line text-sm leading-relaxed">
-                  {{ sessionItem.description }}
-                </p>
+                <MarkdownContent v-if="sessionItem.description" :source="sessionItem.description" class="leading-relaxed" />
                 <p v-else class="text-sm italic opacity-60">Pas de description.</p>
               </div>
 
@@ -83,6 +81,7 @@ import { getSessionById } from '../services/sessionsRepository'
 import { useAuthStore } from '../stores/auth'
 import { useLastActiveStore } from '../stores/lastActive'
 import type { CampaignSummary, SessionSummary } from '../types/domain'
+import MarkdownContent from '../components/campaign/MarkdownContent.vue'
 import AppCard from '../components/ui/AppCard.vue'
 import PageFooter from '../components/ui/PageFooter.vue'
 import SessionNotesPanel from '../components/ui/SessionNotesPanel.vue'
