@@ -16,6 +16,14 @@ import type { ITEM_QUALITY_OPTIONS } from '../utils/inventoryQuality'
 export type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'
 type ItemQuality = (typeof ITEM_QUALITY_OPTIONS)[number]
 
+export interface NewItemForm {
+  name: string
+  description: string
+  quality: ItemQuality
+  encumbrance: number
+  quantity: number
+}
+
 const CATALOG_LABELS: Record<CatalogSection, string> = {
   skills: 'compétences',
   talents: 'talents',
@@ -78,10 +86,10 @@ export function useCharacterCatalogActions({
   const catalogSearchLoading = ref(false)
   const selectedItemsQuality = ref<ItemQuality>('normal')
   const selectedItemsQuantity = ref(1)
-  const newItemForm = ref({
+  const newItemForm = ref<NewItemForm>({
     name: '',
     description: '',
-    quality: 'normal' as ItemQuality,
+    quality: 'normal',
     encumbrance: 0,
     quantity: 1,
   })
@@ -198,6 +206,23 @@ export function useCharacterCatalogActions({
     catalogOptions.value = []
   }
 
+  async function refreshAfterAdd(characterId: string, successMessage: string): Promise<void> {
+    invalidateCurrentLinksCache()
+    try {
+      await loadCharacterLinks(characterId, { force: true })
+    } catch {
+      // The write already succeeded: clear the selection so it cannot be added twice
+      selectedCatalogIds.value = []
+      selectedCatalogLabels.value = {}
+      resetNewItemForm()
+      catalogError.value = 'Ajout effectué, mais actualisation impossible. Rechargez la fiche.'
+      return
+    }
+
+    setSectionSuccess('catalog', successMessage)
+    closeCatalogModal()
+  }
+
   async function confirmCatalogAdd(): Promise<void> {
     if (!character.value || !canEditQuickSection.value || addingCatalog.value) {
       return
@@ -236,10 +261,10 @@ export function useCharacterCatalogActions({
         )
       }
 
-      invalidateCurrentLinksCache()
-      await loadCharacterLinks(character.value.id, { force: true })
-      setSectionSuccess('catalog', `${selectedCatalogIds.value.length} élément(s) ajouté(s).`)
-      closeCatalogModal()
+      await refreshAfterAdd(
+        character.value.id,
+        `${selectedCatalogIds.value.length} élément(s) ajouté(s).`
+      )
     } catch (error) {
       catalogError.value = error instanceof Error ? error.message : 'Ajout impossible.'
     } finally {
@@ -280,10 +305,7 @@ export function useCharacterCatalogActions({
         normalizedQuantity,
         newItemForm.value.quality
       )
-      invalidateCurrentLinksCache()
-      await loadCharacterLinks(character.value.id, { force: true })
-      setSectionSuccess('catalog', 'Équipement créé et ajouté.')
-      closeCatalogModal()
+      await refreshAfterAdd(character.value.id, 'Équipement créé et ajouté.')
     } catch (error) {
       catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
     } finally {
