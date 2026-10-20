@@ -52,7 +52,12 @@ function onViewModeChange(value: string | boolean | null): void {
   >
     <CharacterSection title="Caractéristiques">
       <div class="flex flex-wrap items-center justify-start gap-3 border-b border-base-300 pb-3">
-        <StateCycleBadge :value="viewMode" :options="VIEW_OPTIONS" @change="onViewModeChange" />
+        <StateCycleBadge
+          data-testid="character-stat-view-mode"
+          :value="viewMode"
+          :options="VIEW_OPTIONS"
+          @change="onViewModeChange"
+        />
       </div>
       <p v-if="visibleStats.length === 0" class="text-sm opacity-70">Aucune caractéristique disponible.</p>
       <div v-else-if="viewMode === 'normal'" class="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -3,8 +3,7 @@ import { E2E_CHARACTER_ID, expect, test } from './fixtures/supabaseAuth'
 test.use({ viewport: { width: 375, height: 667 } })
 
 test.describe('Character sheet (authenticated, mobile)', () => {
-  test.beforeEach(async ({ page, backend }) => {
-    void backend
+  test.beforeEach(async ({ page }) => {
     await page.goto(`/characters/${E2E_CHARACTER_ID}`)
     await expect(page.getByRole('heading', { name: 'Aperçu' })).toBeVisible()
     await expect(page.locator('html.app-splash-active')).toHaveCount(0)
@@ -54,7 +53,7 @@ test.describe('Character sheet (authenticated, mobile)', () => {
   })
 
   test('a stat tick made offline is queued then replayed on reconnect', async ({ page, context, backend }) => {
-    await page.getByRole('button', { name: /Etat actuel: Compact/ }).click()
+    await page.getByTestId('character-stat-view-mode').click()
     const tickUp = page.getByRole('article').filter({ hasText: 'Valeur totale' }).filter({ has: page.getByRole('heading', { name: 'F', exact: true }) }).getByRole('button', { name: "Augmenter l'avancement" })
 
     backend.offline = true

@@ -222,11 +222,14 @@ async function installFakeSupabase(context: BrowserContext, page: Page, backend:
 }
 
 export const test = base.extend<{ backend: FakeBackend }>({
-  backend: async ({ context, page }, use) => {
-    const backend = new FakeBackend()
-    await installFakeSupabase(context, page, backend)
-    await use(backend)
-  },
+  backend: [
+    async ({ context, page }, use) => {
+      const backend = new FakeBackend()
+      await installFakeSupabase(context, page, backend)
+      await use(backend)
+    },
+    { auto: true },
+  ],
 })
 
 export { expect } from '@playwright/test'
