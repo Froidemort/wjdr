@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Mars, UserPen, Venus } from '@lucide/vue'
+import { useNetwork } from '@vueuse/core'
 import type { CharacterGender, CharacterRace } from '../../types/character'
 
 defineProps<{
@@ -13,6 +14,8 @@ defineProps<{
 const emit = defineEmits<{
   'edit-career': []
 }>()
+
+const { isOnline } = useNetwork()
 </script>
 
 <template>
@@ -33,6 +36,8 @@ const emit = defineEmits<{
         type="button"
         class="btn btn-accent btn-square min-h-11 min-w-11"
         aria-label="Modifier la carrière"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click="emit('edit-career')"
       >
         <UserPen :size="22" stroke-width="1.5" />

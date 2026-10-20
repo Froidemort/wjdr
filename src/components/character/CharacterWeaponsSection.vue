@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Plus, Sword, Trash2, Weight } from '@lucide/vue'
+import { useNetwork } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import type { CharacterWeapon } from '../../types/domain'
 import {
@@ -22,6 +23,8 @@ const emit = defineEmits<{
   'quality-change': [weapon: CharacterWeapon, value: string | boolean | null]
 }>()
 
+const { isOnline } = useNetwork()
+
 const HAND_LABELS: Record<string, string> = {
   'd&g': 'Équipée',
   droite: 'Droite',
@@ -31,7 +34,7 @@ const HAND_LABELS: Record<string, string> = {
 const filter = ref<'all' | 'equipped' | 'inventory'>('all')
 const filters = [
   { id: 'all', label: 'Toutes' },
-  { id: 'equipped', label: 'Equipees' },
+  { id: 'equipped', label: 'Équipées' },
   { id: 'inventory', label: 'Inventaire' },
 ] as const
 
@@ -61,7 +64,7 @@ function attributesKey(weapon: CharacterWeapon): string {
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <span class="badge badge-outline">Total: {{ stats.total }}</span>
-      <span class="badge badge-outline">Equipees: {{ stats.equipped }}</span>
+      <span class="badge badge-outline">Équipées: {{ stats.equipped }}</span>
       <span class="badge badge-outline">Inventaire: {{ stats.total - stats.equipped }}</span>
     </div>
     <div class="join join-vertical sm:join-horizontal">
@@ -79,6 +82,8 @@ function attributesKey(weapon: CharacterWeapon): string {
       <button
         class="btn btn-sm btn-square min-h-11 min-w-11"
         aria-label="Ajouter des armes"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click.stop.prevent="emit('add')"
       >
         <Plus class="h-4 w-4" />

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Info, Plus, Trash2 } from '@lucide/vue'
+import { useNetwork } from '@vueuse/core'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import type { CharacterSkill } from '../../types/domain'
@@ -20,6 +21,8 @@ const emit = defineEmits<{
   'change-mastery': [skillId: string, level: MasteryLevel]
   'show-description': [title: string, description: string | null]
 }>()
+
+const { isOnline } = useNetwork()
 
 const MASTERY_LEVELS: readonly MasteryLevel[] = [1, 2, 3]
 const activeMasteryId = ref<string | null>(null)
@@ -93,6 +96,8 @@ onBeforeUnmount(() => {
       <button
         class="btn btn-sm btn-square min-h-11 min-w-11"
         aria-label="Ajouter des compétences"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click.stop.prevent="emit('add')"
       >
         <Plus class="h-4 w-4" />

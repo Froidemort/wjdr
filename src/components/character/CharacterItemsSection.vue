@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Info, Plus, Trash2, Weight } from '@lucide/vue'
+import { useNetwork } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import type { CharacterItem } from '../../types/domain'
 import {
@@ -26,6 +27,8 @@ const emit = defineEmits<{
   'quantity-change': [item: CharacterItem, delta: number]
   'show-description': [title: string, description: string | null]
 }>()
+
+const { isOnline } = useNetwork()
 
 const qualityFilter = ref<QualityFilter>('all')
 const query = ref('')
@@ -65,7 +68,7 @@ const filtered = computed(() => {
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <span class="badge badge-outline">Total: {{ stats.total }}</span>
-      <span class="badge badge-outline">Mediocre: {{ stats.mediocre }}</span>
+      <span class="badge badge-outline">Médiocre: {{ stats.mediocre }}</span>
       <span class="badge badge-outline">Normal: {{ stats.normal }}</span>
       <span class="badge badge-outline">Bonne: {{ stats.good }}</span>
       <span class="badge badge-outline">Exceptionelle: {{ stats.exceptional }}</span>
@@ -82,12 +85,14 @@ const filtered = computed(() => {
           {{ option.label }}
         </button>
       </div>
-      <SearchInput v-model="query" placeholder="Filtrer les équipements" aria-label="Filtrer les equipements" />
+      <SearchInput v-model="query" placeholder="Filtrer les équipements" aria-label="Filtrer les équipements" />
     </div>
     <div v-if="editable" class="flex justify-start">
       <button
         class="btn btn-sm btn-square min-h-11 min-w-11"
         aria-label="Ajouter des équipements"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click.stop.prevent="emit('add')"
       >
         <Plus class="h-4 w-4" />

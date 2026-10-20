@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Info, Plus, Trash2 } from '@lucide/vue'
+import { useNetwork } from '@vueuse/core'
 import type { CharacterTalent } from '../../types/domain'
 import { formatNamedWithSpecialization } from '../../utils/characterSheet'
 
@@ -15,6 +16,8 @@ const emit = defineEmits<{
   delete: [talentId: string]
   'show-description': [title: string, description: string | null]
 }>()
+
+const { isOnline } = useNetwork()
 </script>
 
 <template>
@@ -27,6 +30,8 @@ const emit = defineEmits<{
       <button
         class="btn btn-sm btn-square min-h-11 min-w-11"
         aria-label="Ajouter des talents"
+        :disabled="!isOnline"
+        :title="isOnline ? undefined : 'Indisponible hors ligne'"
         @click.stop.prevent="emit('add')"
       >
         <Plus class="h-4 w-4" />
