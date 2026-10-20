@@ -297,6 +297,92 @@ describe('useCharacterSheet', () => {
     })
   })
 
+  describe('offline fallback', () => {
+    it('enqueues a core update on transient failure without pvMax', async () => {
+      deps.updateCharacterCore.mockRejectedValue(new Error('network timeout'))
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onQuickValueChange('pvCurrent', 5)
+      await vi.advanceTimersByTimeAsync(600)
+
+      // Saves leaked from earlier real-timer tests may also enqueue; pick ours
+      const entry = deps.enqueueOfflineUpdate.mock.calls
+        .map(([call]) => call)
+        .find((call) => call.payload.patch.pvCurrent === 5)
+      expect(entry).toMatchObject({
+        entityType: 'character',
+        entityId: 'char-1',
+        payload: { kind: 'character-core', patch: { pvCurrent: 5 } },
+      })
+      expect(entry.payload.patch).not.toHaveProperty('pvMax')
+    })
+
+    it('does not enqueue on non-transient failure', async () => {
+      deps.updateCharacterCore.mockRejectedValue(new Error('forbidden'))
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onQuickValueChange('pvCurrent', 5)
+      await vi.advanceTimersByTimeAsync(600)
+
+      expect(deps.enqueueOfflineUpdate).not.toHaveBeenCalled()
+    })
+
+    it('saves two different stats ticked within the debounce window', async () => {
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onStatTick('B', 1)
+      await vi.advanceTimersByTimeAsync(100)
+      sheet.onStatTick('F', 2)
+      await vi.advanceTimersByTimeAsync(500)
+
+      expect(deps.updateCharacterStatValues).toHaveBeenCalledTimes(2)
+      expect(deps.updateCharacterStatValues).toHaveBeenCalledWith('char-1', 'B', {
+        current_advanced: 3,
+        base_value: undefined,
+        total_advanced: undefined,
+      })
+      expect(deps.updateCharacterStatValues).toHaveBeenCalledWith('char-1', 'F', {
+        current_advanced: 2,
+        base_value: undefined,
+        total_advanced: undefined,
+      })
+    })
+
+    it('queues every pending stat offline on transient failure', async () => {
+      deps.updateCharacterStatValues.mockRejectedValue(new Error('failed to fetch'))
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onStatTick('B', 1)
+      sheet.onStatTick('F', 2)
+      await vi.advanceTimersByTimeAsync(500)
+
+      const payloads = deps.enqueueOfflineUpdate.mock.calls.map(([entry]) => entry.payload)
+      expect(payloads).toEqual([
+        expect.objectContaining({ kind: 'character-stat', statCode: 'B', patch: expect.objectContaining({ currentAdvanced: 3 }) }),
+        expect.objectContaining({ kind: 'character-stat', statCode: 'F', patch: expect.objectContaining({ currentAdvanced: 2 }) }),
+      ])
+    })
+
+    it('finds stats with a mixed-case code and saves under the normalized code', async () => {
+      const sheet = await setup({ stats: [stat('Cc', 30), stat('B', 10, 2)] })
+      vi.useFakeTimers()
+
+      sheet.onStatTick('cC', 1)
+      await vi.advanceTimersByTimeAsync(500)
+
+      expect(sheet.character.value?.stats.find((s) => s.statCode === 'Cc')?.currentAdvanced).toBe(1)
+      expect(deps.updateCharacterStatValues).toHaveBeenCalledWith(
+        'char-1',
+        'CC',
+        expect.objectContaining({ current_advanced: 1 })
+      )
+    })
+  })
+
   describe('last active store', () => {
     it('remembers own character', async () => {
       await setup()
