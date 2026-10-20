@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { CalendarDays } from '@lucide/vue'
+import { CalendarDays, Plus } from '@lucide/vue'
+import { ref } from 'vue'
 import type { CampaignSummary, SessionSummary } from '../../types/domain'
+import CampaignSessionCompactRow from '../campaign/CampaignSessionCompactRow.vue'
+import SessionCreatePanel from '../campaign/SessionCreatePanel.vue'
 import AppCard from './AppCard.vue'
-import CampaignSessionsCalendar from './CampaignSessionsCalendar.vue'
 import CampaignSessionsTimeline from './CampaignSessionsTimeline.vue'
 
 type SessionTimelineFilter = 'all' | 'upcoming' | 'past'
@@ -19,7 +21,7 @@ interface SessionCreateForm {
   description: string
 }
 
-const props = defineProps<{
+defineProps<{
   session: CampaignSummary
   sessions: SessionSummary[]
   timelineSessions: SessionSummary[]
@@ -41,7 +43,7 @@ const props = defineProps<{
   sessionCreateError: string | null
   sessionCreateDateError: string | null
   sessionCreateForm: SessionCreateForm
-  isMobile: boolean
+  todayKey: string
   formatCampaignSessionDate: (value: string) => string
   formatCampaignSessionDateCompact: (value: string) => string
   formatCampaignSessionTitle: (session: SessionSummary) => string
@@ -59,14 +61,14 @@ const emit = defineEmits<{
   'save-session-edit': [sessionId: string]
   'cancel-session-edit': []
   'create-session': []
+  'reset-session-create-form': []
 }>()
 
-function onSessionCreateFieldInput(
-  key: keyof SessionCreateForm,
-  event: Event
-): void {
-  const target = event.target as HTMLInputElement | HTMLTextAreaElement
-  emit('patch:sessionCreateForm', { [key]: target.value })
+const isCreatePanelOpen = ref(false)
+
+function openCreatePanel(): void {
+  emit('reset-session-create-form')
+  isCreatePanelOpen.value = true
 }
 </script>
 
@@ -132,99 +134,67 @@ function onSessionCreateFieldInput(
         <span>Aucune session pour ce filtre.</span>
       </div>
 
-      <CampaignSessionsCalendar
-        v-if="isMobile"
-        :sessions="timelineSessions"
-        :format-campaign-session-title="formatCampaignSessionTitle"
-        :get-session-date-status="getSessionDateStatus"
-        :build-campaign-session-detail-link="buildCampaignSessionDetailLink"
-      />
+      <ul v-if="timelineSessions.length > 0" class="space-y-2 md:hidden" aria-label="Sessions">
+        <li v-for="sessionItem in timelineSessions" :key="sessionItem.id">
+          <CampaignSessionCompactRow
+            :session="sessionItem"
+            :title="formatCampaignSessionTitle(sessionItem)"
+            :today-key="todayKey"
+            :to="buildCampaignSessionDetailLink(sessionItem.id)"
+          />
+        </li>
+      </ul>
 
-      <CampaignSessionsTimeline
-        v-else
-        :sessions="timelineSessions"
-        :is-mj="isMj"
-        :session-delete-busy-id="sessionDeleteBusyId"
-        :session-edit-id="sessionEditId"
-        :session-edit-busy-id="sessionEditBusyId"
-        :session-edit-error="sessionEditError"
-        :session-edit-date-error="sessionEditDateError"
-        :session-edit-form="sessionEditForm"
-        :format-campaign-session-date="formatCampaignSessionDate"
-        :format-campaign-session-date-compact="formatCampaignSessionDateCompact"
-        :format-campaign-session-title="formatCampaignSessionTitle"
-        :get-session-date-status="getSessionDateStatus"
-        :build-campaign-session-detail-link="buildCampaignSessionDetailLink"
-        @patch:session-edit-form="emit('patch:sessionEditForm', $event)"
-        @start-session-edit="emit('start-session-edit', $event)"
-        @delete-session="emit('delete-session', $event)"
-        @save-session-edit="emit('save-session-edit', $event)"
-        @cancel-session-edit="emit('cancel-session-edit')"
-      />
+      <div class="hidden md:block">
+        <CampaignSessionsTimeline
+          :sessions="timelineSessions"
+          :is-mj="isMj"
+          :session-delete-busy-id="sessionDeleteBusyId"
+          :session-edit-id="sessionEditId"
+          :session-edit-busy-id="sessionEditBusyId"
+          :session-edit-error="sessionEditError"
+          :session-edit-date-error="sessionEditDateError"
+          :session-edit-form="sessionEditForm"
+          :format-campaign-session-date="formatCampaignSessionDate"
+          :format-campaign-session-date-compact="formatCampaignSessionDateCompact"
+          :format-campaign-session-title="formatCampaignSessionTitle"
+          :get-session-date-status="getSessionDateStatus"
+          :build-campaign-session-detail-link="buildCampaignSessionDetailLink"
+          @patch:session-edit-form="emit('patch:sessionEditForm', $event)"
+          @start-session-edit="emit('start-session-edit', $event)"
+          @delete-session="emit('delete-session', $event)"
+          @save-session-edit="emit('save-session-edit', $event)"
+          @cancel-session-edit="emit('cancel-session-edit')"
+        />
+      </div>
 
       <div v-if="isMj" class="space-y-4 border-t border-base-300 pt-4">
-        <h3 class="text-sm font-semibold uppercase tracking-[0.15em] opacity-70">Ajouter une session datée</h3>
         <div v-if="session.isArchived" class="alert alert-warning alert-soft text-sm">
           <span>Campagne archivée: création de session bloquée.</span>
         </div>
-        <div class="rounded-box border border-base-300 bg-base-200/70 p-4 sm:p-5">
-          <div class="grid gap-4 md:grid-cols-2">
-            <label class="form-control">
-              <span class="label-text mb-2">Date</span>
-              <input
-                :value="props.sessionCreateForm.date"
-                type="date"
-                class="input input-bordered ui-critical-control"
-                :aria-invalid="sessionCreateDateError ? 'true' : 'false'"
-                :aria-errormessage="sessionCreateDateError ? 'session-create-date-error' : undefined"
-                :aria-describedby="sessionCreateDateError ? 'session-create-date-error' : undefined"
-                required
-                @input="onSessionCreateFieldInput('date', $event)"
-              />
-              <p v-if="sessionCreateDateError" id="session-create-date-error" class="label text-error text-xs">
-                {{ sessionCreateDateError }}
-              </p>
-            </label>
-            <label class="form-control">
-              <span class="label-text mb-2">Titre optionnel</span>
-              <input
-                :value="props.sessionCreateForm.name"
-                type="text"
-                class="input input-bordered ui-critical-control"
-                :aria-invalid="sessionCreateError ? 'true' : 'false'"
-                maxlength="100"
-                placeholder="Ex. Arrivée à Middenheim"
-                @input="onSessionCreateFieldInput('name', $event)"
-              />
-            </label>
-            <label class="form-control md:col-span-2">
-              <span class="label-text mb-2">Description optionnelle</span>
-              <textarea
-                :value="props.sessionCreateForm.description"
-                class="textarea textarea-bordered ui-critical-control min-h-24"
-                :aria-invalid="sessionCreateError ? 'true' : 'false'"
-                maxlength="500"
-                placeholder="Résumé, objectifs, conséquences..."
-                @input="onSessionCreateFieldInput('description', $event)"
-              />
-            </label>
-          </div>
-          <div class="mt-4 flex items-center justify-start gap-3">
-            <button
-              class="btn btn-sm ui-critical-action"
-              :disabled="sessionCreateLoading || session.isArchived"
-              :aria-busy="sessionCreateLoading ? 'true' : 'false'"
-              @click="emit('create-session')"
-            >
-              <span v-if="sessionCreateLoading" class="loading loading-spinner loading-xs" aria-hidden="true" />
-              Créer la session
-            </button>
-          </div>
-        </div>
-        <div v-if="sessionCreateError" role="alert" class="alert alert-error alert-soft text-sm">
-          <span>{{ sessionCreateError }}</span>
-        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-primary ui-critical-action"
+          :disabled="session.isArchived"
+          @click="openCreatePanel"
+        >
+          <Plus class="h-4 w-4" aria-hidden="true" />
+          Nouvelle session
+        </button>
       </div>
+
+      <SessionCreatePanel
+        v-if="isMj"
+        :open="isCreatePanelOpen"
+        :form="sessionCreateForm"
+        :loading="sessionCreateLoading"
+        :error="sessionCreateError"
+        :date-error="sessionCreateDateError"
+        @patch:form="emit('patch:sessionCreateForm', $event)"
+        @submit="emit('create-session')"
+        @created="isCreatePanelOpen = false"
+        @close="isCreatePanelOpen = false"
+      />
     </AppCard>
   </section>
 </template>
