@@ -67,7 +67,7 @@ function onMaxInput(event: Event): void {
               type="number"
               min="0"
               inputmode="numeric"
-              class="input input-xs h-10 w-14 text-center text-base font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:input-sm sm:w-16 sm:text-lg"
+              class="input input-xs h-11 w-14 text-center text-base font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:input-sm sm:w-16 sm:text-lg"
               :aria-label="currentAriaLabel"
               @change="onCurrentInput"
             />
@@ -78,7 +78,7 @@ function onMaxInput(event: Event): void {
               type="number"
               min="0"
               inputmode="numeric"
-              class="input input-xs h-10 w-14 text-center text-base font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:input-sm sm:w-16 sm:text-lg"
+              class="input input-xs h-11 w-14 text-center text-base font-bold [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none sm:input-sm sm:w-16 sm:text-lg"
               :aria-label="maxAriaLabel || label"
               @change="onMaxInput"
             />

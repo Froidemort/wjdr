@@ -12,10 +12,8 @@
         :race="character.race"
         :gender="character.gender"
         :career-name="character.careerName"
-        :values="editable"
         :editable="canEditQuickSection"
         @edit-career="openCareerModal"
-        @quick-change="onQuickValueChange"
       />
 
       <div v-if="globalState !== 'ok'" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
@@ -32,6 +30,23 @@
         </div>
       </div>
 
+      <CharacterOverview
+        :race="character.race"
+        :stats="character.stats"
+        :armors="characterArmors"
+        :weapons="characterWeapons"
+        :items="characterItems"
+        :values="editable"
+        :editable="canEditQuickSection"
+        :busy="Boolean(actionBusyKey)"
+        @quick-change="onQuickValueChange"
+        @equip-armor="onEquipArmorFromDoll"
+        @unequip-armor="onUnequipArmorFromDoll"
+        @unequip-armors="onUnequipArmorsFromDoll"
+        @equip-weapon="onEquipWeaponFromDoll"
+        @unequip-weapon="onUnequipWeaponFromDoll"
+      />
+
       <CharacterTabs v-model="activeCharacterTab" />
 
       <!-- From lg, Profil and Inventaire share the screen side by side. -->
@@ -41,21 +56,11 @@
       >
         <CharacterProfilePanel
           :class="{ 'max-lg:hidden': activeCharacterTab !== 'profile' }"
-          :race="character.race"
           :stats="character.stats"
-          :armors="characterArmors"
-          :weapons="characterWeapons"
-          :items="characterItems"
           :editable="canEditQuickSection"
-          :busy="Boolean(actionBusyKey)"
           @stat-tick="onStatTick"
           @stat-base-change="onStatBaseChange"
           @stat-total-advanced-change="onStatTotalAdvancedChange"
-          @equip-armor="onEquipArmorFromDoll"
-          @unequip-armor="onUnequipArmorFromDoll"
-          @unequip-armors="onUnequipArmorsFromDoll"
-          @equip-weapon="onEquipWeaponFromDoll"
-          @unequip-weapon="onUnequipWeaponFromDoll"
         />
 
         <CharacterInventoryPanel
@@ -514,6 +519,7 @@ import {
 } from '../services/charactersRepository'
 import type { CatalogItem } from '../types/domain'
 import type { CharacterTabId } from '../types/characterSheet'
+import CharacterOverview from '../components/character/CharacterOverview.vue'
 import CharacterInventoryPanel from '../components/character/CharacterInventoryPanel.vue'
 import CharacterProfilePanel from '../components/character/CharacterProfilePanel.vue'
 import CharacterSkillsPanel from '../components/character/CharacterSkillsPanel.vue'

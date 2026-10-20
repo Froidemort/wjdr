@@ -1,43 +1,20 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { CharacterRace } from '../../types/character'
-import type { CharacterArmor, CharacterStatValue, CharacterWeapon } from '../../types/domain'
-import {
-  computeArmorByLocation,
-  type WeaponHand,
-} from '../../utils/equipmentSlots'
-import {
-  computeMaxEncumbrance,
-  computeTotalEncumbrance,
-  getStatTotal,
-  normalizeStatCode,
-  sortStatsByCharacteristicOrder,
-} from '../../utils/characterSheet'
-import type { CharacterItem } from '../../types/domain'
-import CharacterDerivedStatsCard from '../ui/CharacterDerivedStatsCard.vue'
+import type { CharacterStatValue } from '../../types/domain'
+import { normalizeStatCode, sortStatsByCharacteristicOrder } from '../../utils/characterSheet'
 import CharacteristicCard from '../ui/CharacteristicCard.vue'
 import StateCycleBadge from '../ui/StateCycleBadge.vue'
 import CharacterSection from './CharacterSection.vue'
 
 const props = defineProps<{
-  race: CharacterRace
   stats: CharacterStatValue[]
-  armors: CharacterArmor[]
-  weapons: CharacterWeapon[]
-  items: CharacterItem[]
   editable: boolean
-  busy: boolean
 }>()
 
 const emit = defineEmits<{
   'stat-tick': [statCode: string, step: number]
   'stat-base-change': [statCode: string, baseValue: number]
   'stat-total-advanced-change': [statCode: string, totalAdvanced: number]
-  'equip-armor': [armorId: string]
-  'unequip-armor': [armorId: string]
-  'unequip-armors': [armorIds: string[]]
-  'equip-weapon': [weaponId: string, hand: WeaponHand]
-  'unequip-weapon': [weaponId: string]
 }>()
 
 const VIEW_OPTIONS = [
@@ -58,14 +35,6 @@ const primaryRows = computed(() => {
 })
 const secondaryStats = computed(() => visibleStats.value.filter((stat) => stat.isSecondary))
 const compactRows = computed(() => [...primaryRows.value, secondaryStats.value])
-
-const bonusForce = computed(() => Math.floor(getStatTotal(props.stats, 'F') / 10))
-const bonusEndurance = computed(() => Math.floor(getStatTotal(props.stats, 'E') / 10))
-const maxEncumbrance = computed(() => computeMaxEncumbrance(props.race, props.stats))
-const totalEncumbrance = computed(() =>
-  computeTotalEncumbrance({ weapons: props.weapons, armors: props.armors, items: props.items })
-)
-const armorByLocation = computed(() => computeArmorByLocation(props.armors))
 
 function onViewModeChange(value: string | boolean | null): void {
   if (value === 'normal' || value === 'compact') {
@@ -110,25 +79,6 @@ function onViewModeChange(value: string | boolean | null): void {
           </div>
         </div>
       </div>
-    </CharacterSection>
-
-    <CharacterSection title="Statistiques dérivées" collapsed>
-      <CharacterDerivedStatsCard
-        :total-encumbrance="totalEncumbrance"
-        :max-encumbrance="maxEncumbrance"
-        :bonus-force="bonusForce"
-        :bonus-endurance="bonusEndurance"
-        :armor-by-location="armorByLocation"
-        :armors="armors"
-        :weapons="weapons"
-        :editable="editable"
-        :busy="busy"
-        @equip-armor="emit('equip-armor', $event)"
-        @unequip-armor="emit('unequip-armor', $event)"
-        @unequip-armors="emit('unequip-armors', $event)"
-        @equip-weapon="(weaponId, hand) => emit('equip-weapon', weaponId, hand)"
-        @unequip-weapon="emit('unequip-weapon', $event)"
-      />
     </CharacterSection>
   </section>
 </template>
