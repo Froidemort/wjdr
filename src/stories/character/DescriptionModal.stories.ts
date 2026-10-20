@@ -31,3 +31,9 @@ export const Empty: Story = {
     await expect(screen.getByText('Aucune description.')).toBeVisible()
   },
 }
+
+export const DialogIsLabelledByTitle: Story = {
+  play: async () => {
+    await expect(await screen.findByRole('dialog', { name: 'Corde' })).toBeVisible()
+  },
+}

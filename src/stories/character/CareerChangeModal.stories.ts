@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { expect, fn, screen, userEvent } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor } from 'storybook/test'
 import CareerChangeModal from '../../components/character/CareerChangeModal.vue'
 import type { CatalogItem } from '../../types/domain'
 import { openedDialog } from './openedDialog'
+import { whileOffline } from './offline'
 
 const career = (id: string, name: string): CatalogItem => ({
   id,
@@ -109,5 +110,21 @@ export const Busy: Story = {
   play: async () => {
     await screen.findByRole('dialog')
     await expect(screen.getByRole('button', { name: 'Valider' })).toBeDisabled()
+  },
+}
+
+export const OfflineDisablesConfirm: Story = {
+  args: { selectedId: 'c1', selectedName: 'Soldat' },
+  play: async () => {
+    await screen.findByRole('dialog')
+    await whileOffline(async () => {
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Valider' })).toBeDisabled())
+    })
+  },
+}
+
+export const DialogIsLabelledByTitle: Story = {
+  play: async () => {
+    await expect(await screen.findByRole('dialog', { name: 'Changer de carrière' })).toBeVisible()
   },
 }

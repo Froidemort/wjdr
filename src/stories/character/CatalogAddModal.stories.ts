@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { expect, fn, screen, userEvent } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor } from 'storybook/test'
 import CatalogAddModal from '../../components/character/CatalogAddModal.vue'
 import type { CatalogItem } from '../../types/domain'
 import { openedDialog } from './openedDialog'
+import { whileOffline } from './offline'
 
 const option = (id: string, name: string): CatalogItem => ({
   id,
@@ -133,5 +134,31 @@ export const Creating: Story = {
   play: async () => {
     await screen.findByRole('dialog')
     await expect(screen.getByRole('button', { name: 'Créer et ajouter' })).toBeDisabled()
+  },
+}
+
+export const OfflineDisablesConfirm: Story = {
+  args: { selectedIds: ['s1'], selectedLabels: { s1: 'Soins' } },
+  play: async () => {
+    await screen.findByRole('dialog')
+    await whileOffline(async () => {
+      await waitFor(() => expect(screen.getByRole('button', { name: /Ajouter \(1\)/ })).toBeDisabled())
+    })
+  },
+}
+
+export const OfflineDisablesCreate: Story = {
+  args: { section: 'items', sectionLabel: 'équipements', mode: 'create' },
+  play: async () => {
+    await screen.findByRole('dialog')
+    await whileOffline(async () => {
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Créer et ajouter' })).toBeDisabled())
+    })
+  },
+}
+
+export const DialogIsLabelledByTitle: Story = {
+  play: async () => {
+    await expect(await screen.findByRole('dialog', { name: 'Ajouter des compétences' })).toBeVisible()
   },
 }

@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { expect, fn, screen, userEvent } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor } from 'storybook/test'
 import CareerConfirmModal from '../../components/character/CareerConfirmModal.vue'
 import { openedDialog } from './openedDialog'
+import { whileOffline } from './offline'
 
 const meta: Meta<typeof CareerConfirmModal> = {
   title: 'Character/CareerConfirmModal',
@@ -66,5 +67,23 @@ export const Busy: Story = {
     await expect(screen.getByRole('button', { name: 'Annuler' })).toBeDisabled()
     await expect(screen.getByRole('button', { name: 'Appliquer' })).toBeDisabled()
     await expect(screen.getByRole('button', { name: 'Ne pas appliquer' })).toBeDisabled()
+  },
+}
+
+export const OfflineDisablesActions: Story = {
+  play: async () => {
+    await screen.findByRole('dialog')
+    await whileOffline(async () => {
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Appliquer' })).toBeDisabled())
+      await expect(screen.getByRole('button', { name: 'Ne pas appliquer' })).toBeDisabled()
+    })
+  },
+}
+
+export const DialogIsLabelledByTitle: Story = {
+  play: async () => {
+    await expect(
+      await screen.findByRole('dialog', { name: 'Appliquer le profil de carrière' })
+    ).toBeVisible()
   },
 }
