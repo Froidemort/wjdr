@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronUp } from '@lucide/vue'
 import { computed } from 'vue'
 import type { CharacterStatValue } from '../../types/domain'
 
@@ -6,13 +7,16 @@ const props = withDefaults(
   defineProps<{
     stat: CharacterStatValue
     editable?: boolean
+    expanded?: boolean
   }>(),
   {
     editable: false,
+    expanded: false,
   }
 )
 
 const emit = defineEmits<{
+  (event: 'toggle'): void
   (event: 'tick-up', value: { statCode: string; step: number }): void
   (event: 'tick-down', value: { statCode: string; step: number }): void
   (event: 'update-base', value: { statCode: string; baseValue: number }): void
@@ -65,14 +69,43 @@ function onTotalAdvancedInput(event: Event): void {
     totalAdvanced: Math.max(0, Number(target.value || 0)),
   })
 }
+
+// Clicks on the card body collapse it, except on its own controls.
+function onCardClick(event: MouseEvent): void {
+  if ((event.target as HTMLElement).closest('button, input, label')) {
+    return
+  }
+
+  emit('toggle')
+}
 </script>
 
 <template>
-  <article class="card border w-full" :class="cardToneClass">
+  <button
+    v-if="!expanded"
+    type="button"
+    class="min-h-11 w-full rounded-box border px-2 py-1 text-center"
+    :class="cardToneClass"
+    aria-expanded="false"
+    :aria-label="`${stat.statCode}, total ${totalValue}. Afficher le détail`"
+    @click="emit('toggle')"
+  >
+    <span class="block text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</span>
+    <span class="block text-lg font-black tabular-nums">{{ totalValue }}</span>
+  </button>
+  <article v-else class="card border w-full" :class="cardToneClass" @click="onCardClick">
     <div class="card-body p-4 gap-3">
-      <div class="flex flex-col items-center justify-center gap-1 text-center">
-        <h4 class="text-2xl font-black leading-none">{{ stat.statCode }}</h4>
-      </div>
+      <h4 class="text-center">
+        <button
+          type="button"
+          class="flex min-h-11 w-full items-center justify-center gap-2 text-2xl font-black leading-none"
+          aria-expanded="true"
+          @click="emit('toggle')"
+        >
+          {{ stat.statCode }}
+          <ChevronUp class="size-4 opacity-60" aria-hidden="true" />
+        </button>
+      </h4>
 
       <div class="rounded-box border border-base-300 p-3" :class="totalToneClass">
         <div class="text-sm font-semibold uppercase tracking-wide text-center opacity-80">Valeur totale</div>
