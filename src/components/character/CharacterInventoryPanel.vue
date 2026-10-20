@@ -29,9 +29,7 @@ const emit = defineEmits<{
   'delete-weapon': [linkId: string]
   'delete-armor': [linkId: string]
   'delete-item': [linkId: string]
-  'weapon-state-change': [weapon: CharacterWeapon, value: string | boolean | null]
   'weapon-quality-change': [weapon: CharacterWeapon, value: string | boolean | null]
-  'armor-state-change': [armor: CharacterArmor, value: string | boolean | null]
   'armor-quality-change': [armor: CharacterArmor, value: string | boolean | null]
   'item-quality-change': [item: CharacterItem, value: string | boolean | null]
   'item-quantity-change': [item: CharacterItem, delta: number]
@@ -67,7 +65,6 @@ const emit = defineEmits<{
       :success-message="weaponsMessage"
       @add="emit('add', 'weapons')"
       @delete="emit('delete-weapon', $event)"
-      @state-change="(weapon, value) => emit('weapon-state-change', weapon, value)"
       @quality-change="(weapon, value) => emit('weapon-quality-change', weapon, value)"
     />
 
@@ -78,7 +75,6 @@ const emit = defineEmits<{
       :success-message="armorsMessage"
       @add="emit('add', 'armors')"
       @delete="emit('delete-armor', $event)"
-      @state-change="(armor, value) => emit('armor-state-change', armor, value)"
       @quality-change="(armor, value) => emit('armor-quality-change', armor, value)"
     />
 

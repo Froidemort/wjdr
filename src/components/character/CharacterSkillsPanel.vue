@@ -84,13 +84,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section
-    id="character-panel-skills"
-    role="tabpanel"
-    aria-labelledby="character-tab-skills"
-    class="rounded-box border border-base-300 bg-base-100 p-4"
-  >
-    <h2 class="mb-3 text-lg font-semibold">Compétences</h2>
+  <section aria-labelledby="character-skills-title">
+    <h3 id="character-skills-title" class="mb-3 text-base font-semibold">Compétences</h3>
     <div v-if="successMessage" role="status" class="alert alert-success alert-soft mb-3 text-sm">
       <span>{{ successMessage }}</span>
     </div>

@@ -45,9 +45,9 @@ function onViewModeChange(value: string | boolean | null): void {
 
 <template>
   <section
-    id="character-panel-profile"
+    id="character-panel-stats"
     role="tabpanel"
-    aria-labelledby="character-tab-profile"
+    aria-labelledby="character-tab-stats"
     class="space-y-4 rounded-box border border-base-300 bg-base-100 p-4"
   >
     <CharacterSection title="Caractéristiques">

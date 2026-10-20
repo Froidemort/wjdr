@@ -2,7 +2,6 @@
 import { Plus, Sword, Trash2, Weight } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import type { CharacterWeapon } from '../../types/domain'
-import { isTwoHandedWeapon } from '../../utils/equipmentSlots'
 import {
   ITEM_QUALITY_STATE_OPTIONS,
   qualityBadgeClass,
@@ -20,20 +19,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: []
   delete: [linkId: string]
-  'state-change': [weapon: CharacterWeapon, value: string | boolean | null]
   'quality-change': [weapon: CharacterWeapon, value: string | boolean | null]
 }>()
-
-const ONE_HANDED_OPTIONS = [
-  { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: 'droite', label: 'Droite', badgeClass: 'btn-secondary' },
-  { value: 'gauche', label: 'Gauche', badgeClass: 'btn-secondary' },
-] as const
-
-const TWO_HANDED_OPTIONS = [
-  { value: null, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: 'd&g', label: 'Équipée', badgeClass: 'btn-secondary' },
-] as const
 
 const HAND_LABELS: Record<string, string> = {
   'd&g': 'Équipée',
@@ -61,10 +48,6 @@ const filtered = computed(() => {
     filter.value === 'equipped' ? weapon.equipped !== null : weapon.equipped === null
   )
 })
-
-function equippedOptions(weapon: CharacterWeapon) {
-  return isTwoHandedWeapon(weapon) ? TWO_HANDED_OPTIONS : ONE_HANDED_OPTIONS
-}
 
 function attributesKey(weapon: CharacterWeapon): string {
   return weapon.attributes.length === 0 ? 'none' : weapon.attributes.map((a) => a.id).join('|')
@@ -126,13 +109,7 @@ function attributesKey(weapon: CharacterWeapon): string {
           </div>
           <p v-if="weapon.description" class="text-sm opacity-70">{{ weapon.description }}</p>
           <div class="flex flex-wrap items-center gap-2">
-            <StateCycleBadge
-              v-if="editable"
-              :value="weapon.equipped"
-              :options="equippedOptions(weapon)"
-              @change="emit('state-change', weapon, $event)"
-            />
-            <span v-else class="badge badge-sm" :class="weapon.equipped ? 'badge-secondary' : 'badge-outline'">
+            <span class="badge badge-sm" :class="weapon.equipped ? 'badge-secondary' : 'badge-outline'">
               {{ weapon.equipped ? HAND_LABELS[weapon.equipped] : 'Inventaire' }}
             </span>
             <StateCycleBadge

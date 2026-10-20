@@ -49,68 +49,53 @@
 
       <CharacterTabs v-model="activeCharacterTab" />
 
-      <!-- From lg, Profil and Inventaire share the screen side by side. -->
-      <div
-        v-show="activeCharacterTab === 'profile' || activeCharacterTab === 'inventory'"
-        class="grid gap-4 lg:grid-cols-2 lg:items-start"
-      >
-        <CharacterProfilePanel
-          :class="{ 'max-lg:hidden': activeCharacterTab !== 'profile' }"
-          :stats="character.stats"
-          :editable="canEditQuickSection"
-          @stat-tick="onStatTick"
-          @stat-base-change="onStatBaseChange"
-          @stat-total-advanced-change="onStatTotalAdvancedChange"
-        />
+      <CharacterProfilePanel
+        v-show="activeCharacterTab === 'stats'"
+        :stats="character.stats"
+        :editable="canEditQuickSection"
+        @stat-tick="onStatTick"
+        @stat-base-change="onStatBaseChange"
+        @stat-total-advanced-change="onStatTotalAdvancedChange"
+      />
 
-        <CharacterInventoryPanel
-          :class="{ 'max-lg:hidden': activeCharacterTab !== 'inventory' }"
-          :weapons="sortedCharacterWeapons"
-          :armors="sortedCharacterArmors"
-          :items="sortedCharacterItems"
-          :values="editable"
-          :editable="canEditQuickSection"
-          :busy-key="actionBusyKey"
-          :weapons-message="getSectionSuccessMessage('weapons')"
-          :armors-message="getSectionSuccessMessage('armors')"
-          :items-message="getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog')"
-          @add="openCatalogModal"
-          @quick-change="onQuickValueChange"
-          @money-commit="onMoneyCommit"
-          @money-subtract="onMoneySubtract"
-          @delete-weapon="onDeleteWeapon"
-          @delete-armor="onDeleteArmor"
-          @delete-item="onDeleteItem"
-          @weapon-state-change="onWeaponStateChange"
-          @weapon-quality-change="onWeaponQualityChange"
-          @armor-state-change="onArmorStateChange"
-          @armor-quality-change="onArmorQualityChange"
-          @item-quality-change="onItemQualityChange"
-          @item-quantity-change="onChangeItemQuantity"
-          @show-description="openDescriptionModal"
-        />
-      </div>
-
-      <CharacterSkillsPanel
+      <CharacterSkillsTalentsPanel
         v-show="activeCharacterTab === 'skills'"
         :skills="sortedCharacterSkills"
+        :talents="sortedCharacterTalents"
         :editable="canEditQuickSection"
         :busy-key="actionBusyKey"
-        :success-message="getSectionSuccessMessage('skills')"
-        @add="openCatalogModal('skills')"
-        @delete="onDeleteSkill"
+        :skills-message="getSectionSuccessMessage('skills')"
+        :talents-message="getSectionSuccessMessage('talents')"
+        @add-skills="openCatalogModal('skills')"
+        @add-talents="openCatalogModal('talents')"
+        @delete-skill="onDeleteSkill"
+        @delete-talent="onDeleteTalent"
         @change-mastery="onChangeSkillMastery"
         @show-description="openDescriptionModal"
       />
 
-      <CharacterTalentsPanel
-        v-show="activeCharacterTab === 'talents'"
-        :talents="sortedCharacterTalents"
+      <CharacterInventoryPanel
+        v-show="activeCharacterTab === 'inventory'"
+        :weapons="sortedCharacterWeapons"
+        :armors="sortedCharacterArmors"
+        :items="sortedCharacterItems"
+        :values="editable"
         :editable="canEditQuickSection"
         :busy-key="actionBusyKey"
-        :success-message="getSectionSuccessMessage('talents')"
-        @add="openCatalogModal('talents')"
-        @delete="onDeleteTalent"
+        :weapons-message="getSectionSuccessMessage('weapons')"
+        :armors-message="getSectionSuccessMessage('armors')"
+        :items-message="getSectionSuccessMessage('items') || getSectionSuccessMessage('catalog')"
+        @add="openCatalogModal"
+        @quick-change="onQuickValueChange"
+        @money-commit="onMoneyCommit"
+        @money-subtract="onMoneySubtract"
+        @delete-weapon="onDeleteWeapon"
+        @delete-armor="onDeleteArmor"
+        @delete-item="onDeleteItem"
+        @weapon-quality-change="onWeaponQualityChange"
+        @armor-quality-change="onArmorQualityChange"
+        @item-quality-change="onItemQualityChange"
+        @item-quantity-change="onChangeItemQuantity"
         @show-description="openDescriptionModal"
       />
 
@@ -522,10 +507,9 @@ import type { CharacterTabId } from '../types/characterSheet'
 import CharacterOverview from '../components/character/CharacterOverview.vue'
 import CharacterInventoryPanel from '../components/character/CharacterInventoryPanel.vue'
 import CharacterProfilePanel from '../components/character/CharacterProfilePanel.vue'
-import CharacterSkillsPanel from '../components/character/CharacterSkillsPanel.vue'
+import CharacterSkillsTalentsPanel from '../components/character/CharacterSkillsTalentsPanel.vue'
 import CharacterSummaryHeader from '../components/character/CharacterSummaryHeader.vue'
 import CharacterTabs from '../components/character/CharacterTabs.vue'
-import CharacterTalentsPanel from '../components/character/CharacterTalentsPanel.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import { useCharacterSheet } from '../composables/useCharacterSheet'
 import {
@@ -544,7 +528,7 @@ const CATALOG_LABELS: Record<CatalogSection, string> = {
   items: 'équipements',
 }
 
-const activeCharacterTab = ref<CharacterTabId>('profile')
+const activeCharacterTab = ref<CharacterTabId>('stats')
 const {
   character,
   loading,
@@ -578,9 +562,7 @@ const {
   onDeleteWeapon,
   onDeleteArmor,
   onDeleteItem,
-  onWeaponStateChange,
   onWeaponQualityChange,
-  onArmorStateChange,
   onArmorQualityChange,
   onItemQualityChange,
   onChangeItemQuantity,

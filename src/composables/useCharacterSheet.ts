@@ -34,8 +34,6 @@ import type {
 import {
   canEquipArmorStack,
   findConflictingWeapons,
-  isTwoHandedWeapon,
-  isWeaponHand,
   resolveWeaponEquipHand,
   type WeaponHand,
   type WeaponPreferredHand,
@@ -686,53 +684,6 @@ export function useCharacterSheet() {
     }
   }
 
-  async function onWeaponStateChange(
-    weapon: CharacterWeapon,
-    value: string | boolean | null
-  ): Promise<void> {
-    if (!canEditQuickSection.value || !character.value) {
-      return
-    }
-
-    if (value !== null && !isWeaponHand(value)) {
-      return
-    }
-
-    let nextEquipped: WeaponHand | null = value
-    if (nextEquipped === 'd&g' && !isTwoHandedWeapon(weapon)) {
-      nextEquipped = 'droite'
-    } else if ((nextEquipped === 'droite' || nextEquipped === 'gauche') && isTwoHandedWeapon(weapon)) {
-      nextEquipped = 'd&g'
-    }
-
-    if (weapon.equipped === nextEquipped) {
-      return
-    }
-
-    if (!beginAction(`weapon-state-${weapon.id}`)) {
-      return
-    }
-
-    try {
-      if (nextEquipped !== null) {
-        const conflicts = findConflictingWeapons(characterWeapons.value, weapon.id, nextEquipped)
-        for (const conflict of conflicts) {
-          await updateCharacterWeaponEquipped(conflict.id, null)
-          conflict.equipped = null
-        }
-      }
-
-      await updateCharacterWeaponEquipped(weapon.id, nextEquipped)
-      weapon.equipped = nextEquipped
-      invalidateCurrentLinksCache()
-      setSectionSuccess('weapons', 'Etat de l arme mis a jour.')
-    } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-    } finally {
-      endAction()
-    }
-  }
-
   async function onWeaponQualityChange(
     weapon: CharacterWeapon,
     quality: string | boolean | null
@@ -954,43 +905,6 @@ export function useCharacterSheet() {
       weapon.equipped = null
       invalidateCurrentLinksCache()
       setSectionSuccess('weapons', 'Arme déséquipée.')
-    } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
-    } finally {
-      endAction()
-    }
-  }
-
-  async function onArmorStateChange(
-    armor: CharacterArmor,
-    value: string | boolean | null
-  ): Promise<void> {
-    if (!canEditQuickSection.value || !character.value) {
-      return
-    }
-
-    if (typeof value !== 'boolean') {
-      return
-    }
-
-    const nextEquipped = value
-    if (armor.isEquipped === nextEquipped) {
-      return
-    }
-
-    if (nextEquipped && !ensureArmorCanBeEquipped(armor)) {
-      return
-    }
-
-    if (!beginAction(`armor-state-${armor.id}`)) {
-      return
-    }
-
-    try {
-      await updateCharacterArmorEquipped(armor.id, nextEquipped)
-      armor.isEquipped = nextEquipped
-      invalidateCurrentLinksCache()
-      setSectionSuccess('armors', 'Etat de l armure mis a jour.')
     } catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
     } finally {
@@ -1267,9 +1181,7 @@ export function useCharacterSheet() {
     onDeleteWeapon,
     onDeleteArmor,
     onDeleteItem,
-    onWeaponStateChange,
     onWeaponQualityChange,
-    onArmorStateChange,
     onArmorQualityChange,
     onItemQualityChange,
     onChangeItemQuantity,

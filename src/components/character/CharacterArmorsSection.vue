@@ -19,14 +19,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   add: []
   delete: [linkId: string]
-  'state-change': [armor: CharacterArmor, value: string | boolean | null]
   'quality-change': [armor: CharacterArmor, value: string | boolean | null]
 }>()
-
-const EQUIPPED_OPTIONS = [
-  { value: false, label: 'Inventaire', badgeClass: 'btn-outline' },
-  { value: true, label: 'Équipée', badgeClass: 'btn-success' },
-] as const
 
 const filter = ref<'all' | 'equipped' | 'inventory'>('all')
 const filters = [
@@ -105,13 +99,7 @@ const filtered = computed(() => {
           </div>
           <p v-if="armor.description" class="text-sm opacity-70">{{ armor.description }}</p>
           <div class="flex flex-wrap items-center gap-2">
-            <StateCycleBadge
-              v-if="editable"
-              :value="armor.isEquipped"
-              :options="EQUIPPED_OPTIONS"
-              @change="emit('state-change', armor, $event)"
-            />
-            <span v-else class="badge badge-sm" :class="armor.isEquipped ? 'badge-success' : 'badge-outline'">
+            <span class="badge badge-sm" :class="armor.isEquipped ? 'badge-success' : 'badge-outline'">
               {{ armor.isEquipped ? 'Équipée' : 'Inventaire' }}
             </span>
             <StateCycleBadge
