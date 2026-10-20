@@ -52,6 +52,61 @@ test.describe('Character sheet (authenticated, mobile)', () => {
     await expect(page.getByRole('button', { name: /^Corps, vide/ })).toBeVisible()
   })
 
+  test('a failing action shows a dismissible error on the loaded sheet', async ({ page, backend }) => {
+    await page.route('**/rest/v1/character_armors*', (route) =>
+      route.request().method() === 'PATCH'
+        ? route.fulfill({
+            status: 400,
+            contentType: 'application/json',
+            body: JSON.stringify({ code: '42501', message: 'denied', details: '', hint: null }),
+          })
+        : route.fallback()
+    )
+
+    await page.getByRole('button', { name: /^Corps, vide/ }).click()
+    await page.getByRole('dialog').filter({ hasText: 'Corps' }).getByRole('button', { name: /Cotte de mailles/ }).click()
+
+    const alert = page.getByRole('alert').filter({ hasText: 'Modification impossible.' })
+    await expect(alert).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Aperçu' })).toBeVisible()
+    expect(backend.patchesTo('character_armors')).toHaveLength(0)
+
+    await page.keyboard.press('Escape')
+    await alert.getByRole('button', { name: "Fermer le message d'erreur" }).click()
+
+    await expect(alert).toBeHidden()
+    await expect(page.getByRole('heading', { name: 'Aperçu' })).toBeVisible()
+  })
+
+  test('add and career-edit buttons are disabled offline', async ({ page, context, backend }) => {
+    const careerEdit = page.getByRole('button', { name: 'Modifier la carrière' })
+    await expect(careerEdit).toBeEnabled()
+
+    backend.offline = true
+    await context.setOffline(true)
+
+    await expect(careerEdit).toBeDisabled()
+    for (const [tab, addLabels] of [
+      ['Compétences', ['Ajouter des compétences', 'Ajouter des talents']],
+      ['Inventaire', ['Ajouter des armes', 'Ajouter des armures', 'Ajouter des équipements']],
+    ] as const) {
+      await page.getByRole('tab', { name: tab }).click()
+      for (const label of addLabels) {
+        const group = label.replace('Ajouter des ', '')
+        const summary = page.getByText(new RegExp(`^${group}`, 'i')).first()
+        if ((await page.getByRole('button', { name: label }).count()) === 0) {
+          await summary.click()
+        }
+        await expect(page.getByRole('button', { name: label })).toBeDisabled()
+      }
+    }
+
+    backend.offline = false
+    await context.setOffline(false)
+
+    await expect(careerEdit).toBeEnabled()
+  })
+
   test('a stat tick made offline is queued then replayed on reconnect', async ({ page, context, backend }) => {
     await page.getByTestId('character-stat-view-mode').click()
     const tickUp = page.getByRole('article').filter({ hasText: 'Valeur totale' }).filter({ has: page.getByRole('heading', { name: 'F', exact: true }) }).getByRole('button', { name: "Augmenter l'avancement" })

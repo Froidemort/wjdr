@@ -272,6 +272,52 @@ describe('useCharacterCatalogActions', () => {
     })
   })
 
+  describe('refresh failure after a successful write', () => {
+    const REFRESH_MESSAGE = 'Ajout effectué, mais actualisation impossible. Rechargez la fiche.'
+
+    it('reports the refresh failure and clears the selection after add', async () => {
+      const { api, deps } = setup()
+      api.openCatalogModal('skills')
+      api.catalogOptions.value = [option({ id: 's1', name: 'Soins' })]
+      api.toggleCatalogSelection('s1')
+      deps.loadCharacterLinks.mockRejectedValueOnce(new Error('offline'))
+
+      await api.confirmCatalogAdd()
+
+      expect(repo.addCharacterSkills).toHaveBeenCalledOnce()
+      expect(api.catalogError.value).toBe(REFRESH_MESSAGE)
+      expect(api.selectedCatalogIds.value).toEqual([])
+      expect(api.selectedCatalogLabels.value).toEqual({})
+      expect(deps.setSectionSuccess).not.toHaveBeenCalled()
+    })
+
+    it('reports the refresh failure and resets the form after item creation', async () => {
+      const { api, deps } = setup()
+      repo.createCatalogItem.mockResolvedValue({ id: 'new-1' })
+      api.newItemForm.value.name = 'Torche'
+      deps.loadCharacterLinks.mockRejectedValueOnce(new Error('offline'))
+
+      await api.confirmItemCreate()
+
+      expect(repo.addCharacterItems).toHaveBeenCalledOnce()
+      expect(api.catalogError.value).toBe(REFRESH_MESSAGE)
+      expect(api.newItemForm.value.name).toBe('')
+      expect(deps.setSectionSuccess).not.toHaveBeenCalled()
+    })
+
+    it('does not re-add the cleared selection on a second confirmation', async () => {
+      const { api, deps } = setup()
+      api.openCatalogModal('skills')
+      api.selectedCatalogIds.value = ['s1']
+      deps.loadCharacterLinks.mockRejectedValueOnce(new Error('offline'))
+
+      await api.confirmCatalogAdd()
+      await api.confirmCatalogAdd()
+
+      expect(repo.addCharacterSkills).toHaveBeenCalledOnce()
+    })
+  })
+
   describe('selection', () => {
     it('stores a label and clears the query on toggle, and removes on second toggle', () => {
       const { api } = setup()

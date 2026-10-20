@@ -380,6 +380,83 @@ describe('useCharacterSheet', () => {
     })
   })
 
+  describe('dirty core fields', () => {
+    it('sends only the changed field when several are untouched', async () => {
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onQuickValueChange('insanityPoints', 3)
+      await vi.advanceTimersByTimeAsync(600)
+
+      expect(deps.updateCharacterCore).toHaveBeenCalledTimes(1)
+      expect(deps.updateCharacterCore).toHaveBeenCalledWith('char-1', { insanity_points: 3 })
+    })
+
+    it('queues only the changed field offline', async () => {
+      deps.updateCharacterCore.mockRejectedValue(new Error('failed to fetch'))
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onQuickValueChange('moneyGold', 7)
+      await sheet.onMoneyCommit()
+
+      const entry = deps.enqueueOfflineUpdate.mock.calls
+        .map(([call]) => call)
+        .find((call) => call.payload.patch.moneyGold === 7)
+      expect(entry.payload).toEqual({ kind: 'character-core', patch: { moneyGold: 7 } })
+    })
+
+    it('queues available XP clamped to total XP offline', async () => {
+      deps.updateCharacterCore.mockRejectedValue(new Error('failed to fetch'))
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onQuickValueChange('xpAvailable', 500)
+      await vi.advanceTimersByTimeAsync(600)
+
+      const entry = deps.enqueueOfflineUpdate.mock.calls
+        .map(([call]) => call)
+        .find((call) => call.payload.kind === 'character-core')
+      expect(entry.payload.patch).toEqual({ xpAvailable: 100 })
+    })
+
+    it('does not resend a saved field on the next change', async () => {
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onQuickValueChange('pvCurrent', 5)
+      await vi.advanceTimersByTimeAsync(600)
+      sheet.onQuickValueChange('fortuneCurrent', 1)
+      await vi.advanceTimersByTimeAsync(600)
+
+      expect(deps.updateCharacterCore).toHaveBeenNthCalledWith(2, 'char-1', { fortune_current: 1 })
+    })
+  })
+
+  describe('stat save retry', () => {
+    // Source bug: useOptimisticUpdate keeps a rejected saveQueue, so no retry ever runs after a failure
+    it.fails('does not replay the first stat when the second one failed', async () => {
+      deps.updateCharacterStatValues
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('forbidden'))
+        .mockResolvedValue(undefined)
+      const sheet = await setup()
+      vi.useFakeTimers()
+
+      sheet.onStatTick('B', 1)
+      sheet.onStatTick('F', 2)
+      await vi.advanceTimersByTimeAsync(500)
+      expect(deps.updateCharacterStatValues).toHaveBeenCalledTimes(2)
+
+      sheet.onStatTick('F', 1)
+      await vi.advanceTimersByTimeAsync(500)
+
+      const calls = deps.updateCharacterStatValues.mock.calls
+      expect(calls.filter(([, code]) => code === 'B')).toHaveLength(1)
+      expect(calls.filter(([, code]) => code === 'F')).toHaveLength(2)
+    })
+  })
+
   describe('last active store', () => {
     it('remembers own character', async () => {
       await setup()
