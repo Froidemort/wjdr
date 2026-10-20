@@ -83,6 +83,21 @@ type CorePatch = Partial<Record<CoreField, number>>
 
 const CORE_FIELDS = Object.keys(CORE_COLUMNS) as CoreField[]
 
+function modificationErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const { message } = error
+    if (typeof message === 'string' && message) {
+      return message
+    }
+  }
+
+  return 'Modification impossible.'
+}
+
 export function useCharacterSheet() {
   const authStore = useAuthStore()
   const lastActive = useLastActiveStore()
@@ -736,7 +751,7 @@ export function useCharacterSheet() {
         await loadCharacterLinks(currentCharacter.id, { force: true })
         setSectionSuccess('weapons', 'Qualité de l\'arme mise à jour.')
       } catch (error) {
-        errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+        errorMessage.value = modificationErrorMessage(error)
       }
     })
   }
@@ -795,7 +810,7 @@ export function useCharacterSheet() {
       invalidateCurrentLinksCache()
       setSectionSuccess('armors', 'Armure équipée (couche ajoutée).')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+      errorMessage.value = modificationErrorMessage(error)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
     } finally {
@@ -823,7 +838,7 @@ export function useCharacterSheet() {
       invalidateCurrentLinksCache()
       setSectionSuccess('armors', 'Armure déséquipée.')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+      errorMessage.value = modificationErrorMessage(error)
     } finally {
       endAction()
     }
@@ -857,7 +872,7 @@ export function useCharacterSheet() {
         armorsToUnequip.length > 1 ? 'Couches d’armure déséquipées.' : 'Armure déséquipée.'
       )
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+      errorMessage.value = modificationErrorMessage(error)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
     } finally {
@@ -905,7 +920,7 @@ export function useCharacterSheet() {
         conflicts.length > 0 ? 'Arme équipée (remplacement).' : 'Arme équipée.'
       )
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+      errorMessage.value = modificationErrorMessage(error)
       invalidateCurrentLinksCache()
       await loadCharacterLinks(character.value.id, { force: true })
     } finally {
@@ -933,7 +948,7 @@ export function useCharacterSheet() {
       invalidateCurrentLinksCache()
       setSectionSuccess('weapons', 'Arme déséquipée.')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+      errorMessage.value = modificationErrorMessage(error)
     } finally {
       endAction()
     }
@@ -964,7 +979,7 @@ export function useCharacterSheet() {
         await loadCharacterLinks(currentCharacter.id, { force: true })
         setSectionSuccess('armors', 'Qualité de l\'armure mise à jour.')
       } catch (error) {
-        errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+        errorMessage.value = modificationErrorMessage(error)
       }
     })
   }
@@ -1012,7 +1027,7 @@ export function useCharacterSheet() {
       invalidateCurrentLinksCache()
       setSectionSuccess('items', 'Quantité mise à jour.')
     } catch (error) {
-      errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+      errorMessage.value = modificationErrorMessage(error)
     } finally {
       endAction()
     }
@@ -1041,7 +1056,7 @@ export function useCharacterSheet() {
         invalidateCurrentLinksCache()
         setSectionSuccess('items', 'Qualité de l\'équipement mise à jour.')
       } catch (error) {
-        errorMessage.value = error instanceof Error ? error.message : 'Modification impossible.'
+        errorMessage.value = modificationErrorMessage(error)
       }
     })
   }

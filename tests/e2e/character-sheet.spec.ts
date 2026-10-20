@@ -66,7 +66,7 @@ test.describe('Character sheet (authenticated, mobile)', () => {
     await page.getByRole('button', { name: /^Corps, vide/ }).click()
     await page.getByRole('dialog').filter({ hasText: 'Corps' }).getByRole('button', { name: /Cotte de mailles/ }).click()
 
-    const alert = page.getByRole('alert').filter({ hasText: 'Modification impossible.' })
+    const alert = page.getByRole('alert').filter({ hasText: 'denied' })
     await expect(alert).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Aperçu' })).toBeVisible()
     expect(backend.patchesTo('character_armors')).toHaveLength(0)

@@ -60,8 +60,9 @@ export function useOptimisticUpdate<T>(options: UseOptimisticUpdateOptions<T>) {
   }
 
   function queueSave(): Promise<void> {
-    saveQueue = saveQueue.then(runSaveCycle)
-    return saveQueue
+    const run = saveQueue.then(runSaveCycle)
+    saveQueue = run.catch(() => undefined)
+    return run
   }
 
   const debouncedQueueSave = useDebounceFn(() => {

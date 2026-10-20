@@ -434,8 +434,7 @@ describe('useCharacterSheet', () => {
   })
 
   describe('stat save retry', () => {
-    // Source bug: useOptimisticUpdate keeps a rejected saveQueue, so no retry ever runs after a failure
-    it.fails('does not replay the first stat when the second one failed', async () => {
+    it('does not replay the first stat when the second one failed', async () => {
       deps.updateCharacterStatValues
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error('forbidden'))
