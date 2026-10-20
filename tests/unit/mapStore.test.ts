@@ -209,6 +209,32 @@ describe('map store', () => {
       expect(store.hiddenTypeIds).toEqual([])
     })
 
+    it('hides every base marker but keeps campaign markers when the POI switch is off', async () => {
+      repo.listBaseMarkers.mockResolvedValue([marker({ id: 'b1', source: 'base', typeId: 't1' })])
+      repo.listMarkerTypes.mockResolvedValue([])
+      repo.listCampaignMarkers.mockResolvedValue([marker({ id: 'c1' })])
+      const store = useMapStore()
+      await store.loadBase()
+      await store.loadCampaign('camp-1')
+
+      store.showCities = false
+
+      expect(store.visibleMarkers.map((m) => m.id)).toEqual(['c1'])
+    })
+
+    it('lists only the marker types actually used by base markers', async () => {
+      repo.listMarkerTypes.mockResolvedValue([
+        { id: 't1', code: 'town', label: 'Ville', icon: 'Castle', color: null },
+        { id: 't2', code: 'note', label: 'Note', icon: 'StickyNote', color: null },
+      ])
+      repo.listBaseMarkers.mockResolvedValue([marker({ id: 'b1', source: 'base', typeId: 't1' })])
+      const store = useMapStore()
+
+      await store.loadBase()
+
+      expect(store.poiTypes.map((type) => type.id)).toEqual(['t1'])
+    })
+
     it('searches only visible markers', async () => {
       repo.listCampaignMarkers.mockResolvedValue([marker({ name: 'Taverne' })])
       const store = useMapStore()

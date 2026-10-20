@@ -57,4 +57,47 @@ describe('map store cities', () => {
 
     expect(store.showCities).toBe(false)
   })
+
+  it('lists the distinct city types present in the loaded cities', () => {
+    const store = useMapStore()
+    store.cities = [
+      { ...city, id: 1, type: 'Cit\u00e9' },
+      { ...city, id: 2, type: 'Village' },
+      { ...city, id: 3, type: null },
+    ] as City[]
+
+    expect(store.cityTypes).toEqual(['Cit\u00e9', 'Village', 'Autre'])
+  })
+
+  it('toggles a city type in and out of the hidden list', () => {
+    const store = useMapStore()
+
+    store.toggleCityType('Village')
+    expect(store.hiddenCityTypes).toEqual(['Village'])
+    store.toggleCityType('Village')
+    expect(store.hiddenCityTypes).toEqual([])
+  })
+
+  describe('shownCities', () => {
+    const cities = [
+      { ...city, id: 1, type: 'Cit\u00e9' },
+      { ...city, id: 2, type: 'Village' },
+    ] as City[]
+
+    it('excludes cities of a hidden type', () => {
+      const store = useMapStore()
+      store.cities = cities
+      store.hiddenCityTypes = ['Village']
+
+      expect(store.shownCities.map((c) => c.id)).toEqual([1])
+    })
+
+    it('is empty when the POI master switch is off, even without a type filter', () => {
+      const store = useMapStore()
+      store.cities = cities
+      store.showCities = false
+
+      expect(store.shownCities).toEqual([])
+    })
+  })
 })

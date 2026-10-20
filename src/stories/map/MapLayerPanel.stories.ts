@@ -10,10 +10,13 @@ const meta: Meta<typeof MapLayerPanel> = {
   args: {
     types: markerTypes,
     hiddenTypeIds: [],
+    cityTypes: ['Cité', 'Village'],
+    hiddenCityTypes: [],
     hasCampaign: true,
     showCampaign: true,
     showCities: true,
     onToggleType: fn(),
+    onToggleCityType: fn(),
     onPrefetch: fn(),
     onCancelPrefetch: fn(),
   },
@@ -42,6 +45,33 @@ export const HiddenTypeIsUnchecked: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByLabelText('Ville')).not.toBeChecked()
     await expect(canvas.getByLabelText('Note')).toBeChecked()
+  },
+}
+
+export const HiddenCityTypeIsUnchecked: Story = {
+  args: { hiddenCityTypes: ['Village'] },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByLabelText('Cité')).toBeChecked()
+    await expect(canvas.getByLabelText('Village')).not.toBeChecked()
+  },
+}
+
+export const TogglingACityTypeEmitsIt: Story = {
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByLabelText('Village'))
+    await expect(args.onToggleCityType).toHaveBeenCalledWith('Village')
+  },
+}
+
+export const PoiSwitchOffDisablesAllTypeFilters: Story = {
+  play: async ({ canvas }) => {
+    const poiToggle = canvas.getByLabelText("Points d'intérêt")
+    await userEvent.click(poiToggle)
+
+    await expect(canvas.getByLabelText('Cité')).toBeDisabled()
+    await expect(canvas.getByLabelText('Village')).toBeDisabled()
+    await expect(canvas.getByLabelText('Ville')).toBeDisabled()
+    await expect(canvas.getByLabelText('Note')).toBeDisabled()
   },
 }
 

@@ -27,6 +27,10 @@ const {
   showCampaign,
   showCities,
   cities,
+  shownCities,
+  cityTypes,
+  hiddenCityTypes,
+  poiTypes,
   hiddenTypeIds,
   query,
   selectedId,
@@ -171,7 +175,7 @@ onMounted(() => {
       <div class="drawer-content relative size-full">
         <MapCanvas
           :pins="pins"
-          :cities="cities"
+          :cities="shownCities"
           :show-cities="showCities"
           :selected-city-id="selectedMarker ? null : selectedCityId"
           :fly-target="flyTarget"
@@ -216,11 +220,14 @@ onMounted(() => {
           <MapLayerPanel
             v-model:show-campaign="showCampaign"
             v-model:show-cities="showCities"
-            :types="types"
+            :types="poiTypes"
             :hidden-type-ids="hiddenTypeIds"
+            :city-types="cityTypes"
+            :hidden-city-types="hiddenCityTypes"
             :has-campaign="campaignId !== null"
             :prefetch="prefetchState"
             @toggle-type="store.toggleType"
+            @toggle-city-type="store.toggleCityType"
             @prefetch="startPrefetch"
             @cancel-prefetch="cancelPrefetch"
           />

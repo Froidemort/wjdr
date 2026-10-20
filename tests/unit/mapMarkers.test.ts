@@ -42,16 +42,20 @@ describe('filterMarkers', () => {
   const base = marker({ id: 'b', source: 'base', typeId: 't1' })
   const camp = marker({ id: 'c', source: 'campaign', typeId: 't2' })
 
-  it('always keeps base markers', () => {
-    expect(filterMarkers([base, camp], { showCampaign: true, hiddenTypeIds: [] })).toEqual([base, camp])
+  it('keeps base and campaign markers by default', () => {
+    expect(filterMarkers([base, camp], { showCampaign: true, showPois: true, hiddenTypeIds: [] })).toEqual([base, camp])
   })
 
   it('hides campaign markers when showCampaign is false', () => {
-    expect(filterMarkers([base, camp], { showCampaign: false, hiddenTypeIds: [] })).toEqual([base])
+    expect(filterMarkers([base, camp], { showCampaign: false, showPois: true, hiddenTypeIds: [] })).toEqual([base])
   })
 
-  it('hides markers of hidden types', () => {
-    expect(filterMarkers([base, camp], { showCampaign: true, hiddenTypeIds: ['t2'] })).toEqual([base])
+  it('hides every base marker when showPois is false', () => {
+    expect(filterMarkers([base, camp], { showCampaign: true, showPois: false, hiddenTypeIds: [] })).toEqual([camp])
+  })
+
+  it('hides base markers of hidden types only', () => {
+    expect(filterMarkers([base, camp], { showCampaign: true, showPois: true, hiddenTypeIds: ['t1', 't2'] })).toEqual([camp])
   })
 })
 
