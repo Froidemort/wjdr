@@ -86,7 +86,7 @@ test.describe('Interactive map', () => {
   test('shows the cities toggle and offline prefetch in the layer panel', async ({ page }) => {
     await page.goto('/map')
 
-    await expect(page.getByLabel('Villes et lieux-dits')).toBeChecked()
+    await expect(page.getByLabel('Points d\'intérêt')).toBeChecked()
     await expect(page.getByRole('button', { name: /Précharger la carte/ })).toBeVisible()
   })
 })

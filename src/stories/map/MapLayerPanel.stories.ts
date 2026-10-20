@@ -54,7 +54,7 @@ export const TogglingATypeEmitsItsId: Story = {
 
 export const CitiesToggle: Story = {
   play: async ({ canvas }) => {
-    const toggle = canvas.getByLabelText('Villes et lieux-dits')
+    const toggle = canvas.getByLabelText('Points d\'intérêt')
     await expect(toggle).toBeChecked()
     await userEvent.click(toggle)
     await expect(toggle).not.toBeChecked()
