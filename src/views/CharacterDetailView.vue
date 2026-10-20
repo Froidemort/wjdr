@@ -117,7 +117,7 @@
         <h3 class="grim-modal-title mb-4 text-center text-3xl">Changer de carrière</h3>
 
 				<div class="space-y-3">
-          <div class="join" role="group" aria-label="Filtre des carrieres">
+          <div class="join" role="group" aria-label="Filtre des carrières">
             <button
               type="button"
               class="btn btn-sm join-item ui-critical-action"
@@ -166,11 +166,11 @@
               {{
                 careerFilterMode === 'all'
                   ? careerQuery.trim().length < 2
-                    ? 'Commencez a taper pour rechercher une carriere.'
-                    : 'Aucune carriere trouvee.'
+                    ? 'Commencez à taper pour rechercher une carrière.'
+                    : 'Aucune carrière trouvée.'
                   : careerPathOptions.length === 0
-                    ? 'Aucun debouche disponible pour la carriere actuelle.'
-                    : 'Aucune carriere ne correspond a votre recherche.'
+                    ? 'Aucun débouché disponible pour la carrière actuelle.'
+                    : 'Aucune carrière ne correspond à votre recherche.'
               }}
             </p>
 					</div>
@@ -375,12 +375,12 @@
 										</label>
 									</li>
 								</ul>
-                <p v-else class="text-center text-sm opacity-70 py-8">{{ catalogQuery.trim().length < 2 ? 'Saisissez au moins 2 caracteres.' : 'Aucun element trouve.' }}</p>
+                <p v-else class="text-center text-sm opacity-70 py-8">{{ catalogQuery.trim().length < 2 ? 'Saisissez au moins 2 caractères.' : 'Aucun élément trouvé.' }}</p>
 							</div>
 						</div>
 
             <p v-if="catalogOptions.length > displayedCatalogOptions.length" class="text-xs opacity-70 px-1">
-              Affichage limité aux {{ displayedCatalogOptions.length }} premiers résultats. Précise votre recherche pour affiner.
+              Affichage limité aux {{ displayedCatalogOptions.length }} premiers résultats. Précisez votre recherche pour affiner.
             </p>
 
             <div
@@ -415,7 +415,7 @@
 						<div v-if="selectedCatalogIds.length > 0" class="rounded-lg border border-base-300 bg-base-200 p-4">
 							<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
 								<p class="text-sm font-semibold">{{ selectedCatalogIds.length }} sélectionné(s)</p>
-								<p class="text-xs opacity-70">Clique sur un badge pour le retirer.</p>
+								<p class="text-xs opacity-70">Cliquez sur un badge pour le retirer.</p>
 							</div>
 							<div class="flex flex-wrap gap-2">
                 <button
@@ -873,8 +873,8 @@ async function applyCareerChange(applyCareerCharacteristics: boolean): Promise<v
     setSectionSuccess(
       'career',
       applyCareerCharacteristics
-        ? 'Carriere et caracteristiques mises a jour.'
-        : 'Carriere mise a jour.'
+        ? 'Carrière et caractéristiques mises à jour.'
+        : 'Carrière mise à jour.'
     )
     closeCareerConfirmModal()
   } catch (error) {
@@ -882,8 +882,8 @@ async function applyCareerChange(applyCareerCharacteristics: boolean): Promise<v
       await loadCharacter().catch(() => undefined)
       careerConfirmError.value =
         error instanceof Error
-          ? `Carriere mise a jour, mais profil de carriere non applique: ${error.message}`
-          : 'Carriere mise a jour, mais profil de carriere non applique.'
+          ? `Carrière mise à jour, mais profil de carrière non appliqué : ${error.message}`
+          : 'Carrière mise à jour, mais profil de carrière non appliqué.'
       return
     }
 
@@ -997,7 +997,7 @@ async function confirmCatalogAdd(): Promise<void> {
 
   if (
     !(await confirmDestructiveAction(
-      `Ajouter ${selectedCatalogIds.value.length} element(s) a la fiche ?`
+      `Ajouter ${selectedCatalogIds.value.length} élément(s) à la fiche ?`
     ))
   ) {
     return
@@ -1025,7 +1025,7 @@ async function confirmCatalogAdd(): Promise<void> {
 
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
-    setSectionSuccess('catalog', `${selectedCatalogIds.value.length} element(s) ajoute(s).`)
+    setSectionSuccess('catalog', `${selectedCatalogIds.value.length} élément(s) ajouté(s).`)
     closeCatalogModal()
   } catch (error) {
     catalogError.value = error instanceof Error ? error.message : 'Ajout impossible.'
@@ -1048,7 +1048,7 @@ async function confirmItemCreate(): Promise<void> {
   const normalizedEncumbrance = Math.max(0, Math.floor(newItemForm.value.encumbrance || 0))
   const normalizedQuantity = Math.max(1, Math.floor(newItemForm.value.quantity || 1))
 
-  if (!(await confirmDestructiveAction('Creer puis ajouter cet equipement a la fiche ?'))) {
+  if (!(await confirmDestructiveAction('Créer puis ajouter cet équipement à la fiche ?'))) {
     return
   }
 
@@ -1069,7 +1069,7 @@ async function confirmItemCreate(): Promise<void> {
     )
     invalidateCurrentLinksCache()
     await loadCharacterLinks(character.value.id, { force: true })
-    setSectionSuccess('catalog', 'Equipement cree et ajoute.')
+    setSectionSuccess('catalog', 'Équipement créé et ajouté.')
     closeCatalogModal()
   } catch (error) {
     catalogError.value = error instanceof Error ? error.message : 'Création impossible.'
