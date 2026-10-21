@@ -191,7 +191,7 @@
 
 <script setup lang="ts">
 import { ChevronLeft, Users } from '@lucide/vue'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import type { CharacterTabId } from '../types/characterSheet'
 import CareerChangeModal from '../components/character/CareerChangeModal.vue'
 import CareerConfirmModal from '../components/character/CareerConfirmModal.vue'
@@ -212,6 +212,14 @@ import { useIsOnline } from '../composables/useIsOnline'
 import { useQueuedUpdatesCount } from '../composables/useQueuedUpdatesCount'
 
 const activeCharacterTab = ref<CharacterTabId>('stats')
+
+watch(activeCharacterTab, async (tab) => {
+  await nextTick()
+  const panel = document.getElementById(`character-panel-${tab}`)
+  if (!panel) return
+  const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+  panel.scrollIntoView({ behavior, block: 'start' })
+})
 const {
   character,
   loading,

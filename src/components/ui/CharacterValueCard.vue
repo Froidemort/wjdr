@@ -52,7 +52,7 @@ function onMaxInput(event: Event): void {
     :class="highlighted ? 'border-2 border-primary/50 shadow-sm' : 'border-base-300'"
   >
     <div class="card-body gap-2 p-3 sm:gap-3 sm:p-4">
-      <div class="flex items-center justify-between gap-2">
+      <div class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex min-w-0 items-center gap-2">
           <div class="tooltip inline-flex shrink-0" :data-tip="label">
             <component :is="icon" :class="iconClass" aria-hidden="true" />
@@ -60,7 +60,7 @@ function onMaxInput(event: Event): void {
           <p class="truncate text-sm font-semibold leading-tight text-base-content/85 sm:text-base">{{ label }}</p>
         </div>
 
-        <div class="flex min-w-0 items-center justify-end gap-1.5 font-semibold tabular-nums sm:gap-2">
+        <div class="flex min-w-0 items-center gap-1.5 sm:justify-end font-semibold tabular-nums sm:gap-2">
           <template v-if="editable">
             <input
               :value="current"
