@@ -1,12 +1,11 @@
-import { E2E_CHARACTER_ID, expect, test } from './fixtures/supabaseAuth'
+import { openCharacterSheet } from './fixtures/characterSheet'
+import { expect, test } from './fixtures/supabaseAuth'
 
 test.use({ viewport: { width: 375, height: 667 } })
 
 test.describe('Character sheet (authenticated, mobile)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/characters/${E2E_CHARACTER_ID}`)
-    await expect(page.getByRole('heading', { name: 'Aperçu' })).toBeVisible()
-    await expect(page.locator('html.app-splash-active')).toHaveCount(0)
+    await openCharacterSheet(page)
   })
 
   test('overview shows wounds, fortune and destiny before the other overview cards', async ({ page }) => {

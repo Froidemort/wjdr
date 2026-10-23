@@ -1,22 +1,26 @@
 <script setup lang="ts">
 import { Bell, BookOpenText, House, LogOut, MoreHorizontal, Scroll, UserCircle, UserRound, Users } from '@lucide/vue'
-import { onClickOutside } from '@vueuse/core'
 import { computed, type Component, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useCurrentContext } from '../composables/useCurrentContext'
+import { useLogout } from '../composables/useLogout'
 import { useMissivesInbox } from '../composables/useMissivesInbox'
 import { usePageScrolled } from '../composables/usePageScrolled'
+import { usePopoverPanel } from '../composables/usePopoverPanel'
 import { useAuthStore } from '../stores/auth'
 import ThemeToggle from '../components/ui/ThemeToggle.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
-const router = useRouter()
 const { unreadCount } = useMissivesInbox()
 const { isScrolled } = usePageScrolled()
-const optionsOpen = ref(false)
 const optionsRef = ref<HTMLElement | null>(null)
-onClickOutside(optionsRef, () => closeOptions())
+const optionsTriggerRef = ref<HTMLButtonElement | null>(null)
+const { isOpen: optionsOpen, close: closeOptions, toggle: toggleOptions } = usePopoverPanel({
+  rootRef: optionsRef,
+  triggerRef: optionsTriggerRef,
+})
+const { logout } = useLogout(closeOptions)
 
 const { navContext } = useCurrentContext()
 
@@ -67,22 +71,13 @@ function isRouteActive(path: string): boolean {
   return route.meta.navSection === section
 }
 
-function closeOptions(): void {
-  optionsOpen.value = false
-}
-
-async function onLogout(): Promise<void> {
-  closeOptions()
-  await authStore.signOut()
-  await router.replace('/')
-}
 </script>
 
 <template>
   <!-- --grim-nav-height:0 — mobile header is sticky, not overlaid, so the hero does not pull up under it -->
   <div
-    class="flex min-h-dvh flex-col bg-base-100 [--grim-nav-height:0px] [--grim-dock-height:4rem]"
-    :class="isAuthenticated ? '[--grim-chrome-height:calc(7.5rem_+_env(safe-area-inset-bottom,0px))]' : '[--grim-chrome-height:3.5rem]'"
+    class="flex min-h-dvh flex-col bg-base-100 [--grim-nav-height:0px] [--grim-dock-height:calc(4rem_+_env(safe-area-inset-bottom,0px))]"
+    :class="isAuthenticated ? '[--grim-chrome-height:calc(3.5rem_+_var(--grim-dock-height))]' : '[--grim-chrome-height:3.5rem]'"
   >
     <header
       class="sticky top-0 z-40 navbar min-h-14 border-b border-transparent px-3 transition-[background-color,border-color,box-shadow] duration-300 ease-out motion-reduce:transition-none"
@@ -132,7 +127,7 @@ async function onLogout(): Promise<void> {
       <slot />
     </main>
 
-    <div v-if="isAuthenticated" class="sticky bottom-0 z-40 dock dock-sm h-[calc(4rem+env(safe-area-inset-bottom,0px))] border-t border-base-300 bg-base-200">
+    <div v-if="isAuthenticated" class="sticky bottom-0 z-40 dock dock-sm h-(--grim-dock-height) border-t border-base-300 bg-base-200">
       <RouterLink
         v-for="item in navItems"
         :key="item.label"
@@ -144,26 +139,33 @@ async function onLogout(): Promise<void> {
         <span class="dock-label">{{ item.label }}</span>
       </RouterLink>
 
-      <details ref="optionsRef" class="dropdown dropdown-top dropdown-end" :open="optionsOpen" @toggle="optionsOpen = !optionsOpen">
-        <summary class="flex min-h-11 min-w-11 cursor-pointer flex-col items-center justify-center gap-1 px-2 text-xs text-base-content/80 outline-none list-none">
+      <div ref="optionsRef" class="dropdown dropdown-top dropdown-end" :class="{ 'dropdown-open': optionsOpen }">
+        <button
+          ref="optionsTriggerRef"
+          type="button"
+          class="flex min-h-11 min-w-11 cursor-pointer flex-col items-center justify-center gap-1 px-2 text-xs text-base-content/80 outline-none"
+          aria-haspopup="menu"
+          :aria-expanded="optionsOpen ? 'true' : 'false'"
+          @click="toggleOptions"
+        >
           <MoreHorizontal class="size-5" />
           <span class="dock-label">Options</span>
-        </summary>
-        <ul class="menu dropdown-content z-50 w-44 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg mb-2">
+        </button>
+        <ul v-if="optionsOpen" class="menu dropdown-content z-50 w-44 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg mb-2">
           <li>
-            <router-link to="/profile" class="min-h-11 gap-3" @click="closeOptions">
+            <router-link to="/profile" class="min-h-11 gap-3">
               <UserCircle class="size-5 text-primary" />
               Profil
             </router-link>
           </li>
           <li>
-            <button type="button" class="min-h-11 w-full justify-start gap-3 text-error" @click="onLogout">
+            <button type="button" class="min-h-11 w-full justify-start gap-3 text-error" @click="logout">
               <LogOut class="size-5" />
               Se déconnecter
             </button>
           </li>
         </ul>
-    </details>
+      </div>
     </div>
   </div>
 </template>
