@@ -22,9 +22,9 @@ const TABS: ReadonlyArray<{ id: CharacterTabId; label: string; shortLabel: strin
 </script>
 
 <template>
-  <!-- Mobile: pinned above the dock within thumb reach; from sm: inline bar. -->
+  <!-- Mobile: fixed above the dock; max-sm:mb-0 cancels the parent's space-y margin that would lift it. From sm: inline bar. -->
   <nav
-    class="fixed inset-x-0 bottom-[calc(var(--grim-dock-height,0px)+env(safe-area-inset-bottom,0px))] z-30 border-t border-base-300 bg-base-100/95 p-2 backdrop-blur sm:static sm:rounded-box sm:border sm:p-3 sm:backdrop-blur-none"
+    class="fixed inset-x-0 bottom-[var(--grim-dock-height,0px)] z-30 max-sm:mb-0 border-t border-base-300 bg-base-100/95 p-2 backdrop-blur sm:static sm:rounded-box sm:border sm:p-3 sm:backdrop-blur-none"
     aria-label="Sections du personnage"
   >
     <div role="tablist" class="join grid w-full grid-cols-3 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
