@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 import type { Ref } from 'vue'
+import { compareByName } from '../utils/compare'
 
 export interface CompendiumFilterConfig<TItem> {
   searchText: (item: TItem) => string
@@ -56,9 +57,7 @@ export function useCompendiumInventoryFilters<TItem>(
           }
         }
       }
-      result[facet] = Array.from(counts, ([name, count]) => ({ name, count })).sort((a, b) =>
-        a.name.localeCompare(b.name, 'fr')
-      )
+      result[facet] = Array.from(counts, ([name, count]) => ({ name, count })).sort(compareByName)
     }
     return result
   })

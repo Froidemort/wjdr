@@ -1,4 +1,5 @@
 import type { MapMarker, MapRole, MarkerVisibility } from '../types/map'
+import { compareByName } from './compare'
 import { normalizeSearchText } from './searchText'
 
 export interface MarkerFilters {
@@ -38,8 +39,7 @@ export function searchMarkers(markers: readonly MapMarker[], query: string, limi
     else if (name.includes(needle)) contains.push(marker)
   }
 
-  const byName = (a: MapMarker, b: MapMarker) => a.name.localeCompare(b.name, 'fr')
-  return [...prefix.sort(byName), ...contains.sort(byName)].slice(0, limit)
+  return [...prefix.sort(compareByName), ...contains.sort(compareByName)].slice(0, limit)
 }
 
 export function canEditMarker(marker: MapMarker, userId: string | null, role: MapRole | null): boolean {

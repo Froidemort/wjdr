@@ -2,6 +2,7 @@ import { supabase } from '../db/supabase'
 import type { CampaignRow } from '../types/db'
 import type { CampaignSummary } from '../types/domain'
 import { withRetry } from './shared/retry'
+import { throwIfError } from './shared/supabase'
 import { isUuidLike } from '../utils/validation'
 
 export interface PaginatedCampaigns {
@@ -50,9 +51,7 @@ export async function listCampaignsForUser(userId: string): Promise<CampaignSumm
       .select('id, name, code, description, is_archived, mj_id, created_at')
       .order('created_at', { ascending: false })
 
-    if (error) {
-      throw error
-    }
+    throwIfError(error)
 
     return ((data ?? []) as CampaignRow[]).map(mapCampaign).sort((a, b) => {
       const left = a.createdAt ?? ''
@@ -135,9 +134,7 @@ export async function getCampaignById(campaignId: string): Promise<CampaignSumma
       ? await query.eq('id', identifier).maybeSingle()
       : await query.eq('code', identifier.toUpperCase()).maybeSingle()
 
-    if (error) {
-      throw error
-    }
+    throwIfError(error)
 
     return data ? mapCampaign(data as CampaignRow) : null
   })

@@ -12,7 +12,8 @@
     "tmp/**",
     "coverage/**",
     "**/graphify-out/**",
-    "migrations/**"
+    "scripts/data/**",
+    "data/**"
   ],
   "ignoreExportsUsedInFile": true,
   "tags": [

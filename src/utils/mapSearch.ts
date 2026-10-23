@@ -1,5 +1,6 @@
 import type { City } from '../types/cities'
 import type { MapMarker, MapSearchResult } from '../types/map'
+import { compareByName } from './compare'
 import { normalizeSearchText } from './searchText'
 
 /** Accent/case-insensitive name search over markers and cities; hidden cities are skipped, prefix matches rank first. */
@@ -22,6 +23,5 @@ export function searchPlaces(markers: readonly MapMarker[], cities: readonly Cit
     if (!city.hidden) push({ kind: 'city', key: `city-${city.id}`, name: city.name, id: city.id })
   }
 
-  const byName = (a: MapSearchResult, b: MapSearchResult) => a.name.localeCompare(b.name, 'fr')
-  return [...prefix.sort(byName), ...contains.sort(byName)].slice(0, limit)
+  return [...prefix.sort(compareByName), ...contains.sort(compareByName)].slice(0, limit)
 }

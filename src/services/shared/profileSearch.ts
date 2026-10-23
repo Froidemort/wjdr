@@ -1,6 +1,7 @@
 import { supabase } from '../../db/supabase'
 import type { BasicProfileRow } from '../../types/db'
 import type { Profile } from '../../types/domain'
+import { throwIfError } from './supabase'
 
 export function mapBasicProfile(row: BasicProfileRow): Profile {
   return {
@@ -22,9 +23,7 @@ export async function searchProfilesByTerm(query: string, limit = 20): Promise<B
     .or(`username.ilike.%${trimmed}%,email.ilike.%${trimmed}%`)
     .limit(limit)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return (data ?? []) as BasicProfileRow[]
 }

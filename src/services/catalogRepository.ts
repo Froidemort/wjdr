@@ -1,4 +1,5 @@
 import { supabase } from '../db/supabase'
+import { throwIfError } from './shared/supabase'
 import type {
   CatalogItem,
   CatalogRow,
@@ -48,9 +49,7 @@ export async function searchCatalog(
 
   const { data, error } = await request.returns<CatalogRow[]>()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return ((data ?? []) as CatalogRow[]).map(mapCatalogItem)
 }
@@ -68,9 +67,7 @@ export async function createCatalogItem(input: CreateCatalogItemInput): Promise<
     .select('id, name, description, encumbrance')
     .single<CatalogRow>()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return mapCatalogItem(data)
 }

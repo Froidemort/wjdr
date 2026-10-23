@@ -1,5 +1,6 @@
 import { supabase } from '../db/supabase'
 import { withRetry } from './shared/retry'
+import { throwIfError } from './shared/supabase'
 import { isValidSessionCode, isValidUUID, validateInput } from '../utils/validation'
 
 export interface NotificationItem {
@@ -154,9 +155,7 @@ export async function listNotificationsForUserPaginated(
       .order('created_at', { ascending: false })
       .range(from, to)
 
-    if (error) {
-      throw error
-    }
+    throwIfError(error)
 
     return {
       items: ((data ?? []) as NotificationRow[]).map(mapNotification),
@@ -171,9 +170,7 @@ export async function markNotificationRead(notificationId: string): Promise<void
     .update({ is_read: true })
     .eq('id', notificationId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function markAllNotificationsRead(userId: string): Promise<void> {
@@ -183,9 +180,7 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
     .eq('receiver_user_id', userId)
     .eq('is_read', false)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function countUnreadNotifications(userId: string): Promise<number> {
@@ -195,9 +190,7 @@ export async function countUnreadNotifications(userId: string): Promise<number> 
     .eq('receiver_user_id', userId)
     .eq('is_read', false)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return count ?? 0
 }
@@ -205,9 +198,7 @@ export async function countUnreadNotifications(userId: string): Promise<number> 
 export async function deleteNotification(notificationId: string): Promise<void> {
   const { error } = await supabase.from('notifications').delete().eq('id', notificationId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function requestJoinCampaign(campaignId: string, requesterId: string): Promise<void> {
@@ -222,9 +213,7 @@ export async function requestJoinCampaign(campaignId: string, requesterId: strin
     }
   )
 
-  if (ownerError) {
-    throw ownerError
-  }
+  throwIfError(ownerError)
 
   const mjId = String(ownerId ?? '')
   if (!mjId) {
@@ -244,9 +233,7 @@ export async function requestJoinCampaign(campaignId: string, requesterId: strin
     .eq('receiver_user_id', mjId)
     .ilike('message', `%${marker}%`)
 
-  if (existingError) {
-    throw existingError
-  }
+  throwIfError(existingError)
 
   const hasPendingRequest = (existingRows ?? []).some(
     (row) => !(row as { is_read: boolean }).is_read
@@ -270,9 +257,7 @@ export async function requestJoinCampaign(campaignId: string, requesterId: strin
     message: `L aventurier ${username} demande audience pour rejoindre votre table.\n${marker}`,
   })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function requestCampaignJoinByCode(userId: string, code: string): Promise<void> {
@@ -293,9 +278,7 @@ export async function requestCampaignJoinByCode(userId: string, code: string): P
     target_code: normalized,
   })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   if (!campaignId) {
     throw new Error('Campagne introuvable ou archivée.')
@@ -318,9 +301,7 @@ export async function listPendingJoinRequestsForCampaign(
     .eq('is_read', false)
     .order('created_at', { ascending: false })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const rows = ((data ?? []) as JoinRequestRow[])
     .filter((row) => Boolean(row.sender_user_id))
@@ -357,9 +338,7 @@ export async function notifyJoinRequestAccepted(
     message: `Le Maître du Jeu accepte votre entree a la table.\n[session:${campaignId}]`,
   })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function notifyJoinRequestRejected(
@@ -374,7 +353,5 @@ export async function notifyJoinRequestRejected(
     message: `Le Maître du Jeu n a pas retenu votre demande pour cette table.`,
   })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }

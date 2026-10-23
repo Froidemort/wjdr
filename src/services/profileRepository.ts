@@ -1,6 +1,7 @@
 import { supabase } from '../db/supabase'
 import type { ProfileSettingsRow } from '../types/db'
 import { isValidUsername } from '../utils/validation'
+import { throwIfError } from './shared/supabase'
 
 export interface ProfileSettings {
   username: string
@@ -27,9 +28,7 @@ export async function getProfileSettings(userId: string): Promise<ProfileSetting
     .eq('id', userId)
     .maybeSingle()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   if (!data) {
     throw new Error('Profil introuvable.')
@@ -60,9 +59,7 @@ export async function uploadProfileAvatar(userId: string, file: File): Promise<s
     contentType: file.type,
   })
 
-  if (uploadError) {
-    throw uploadError
-  }
+  throwIfError(uploadError)
 
   const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(path)
 
@@ -73,9 +70,7 @@ export async function uploadProfileAvatar(userId: string, file: File): Promise<s
     .update({ avatar_url: avatarUrl })
     .eq('id', userId)
 
-  if (profileError) {
-    throw profileError
-  }
+  throwIfError(profileError)
 
   await supabase.auth.updateUser({
     data: {
@@ -147,9 +142,7 @@ export async function updateProfileEmail(userId: string, rawEmail: string): Prom
   }
 
   const { error: authError } = await supabase.auth.updateUser({ email })
-  if (authError) {
-    throw authError
-  }
+  throwIfError(authError)
 
   const { error: profileError } = await supabase.from('profiles').update({ email }).eq('id', userId)
 
@@ -169,7 +162,5 @@ export async function updateAccountPassword(newPassword: string): Promise<void> 
   }
 
   const { error } = await supabase.auth.updateUser({ password: newPassword })
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }

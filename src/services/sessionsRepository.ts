@@ -1,6 +1,7 @@
 import { supabase } from '../db/supabase'
 import type { SessionRow } from '../types/db'
 import type { SessionSummary, CreateSessionInput } from '../types/domain'
+import { throwIfError } from './shared/supabase'
 
 function mapSession(row: SessionRow): SessionSummary {
   return {
@@ -40,9 +41,7 @@ export async function listSessionsForCampaign(campaignId: string): Promise<Sessi
     .eq('campaign_id', campaignId)
     .order('date', { ascending: false })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return (data ?? []).map((row) => mapSession(row as SessionRow))
 }
@@ -104,9 +103,7 @@ export async function getSessionById(sessionId: string): Promise<SessionSummary 
     .eq('id', sessionId)
     .maybeSingle()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return data ? mapSession(data as SessionRow) : null
 }

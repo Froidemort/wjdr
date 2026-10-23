@@ -12,7 +12,7 @@ import {
 import type { CatalogItem } from '../types/domain'
 import { normalizeStatCode, sortStatsByCharacteristicOrder } from '../utils/characterSheet'
 import { safeErrorMessage } from '../utils/errorMessages'
-import type { FeedbackSection } from './useCharacterSheet'
+import type { FeedbackSection } from './useCharacterFeedback'
 
 interface CareerCharacter {
   id: string

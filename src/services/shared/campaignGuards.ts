@@ -1,4 +1,5 @@
 import { supabase } from '../../db/supabase'
+import { throwIfError } from './supabase'
 
 export async function assertCampaignWritable(campaignId: string): Promise<void> {
   const { data, error } = await supabase
@@ -7,9 +8,7 @@ export async function assertCampaignWritable(campaignId: string): Promise<void> 
     .eq('id', campaignId)
     .maybeSingle()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   if (!data) {
     throw new Error('Campagne introuvable.')

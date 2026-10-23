@@ -2,6 +2,7 @@ import { supabase } from '../db/supabase'
 import type { Profile } from '../types/domain'
 import { assertCampaignWritable } from './shared/campaignGuards'
 import { mapBasicProfile, searchProfilesByTerm } from './shared/profileSearch'
+import { throwIfError } from './shared/supabase'
 
 export interface SessionInvitation {
   userId: string
@@ -54,9 +55,7 @@ export async function listCampaignInvitations(
     .eq('sender_user_id', mjId)
     .order('created_at', { ascending: false })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const rows = ((data ?? []) as NotificationRow[]).filter((row) =>
     isInvitationForCampaign(row, campaignId)
@@ -95,9 +94,7 @@ export async function searchInvitableProfilesByNotification(
     .select('receiver_user_id, title, message, is_read, created_at')
     .eq('sender_user_id', mjId)
 
-  if (invitationsError) {
-    throw invitationsError
-  }
+  throwIfError(invitationsError)
 
   const invitationRows = ((invitationsData ?? []) as NotificationRow[]).filter((row) =>
     isInvitationForCampaign(row, campaignId)
@@ -130,9 +127,7 @@ export async function createCampaignInvitations(
     .select('receiver_user_id, title, message, is_read, created_at')
     .eq('sender_user_id', mjId)
 
-  if (existingError) {
-    throw existingError
-  }
+  throwIfError(existingError)
 
   const existingIds = new Set(
     ((existingData ?? []) as NotificationRow[])
@@ -154,7 +149,5 @@ export async function createCampaignInvitations(
 
   const { error } = await supabase.from('notifications').insert(rows)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }

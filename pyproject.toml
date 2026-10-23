@@ -22,12 +22,6 @@ dependencies = [
     "requests>=2.34.2",
 ]
 
-[project.scripts]
-extract_spells = "wjdr.migrations.extract_spells:main"
-extract_career = "wjdr.migrations.extract_career:main"
-extract_skills_talents = "wjdr.migrations.skills_talents_links:main"
-extract_weapon_attributes = "wjdr.migrations.weapon_attributes_setter:main"
-
 [build-system]
 requires = ["uv_build>=0.12.24,<0.13.0"]
 build-backend = "uv_build"
@@ -35,7 +29,7 @@ build-backend = "uv_build"
 [tool.ruff]
 target-version = "py313"
 line-length = 240
-src = ["migrations", "src"]
+src = ["scripts/data", "src"]
 
 [tool.ruff.lint]
 # PEP 8 (E, W, N, I), PEP 484/585/604 (ANN, UP), PEP 257 (D)

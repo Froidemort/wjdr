@@ -1,6 +1,6 @@
 default_install_hook_types: [pre-commit, commit-msg, pre-push]
 default_stages: [pre-commit]
-exclude: '^(coverage/|graphify-out/|tmp/|dist/|public/mockServiceWorker\.js|package-lock\.json|migrations/public_data\.sql)'
+exclude: '^(coverage/|graphify-out/|tmp/|dist/|public/mockServiceWorker\.js|package-lock\.json|data/seed/public_data\.sql)'
 
 repos:
   - repo: builtin
@@ -54,9 +54,9 @@ repos:
     hooks:
       - id: ruff-check
         args: ['--fix']
-        files: '^migrations/.*\.py$'
+        files: '^scripts/data/.*\.py$'
       - id: ruff-format
-        files: '^migrations/.*\.py$'
+        files: '^scripts/data/.*\.py$'
 
   # TypeScript / Vue
   - repo: local

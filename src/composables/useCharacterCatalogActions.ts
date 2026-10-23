@@ -11,7 +11,7 @@ import {
 import type { CatalogItem } from '../types/domain'
 import { formatNamedWithSpecialization } from '../utils/characterSheet'
 import { safeErrorMessage } from '../utils/errorMessages'
-import type { FeedbackSection } from './useCharacterSheet'
+import type { FeedbackSection } from './useCharacterFeedback'
 import type { ITEM_QUALITY_OPTIONS } from '../utils/inventoryQuality'
 
 export type CatalogSection = 'skills' | 'talents' | 'weapons' | 'armors' | 'items'

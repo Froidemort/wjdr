@@ -1,4 +1,5 @@
 import type { City } from '../types/cities'
+import { compareFr } from './compare'
 
 const MID_TYPES = new Set(['Ville', 'Forteresse', 'Mine'])
 
@@ -25,7 +26,7 @@ export function cityTypesOf(cities: readonly Pick<City, 'type'>[]): string[] {
     const index = CITY_TYPE_ORDER.indexOf(type)
     return index === -1 ? CITY_TYPE_ORDER.length : index
   }
-  return [...present].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b, 'fr'))
+  return [...present].sort((a, b) => rank(a) - rank(b) || compareFr(a, b))
 }
 
 export function filterCitiesByType<T extends Pick<City, 'type'>>(cities: readonly T[], hiddenTypes: readonly string[]): T[] {
