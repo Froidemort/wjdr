@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { Bell, LogOut, UserCircle } from '@lucide/vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
 import { mainNavLinks, resolveNavTo } from '../../config/navLinks'
 import { useCurrentContext } from '../../composables/useCurrentContext'
+import { useLogout } from '../../composables/useLogout'
 
 // Collapsible drawer for authenticated users on small screens (sm and below).
 const open = defineModel<boolean>('open', { required: true })
@@ -11,19 +10,13 @@ defineProps<{
   unreadCount: number
 }>()
 
-const authStore = useAuthStore()
 const { navContext } = useCurrentContext()
-const router = useRouter()
-
-async function onLogout(): Promise<void> {
-  open.value = false
-  await authStore.signOut()
-  await router.replace('/')
-}
 
 function close(): void {
   open.value = false
 }
+
+const { logout } = useLogout(close)
 </script>
 
 <template>
@@ -62,7 +55,7 @@ function close(): void {
         </router-link>
       </li>
       <li>
-        <button type="button" class="min-h-11 gap-3 text-error" @click="onLogout">
+        <button type="button" class="min-h-11 gap-3 text-error" @click="logout">
           <LogOut class="size-5" />
           Se déconnecter
         </button>
