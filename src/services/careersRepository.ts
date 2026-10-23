@@ -2,6 +2,8 @@ import { supabase } from '../db/supabase'
 import type { CareerCharacteristic, CareerPathCareer } from '../types/career'
 import type { CareerCharacteristicRow, CareerPathRow, CareerRow } from '../types/db'
 import { normalizeStatCode } from '../utils/characterSheet'
+import { fetchAllPages } from './shared/pagination'
+import { throwIfError } from './shared/supabase'
 
 export type { CareerCharacteristic, CareerPathCareer } from '../types/career'
 
@@ -37,9 +39,7 @@ export async function listCareerCharacteristicsByCareerId(
     .select('stat_code, value')
     .eq('career_id', trimmedCareerId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const mapped = ((data ?? []) as CareerCharacteristicRow[])
     .map((row) => ({
@@ -62,9 +62,7 @@ export async function listCareerPathCareersByFromCareerId(
     .select('to_career_id')
     .eq('from_career_id', trimmedCareerId)
 
-  if (pathError) {
-    throw pathError
-  }
+  throwIfError(pathError)
 
   const targetCareerIds = Array.from(
     new Set(
@@ -83,34 +81,12 @@ export async function listCareerPathCareersByFromCareerId(
     .select('id, name')
     .in('id', targetCareerIds)
 
-  if (careersError) {
-    throw careersError
-  }
+  throwIfError(careersError)
 
   return ((careersData ?? []) as CareerRow[])
     .map(mapCareerPathCareer)
     .filter((row): row is CareerPathCareer => row !== null)
     .sort((left, right) => left.name.localeCompare(right.name, 'fr', FRENCH_SORT_OPTIONS))
-}
-
-const PAGE_SIZE = 1000
-
-// PostgREST caps responses at 1000 rows, so page until a short page.
-async function fetchAllPages<T>(
-  fetchPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: Error | null }>
-): Promise<T[]> {
-  const rows: T[] = []
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await fetchPage(from, from + PAGE_SIZE - 1)
-    if (error) {
-      throw error
-    }
-    const page = data ?? []
-    rows.push(...page)
-    if (page.length < PAGE_SIZE) {
-      return rows
-    }
-  }
 }
 
 export async function listAllCareers(): Promise<CareerPathCareer[]> {

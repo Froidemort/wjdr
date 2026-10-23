@@ -11,6 +11,7 @@ import type { CharacterRace, CreateCharacterPayload } from '../types/character'
 import type { CharacterDetail, CharacterStatValue, CharacterSummary } from '../types/domain'
 import { listCharacterLinksBundlesByIds, type CharacterLinksBundle } from './characterLinksRepository'
 import { withRetry } from './shared/retry'
+import { throwIfError } from './shared/supabase'
 
 export type { CreateCharacterPayload } from '../types/character'
 
@@ -57,9 +58,7 @@ async function resolveCareerNames(careerIds: string[]): Promise<Map<string, stri
 
   const { data, error } = await supabase.from('careers').select('id, name').in('id', uniqueIds)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const byId = new Map<string, string>()
   for (const row of (data ?? []) as CareerRow[]) {
@@ -82,9 +81,7 @@ async function resolveOwnerAvatars(userIds: string[]): Promise<Map<string, strin
     .select('id, avatar_url')
     .in('id', uniqueIds)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const byId = new Map<string, string | null>()
   for (const row of (data ?? []) as ProfileAvatarRow[]) {
@@ -108,9 +105,7 @@ async function resolveWoundsMaxByCharacterIds(
     .eq('stat_code', WOUNDS_STAT_CODE)
     .in('character_id', uniqueIds)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const byCharacterId = new Map<string, number>()
   for (const row of (data ?? []) as Array<{
@@ -150,9 +145,7 @@ async function syncCharacterWoundsCore(characterId: string, woundsMax: number): 
     .eq('id', characterId)
     .maybeSingle()
 
-  if (characterError) {
-    throw characterError
-  }
+  throwIfError(characterError)
 
   if (!characterRow) {
     throw new Error('Personnage introuvable.')
@@ -168,9 +161,7 @@ async function syncCharacterWoundsCore(characterId: string, woundsMax: number): 
     })
     .eq('id', characterId)
 
-  if (updateError) {
-    throw updateError
-  }
+  throwIfError(updateError)
 }
 
 async function setCharacterWoundsStatCurrentAdvanced(
@@ -186,9 +177,7 @@ async function setCharacterWoundsStatCurrentAdvanced(
     .eq('stat_code', WOUNDS_STAT_CODE)
     .maybeSingle()
 
-  if (existingRowError) {
-    throw existingRowError
-  }
+  throwIfError(existingRowError)
 
   const baseValue = normalizeNonNegativeInteger(
     Number((existingRow as { base_value: number } | null)?.base_value ?? 0)
@@ -209,9 +198,7 @@ async function setCharacterWoundsStatCurrentAdvanced(
       { onConflict: 'character_id,stat_code' }
     )
 
-  if (upsertError) {
-    throw upsertError
-  }
+  throwIfError(upsertError)
 }
 
 async function assertCharacterCampaignWritable(characterId: string): Promise<void> {
@@ -221,9 +208,7 @@ async function assertCharacterCampaignWritable(characterId: string): Promise<voi
     .eq('id', characterId)
     .maybeSingle()
 
-  if (characterMetaError) {
-    throw characterMetaError
-  }
+  throwIfError(characterMetaError)
 
   if (!characterMeta) {
     throw new Error('Personnage introuvable.')
@@ -235,9 +220,7 @@ async function assertCharacterCampaignWritable(characterId: string): Promise<voi
     .eq('id', characterMeta.campaign_id as string)
     .maybeSingle()
 
-  if (campaignMetaError) {
-    throw campaignMetaError
-  }
+  throwIfError(campaignMetaError)
 
   if (campaignMeta?.is_archived) {
     throw new Error('Campagne archivée : action interdite.')
@@ -251,9 +234,7 @@ async function resolveDefaultCareerId(): Promise<string> {
     .eq('name', DEFAULT_CHARACTER_CAREER_NAME)
     .maybeSingle()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const career = data as CareerRow | null
   if (!career?.id) {
@@ -269,9 +250,7 @@ async function createInitialStats(characterId: string): Promise<void> {
     .select('code')
     .order('code', { ascending: true })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const rows = ((data ?? []) as StaticStatRow[]).map((stat) => ({
     character_id: characterId,
@@ -287,9 +266,7 @@ async function createInitialStats(characterId: string): Promise<void> {
 
   const { error: insertError } = await supabase.from('character_stat_values').insert(rows)
 
-  if (insertError) {
-    throw insertError
-  }
+  throwIfError(insertError)
 }
 
 export async function listCharactersForUser(userId: string): Promise<CharacterSummary[]> {
@@ -302,9 +279,7 @@ export async function listCharactersForUser(userId: string): Promise<CharacterSu
       .eq('user_id', userId)
       .order('name', { ascending: true })
 
-    if (error) {
-      throw error
-    }
+    throwIfError(error)
 
     const rows = (data ?? []) as CharacterRow[]
     const [careerNames, avatars, woundsByCharacterId] = await Promise.all([
@@ -333,9 +308,7 @@ export async function listCharactersByCampaign(campaignId: string): Promise<Char
       .eq('campaign_id', campaignId)
       .order('name', { ascending: true })
 
-    if (error) {
-      throw error
-    }
+    throwIfError(error)
 
     const rows = (data ?? []) as CharacterRow[]
     const [careerNames, avatars, woundsByCharacterId] = await Promise.all([
@@ -380,9 +353,7 @@ export async function listCampaignCharacterSheets(
     ])
   )
 
-  if (statsResult.error) {
-    throw statsResult.error
-  }
+  throwIfError(statsResult.error)
 
   const statsById = new Map<string, CharacterStatValue[]>()
   for (const row of (statsResult.data ?? []) as Array<CharacterStatRow & { character_id: string }>) {
@@ -421,17 +392,11 @@ export async function getCharacterById(characterId: string): Promise<CharacterDe
         .order('code', { ascending: true }),
     ])
 
-    if (characterResult.error) {
-      throw characterResult.error
-    }
+    throwIfError(characterResult.error)
 
-    if (statsResult.error) {
-      throw statsResult.error
-    }
+    throwIfError(statsResult.error)
 
-    if (staticStatsResult.error) {
-      throw staticStatsResult.error
-    }
+    throwIfError(staticStatsResult.error)
 
     if (!characterResult.data) {
       return null
@@ -495,9 +460,7 @@ export async function updateCharacterCore(
       .eq('stat_code', WOUNDS_STAT_CODE)
       .maybeSingle()
 
-    if (woundsError) {
-      throw woundsError
-    }
+    throwIfError(woundsError)
 
     const normalizedWoundsRow = woundsRow as
       | { base_value: number; current_advanced: number }
@@ -512,9 +475,7 @@ export async function updateCharacterCore(
 
   const { error } = await supabase.from('characters').update(updatePayload).eq('id', characterId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function updateCharacterCareer(characterId: string, careerId: string): Promise<void> {
@@ -530,9 +491,7 @@ export async function updateCharacterCareer(characterId: string, careerId: strin
     .update({ career_id: trimmedCareerId })
     .eq('id', characterId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function updateCharacterStatCurrentAdvanced(
@@ -581,9 +540,7 @@ export async function updateCharacterStatValues(
     .eq('character_id', characterId)
     .eq('stat_code', trimmedStatCode)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   if (
     trimmedStatCode.trim().toUpperCase() === WOUNDS_STAT_CODE &&
@@ -597,9 +554,7 @@ export async function updateCharacterStatValues(
       .eq('stat_code', WOUNDS_STAT_CODE)
       .maybeSingle()
 
-    if (woundsError) {
-      throw woundsError
-    }
+    throwIfError(woundsError)
 
     const normalizedWoundsRow = woundsRow as
       | { base_value: number; current_advanced: number }
@@ -628,9 +583,7 @@ export async function replaceCharacterTotalAdvancedValues(
     .select('stat_code, base_value, current_advanced, total_advanced')
     .eq('character_id', trimmedCharacterId)
 
-  if (existingRowsError) {
-    throw existingRowsError
-  }
+  throwIfError(existingRowsError)
 
   const existingByStatCode = new Map<string, CharacterStatRow>()
   for (const row of (existingRows ?? []) as CharacterStatRow[]) {
@@ -663,9 +616,7 @@ export async function replaceCharacterTotalAdvancedValues(
     .from('character_stat_values')
     .upsert(upsertRows, { onConflict: 'character_id,stat_code' })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
 }
 
@@ -682,9 +633,7 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
     .eq('user_id', payload.userId)
     .maybeSingle()
 
-  if (existingError) {
-    throw existingError
-  }
+  throwIfError(existingError)
 
   if (existingCharacter) {
     throw new Error('Vous avez déjà un personnage dans cette campagne.')
@@ -715,9 +664,7 @@ export async function createCharacterForCampaign(payload: CreateCharacterPayload
     .select('id')
     .single()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const characterId = String((data as { id: string }).id)
   await createInitialStats(characterId)

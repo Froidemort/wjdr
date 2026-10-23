@@ -9,6 +9,7 @@ import type {
   WeaponAttribute,
 } from '../types/domain'
 import type { WeaponHand } from '../utils/equipmentSlots'
+import { throwIfError } from './shared/supabase'
 
 function normalizeQuality(value: string | null | undefined): InventoryQuality {
   if (
@@ -194,6 +195,24 @@ interface SkillTalentLinkRow {
 
 const characterLinksCache = new Map<string, CharacterLinksBundle>()
 
+type InventoryLinkTable = 'character_weapons' | 'character_armors' | 'character_items'
+
+async function removeLink(table: InventoryLinkTable, linkId: string): Promise<void> {
+  const { error } = await supabase.from(table).delete().eq('id', linkId)
+
+  throwIfError(error)
+}
+
+async function updateLinkQuality(
+  table: InventoryLinkTable,
+  linkId: string,
+  quality: InventoryQuality
+): Promise<void> {
+  const { error } = await supabase.from(table).update({ quality }).eq('id', linkId)
+
+  throwIfError(error)
+}
+
 function unwrapRelated<T>(value: T | T[] | null | undefined): T | undefined {
   if (!value) {
     return undefined
@@ -278,9 +297,7 @@ async function loadSkillTalentRelations(skillIds: string[]): Promise<Map<string,
     .in('skill_id', skillIds)
 
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   const mapped = new Map<string, Set<string>>()
   for (const row of (data ?? []) as SkillTalentLinkRow[]) {
@@ -301,9 +318,7 @@ export async function listCharacterSkills(characterId: string): Promise<Characte
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'skills' })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return ((data ?? []) as SkillLinkRow[]).map(mapSkillRow)
 }
@@ -337,9 +352,7 @@ export async function addCharacterSkills(characterId: string, skillIds: string[]
     .from('character_skills')
     .upsert(rows, { onConflict: 'character_id,skill_id', ignoreDuplicates: true })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function updateCharacterSkillMastery(
@@ -353,9 +366,7 @@ export async function updateCharacterSkillMastery(
     .eq('character_id', characterId)
     .eq('skill_id', skillId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function removeCharacterSkill(characterId: string, skillId: string): Promise<void> {
@@ -365,9 +376,7 @@ export async function removeCharacterSkill(characterId: string, skillId: string)
     .eq('character_id', characterId)
     .eq('skill_id', skillId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function listCharacterTalents(characterId: string): Promise<CharacterTalent[]> {
@@ -377,9 +386,7 @@ export async function listCharacterTalents(characterId: string): Promise<Charact
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'talents' })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return ((data ?? []) as TalentLinkRow[]).map(mapTalentRow)
 }
@@ -409,9 +416,7 @@ export async function addCharacterTalents(characterId: string, talentIds: string
     .from('character_talents')
     .upsert(rows, { onConflict: 'character_id,talent_id', ignoreDuplicates: true })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function removeCharacterTalent(characterId: string, talentId: string): Promise<void> {
@@ -421,9 +426,7 @@ export async function removeCharacterTalent(characterId: string, talentId: strin
     .eq('character_id', characterId)
     .eq('talent_id', talentId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function listCharacterWeapons(characterId: string): Promise<CharacterWeapon[]> {
@@ -435,9 +438,7 @@ export async function listCharacterWeapons(characterId: string): Promise<Charact
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'weapons' })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return ((data ?? []) as WeaponLinkRow[]).map(mapWeaponRow)
 }
@@ -494,17 +495,11 @@ export async function addCharacterWeapons(
 
   const { error } = await supabase.from('character_weapons').insert(rows)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function removeCharacterWeapon(linkId: string): Promise<void> {
-  const { error } = await supabase.from('character_weapons').delete().eq('id', linkId)
-
-  if (error) {
-    throw error
-  }
+  await removeLink('character_weapons', linkId)
 }
 
 export async function updateCharacterWeaponEquipped(
@@ -516,20 +511,14 @@ export async function updateCharacterWeaponEquipped(
     .update({ equiped: equipped })
     .eq('id', linkId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function updateCharacterWeaponQuality(
   linkId: string,
   quality: InventoryQuality
 ): Promise<void> {
-  const { error } = await supabase.from('character_weapons').update({ quality }).eq('id', linkId)
-
-  if (error) {
-    throw error
-  }
+  await updateLinkQuality('character_weapons', linkId, quality)
 }
 
 export async function listCharacterArmors(characterId: string): Promise<CharacterArmor[]> {
@@ -541,9 +530,7 @@ export async function listCharacterArmors(characterId: string): Promise<Characte
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'armors' })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return ((data ?? []) as ArmorLinkRow[]).map(mapArmorRow)
 }
@@ -583,17 +570,11 @@ export async function addCharacterArmors(
 
   const { error } = await supabase.from('character_armors').insert(rows)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function removeCharacterArmor(linkId: string): Promise<void> {
-  const { error } = await supabase.from('character_armors').delete().eq('id', linkId)
-
-  if (error) {
-    throw error
-  }
+  await removeLink('character_armors', linkId)
 }
 
 export async function updateCharacterArmorEquipped(
@@ -605,20 +586,14 @@ export async function updateCharacterArmorEquipped(
     .update({ is_equipped: isEquipped })
     .eq('id', linkId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function updateCharacterArmorQuality(
   linkId: string,
   quality: InventoryQuality
 ): Promise<void> {
-  const { error } = await supabase.from('character_armors').update({ quality }).eq('id', linkId)
-
-  if (error) {
-    throw error
-  }
+  await updateLinkQuality('character_armors', linkId, quality)
 }
 
 export async function listCharacterItems(characterId: string): Promise<CharacterItem[]> {
@@ -628,9 +603,7 @@ export async function listCharacterItems(characterId: string): Promise<Character
     .eq('character_id', characterId)
     .order('name', { ascending: true, referencedTable: 'items' })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return ((data ?? []) as ItemLinkRow[]).map(mapItemRow)
 }
@@ -669,9 +642,7 @@ export async function addCharacterItems(
 
   const { error } = await supabase.from('character_items').insert(rows)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function updateCharacterItemQuantity(linkId: string, quantity: number): Promise<void> {
@@ -682,28 +653,18 @@ export async function updateCharacterItemQuantity(linkId: string, quantity: numb
     .update({ quantity: normalizedQuantity })
     .eq('id', linkId)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function updateCharacterItemQuality(
   linkId: string,
   quality: InventoryQuality
 ): Promise<void> {
-  const { error } = await supabase.from('character_items').update({ quality }).eq('id', linkId)
-
-  if (error) {
-    throw error
-  }
+  await updateLinkQuality('character_items', linkId, quality)
 }
 
 export async function removeCharacterItem(linkId: string): Promise<void> {
-  const { error } = await supabase.from('character_items').delete().eq('id', linkId)
-
-  if (error) {
-    throw error
-  }
+  await removeLink('character_items', linkId)
 }
 
 function groupByCharacter<Row extends { character_id?: string }, Entry>(
@@ -721,12 +682,6 @@ function groupByCharacter<Row extends { character_id?: string }, Entry>(
   }
 
   return grouped
-}
-
-function throwIfError(error: unknown): void {
-  if (error) {
-    throw error
-  }
 }
 
 // One query per link table for all characters, so a campaign table needs no per-character requests.

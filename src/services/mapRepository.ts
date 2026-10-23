@@ -1,9 +1,10 @@
 import { supabase } from '../db/supabase'
 import type { CampaignMarkerRow, MapMarkerRow, MapMarkerTypeRow } from '../types/db'
 import type { MapMarker, MarkerDraft, MarkerType, MarkerVisibility } from '../types/map'
+import { fetchAllPages } from './shared/pagination'
 import { withRetry } from './shared/retry'
+import { throwIfError } from './shared/supabase'
 
-const PAGE_SIZE = 1000
 const BASE_COLUMNS = 'id, type_id, name, description, lat, lng, external_ref'
 const CAMPAIGN_COLUMNS = 'id, campaign_id, type_id, name, description, lat, lng, visibility, created_by, created_at'
 
@@ -47,9 +48,7 @@ export async function listMarkerTypes(): Promise<MarkerType[]> {
   return withRetry(async () => {
     const { data, error } = await supabase.from('map_marker_types').select('id, code, label, icon, color').order('label')
 
-    if (error) {
-      throw error
-    }
+    throwIfError(error)
 
     return ((data ?? []) as MapMarkerTypeRow[]).map(mapMarkerType)
   })
@@ -57,28 +56,21 @@ export async function listMarkerTypes(): Promise<MarkerType[]> {
 
 /** Reads the whole base layer, paging past the API row limit. */
 export async function listBaseMarkers(): Promise<MapMarker[]> {
-  const markers: MapMarker[] = []
-
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const rows = await withRetry(async () => {
+  const rows = await fetchAllPages<MapMarkerRow>((from, to) =>
+    withRetry(async () => {
       const { data, error } = await supabase
         .from('map_markers')
         .select(BASE_COLUMNS)
         .order('id')
-        .range(from, from + PAGE_SIZE - 1)
+        .range(from, to)
 
-      if (error) {
-        throw error
-      }
+      throwIfError(error)
 
-      return (data ?? []) as MapMarkerRow[]
+      return { data: (data ?? []) as MapMarkerRow[], error: null }
     })
+  )
 
-    markers.push(...rows.map(mapBaseMarker))
-    if (rows.length < PAGE_SIZE) {
-      return markers
-    }
-  }
+  return rows.map(mapBaseMarker)
 }
 
 export async function listCampaignMarkers(campaignId: string): Promise<MapMarker[]> {
@@ -89,9 +81,7 @@ export async function listCampaignMarkers(campaignId: string): Promise<MapMarker
       .eq('campaign_id', campaignId)
       .order('created_at')
 
-    if (error) {
-      throw error
-    }
+    throwIfError(error)
 
     return ((data ?? []) as CampaignMarkerRow[]).map(mapCampaignMarker)
   })
@@ -99,9 +89,7 @@ export async function listCampaignMarkers(campaignId: string): Promise<MapMarker
 
 export async function createCampaignMarker(campaignId: string, draft: MarkerDraft): Promise<MapMarker> {
   const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError) {
-    throw userError
-  }
+  throwIfError(userError)
   if (!userData.user) {
     throw new Error('Connexion requise pour ajouter un marqueur.')
   }
@@ -121,9 +109,7 @@ export async function createCampaignMarker(campaignId: string, draft: MarkerDraf
     .select(CAMPAIGN_COLUMNS)
     .single()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return mapCampaignMarker(data as CampaignMarkerRow)
 }
@@ -148,9 +134,7 @@ export async function updateCampaignMarker(id: string, patch: CampaignMarkerPatc
 
   const { data, error } = await supabase.from('campaign_markers').update(update).eq('id', id).select(CAMPAIGN_COLUMNS).single()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return mapCampaignMarker(data as CampaignMarkerRow)
 }
@@ -158,7 +142,5 @@ export async function updateCampaignMarker(id: string, patch: CampaignMarkerPatc
 export async function deleteCampaignMarker(id: string): Promise<void> {
   const { error } = await supabase.from('campaign_markers').delete().eq('id', id)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }

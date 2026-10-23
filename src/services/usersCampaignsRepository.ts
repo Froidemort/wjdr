@@ -2,6 +2,7 @@ import { supabase } from '../db/supabase'
 import type { Profile } from '../types/domain'
 import { assertCampaignWritable } from './shared/campaignGuards'
 import { mapBasicProfile, searchProfilesByTerm } from './shared/profileSearch'
+import { throwIfError } from './shared/supabase'
 
 export async function listUserCampaignIds(userId: string): Promise<string[]> {
   const { data, error } = await supabase
@@ -10,9 +11,7 @@ export async function listUserCampaignIds(userId: string): Promise<string[]> {
     .eq('user_id', userId)
     .eq('active', true)
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return Array.from(new Set((data ?? []).map((row) => row.campaign_id as string)))
 }
@@ -26,9 +25,7 @@ export async function isUserInCampaign(campaignId: string, userId: string): Prom
     .eq('active', true)
     .maybeSingle()
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 
   return Boolean(data)
 }
@@ -51,9 +48,7 @@ export async function addUsersToCampaign(campaignId: string, userIds: string[]):
     .from('users_campaigns')
     .upsert(rows, { onConflict: 'campaign_id,user_id' })
 
-  if (error) {
-    throw error
-  }
+  throwIfError(error)
 }
 
 export async function searchInvitableProfilesByMembership(
@@ -72,9 +67,7 @@ export async function searchInvitableProfilesByMembership(
     .eq('campaign_id', campaignId)
     .eq('active', true)
 
-  if (membersError) {
-    throw membersError
-  }
+  throwIfError(membersError)
 
   const blockedIds = new Set<string>([
     mjId,
@@ -99,9 +92,7 @@ export async function joinCampaignByCode(
     .eq('code', normalized)
     .maybeSingle()
 
-  if (campaignError) {
-    throw campaignError
-  }
+  throwIfError(campaignError)
 
   if (!campaign || campaign.is_archived) {
     return null
@@ -123,13 +114,9 @@ export async function canAccessCampaign(campaignId: string, userId: string): Pro
     supabase.from('campaigns').select('id').eq('id', campaignId).eq('mj_id', userId).maybeSingle(),
   ])
 
-  if (membershipResult.error) {
-    throw membershipResult.error
-  }
+  throwIfError(membershipResult.error)
 
-  if (mjResult.error) {
-    throw mjResult.error
-  }
+  throwIfError(mjResult.error)
 
   return Boolean(membershipResult.data || mjResult.data)
 }

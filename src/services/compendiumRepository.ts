@@ -1,5 +1,6 @@
 import { supabase } from '../db/supabase'
 import { slugify } from '../utils/slugify'
+import { compareByName, compareFr } from '../utils/compare'
 import type {
   CompendiumArmor,
   CompendiumArmorRow,
@@ -15,6 +16,8 @@ import type {
   CompendiumWeapon,
   CompendiumWeaponRow,
 } from '../types/compendium'
+import { fetchAllPages } from './shared/pagination'
+import { throwIfError } from './shared/supabase'
 
 const WEAPON_SELECT =
   'id, name, description, encumbrance, damage_formula, weapon_attribute_mappings(weapon_attributes(name, description))'
@@ -32,7 +35,7 @@ function mapWeapon(row: CompendiumWeaponRow): CompendiumWeapon {
       .map((mapping) => mapping.weapon_attributes)
       .filter((attribute): attribute is NonNullable<typeof attribute> => attribute !== null)
       .map((attribute) => ({ name: attribute.name, description: attribute.description ?? null }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+      .sort(compareByName),
   }
 }
 
@@ -64,7 +67,7 @@ export async function fetchCompendiumWeapons(): Promise<CompendiumWeapon[]> {
     .order('name', { ascending: true })
     .returns<CompendiumWeaponRow[]>()
 
-  if (error) throw error
+  throwIfError(error)
 
   return (data ?? []).map(mapWeapon)
 }
@@ -76,7 +79,7 @@ export async function fetchCompendiumArmors(): Promise<CompendiumArmor[]> {
     .order('name', { ascending: true })
     .returns<CompendiumArmorRow[]>()
 
-  if (error) throw error
+  throwIfError(error)
 
   return (data ?? []).map(mapArmor)
 }
@@ -88,7 +91,7 @@ export async function fetchCompendiumItems(): Promise<CompendiumItem[]> {
     .order('name', { ascending: true })
     .returns<CompendiumItemRow[]>()
 
-  if (error) throw error
+  throwIfError(error)
 
   return (data ?? []).map(mapItem)
 }
@@ -97,17 +100,12 @@ const SKILL_SELECT =
   'id, name, specialization, is_basic, stat_code, description, skills_talents(talents(id, name, specialization))'
 const TALENT_SELECT =
   'id, name, specialization, description, skills_talents(skills(id, name, specialization))'
-// PostgREST caps responses at 1000 rows by default.
-const PAGE_SIZE = 1000
 
-function compareByName(
+function compareByNameAndSpecialization(
   a: { name: string; specialization: string | null },
   b: { name: string; specialization: string | null }
 ): number {
-  return (
-    a.name.localeCompare(b.name, 'fr') ||
-    (a.specialization ?? '').localeCompare(b.specialization ?? '', 'fr')
-  )
+  return compareByName(a, b) || compareFr(a.specialization ?? '', b.specialization ?? '')
 }
 
 function mapLink(row: { id: string; name: string; specialization: string | null }): CompendiumLink {
@@ -126,7 +124,7 @@ function mapLinks(
   return rows
     .filter((row): row is NonNullable<typeof row> => row !== null)
     .map(mapLink)
-    .sort(compareByName)
+    .sort(compareByNameAndSpecialization)
 }
 
 function mapSkill(row: CompendiumSkillRow): CompendiumSkill {
@@ -147,36 +145,26 @@ function mapTalent(row: CompendiumTalentRow): CompendiumTalent {
   }
 }
 
-async function fetchAllRows<Row>(
-  table: 'skills' | 'talents' | 'spells',
-  select: string
-): Promise<Row[]> {
-  const rows: Row[] = []
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabase
+function fetchAllRows<Row>(table: 'skills' | 'talents' | 'spells', select: string): Promise<Row[]> {
+  return fetchAllPages<Row>((from, to) =>
+    supabase
       .from(table)
       .select(select)
       .order('name', { ascending: true })
       .order('id', { ascending: true })
-      .range(from, from + PAGE_SIZE - 1)
+      .range(from, to)
       .returns<Row[]>()
-
-    if (error) throw error
-
-    const page = data ?? []
-    rows.push(...page)
-    if (page.length < PAGE_SIZE) return rows
-  }
+  )
 }
 
 export async function fetchCompendiumSkills(): Promise<CompendiumSkill[]> {
   const rows = await fetchAllRows<CompendiumSkillRow>('skills', SKILL_SELECT)
-  return rows.map(mapSkill).sort(compareByName)
+  return rows.map(mapSkill).sort(compareByNameAndSpecialization)
 }
 
 export async function fetchCompendiumTalents(): Promise<CompendiumTalent[]> {
   const rows = await fetchAllRows<CompendiumTalentRow>('talents', TALENT_SELECT)
-  return rows.map(mapTalent).sort(compareByName)
+  return rows.map(mapTalent).sort(compareByNameAndSpecialization)
 }
 
 const SPELL_SELECT =
@@ -199,5 +187,5 @@ function mapSpell(row: CompendiumSpellRow): CompendiumSpell {
 
 export async function fetchCompendiumSpells(): Promise<CompendiumSpell[]> {
   const rows = await fetchAllRows<CompendiumSpellRow>('spells', SPELL_SELECT)
-  return rows.map(mapSpell).sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  return rows.map(mapSpell).sort(compareByName)
 }

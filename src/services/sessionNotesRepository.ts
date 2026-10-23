@@ -1,6 +1,7 @@
 import { supabase } from '../db/supabase'
 import type { CreateSessionNoteInput, SessionNote, UpdateSessionNoteInput } from '../types/domain'
 import { withRetry } from './shared/retry'
+import { throwIfError } from './shared/supabase'
 
 type SessionNotesRealtimeEvent = '*' | 'INSERT' | 'UPDATE' | 'DELETE'
 
@@ -104,9 +105,7 @@ export async function listSessionNotesForCampaign(
 
     const { data, error } = await query.order('created_at', { ascending: false })
 
-    if (error) {
-      throw error
-    }
+    throwIfError(error)
 
     return ((data ?? []) as SessionNoteRow[]).map(mapSessionNote)
   })
