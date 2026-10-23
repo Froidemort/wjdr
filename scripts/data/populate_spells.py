@@ -2,17 +2,16 @@
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
 from postgrest.types import ReturnMethod
-from supabase import Client, create_client
+from supabase import Client
+
+from _common import TMP_DIR, configure_logging, create_supabase_client, load_env
 
 LOGGER = logging.getLogger(__name__)
-MIGRATIONS_DIR = Path(__file__).resolve().parent
-SPELLS_FILE = MIGRATIONS_DIR / "compendium_spells_fixed.json"
+SPELLS_FILE = TMP_DIR / "compendium_spells_fixed.json"
 BATCH_SIZE = 100
 EXISTING_PAGE_SIZE = 1000
 SPELL_COLUMNS = {
@@ -145,19 +144,14 @@ def insert_missing_spells(client: Client, spells: list[dict[str, Any]]) -> int:
 
 def main() -> None:
     """Run the spell import."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    configure_logging(
+        logging.INFO,
+        "%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
-    load_dotenv()
-
-    supabase_url = os.getenv("VITE_SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
-    if not supabase_url or not supabase_key:
-        raise RuntimeError("VITE_SUPABASE_URL and SUPABASE_KEY must be configured.")
+    load_env()
 
     spells = load_spells(SPELLS_FILE)
-    client = create_client(supabase_url, supabase_key)
+    client = create_supabase_client()
     insert_missing_spells(client, spells)
 
 

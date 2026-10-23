@@ -2,27 +2,24 @@
 
 import json
 import logging
-import os
 import sys
 
-import dotenv
 import questionary
 import tabulate
 from postgrest import SyncQueryRequestBuilder
 from postgrest.exceptions import APIError
 from postgrest.types import JSON
-from supabase import Client, PostgrestAPIResponse, create_client
+from supabase import Client, PostgrestAPIResponse
+
+from _common import LOG_FORMAT, configure_logging, create_supabase_client, load_env
 
 LOGGER = logging.getLogger(__name__)
-logging.basicConfig(level=logging.WARNING, format="%(asctime)s - %(levelname)s - %(message)s")
+configure_logging(logging.WARNING, LOG_FORMAT)
 LOGGER.setLevel(logging.DEBUG)
 
-dotenv.load_dotenv(dotenv.find_dotenv())
+load_env()
 
-url: str = os.getenv("VITE_SUPABASE_URL", "")
-key: str = os.getenv("SUPABASE_KEY", "")
-
-supabase: Client = create_client(url, key)
+supabase: Client = create_supabase_client()
 
 
 def wrap_query(query: SyncQueryRequestBuilder) -> list[JSON]:

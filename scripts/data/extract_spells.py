@@ -22,13 +22,14 @@ from pydantic_ai.exceptions import ModelHTTPError
 from pydantic_ai.models.github_copilot import GitHubCopilotModel
 from pydantic_ai.providers.github_copilot import GitHubCopilotProvider
 
+from _common import SOURCES_DIR, TMP_DIR
+
 load_dotenv()
 
 LOGGER = logging.getLogger(__name__)
-MIGRATIONS_DIR = Path(__file__).resolve().parent
-PDF_FILE_PATH = MIGRATIONS_DIR / "compendium_spells.pdf"
-OUTPUT_PATH = MIGRATIONS_DIR / "compendium_spells.json"
-OUTPUT_PATH_FIXED = MIGRATIONS_DIR / "compendium_spells_fixed.json"
+PDF_FILE_PATH = SOURCES_DIR / "compendium_spells.pdf"
+OUTPUT_PATH = TMP_DIR / "compendium_spells.json"
+OUTPUT_PATH_FIXED = TMP_DIR / "compendium_spells_fixed.json"
 TITLE_PATTERN = re.compile(r"^\d+(?:\.\d+)*\) ")
 MODEL_NAME = "claude-haiku-4.5"
 
@@ -154,6 +155,7 @@ def pprint_diff(json_from_path: Path, json_to_path: Path) -> None:
 def write_spells_json(path: Path, spells: list[Spell]) -> None:
     """Replace a JSON output atomically, preserving the prior file on failure."""
     temporary_path = path.with_suffix(f"{path.suffix}.tmp")
+    path.parent.mkdir(parents=True, exist_ok=True)
     content = json.dumps(
         [spell.model_dump(mode="json") for spell in spells],
         ensure_ascii=False,

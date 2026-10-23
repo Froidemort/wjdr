@@ -9,14 +9,15 @@ tile set used by `src/config/map.ts` (Leaflet default CRS) with no conversion.
 import html
 import json
 import re
-from pathlib import Path
 from typing import TypedDict
 
 import requests
 
+from _common import REPO_ROOT
+
 BASE_URL = "https://wjrf.bimondiens.com"
 MAPS_URL = f"{BASE_URL}/content/maps/index.php"
-OUTPUT_PATH = Path(__file__).resolve().parent.parent / "public" / "data" / "cities.json"
+OUTPUT_PATH = REPO_ROOT / "public" / "data" / "cities.json"
 ENCODING = "iso-8859-15"
 USER_AGENT = "Mozilla/5.0 (personal use; wjdr importer)"
 

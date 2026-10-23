@@ -8,28 +8,26 @@ The bucket is created by migration 017 (private, image/jpeg only). Uses VITE_SUP
 import argparse
 import base64
 import json
-import os
 import sys
 import threading
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 
-from dotenv import load_dotenv
 from httpx import TransportError
 from storage3.exceptions import StorageApiError
-from supabase import Client, create_client
+from supabase import Client
 
-load_dotenv()
+from _common import REPO_ROOT, TMP_DIR, create_supabase_client, load_env
+
+load_env()
 
 
-ROOT = Path(__file__).resolve().parent.parent
-TILES_DIR = ROOT / "tmp" / "tiles"
+TILES_DIR = TMP_DIR / "tiles"
 BUCKET = "map-tiles"
 MIN_ZOOM = 2
 MAX_ZOOM = 7
-INDEX_PATH = ROOT / "public" / "data" / "map-tiles-index.json"
+INDEX_PATH = REPO_ROOT / "public" / "data" / "map-tiles-index.json"
 CONTENT_TYPE = "image/jpeg"
 CACHE_CONTROL = "31536000"
 LIST_PAGE_SIZE = 1000
@@ -43,11 +41,10 @@ def get_client() -> Client:
     """Return a per-thread Supabase client built from the environment."""
     client: Client | None = getattr(_local, "client", None)
     if client is None:
-        url = os.environ.get("VITE_SUPABASE_URL")
-        key = os.environ.get("SUPABASE_KEY")
-        if not url or not key:
-            sys.exit("VITE_SUPABASE_URL and SUPABASE_KEY must be set in the environment")
-        client = create_client(url, key)
+        try:
+            client = create_supabase_client()
+        except RuntimeError as exc:
+            sys.exit(str(exc))
         _local.client = client
     return client
 
@@ -149,7 +146,7 @@ def main() -> None:
         sys.exit(f"no tiles found in {TILES_DIR}")
 
     write_index(tiles)
-    print(f"wrote {INDEX_PATH.relative_to(ROOT)}")
+    print(f"wrote {INDEX_PATH.relative_to(REPO_ROOT)}")
     if args.index_only:
         return
 

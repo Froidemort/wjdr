@@ -2,34 +2,30 @@
 
 import json
 import logging
-import os
 import pathlib
 
-import dotenv
 import pdfplumber
 from postgrest import SyncQueryRequestBuilder
 from postgrest.exceptions import APIError
 from postgrest.types import JSON
-from supabase import Client, PostgrestAPIResponse, create_client
+from supabase import Client, PostgrestAPIResponse
 from tabulate import tabulate
 from unidecode import unidecode
 
+from _common import LOG_FORMAT, SOURCES_DIR, TMP_DIR, configure_logging, create_supabase_client, load_env
+
 LOGGER = logging.getLogger(__name__)
-logging.basicConfig(level=logging.WARNING, format="%(asctime)s - %(levelname)s - %(message)s")
+configure_logging(logging.WARNING, LOG_FORMAT)
 LOGGER.setLevel(logging.DEBUG)
 
-dotenv.load_dotenv(dotenv.find_dotenv())
+load_env()
 
-url: str = os.getenv("VITE_SUPABASE_URL", "")
-key: str = os.getenv("SUPABASE_KEY", "")
-
-supabase: Client = create_client(url, key)
+supabase: Client = create_supabase_client()
 
 # Chemin vers le fichier PDF
-base_path = pathlib.Path(__file__).parent.resolve()
-pdf_path = base_path / "compendium_carrieres_modifie.pdf"
-output_json_path = base_path / "career_data.json"
-output_failed_careers_path = base_path / "failed_careers.json"
+pdf_path = SOURCES_DIR / "compendium_carrieres_modifie.pdf"
+output_json_path = TMP_DIR / "career_data.json"
+output_failed_careers_path = TMP_DIR / "failed_careers.json"
 
 CHARACTERISTIC_LABELS = [
     "CC",
@@ -262,6 +258,7 @@ if __name__ == "__main__":
                 ", ".join(missing_in_db),
             )
 
+    TMP_DIR.mkdir(exist_ok=True)
     with open(output_json_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     if failed_careers:

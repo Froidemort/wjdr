@@ -1,27 +1,25 @@
 """Link skills to talents from the compendium PDF."""
 
 import logging
-import os
 from pathlib import Path
 
-import dotenv
 import pdfplumber
 import questionary
 from postgrest import APIError, SyncQueryRequestBuilder
 from postgrest.types import JSON
-from supabase import Client, PostgrestAPIResponse, create_client
+from supabase import Client, PostgrestAPIResponse
 from unidecode import unidecode
 
+from _common import LOG_FORMAT, SOURCES_DIR, TMP_DIR, configure_logging, create_supabase_client, load_env
+
 LOGGER = logging.getLogger(__name__)
-logging.basicConfig(level=logging.WARNING, format="%(asctime)s - %(levelname)s - %(message)s")
+configure_logging(logging.WARNING, LOG_FORMAT)
 LOGGER.setLevel(logging.DEBUG)
 
-dotenv.load_dotenv(dotenv.find_dotenv())
+load_env()
 
-url: str = os.getenv("VITE_SUPABASE_URL", "")
-key: str = os.getenv("SUPABASE_KEY", "")
-
-supabase: Client = create_client(url, key)
+supabase: Client = create_supabase_client()
+DRY_RUN_PATH = TMP_DIR / "skills_talents_links_dry_run.json"
 
 
 def wrap_query(query: SyncQueryRequestBuilder) -> list[JSON]:
@@ -64,7 +62,7 @@ def sanitize_talents(str_talents: str) -> list[str]:
 def get_skills_talents_links() -> list[dict]:
     """Get the skills and the linked talent from the PDF."""
     skills_talents_links: list[dict] = []
-    with pdfplumber.open(Path(__file__).parent / "compendium_skills_talents.pdf") as pdf:
+    with pdfplumber.open(SOURCES_DIR / "compendium_skills_talents.pdf") as pdf:
         for page in pdf.pages:
             # Here we check if there is a table
             tables = page.extract_tables()
@@ -82,7 +80,7 @@ def get_skills_talents_links() -> list[dict]:
 
 def associate(
     client: Client,
-    json_path: Path = Path(__file__).parent.parent / "skills_talents_links_dry_run.json",
+    json_path: Path = DRY_RUN_PATH,
 ) -> None:
     """Associate skills with talents and insert the links."""
     skills = wrap_query(client.table("skills").select("*"))
@@ -169,6 +167,7 @@ def associate(
         )
         import json
 
+        TMP_DIR.mkdir(exist_ok=True)
         json_path.write_text(json.dumps(data_to_insert, indent=4, ensure_ascii=False))
         return
     try:
@@ -181,7 +180,7 @@ def associate(
 
 
 if __name__ == "__main__":
-    json_path = Path(__file__).parent.parent / "skills_talents_links_dry_run.json"
+    json_path = DRY_RUN_PATH
     if not json_path.exists():
         associate(supabase, json_path)
     else:

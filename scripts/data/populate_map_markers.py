@@ -2,13 +2,13 @@
 
 import json
 import logging
-import os
 import sys
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
-from supabase import Client, create_client
+from supabase import Client
+
+from _common import configure_logging, create_supabase_client, load_env
 
 LOGGER = logging.getLogger(__name__)
 SEED_FILE = Path(__file__).resolve().parent / "map_markers_seed.json"
@@ -71,14 +71,14 @@ def push(client: Client, entries: list[dict[str, Any]]) -> None:
 
 def main() -> None:
     """Validate the seed, then upsert it (use --dry-run to validate only)."""
-    logging.basicConfig(level=logging.INFO)
-    load_dotenv()
+    configure_logging(logging.INFO)
+    load_env()
     entries = load_seed(SEED_FILE)
     if "--dry-run" in sys.argv:
         LOGGER.info("Seed valid: %d markers.", len(entries))
         return
 
-    client = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
+    client = create_supabase_client("SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY")
     push(client, entries)
 
 
