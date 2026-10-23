@@ -1,5 +1,6 @@
 import { computed, ref, watch } from 'vue'
 import type { Ref } from 'vue'
+import { compareByName } from '../utils/compare'
 
 export type SpellSortOrder = 'name' | 'difficulty-asc' | 'difficulty-desc'
 
@@ -64,7 +65,7 @@ export function useCompendiumSpellFilters<TSpell extends FilterableSpell>(
     }
     return Array.from(counts.entries())
       .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+      .sort(compareByName)
   })
 
   function toggleCategory(category: string): void {
@@ -129,7 +130,7 @@ export function useCompendiumSpellFilters<TSpell extends FilterableSpell>(
         sorted.sort((a, b) => b.difficulty - a.difficulty)
         break
       default:
-        sorted.sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+        sorted.sort(compareByName)
     }
 
     return sorted

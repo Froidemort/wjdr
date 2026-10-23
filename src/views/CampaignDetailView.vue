@@ -229,6 +229,7 @@ import { useCopyFeedback } from '../composables/useCopyFeedback'
 import { useDeviceBreakpoint } from '../composables/useDeviceBreakpoint'
 import { useRealtimeChannels } from '../composables/useRealtimeChannels'
 import { shouldLandOnSessionsTab } from '../utils/campaignSessions'
+import { compareByName } from '../utils/compare'
 
 const authStore = useAuthStore()
 const lastActive = useLastActiveStore()
@@ -372,7 +373,7 @@ const canCreateOwnCharacter = computed(() =>
   )
 )
 const sortedCharacters = computed(() =>
-  [...characters.value].sort((left, right) => left.name.localeCompare(right.name, 'fr'))
+  [...characters.value].sort(compareByName)
 )
 const filteredCharacters = computed(() => {
   if (!authStore.user?.id || characterListFilter.value === 'all') {

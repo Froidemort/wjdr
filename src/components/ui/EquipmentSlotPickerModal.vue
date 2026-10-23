@@ -2,6 +2,7 @@
 import { Lock, Shield, Sword, Weight, X } from '@lucide/vue'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import type { CharacterArmor, CharacterWeapon } from '../../types/domain'
+import { compareByName } from '../../utils/compare'
 import {
   MAX_ARMORS_PER_LOCATION,
   type ArmorSlotId,
@@ -78,7 +79,7 @@ const filteredArmors = computed(() => {
     if (right.armorPoints !== left.armorPoints) {
       return right.armorPoints - left.armorPoints
     }
-    return left.name.localeCompare(right.name, 'fr')
+    return compareByName(left, right)
   })
 })
 
@@ -95,7 +96,7 @@ const filteredWeapons = computed(() => {
     if (leftScore !== rightScore) {
       return leftScore - rightScore
     }
-    return left.name.localeCompare(right.name, 'fr')
+    return compareByName(left, right)
   })
 })
 

@@ -9,6 +9,7 @@ import type {
   WeaponSlotDefinition,
   WeaponSlotId,
 } from '../types/equipment'
+import { compareByName } from './compare'
 
 export type {
   ArmorByLocation,
@@ -138,7 +139,7 @@ export function getEquippedArmorsForSlot(
       if (right.armorPoints !== left.armorPoints) {
         return right.armorPoints - left.armorPoints
       }
-      return left.name.localeCompare(right.name, 'fr')
+      return compareByName(left, right)
     })
 }
 

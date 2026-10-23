@@ -9,6 +9,7 @@ import {
   type CompendiumFilterConfig,
 } from '../composables/useCompendiumInventoryFilters'
 import { useIncrementalReveal } from '../composables/useIncrementalReveal'
+import { compareByName } from '../utils/compare'
 import DataGrid from '../components/ui/DataGrid.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import CompendiumEntryCard from '../components/ui/CompendiumEntryCard.vue'
@@ -40,7 +41,7 @@ function selectTab(tab: CompendiumTab): void {
   void router.replace({ query: { ...route.query, tab } })
 }
 
-const byName = <T extends { name: string }>(a: T, b: T): number => a.name.localeCompare(b.name, 'fr')
+const byName = compareByName
 const byEncumbrance = <T extends { encumbrance: number }>(a: T, b: T): number =>
   a.encumbrance - b.encumbrance
 
