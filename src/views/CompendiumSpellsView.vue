@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWindowScroll } from '@vueuse/core'
-import { ArrowUp, ListFilter, RotateCcw, ArrowDownUp, X } from '@lucide/vue'
+import { ArrowUp, ListFilter, RotateCcw, ArrowDownUp } from '@lucide/vue'
 import { useCompendiumSpellsStore } from '../stores/compendiumSpells'
 import { useCompendiumSpellFilters } from '../composables/useCompendiumSpellFilters'
 import { useIncrementalReveal } from '../composables/useIncrementalReveal'
