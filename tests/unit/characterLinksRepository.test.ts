@@ -134,6 +134,11 @@ describe('characterLinksRepository', () => {
     ['equipement armure', () => updateCharacterArmorEquipped('armor-link', false), 'character_armors'],
     ['quantite', () => updateCharacterItemQuantity('item-link', 2), 'character_items'],
     ['suppression arme', () => removeCharacterWeapon('weapon-link'), 'character_weapons'],
+    ['suppression armure', () => removeCharacterArmor('armor-link'), 'character_armors'],
+    ['suppression objet', () => removeCharacterItem('item-link'), 'character_items'],
+    ['qualite arme', () => updateCharacterWeaponQuality('weapon-link', 'bonne'), 'character_weapons'],
+    ['qualite armure', () => updateCharacterArmorQuality('armor-link', 'bonne'), 'character_armors'],
+    ['qualite objet', () => updateCharacterItemQuality('item-link', 'bonne'), 'character_items'],
   ] as const)('propage une erreur de mutation pour %s', async (_name, operation, table) => {
     fromMock.mockImplementation((requestedTable) => {
       if (requestedTable === table) return builder([], new Error('mutation echouee'))
