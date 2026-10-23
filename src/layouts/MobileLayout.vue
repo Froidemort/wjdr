@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Bell, BookOpenText, House, LogOut, MoreHorizontal, Scroll, UserCircle, UserRound, Users } from '@lucide/vue'
+import { onClickOutside } from '@vueuse/core'
 import { computed, type Component, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useCurrentContext } from '../composables/useCurrentContext'
@@ -14,6 +15,8 @@ const router = useRouter()
 const { unreadCount } = useMissivesInbox()
 const { isScrolled } = usePageScrolled()
 const optionsOpen = ref(false)
+const optionsRef = ref<HTMLElement | null>(null)
+onClickOutside(optionsRef, () => closeOptions())
 
 const { navContext } = useCurrentContext()
 
@@ -129,7 +132,7 @@ async function onLogout(): Promise<void> {
       <slot />
     </main>
 
-    <div v-if="isAuthenticated" class="sticky bottom-0 z-40 dock dock-sm border-t border-base-300 bg-base-200">
+    <div v-if="isAuthenticated" class="sticky bottom-0 z-40 dock dock-sm h-[calc(4rem+env(safe-area-inset-bottom,0px))] border-t border-base-300 bg-base-200">
       <RouterLink
         v-for="item in navItems"
         :key="item.label"
@@ -141,7 +144,7 @@ async function onLogout(): Promise<void> {
         <span class="dock-label">{{ item.label }}</span>
       </RouterLink>
 
-      <details class="dropdown dropdown-top dropdown-end" :open="optionsOpen" @toggle="optionsOpen = !optionsOpen">
+      <details ref="optionsRef" class="dropdown dropdown-top dropdown-end" :open="optionsOpen" @toggle="optionsOpen = !optionsOpen">
         <summary class="flex min-h-11 min-w-11 cursor-pointer flex-col items-center justify-center gap-1 px-2 text-xs text-base-content/80 outline-none list-none">
           <MoreHorizontal class="size-5" />
           <span class="dock-label">Options</span>
