@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { UserCircle } from '@lucide/vue'
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useLogout } from '../../composables/useLogout'
 import { usePopoverPanel } from '../../composables/usePopoverPanel'
 import { sanitizeAvatarUrl } from '../../utils/avatarUrl'
 
@@ -12,7 +12,6 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const router = useRouter()
 const rootRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
 const { isOpen, close, toggle } = usePopoverPanel({
@@ -27,11 +26,7 @@ const ariaLabel = computed(() =>
   displayName.value ? `Menu compte — ${displayName.value}` : 'Menu compte',
 )
 
-async function onLogout(): Promise<void> {
-  close()
-  await authStore.signOut()
-  await router.replace('/')
-}
+const { logout } = useLogout(close)
 
 defineExpose({ close })
 </script>
@@ -65,7 +60,7 @@ defineExpose({ close })
         <router-link to="/profile" @click="close">Profil</router-link>
       </li>
       <li>
-        <button type="button" class="text-error" @click="onLogout">Se déconnecter</button>
+        <button type="button" class="text-error" @click="logout">Se déconnecter</button>
       </li>
     </ul>
   </div>
