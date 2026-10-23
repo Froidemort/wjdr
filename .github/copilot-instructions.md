@@ -16,9 +16,10 @@ Warhammer Fantasy RPG companion. Vue 3.5, Vite 8, TypeScript, Pinia, vue-router,
 - E2E: `npm run test:e2e`
 
 ## Layout
-- `src/views` pages, `src/components` UI, `src/composables` logic
-- `src/stores` Pinia, `src/services` repositories, `src/db` clients
-- `api/` Vercel functions, `migrations/` SQL + Python, `tests/{unit,e2e}`
+- Use graphify for code navigation and dependency analysis, additional infos :
+  - `src/views` pages, `src/components` UI, `src/composables` logic
+  - `src/stores` Pinia, `src/services` repositories, `src/db` clients
+  - `api/` Vercel functions, `migrations/` SQL + Python, `tests/{unit,e2e}`
 
 ## Rules
 - Terse replies and reports: short fragments, no filler, no pleasantries. Normal prose for code, commits, PRs, security warnings, destructive-action confirmations.
