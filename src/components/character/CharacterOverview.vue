@@ -107,7 +107,7 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
           aria-hidden="true"
         />
         <p class="mt-1 text-xs opacity-70">
-          Max : Force × {{ encumbranceMultiplier }} · BF {{ bonusForce }} · BE {{ bonusEndurance }}
+          Max : Force × {{ encumbranceMultiplier }}
         </p>
       </article>
 
@@ -136,6 +136,22 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
 
     <div class="space-y-2">
       <h3 class="text-base font-semibold">Armes et armures équipées</h3>
+      <ul class="flex flex-wrap gap-2" aria-label="Bonus de caractéristiques">
+        <li
+          class="badge badge-neutral font-semibold"
+          :aria-label="`Bonus de Force ${bonusForce}`"
+          :title="`Bonus de Force ${bonusForce}`"
+        >
+          BF {{ bonusForce }}
+        </li>
+        <li
+          class="badge badge-neutral font-semibold"
+          :aria-label="`Bonus d'Endurance ${bonusEndurance}`"
+          :title="`Bonus d'Endurance ${bonusEndurance}`"
+        >
+          BE {{ bonusEndurance }}
+        </li>
+      </ul>
       <CharacterDerivedStatsCard
         :armor-by-location="armorByLocation"
         :armors="armors"
