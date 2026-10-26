@@ -1,3 +1,5 @@
+[![CI](https://github.com/Froidemort/wjdr/actions/workflows/ci.yml/badge.svg)](https://github.com/Froidemort/wjdr/actions/workflows/ci.yml)
+
 # Warhammer RPG App
 
 Companion app pour le jeu de rôle Warhammer Fantasy (seconde édition) : campagnes, sessions, personnages, compendium et carte. Les mises à jour de personnages et de sessions fonctionnent hors ligne.
@@ -54,6 +56,8 @@ La fonction `api/campaigns/[identifier].ts` (Vercel) lit `SUPABASE_URL` et `SUPA
 | `npm run knip` | Détection de code mort |
 
 ## Organisation du dépôt
+
+[![Architecture diagram](https://gitdiagram.com/diagram-badge.svg)](https://gitdiagram.com/froidemort/wjdr?utm_source=readme&utm_medium=badge)
 
 | Dossier | Contenu |
 | --- | --- |
