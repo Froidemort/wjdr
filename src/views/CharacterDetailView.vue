@@ -58,7 +58,7 @@
         @unequip-weapon="onUnequipWeaponFromDoll"
       />
 
-      <CharacterTabs v-model="activeCharacterTab" />
+      <CharacterTabs v-model="activeCharacterTab" @overview="scrollToTop" />
 
       <CharacterProfilePanel
         v-show="activeCharacterTab === 'stats'"
@@ -213,12 +213,22 @@ import { useQueuedUpdatesCount } from '../composables/useQueuedUpdatesCount'
 
 const activeCharacterTab = ref<CharacterTabId>('stats')
 
+function scrollBehavior(): 'auto' | 'smooth' {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+}
+
+function scrollToTop(): void {
+  const behavior = scrollBehavior()
+  const overview = document.getElementById('character-overview')
+  if (overview) overview.scrollIntoView({ behavior, block: 'start' })
+  else window.scrollTo({ top: 0, behavior })
+}
+
 watch(activeCharacterTab, async (tab) => {
   await nextTick()
   const panel = document.getElementById(`character-panel-${tab}`)
   if (!panel) return
-  const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
-  panel.scrollIntoView({ behavior, block: 'start' })
+  panel.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
 })
 const {
   character,
