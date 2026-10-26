@@ -1,4 +1,4 @@
-export type CharacterTabId = 'stats' | 'skills' | 'inventory'
+export type CharacterTabId = 'overview' | 'stats' | 'skills' | 'inventory'
 
 export interface CharacterQuickValues {
   pvMax: number
