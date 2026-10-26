@@ -317,6 +317,13 @@ async function installFakeSupabase(context: BrowserContext, page: Page, backend:
   await page.route('**/rest/v1/**', (route) => backend.handleRest(route))
 }
 
+/** Marks the splash as seen so it does not show (and race) in the test. */
+export async function markSplashSeen(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('wjdr:splash-last-seen', String(Date.now()))
+  })
+}
+
 export const test = base.extend<{ backend: FakeBackend }>({
   backend: [
     async ({ context, page }, use) => {

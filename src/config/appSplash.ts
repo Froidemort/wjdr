@@ -1,4 +1,6 @@
 /** Single source of truth for the app splash screen (timing, layout, title). */
+export const SPLASH_TTL_MS = 24 * 60 * 60 * 1000
+
 export const APP_SPLASH = {
 	classNames: {
 		activeHtmlClass: 'app-splash-active',
