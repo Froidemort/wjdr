@@ -42,7 +42,7 @@ const emit = defineEmits<{
     id="character-panel-inventory"
     role="tabpanel"
     aria-labelledby="character-tab-inventory"
-    class="space-y-4 rounded-box border border-base-300 bg-base-100 p-4"
+    class="scroll-mt-4 space-y-4 rounded-box border border-base-300 bg-base-100 p-4"
   >
     <CharacterSection title="Argent">
       <CharacterMoneyCard

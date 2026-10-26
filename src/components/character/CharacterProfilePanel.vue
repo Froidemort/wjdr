@@ -43,7 +43,7 @@ function toggleAll(): void {
     id="character-panel-stats"
     role="tabpanel"
     aria-labelledby="character-tab-stats"
-    class="space-y-4 rounded-box border border-base-300 bg-base-100 p-4"
+    class="scroll-mt-4 space-y-4 rounded-box border border-base-300 bg-base-100 p-4"
   >
     <CharacterSection title="Caractéristiques">
       <div class="flex flex-wrap items-center justify-start gap-3 border-b border-base-300 pb-3">

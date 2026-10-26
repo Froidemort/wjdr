@@ -58,10 +58,10 @@
         @unequip-weapon="onUnequipWeaponFromDoll"
       />
 
-      <CharacterTabs v-model="activeCharacterTab" @overview="scrollToTop" />
+      <CharacterTabs :model-value="activeCharacterTab" @update:model-value="selectTab" />
 
       <CharacterProfilePanel
-        v-show="activeCharacterTab === 'stats'"
+        v-show="isPanelVisible('stats')"
         :stats="character.stats"
         :editable="canEditQuickSection"
         @stat-tick="onStatTick"
@@ -70,7 +70,7 @@
       />
 
       <CharacterSkillsTalentsPanel
-        v-show="activeCharacterTab === 'skills'"
+        v-show="isPanelVisible('skills')"
         :skills="sortedCharacterSkills"
         :talents="sortedCharacterTalents"
         :editable="canEditQuickSection"
@@ -86,7 +86,7 @@
       />
 
       <CharacterInventoryPanel
-        v-show="activeCharacterTab === 'inventory'"
+        v-show="isPanelVisible('inventory')"
         :weapons="sortedCharacterWeapons"
         :armors="sortedCharacterArmors"
         :items="sortedCharacterItems"
@@ -191,8 +191,7 @@
 
 <script setup lang="ts">
 import { ChevronLeft, Users } from '@lucide/vue'
-import { computed, nextTick, ref, watch } from 'vue'
-import type { CharacterTabId } from '../types/characterSheet'
+import { computed, ref } from 'vue'
 import CareerChangeModal from '../components/character/CareerChangeModal.vue'
 import CareerConfirmModal from '../components/character/CareerConfirmModal.vue'
 import CatalogAddModal from '../components/character/CatalogAddModal.vue'
@@ -208,28 +207,10 @@ import { useCharacterCareer } from '../composables/useCharacterCareer'
 import { useCharacterCatalogActions } from '../composables/useCharacterCatalogActions'
 import { useCharacterDescriptionModal } from '../composables/useCharacterDescriptionModal'
 import { useCharacterSheet } from '../composables/useCharacterSheet'
+import { useCharacterTabNavigation } from '../composables/useCharacterTabNavigation'
 import { useIsOnline } from '../composables/useIsOnline'
 import { useQueuedUpdatesCount } from '../composables/useQueuedUpdatesCount'
 
-const activeCharacterTab = ref<CharacterTabId>('stats')
-
-function scrollBehavior(): 'auto' | 'smooth' {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
-}
-
-function scrollToTop(): void {
-  const behavior = scrollBehavior()
-  const overview = document.getElementById('character-overview')
-  if (overview) overview.scrollIntoView({ behavior, block: 'start' })
-  else window.scrollTo({ top: 0, behavior })
-}
-
-watch(activeCharacterTab, async (tab) => {
-  await nextTick()
-  const panel = document.getElementById(`character-panel-${tab}`)
-  if (!panel) return
-  panel.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
-})
 const {
   character,
   loading,
@@ -276,6 +257,9 @@ const {
   getSectionSuccessMessage,
   confirmDestructiveAction,
 } = useCharacterSheet()
+const { activeTab: activeCharacterTab, selectTab, isPanelVisible } = useCharacterTabNavigation({
+  ready: computed(() => Boolean(character.value)),
+})
 const isOnline = useIsOnline()
 const { queuedCount } = useQueuedUpdatesCount()
 
