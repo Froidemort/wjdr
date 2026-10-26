@@ -16,7 +16,6 @@ const CampaignListView = () => import('../views/CampaignListView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const MapView = () => import('../views/MapView.vue')
-const OldWorldMapView = () => import('../views/OldWorldMapView.vue')
 const CompendiumHomeView = () => import('../views/CompendiumHomeView.vue')
 const CompendiumInventoryView = () => import('../views/CompendiumInventoryView.vue')
 const CompendiumSpellsView = () => import('../views/CompendiumSpellsView.vue')
@@ -30,12 +29,6 @@ export const appRoutes: RouteRecordRaw[] = [
     path: '/',
     component: HomeView,
     meta: { requiresAuth: false, hideFooter: false},
-  },
-  // Static Old World reference map
-  {
-    path: '/old-world',
-    component: OldWorldMapView,
-    meta: { requiresAuth: false, hideFooter: false },
   },
   // Interactive map: public base layer, campaign markers when a campaign is in context
   {
