@@ -15,6 +15,14 @@ import { parseCampaignSessionDate } from '../utils/campaignSessions'
 const authStore = useAuthStore()
 const { campaign, session, character, campaignTo, sessionTo, characterTo } = useCurrentContext()
 
+const campaignCreationDate = computed(() =>
+  campaign.value?.createdAt ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(campaign.value?.createdAt)) : 'Date de création inconnue'
+)
+
+const sessionDate = computed(() =>
+  session.value?.date ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(session.value?.date)) : 'Date de session inconnue'
+)
+
 const sessionTitle = computed(() => {
   if (!session.value) {
     return ''
@@ -92,11 +100,16 @@ const hasResume = computed(() => Boolean(campaignTo.value))
           Reprendre
         </h2>
         <ul class="grid gap-3 md:grid-cols-3" aria-label="Reprendre">
-          <HomeResumeCard label="Campagne" :title="campaign.name" :to="campaignTo" :icon="Scroll" />
+          <HomeResumeCard label="Campagne"
+          :title="campaign.name"
+          :description="campaignCreationDate"
+          :to="campaignTo"
+          :icon="Scroll" />
           <HomeResumeCard
             v-if="session && sessionTo"
             label="Session"
             :title="sessionTitle"
+            :description="sessionDate"
             :to="sessionTo"
             :icon="CalendarDays"
           />
