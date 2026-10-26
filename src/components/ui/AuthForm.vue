@@ -85,7 +85,7 @@ const tabClass = (active: boolean) =>
     'cursor-pointer border-b-2 pb-3 font-[family-name:var(--font-grim-title)] text-sm uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-base-100',
     active
       ? 'border-primary text-base-content'
-      : 'border-transparent text-base-content/45 hover:text-base-content/70',
+      : 'border-transparent text-base-content/70 hover:text-base-content/70',
   ].join(' ')
 
 watch(
@@ -190,7 +190,7 @@ async function requestPasswordReset(): Promise<void> {
             aria-describedby="password-reset-help"
           />
         </label>
-        <p id="password-reset-help" class="text-xs text-base-content/60 pt-2">
+        <p id="password-reset-help" class="text-xs text-base-content/70 pt-2">
           Un lien sera envoyé si cette adresse est associée à un compte.
         </p>
         <div v-if="resetError" role="alert" aria-live="assertive" class="alert alert-error alert-soft text-sm"><span>{{ resetError }}</span></div>

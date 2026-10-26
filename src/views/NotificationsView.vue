@@ -118,7 +118,7 @@ watch(
         <span class="size-1 rotate-45 border border-primary/50 bg-primary/20" />
       </div>
       <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <p class="max-w-md text-sm leading-relaxed text-base-content/65">
+        <p class="max-w-md text-sm leading-relaxed text-base-content/70">
           Courriers de votre table et nouvelles du Vieux Monde.
         </p>
         <button
@@ -146,7 +146,7 @@ watch(
     >
       <ScrollText class="mx-auto size-8 text-primary/50" aria-hidden="true" />
       <h2 class="mt-4 text-xl">Aucune missive pour l'instant</h2>
-      <p class="mt-2 text-sm text-base-content/60">
+      <p class="mt-2 text-sm text-base-content/70">
         Quand un maître de jeu te contacte, ses messages apparaîtront ici.
       </p>
       <router-link
@@ -206,7 +206,7 @@ watch(
                   <button
                     v-if="!notif.isRead"
                     type="button"
-                    class="text-xs uppercase tracking-[0.12em] text-base-content/50 hover:text-base-content disabled:opacity-40"
+                    class="text-xs uppercase tracking-[0.12em] text-base-content/70 hover:text-base-content disabled:opacity-40"
                     :disabled="isBusy(notif.id)"
                     @click="handleMarkRead(notif.id)"
                   >
@@ -215,7 +215,7 @@ watch(
                 </div>
                 <button
                   type="button"
-                  class="shrink-0 text-xs uppercase tracking-[0.12em] text-base-content/35 hover:text-error disabled:opacity-40"
+                  class="shrink-0 text-xs uppercase tracking-[0.12em] text-base-content/70 hover:text-error disabled:opacity-40"
                   :disabled="isBusy(notif.id)"
                   @click="handleRemove(notif.id)"
                 >
@@ -232,11 +232,11 @@ watch(
       v-if="!loading && !error && notifications.length > 0"
       class="flex items-center justify-between gap-3 text-sm"
     >
-      <p class="text-base-content/45">Page {{ page }} / {{ totalPages }}</p>
+      <p class="text-base-content/70">Page {{ page }} / {{ totalPages }}</p>
       <div class="flex items-center gap-4">
         <button
           type="button"
-          class="font-grim-title text-xs uppercase tracking-[0.14em] text-base-content/60 disabled:opacity-25"
+          class="font-grim-title text-xs uppercase tracking-[0.14em] text-base-content/70 disabled:opacity-25"
           :disabled="!canGoPrevious || loading"
           @click="goToPreviousPage"
         >
@@ -244,7 +244,7 @@ watch(
         </button>
         <button
           type="button"
-          class="font-grim-title text-xs uppercase tracking-[0.14em] text-base-content/60 disabled:opacity-25"
+          class="font-grim-title text-xs uppercase tracking-[0.14em] text-base-content/70 disabled:opacity-25"
           :disabled="!canGoNext || loading"
           @click="goToNextPage"
         >

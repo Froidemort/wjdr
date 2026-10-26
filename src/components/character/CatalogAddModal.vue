@@ -156,7 +156,7 @@ defineExpose({ dialog })
                         <span class="break-words font-medium leading-tight">{{ formatLabel(option) }}</span>
                         <span v-if="selectedIds.includes(option.id)" class="badge badge-warning badge-sm">Sélectionné</span>
                       </div>
-                      <p v-if="option.specialization" class="text-xs opacity-60">{{ option.specialization }}</p>
+                      <p v-if="option.specialization" class="text-xs opacity-70">{{ option.specialization }}</p>
                     </div>
                   </label>
                 </li>

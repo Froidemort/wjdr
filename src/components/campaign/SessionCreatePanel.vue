@@ -112,7 +112,7 @@ watch(
         </div>
 
         <div class="flex items-center justify-between gap-2">
-          <span class="text-xs opacity-60">Ctrl+Entrée pour valider</span>
+          <span class="text-xs opacity-70">Ctrl+Entrée pour valider</span>
           <div class="flex gap-2">
             <button type="button" class="btn btn-ghost btn-sm" @click="emit('close')">Annuler</button>
             <button

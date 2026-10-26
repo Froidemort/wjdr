@@ -297,7 +297,7 @@ function armorActionLabel(armor: CharacterArmor): string {
         class="relative border-b border-base-content/10 bg-gradient-to-b from-base-200/55 to-transparent px-4 pb-3.5 pt-4 sm:px-5"
       >
         <div class="min-w-0 pr-10">
-          <p class="mb-0.5 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-base-content/55">
+          <p class="mb-0.5 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-base-content/70">
             Équiper
           </p>
           <h3 id="equipment-slot-picker-title" class="m-0 font-[family-name:var(--font-grim-title)] text-[1.65rem] leading-tight tracking-wide text-primary">
@@ -336,7 +336,7 @@ function armorActionLabel(armor: CharacterArmor): string {
             />
           </div>
           <div class="flex min-w-0 flex-col gap-0.5">
-            <span class="text-[0.62rem] font-bold uppercase tracking-wider opacity-55">Couches</span>
+            <span class="text-[0.62rem] font-bold uppercase tracking-wider opacity-70">Couches</span>
             <span class="text-[0.92rem] font-extrabold tabular-nums leading-none">
               {{ stackCount }}/{{ MAX_ARMORS_PER_LOCATION }}
               <span
@@ -382,7 +382,7 @@ function armorActionLabel(armor: CharacterArmor): string {
             <Sword class="h-4 w-4" />
           </span>
           <div class="flex min-w-0 flex-col gap-0.5">
-            <p class="m-0 text-[0.62rem] font-bold uppercase tracking-wider opacity-55">Équipée</p>
+            <p class="m-0 text-[0.62rem] font-bold uppercase tracking-wider opacity-70">Équipée</p>
             <p class="m-0 truncate text-[0.95rem] font-bold leading-tight" :title="equippedWeaponOnSlot.name">
               {{ equippedWeaponOnSlot.name }}
             </p>
@@ -420,7 +420,7 @@ function armorActionLabel(armor: CharacterArmor): string {
 
           <template v-else>
             <section v-if="equippedArmors.length > 0" class="space-y-2">
-              <h4 class="m-0 flex items-center gap-2 text-[0.68rem] font-extrabold uppercase tracking-[0.1em] opacity-60">
+              <h4 class="m-0 flex items-center gap-2 text-[0.68rem] font-extrabold uppercase tracking-[0.1em] opacity-70">
                 Équipé
               </h4>
               <div class="flex flex-col gap-2">
@@ -442,7 +442,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                     <span class="text-[0.92rem] font-bold leading-tight">{{ armor.name }}</span>
                     <span
                       v-if="armor.description"
-                      class="line-clamp-2 text-[0.72rem] leading-snug opacity-60"
+                      class="line-clamp-2 text-[0.72rem] leading-snug opacity-70"
                     >
                       {{ armor.description }}
                     </span>
@@ -460,7 +460,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                       </span>
                       <span
                         v-if="armor.coveredLocations?.length"
-                        class="text-[0.7rem] italic opacity-55"
+                        class="text-[0.7rem] italic opacity-70"
                       >
                         {{ armor.coveredLocations.join(' · ') }}
                       </span>
@@ -468,7 +468,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                   </span>
                   <span
                     v-if="editable"
-                    class="self-center text-[0.65rem] font-extrabold uppercase tracking-wider opacity-55"
+                    class="self-center text-[0.65rem] font-extrabold uppercase tracking-wider opacity-70"
                   >
                     Retirer
                   </span>
@@ -480,7 +480,7 @@ function armorActionLabel(armor: CharacterArmor): string {
               class="space-y-2"
               :class="{ 'mt-4 border-t border-base-content/10 pt-3.5': equippedArmors.length > 0 }"
             >
-              <h4 class="m-0 flex items-center gap-2 text-[0.68rem] font-extrabold uppercase tracking-[0.1em] opacity-60">
+              <h4 class="m-0 flex items-center gap-2 text-[0.68rem] font-extrabold uppercase tracking-[0.1em] opacity-70">
                 Inventaire
                 <span
                   class="inline-flex h-4 min-w-4 items-center justify-center border border-base-content/15 px-1 text-[0.62rem] font-extrabold tabular-nums"
@@ -526,7 +526,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                     </span>
                     <span
                       v-if="armor.description"
-                      class="line-clamp-2 text-[0.72rem] leading-snug opacity-60"
+                      class="line-clamp-2 text-[0.72rem] leading-snug opacity-70"
                     >
                       {{ armor.description }}
                     </span>
@@ -544,7 +544,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                       </span>
                       <span
                         v-if="armor.coveredLocations?.length"
-                        class="text-[0.7rem] italic opacity-55"
+                        class="text-[0.7rem] italic opacity-70"
                       >
                         {{ armor.coveredLocations.join(' · ') }}
                       </span>
@@ -552,7 +552,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                   </span>
                   <span
                     v-if="editable"
-                    class="self-center text-[0.65rem] font-extrabold uppercase tracking-wider opacity-55"
+                    class="self-center text-[0.65rem] font-extrabold uppercase tracking-wider opacity-70"
                   >
                     {{ armorActionLabel(armor) }}
                   </span>
@@ -569,7 +569,7 @@ function armorActionLabel(armor: CharacterArmor): string {
 
           <template v-else>
             <section class="space-y-2">
-              <h4 class="m-0 flex items-center gap-2 text-[0.68rem] font-extrabold uppercase tracking-[0.1em] opacity-60">
+              <h4 class="m-0 flex items-center gap-2 text-[0.68rem] font-extrabold uppercase tracking-[0.1em] opacity-70">
                 {{ equippedWeaponOnSlot ? 'Autres armes' : 'Armes' }}
                 <span
                   class="inline-flex h-4 min-w-4 items-center justify-center border border-base-content/15 px-1 text-[0.62rem] font-extrabold tabular-nums"
@@ -605,7 +605,7 @@ function armorActionLabel(armor: CharacterArmor): string {
                     </p>
                     <p
                       v-if="row.locationHint"
-                      class="ml-5 mt-1 text-[0.62rem] font-bold uppercase tracking-wider opacity-50"
+                      class="ml-5 mt-1 text-[0.62rem] font-bold uppercase tracking-wider opacity-70"
                     >
                       {{ row.locationHint }}
                     </p>

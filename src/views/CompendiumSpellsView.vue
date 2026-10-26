@@ -126,7 +126,7 @@ function displayedDescription(spell: { id: string; description: string | null })
                   <label class="label cursor-pointer flex gap-2 justify-between min-h-11">
                     <span class="label-text truncate" :title="category.name">{{ category.name }}</span>
                     <span class="flex items-center gap-2 shrink-0">
-                      <span class="opacity-60 text-xs">{{ category.count }}</span>
+                      <span class="opacity-70 text-xs">{{ category.count }}</span>
                       <input
                         type="checkbox"
                         class="checkbox sm:checkbox-sm"
@@ -136,7 +136,7 @@ function displayedDescription(spell: { id: string; description: string | null })
                     </span>
                   </label>
                 </li>
-                <li v-if="filteredCategories.length === 0" class="text-xs opacity-60 p-2">Aucune catégorie trouvée.</li>
+                <li v-if="filteredCategories.length === 0" class="text-xs opacity-70 p-2">Aucune catégorie trouvée.</li>
               </ul>
             </div>
           </div>
@@ -148,7 +148,7 @@ function displayedDescription(spell: { id: string; description: string | null })
           <span class="label-text text-xs font-semibold uppercase tracking-wide opacity-70">Difficulté</span>
           <div class="join">
             <label class="join-item input sm:input-sm flex items-center gap-1">
-              <span class="opacity-60 text-xs">Min</span>
+              <span class="opacity-70 text-xs">Min</span>
               <input
                 v-model.number="minDifficulty"
                 type="number"
@@ -160,7 +160,7 @@ function displayedDescription(spell: { id: string; description: string | null })
               />
             </label>
             <label class="join-item input sm:input-sm flex items-center gap-1">
-              <span class="opacity-60 text-xs">Max</span>
+              <span class="opacity-70 text-xs">Max</span>
               <input
                 v-model.number="maxDifficulty"
                 type="number"
@@ -179,7 +179,7 @@ function displayedDescription(spell: { id: string; description: string | null })
         <div class="flex flex-col gap-1">
           <span class="label-text text-xs font-semibold uppercase tracking-wide opacity-70">Tri</span>
           <label class="input sm:input-sm flex items-center gap-2">
-            <ArrowDownUp class="size-4 opacity-60" />
+            <ArrowDownUp class="size-4 opacity-70" />
             <select v-model="sortBy" class="w-40">
               <option value="name">Nom</option>
               <option value="difficulty-asc">Difficulté croissante</option>
@@ -190,7 +190,7 @@ function displayedDescription(spell: { id: string; description: string | null })
       </div>
 
       <div v-if="categories.some((c) => isCategorySelected(c.name))" class="flex flex-wrap items-center gap-2">
-        <span class="text-xs opacity-60">Filtres actifs :</span>
+        <span class="text-xs opacity-70">Filtres actifs :</span>
         <span
           v-for="category in categories.filter((c) => isCategorySelected(c.name))"
           :key="category.name"
@@ -255,7 +255,7 @@ function displayedDescription(spell: { id: string; description: string | null })
                 <span v-if="spell.range">Portée : {{ spell.range }}</span>
                 <span v-if="spell.duration">Durée : {{ spell.duration }}</span>
               </div>
-              <p v-if="spell.bonusIngredient" class="text-xs opacity-60">Ingrédient bonus : {{ spell.bonusIngredient }}<template v-if="spell.bonus !== null"> (+{{ spell.bonus }})</template></p>
+              <p v-if="spell.bonusIngredient" class="text-xs opacity-70">Ingrédient bonus : {{ spell.bonusIngredient }}<template v-if="spell.bonus !== null"> (+{{ spell.bonus }})</template></p>
             </div>
           </div>
         </template>
@@ -269,7 +269,7 @@ function displayedDescription(spell: { id: string; description: string | null })
       class="btn btn-circle btn-primary shadow-lg fixed right-4 bottom-[calc(var(--grim-dock-height,0px)+1rem)] z-50 transition-opacity duration-300"
       :class="isScrolling
         ? 'opacity-0 pointer-events-none'
-        : 'opacity-60 hover:opacity-100 active:opacity-100 focus-visible:opacity-100'"
+        : 'opacity-70 hover:opacity-100 active:opacity-100 focus-visible:opacity-100'"
       @click="scrollToTop"
     >
       <ArrowUp class="size-5" />

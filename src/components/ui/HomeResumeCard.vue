@@ -22,7 +22,7 @@ defineProps<{
         <component :is="icon" class="size-5" aria-hidden="true" />
       </span>
       <span class="min-w-0 flex-1">
-        <span class="block text-xs font-semibold uppercase tracking-[0.16em] text-base-content/60">{{ label }}</span>
+        <span class="block text-xs font-semibold uppercase tracking-[0.16em] text-base-content/70">{{ label }}</span>
         <span class="block truncate font-semibold">{{ title }}</span>
         <span v-if="description" class="block truncate text-sm text-base-content/70">{{ description }}</span>
       </span>

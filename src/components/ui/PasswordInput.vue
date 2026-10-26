@@ -53,7 +53,7 @@ const strength = computed(() =>
       />
       <button
         type="button"
-        class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm opacity-55 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none"
+        class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none"
         :aria-label="reveal ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
         :aria-pressed="reveal"
         tabindex="-1"

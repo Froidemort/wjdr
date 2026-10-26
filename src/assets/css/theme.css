@@ -25,27 +25,27 @@
   --color-base-content: oklch(88.24% 0.025 65.0);   /* Texte blanc cassé / parchemin brûlé */
 
   /* Couleurs d'accentuation : Rouge Sang Impérial & Or du Vieux Monde */
-  --color-primary: oklch(48% 0.165 24.22);          /* Rouge sang séché / Enluminures du grimoire (augmenté pour AAA) */
-  --color-primary-content: oklch(92.0% 0.01 25.0);
+  --color-primary: oklch(72.5% 0.165 24.22);        /* Rouge sang clair / Enluminures du grimoire (texte AAA sur fonds sombres) */
+  --color-primary-content: oklch(10.5% 0.01 25.0);
 
   --color-secondary: oklch(28.0% 0.03 20.0);        /* Brun d'acier corrodé et de cuir */
   --color-secondary-content: oklch(85.0% 0.02 70.0);
 
   --color-accent: oklch(73% 0.1389 90.43);        /* Or Vieilli / Artefacts & Magie */
-  --color-accent-content: oklch(25.0% 0.06 80.0);
+  --color-accent-content: oklch(23.0% 0.06 80.0);
 
   --color-neutral: oklch(10.0% 0.005 0.0);          /* Noir pur pour les ombres et contrastes lourds */
   --color-neutral-content: oklch(75.0% 0.01 60.0);
 
   /* États (Adaptés au ton rude et pragmatique du Jdr) */
-  --color-info: oklch(62.5% 0.114 233.1);           /* Bleu nuit alchimique */
-  --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(58.5% 0.134 148.2);        /* Vert de gris / bénédictions de Sigmar */
+  --color-info: oklch(69.5% 0.114 233.1);           /* Bleu nuit alchimique */
+  --color-info-content: oklch(17.0% 0.03 233.1);
+  --color-success: oklch(69.0% 0.134 148.2);        /* Vert de gris / bénédictions de Sigmar */
   --color-success-content: oklch(15% 0.05 148.2);
   --color-warning: oklch(78.5% 0.155 75.6);         /* Ambre de mise en garde / Mutagène */
   --color-warning-content: oklch(20% 0.05 75.6);
-  --color-error: oklch(48.5% 0.181 18.5);           /* Corruption pure / Points de Folie */
-  --color-error-content: oklch(95% 0.02 18.5);
+  --color-error: oklch(73.5% 0.181 18.5);           /* Corruption pure / Points de Folie */
+  --color-error-content: oklch(19.0% 0.02 18.5);
 
   /* Structure gothique rigide, angles droits à la Warhammer */
   --radius-selector: 0.125rem;
@@ -80,7 +80,7 @@ html[data-theme="grimorium-dark"] {
   --color-primary: oklch(38.15% 0.142 22.0);       /* Rouge bordeaux des titres de chapitres */
   --color-primary-content: oklch(96.0% 0.01 80.0);
 
-  --color-secondary: oklch(52.4% 0.082 58.0);       /* Brun de reliure en cuir */
+  --color-secondary: oklch(45.5% 0.082 58.0);       /* Brun de reliure en cuir */
   --color-secondary-content: oklch(98.0% 0.005 80.0);
 
   --color-accent: oklch(45.0% 0.12 40.0);           /* Brun-rouge flamboyant pour les modificateurs négatifs */
@@ -90,12 +90,12 @@ html[data-theme="grimorium-dark"] {
   --color-neutral-content: oklch(95.0% 0.01 75.0);
 
   /* États */
-  --color-info: oklch(50.0% 0.10 240.0);
-  --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(45.0% 0.12 145.0);         /* Vert sombre héraldique */
-  --color-success-content: oklch(100% 0 0);
-  --color-warning: oklch(57.0% 0.14 70.0);          /* Ambre plus saturé pour meilleur contraste (65% → 57% = 7:1 AAA) */
-  --color-warning-content: oklch(15% 0.05 70.0);
+  --color-info: oklch(37.5% 0.10 240.0);
+  --color-info-content: oklch(99.5% 0 0);
+  --color-success: oklch(37.0% 0.12 145.0);         /* Vert sombre héraldique */
+  --color-success-content: oklch(99.5% 0 0);
+  --color-warning: oklch(45.5% 0.14 70.0);          /* Ambre sombre : texte et fond AAA */
+  --color-warning-content: oklch(99.5% 0 0);
   --color-error: oklch(40.0% 0.16 15.0);            /* Alerte rouge sombre type flétrissure */
   --color-error-content: oklch(98% 0.01 15.0);
 
@@ -250,13 +250,6 @@ input, select, textarea, .card {
   letter-spacing: 0.02em;
 }
 
-.badge-success,
-.badge-warning,
-.badge-error,
-.badge-info {
-  color: color-mix(in oklab, var(--color-base-content) 92%, black);
-}
-
 /* Champs plus discrets et focus plus elegant */
 .input,
 .select,
@@ -264,7 +257,7 @@ input, select, textarea, .card {
 input,
 select,
 textarea {
-  border-color: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  border-color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
   box-shadow: inset 0 0 0 0.5px color-mix(in oklab, var(--color-base-content) 10%, transparent);
 }
 
@@ -281,7 +274,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: none;
-  border-color: color-mix(in oklab, var(--color-primary) 28%, var(--color-base-300));
+  border-color: var(--color-primary);
   box-shadow:
     inset 0 0 0 0.5px color-mix(in oklab, var(--color-primary) 35%, transparent),
     0 0 0 2px color-mix(in oklab, var(--color-primary) 16%, transparent);
@@ -378,19 +371,19 @@ a:focus-visible,
   outline: none;
   box-shadow:
     0 0 0 2px color-mix(in oklab, var(--color-base-100) 92%, transparent),
-    0 0 0 4px color-mix(in oklab, var(--color-accent) 36%, transparent);
+    0 0 0 4px var(--color-accent);
 }
 
 .badge:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-accent) 36%, transparent);
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 /* Support pour les contrôles de formulaire */
 input[type="checkbox"]:focus-visible,
 input[type="radio"]:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 30%, transparent);
+  box-shadow: 0 0 0 3px var(--color-accent);
 }
 
 /* Indicateur de focus pour les carrousels et menus */
@@ -398,7 +391,7 @@ input[type="radio"]:focus-visible {
 [role="menuitemcheckbox"]:focus-visible,
 [role="menuitemradio"]:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--color-accent) 35%, transparent);
+  box-shadow: inset 0 0 0 2px var(--color-accent);
   background-color: var(--color-base-200);
 }
 
@@ -746,10 +739,10 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
 
 .ui-critical-control:focus-visible {
   outline: none;
-  border-color: color-mix(in oklab, var(--color-accent) 42%, transparent);
+  border-color: var(--color-accent);
   box-shadow:
     0 0 0 2px color-mix(in oklab, var(--color-base-100) 92%, transparent),
-    0 0 0 4px color-mix(in oklab, var(--color-accent) 38%, transparent);
+    0 0 0 4px var(--color-accent);
 }
 
 .ui-critical-control[aria-invalid='true'],
@@ -787,7 +780,7 @@ html[data-magicui-theme-vt='active']::view-transition-new(root) {
   outline: none;
   box-shadow:
     0 0 0 2px color-mix(in oklab, var(--color-base-100) 92%, transparent),
-    0 0 0 4px color-mix(in oklab, var(--color-accent) 40%, transparent);
+    0 0 0 4px var(--color-accent);
 }
 
 .ui-critical-action:disabled {

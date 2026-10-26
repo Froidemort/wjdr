@@ -103,7 +103,7 @@ function onCardClick(event: MouseEvent): void {
           @click="emit('toggle')"
         >
           {{ stat.statCode }}
-          <ChevronUp class="size-4 opacity-60" aria-hidden="true" />
+          <ChevronUp class="size-4 opacity-70" aria-hidden="true" />
         </button>
       </h4>
 
@@ -118,7 +118,7 @@ function onCardClick(event: MouseEvent): void {
         <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div class="text-2xl font-extrabold tabular-nums flex items-center gap-2">
             <span>{{ stat.currentAdvanced }}</span>
-            <span class="opacity-60">/</span>
+            <span class="opacity-70">/</span>
             <template v-if="editable">
               <input
                 :value="stat.totalAdvanced"

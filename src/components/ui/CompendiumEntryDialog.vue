@@ -43,7 +43,7 @@ watch(() => props.open, syncDialog, { flush: 'post' })
       </header>
 
       <p v-if="description" class="text-sm whitespace-pre-line opacity-90">{{ description }}</p>
-      <p v-else class="text-sm opacity-60">Aucune description disponible.</p>
+      <p v-else class="text-sm opacity-70">Aucune description disponible.</p>
 
       <section v-if="related.length" class="flex flex-col gap-2">
         <h3 class="text-xs font-semibold uppercase tracking-wide opacity-70">{{ relatedLabel }}</h3>
