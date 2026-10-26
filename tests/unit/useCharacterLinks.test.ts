@@ -227,15 +227,6 @@ describe('useCharacterLinks', () => {
     expect(deps.removeCharacterSkill).not.toHaveBeenCalled()
   })
 
-  it('cancels skill deletion when the confirmation is dismissed', async () => {
-    deps.confirmAction.mockResolvedValue(false)
-    const { links } = setup()
-
-    await links.onDeleteSkill('s1')
-
-    expect(deps.removeCharacterSkill).not.toHaveBeenCalled()
-  })
-
   it('reports an error when deleting a skill fails', async () => {
     deps.removeCharacterSkill.mockRejectedValue(new Error('down'))
     const { links, errorMessage } = setup()
@@ -243,15 +234,6 @@ describe('useCharacterLinks', () => {
     await links.onDeleteSkill('s1')
 
     expect(errorMessage.value).toBe('down')
-  })
-
-  it('cancels talent deletion when the confirmation is dismissed', async () => {
-    deps.confirmAction.mockResolvedValue(false)
-    const { links } = setup()
-
-    await links.onDeleteTalent('t1')
-
-    expect(deps.removeCharacterTalent).not.toHaveBeenCalled()
   })
 
   it('deletes a talent then reloads the links', async () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import type { CharacterSkill, CharacterTalent } from '../../types/domain'
 import { formatNamedWithSpecialization } from '../../utils/characterSheet'
 import SearchInput from '../ui/SearchInput.vue'
@@ -51,6 +51,52 @@ const filteredSkills = computed(() =>
 const filteredTalents = computed(() =>
   props.talents.filter((talent) => matches(talent.name, talent.specialization))
 )
+
+interface PendingDelete {
+  kind: 'skill' | 'talent'
+  id: string
+  name: string
+}
+
+const deleteDialog = ref<HTMLDialogElement | null>(null)
+const deleteTitleId = useId()
+const pendingDelete = ref<PendingDelete | null>(null)
+
+const deleteTitle = computed(() => {
+  if (!pendingDelete.value) return null
+  return pendingDelete.value.kind === 'skill' ? 'Supprimer la compétence ?' : 'Supprimer le talent ?'
+})
+
+function requestDelete(kind: PendingDelete['kind'], id: string): void {
+  const target =
+    kind === 'skill'
+      ? props.skills.find((skill) => skill.skillId === id)
+      : props.talents.find((talent) => talent.talentId === id)
+  if (!target) return
+
+  pendingDelete.value = { kind, id, name: formatNamedWithSpecialization(target.name, target.specialization) }
+  deleteDialog.value?.showModal()
+}
+
+function closeDeleteModal(): void {
+  if (deleteDialog.value?.open) {
+    deleteDialog.value.close()
+    return
+  }
+  pendingDelete.value = null
+}
+
+function confirmDelete(): void {
+  const target = pendingDelete.value
+  closeDeleteModal()
+  if (!target) return
+
+  if (target.kind === 'skill') {
+    emit('delete-skill', target.id)
+  } else {
+    emit('delete-talent', target.id)
+  }
+}
 </script>
 
 <template>
@@ -86,7 +132,7 @@ const filteredTalents = computed(() =>
       :busy-key="busyKey"
       :success-message="skillsMessage"
       @add="emit('add-skills')"
-      @delete="emit('delete-skill', $event)"
+      @delete="requestDelete('skill', $event)"
       @change-mastery="(skillId, level) => emit('change-mastery', skillId, level)"
       @show-description="(title, description) => emit('show-description', title, description)"
     />
@@ -98,8 +144,41 @@ const filteredTalents = computed(() =>
       :busy-key="busyKey"
       :success-message="talentsMessage"
       @add="emit('add-talents')"
-      @delete="emit('delete-talent', $event)"
+      @delete="requestDelete('talent', $event)"
       @show-description="(title, description) => emit('show-description', title, description)"
     />
+
+    <dialog
+      ref="deleteDialog"
+      class="modal modal-top sm:modal-middle"
+      :aria-labelledby="deleteTitleId"
+      @close="pendingDelete = null"
+    >
+      <div class="modal-box grim-modal-box max-w-md p-6">
+        <button
+          type="button"
+          class="btn btn-sm btn-circle grim-modal-close absolute right-3 top-3 min-h-11 min-w-11"
+          aria-label="Fermer"
+          @click="closeDeleteModal"
+        >
+          ✕
+        </button>
+        <h3 :id="deleteTitleId" class="grim-modal-title mb-2 px-8 text-center text-2xl">{{ deleteTitle }}</h3>
+        <p class="break-words text-center text-sm opacity-80 [overflow-wrap:anywhere]">
+          <span class="font-semibold">{{ pendingDelete?.name }}</span> sera retiré de la fiche.
+        </p>
+
+        <div class="grim-modal-actions mt-4 flex flex-wrap items-center justify-end gap-2">
+          <button type="button" class="btn btn-sm min-h-11 ui-critical-action" autofocus @click="closeDeleteModal">
+            Annuler
+          </button>
+          <button type="button" class="btn btn-error btn-sm min-h-11" @click="confirmDelete">Supprimer</button>
+        </div>
+      </div>
+
+      <form method="dialog" class="modal-backdrop">
+        <button tabindex="-1">Fermer</button>
+      </form>
+    </dialog>
   </section>
 </template>

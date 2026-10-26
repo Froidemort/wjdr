@@ -126,10 +126,6 @@ export function useCharacterLinks({
 
     const currentCharacterId = character.value.id
 
-    if (!(await confirmDestructiveAction('Supprimer cette compétence ?'))) {
-      return
-    }
-
     beginAction(`skill-${skillId}`)
     try {
       await removeCharacterSkill(currentCharacterId, skillId)
@@ -149,10 +145,6 @@ export function useCharacterLinks({
     }
 
     const currentCharacterId = character.value.id
-
-    if (!(await confirmDestructiveAction('Supprimer ce talent ?'))) {
-      return
-    }
 
     beginAction(`talent-${talentId}`)
     try {

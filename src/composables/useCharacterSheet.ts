@@ -6,13 +6,11 @@ import { useLastActiveStore } from '../stores/lastActive'
 import type { CharacterDetail } from '../types/domain'
 import { safeErrorMessage } from '../utils/errorMessages'
 import { useCharacterEquipment } from './useCharacterEquipment'
-import { type FeedbackSection, useCharacterFeedback } from './useCharacterFeedback'
+import { useCharacterFeedback } from './useCharacterFeedback'
 import { useCharacterLinks } from './useCharacterLinks'
 import { useCharacterQuickSave } from './useCharacterQuickSave'
 import { useCharacterRealtime } from './useCharacterRealtime'
 import { useCharacterStats } from './useCharacterStats'
-
-export type { FeedbackSection }
 
 export function useCharacterSheet() {
   const authStore = useAuthStore()
