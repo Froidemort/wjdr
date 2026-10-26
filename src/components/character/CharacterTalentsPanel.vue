@@ -42,15 +42,17 @@ const isOnline = useIsOnline()
       <article
         v-for="talent in talents"
         :key="talent.talentId"
-        v-memo="[talent.talentId, editable]"
+        v-memo="[talent.talentId, talent.name, talent.specialization, talent.description, editable, busyKey]"
         class="group card border border-base-300 bg-base-100"
       >
         <div class="card-body min-w-0 gap-2 p-3">
-          <div class="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <h4 class="min-w-0 max-w-full flex-1 break-words text-left font-semibold leading-snug [overflow-wrap:anywhere]">
+          <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <h4
+              class="mb-0 min-w-32 max-w-full flex-1 break-words text-left font-semibold leading-snug [overflow-wrap:anywhere]"
+            >
               {{ formatNamedWithSpecialization(talent.name, talent.specialization) }}
             </h4>
-            <div class="hover-actions ml-auto flex shrink-0 items-center gap-1 self-end sm:self-start">
+            <div class="hover-actions ml-auto flex shrink-0 items-center gap-1">
               <button
                 v-if="talent.description"
                 class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
@@ -64,7 +66,7 @@ const isOnline = useIsOnline()
                 class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11"
                 :disabled="Boolean(busyKey)"
                 :aria-busy="busyKey === `talent-${talent.talentId}` ? 'true' : 'false'"
-                :aria-label="`Supprimer ${talent.name}`"
+                :aria-label="`Supprimer ${formatNamedWithSpecialization(talent.name, talent.specialization)}`"
                 @click="emit('delete', talent.talentId)"
               >
                 <Trash2 class="h-4 w-4" />
