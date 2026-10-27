@@ -63,7 +63,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="flex min-h-[70vh] items-center justify-center p-4 sm:p-6">
+  <div class="flex min-h-[70vh] items-center justify-center p-4 sm:p-6">
     <AppCard title="Nouveau mot de passe" class="w-full max-w-md">
       <form v-if="!success" class="space-y-4" @submit.prevent="submit">
         <p class="text-sm text-base-content/70">Choisis un nouveau mot de passe pour ton compte.</p>
@@ -82,5 +82,5 @@ onMounted(async () => {
         <button type="button" class="btn btn-primary min-h-11 w-full" @click="returnHome">Retour a l accueil</button>
       </div>
     </AppCard>
-  </main>
+  </div>
 </template>

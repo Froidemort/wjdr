@@ -1,5 +1,5 @@
 <template>
-	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
+	<div class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
 		<div v-if="loading" class="skeleton h-48 w-full" />
 
 		<div v-else-if="errorMessage" role="alert" class="alert alert-error alert-soft">
@@ -196,7 +196,7 @@
 			:user-id="authStore.user.id"
 			@created="onCharacterCreated"
 		/>
-	</main>
+	</div>
 </template>
 
 <script setup lang="ts">

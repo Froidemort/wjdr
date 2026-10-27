@@ -1,5 +1,5 @@
 <template>
-	<main class="mx-auto max-w-2xl p-4 sm:p-6 space-y-6">
+	<div class="mx-auto max-w-2xl p-4 sm:p-6 space-y-6">
 		<AppCard title="Profil">
 			<div class="space-y-6">
 				<div class="space-y-3">
@@ -153,7 +153,7 @@
 				Retour
 			</router-link>
 		</div>
-	</main>
+	</div>
 </template>
 
 <script setup lang="ts">

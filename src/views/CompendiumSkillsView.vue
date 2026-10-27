@@ -87,7 +87,7 @@ void store.loadSkills()
 </script>
 
 <template>
-  <main class="bg-base-100">
+  <div class="bg-base-100">
     <header class="bg-base-300 text-base-content p-6">
       <h1 class="text-2xl font-bold">Compendium des compétences</h1>
       <p class="opacity-80 text-sm mt-1">Compétences de base et avancées du Vieux Monde.</p>
@@ -184,5 +184,5 @@ void store.loadSkills()
       :related="dialogRelated"
       @close="closeEntry"
     />
-  </main>
+  </div>
 </template>

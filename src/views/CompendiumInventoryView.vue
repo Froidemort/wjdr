@@ -129,7 +129,7 @@ watch(activeTab, () => { void loadActiveTab() }, { immediate: true })
 </script>
 
 <template>
-  <main class="bg-base-100">
+  <div class="bg-base-100">
     <header class="bg-base-300 text-base-content p-6">
       <h1 class="text-2xl font-bold">Compendium de l'inventaire</h1>
       <p class="opacity-80 text-sm mt-1">Armes, armures et équipements du Vieux Monde.</p>
@@ -262,5 +262,5 @@ watch(activeTab, () => { void loadActiveTab() }, { immediate: true })
         </template>
       </DataGrid>
     </div>
-  </main>
+  </div>
 </template>

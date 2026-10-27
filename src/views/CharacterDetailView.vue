@@ -1,5 +1,5 @@
 <template>
-  <main class="mx-auto max-w-6xl space-y-4 p-4 pb-40 sm:p-6 sm:pb-6">
+  <div class="mx-auto max-w-6xl space-y-4 p-4 pb-40 sm:p-6 sm:pb-6">
     <div v-if="loading && !character" class="skeleton h-56 w-full" />
 
     <div v-else-if="errorMessage && !character" role="alert" class="alert alert-error alert-soft">
@@ -186,7 +186,7 @@
         Tous les personnages
       </router-link>
     </footer>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">

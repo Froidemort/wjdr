@@ -251,26 +251,26 @@ async function requestPasswordReset(): Promise<void> {
       @submit.prevent="onSubmit"
     >
       <div v-if="!isLogin" class="form-control">
-        <label class="label py-1">
+        <label for="auth-username" class="label py-1">
           <span class="label-text">Nom d'utilisateur</span>
         </label>
-        <input v-model="username" type="text" class="input w-full ui-critical-control" :aria-invalid="usernameError ? 'true' : 'false'" :aria-errormessage="usernameError ? 'auth-username-error' : undefined" :aria-describedby="usernameError ? 'auth-username-error' : undefined" required autocomplete="username" />
+        <input id="auth-username" v-model="username" type="text" class="input w-full ui-critical-control" :aria-invalid="usernameError ? 'true' : 'false'" :aria-errormessage="usernameError ? 'auth-username-error' : undefined" :aria-describedby="usernameError ? 'auth-username-error' : undefined" required autocomplete="username" />
         <p v-if="usernameError" id="auth-username-error" class="label text-error text-xs">{{ usernameError }}</p>
       </div>
 
       <div v-if="isLogin" class="form-control">
-        <label class="label py-1">
+        <label for="auth-identifier" class="label py-1">
           <span class="label-text">Email ou nom d'utilisateur</span>
         </label>
-        <input v-model="identifier" type="text" class="input w-full ui-critical-control" :aria-invalid="identifierError ? 'true' : 'false'" :aria-errormessage="identifierError ? 'auth-identifier-error' : undefined" :aria-describedby="identifierError ? 'auth-identifier-error' : undefined" required autocomplete="username" />
+        <input id="auth-identifier" v-model="identifier" type="text" class="input w-full ui-critical-control" :aria-invalid="identifierError ? 'true' : 'false'" :aria-errormessage="identifierError ? 'auth-identifier-error' : undefined" :aria-describedby="identifierError ? 'auth-identifier-error' : undefined" required autocomplete="username" />
         <p v-if="identifierError" id="auth-identifier-error" class="label text-error text-xs">{{ identifierError }}</p>
       </div>
 
       <div v-if="!isLogin" class="form-control">
-        <label class="label py-1">
+        <label for="auth-email" class="label py-1">
           <span class="label-text">Email</span>
         </label>
-        <input v-model="email" type="email" class="input w-full ui-critical-control" :aria-invalid="emailError ? 'true' : 'false'" :aria-errormessage="emailError ? 'auth-email-error' : undefined" :aria-describedby="emailError ? 'auth-email-error' : undefined" required autocomplete="email" />
+        <input id="auth-email" v-model="email" type="email" class="input w-full ui-critical-control" :aria-invalid="emailError ? 'true' : 'false'" :aria-errormessage="emailError ? 'auth-email-error' : undefined" :aria-describedby="emailError ? 'auth-email-error' : undefined" required autocomplete="email" />
         <p v-if="emailError" id="auth-email-error" class="label text-error text-xs">{{ emailError }}</p>
       </div>
 

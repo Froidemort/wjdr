@@ -1,5 +1,5 @@
 <template>
-  <main class="mx-auto max-w-5xl space-y-5 p-4 sm:p-6">
+  <div class="mx-auto max-w-5xl space-y-5 p-4 sm:p-6">
     <div v-if="loading" class="skeleton h-56 w-full" />
 
     <div v-else-if="errorMessage" role="alert" class="alert alert-error alert-soft">
@@ -70,7 +70,7 @@
 
       <PageFooter :back-to="`/campaigns/${campaign.id}`" back-label="Retour à la campagne" mobile-visible />
     </template>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">

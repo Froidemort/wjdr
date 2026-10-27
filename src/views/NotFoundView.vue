@@ -1,5 +1,5 @@
 <template>
-  <main class="flex min-h-[60vh] items-center justify-center p-6">
+  <div class="flex min-h-[60vh] items-center justify-center p-6">
     <section class="card card-border w-full max-w-lg bg-base-100 shadow-sm">
       <div class="card-body items-center text-center">
         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Erreur 404</p>
@@ -11,5 +11,5 @@
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </template>

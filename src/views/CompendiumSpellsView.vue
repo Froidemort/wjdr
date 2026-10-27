@@ -94,7 +94,7 @@ function displayedDescription(spell: { id: string; description: string | null })
 </script>
 
 <template>
-  <main ref="scrollTargetRef" class="bg-base-100">
+  <div ref="scrollTargetRef" class="bg-base-100">
     <header class="bg-base-300 text-base-content p-6">
       <h1 class="text-2xl font-bold">Compendium des sorts</h1>
       <p class="opacity-80 text-sm mt-1">Liste des sorts et prières du Vieux Monde. Explore les secrets des vents de magie !</p>
@@ -180,7 +180,7 @@ function displayedDescription(spell: { id: string; description: string | null })
           <span class="label-text text-xs font-semibold uppercase tracking-wide opacity-70">Tri</span>
           <label class="input sm:input-sm flex items-center gap-2">
             <ArrowDownUp class="size-4 opacity-70" />
-            <select v-model="sortBy" class="w-40">
+            <select v-model="sortBy" class="w-40" aria-label="Trier les sorts">
               <option value="name">Nom</option>
               <option value="difficulty-asc">Difficulté croissante</option>
               <option value="difficulty-desc">Difficulté décroissante</option>
@@ -274,5 +274,5 @@ function displayedDescription(spell: { id: string; description: string | null })
     >
       <ArrowUp class="size-5" />
     </button>
-  </main>
+  </div>
 </template>
