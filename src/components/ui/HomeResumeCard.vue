@@ -27,7 +27,7 @@ defineProps<{
         <span v-if="description" class="block truncate text-sm text-base-content/70">{{ description }}</span>
       </span>
       <ArrowRight
-        class="size-4 shrink-0 text-base-content/50 transition-transform group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
+        class="size-4 shrink-0 text-base-content/70 transition-transform group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
         aria-hidden="true"
       />
     </RouterLink>

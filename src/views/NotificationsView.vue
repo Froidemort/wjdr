@@ -168,7 +168,7 @@ watch(
               class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full font-grim-title text-xs"
               :class="
                 notif.isRead
-                  ? 'border border-base-content/15 text-base-content/40'
+                  ? 'border border-base-content/15 text-base-content/70'
                   : 'bg-primary text-primary-content shadow-[0_2px_8px_color-mix(in_oklab,var(--color-primary)_40%,transparent)]'
               "
               aria-hidden="true"
@@ -183,7 +183,7 @@ watch(
                 </h2>
                 <span
                   class="shrink-0 pt-0.5 font-grim-title text-[0.65rem] uppercase tracking-[0.18em]"
-                  :class="notif.isRead ? 'text-base-content/40' : 'text-primary'"
+                  :class="notif.isRead ? 'text-base-content/70' : 'text-primary'"
                 >
                   {{ notif.isRead ? 'Lue' : 'Nouvelle' }}
                 </span>

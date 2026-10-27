@@ -58,7 +58,7 @@ const isFeatured = computed(() => Boolean(props.feature.featured))
       <div class="grim-feature-card__body relative z-10 flex flex-1 flex-col gap-3 px-5 pb-5 pt-4">
         <div class="flex items-center gap-3">
           <span
-            class="grim-feature-card__icon flex size-8 shrink-0 items-center justify-center rounded-sm border border-primary/15 bg-primary/6 text-primary/60"
+            class="grim-feature-card__icon flex size-8 shrink-0 items-center justify-center rounded-sm border border-primary/15 bg-primary/6 text-primary/70"
             aria-hidden="true"
           >
             <component :is="feature.icon" class="size-4" />
@@ -67,7 +67,7 @@ const isFeatured = computed(() => Boolean(props.feature.featured))
             class="grim-feature-card__title font-grim-title leading-snug tracking-wide"
             :class="[
               isFeatured ? 'text-xl lg:text-2xl' : 'text-lg',
-              isAvailable ? 'text-base-content/75' : 'text-base-content/35',
+              isAvailable ? 'text-base-content/75' : 'text-base-content/70',
             ]"
           >
             {{ feature.title }}
@@ -75,8 +75,7 @@ const isFeatured = computed(() => Boolean(props.feature.featured))
         </div>
 
         <p
-          class="grim-feature-card__desc text-sm leading-relaxed"
-          :class="isAvailable ? 'text-base-content/50' : 'text-base-content/25'"
+          class="grim-feature-card__desc text-sm leading-relaxed text-base-content/70"
         >
           {{ feature.description }}
         </p>
@@ -88,7 +87,7 @@ const isFeatured = computed(() => Boolean(props.feature.featured))
           </span>
           <span
             v-else
-            class="inline-flex items-center gap-1.5 font-grim-title text-xs uppercase tracking-[0.18em] text-base-content/25"
+            class="inline-flex items-center gap-1.5 font-grim-title text-xs uppercase tracking-[0.18em] text-base-content/70"
           >
             <Hourglass class="size-3.5" aria-hidden="true" />
             {{ feature.cta }}
