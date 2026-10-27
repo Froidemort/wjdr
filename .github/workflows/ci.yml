@@ -53,8 +53,12 @@ jobs:
       - run: npm run test:unit
 
   test-storybook:
-    name: Storybook tests (a11y)
+    name: Storybook tests (a11y, ${{ matrix.theme }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        theme: [grimorium-dark, grimorium-light]
 
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +71,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:storybook
+        env:
+          STORYBOOK_THEME: ${{ matrix.theme }}
 
   test-e2e:
     name: E2E tests
