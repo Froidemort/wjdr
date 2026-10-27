@@ -95,7 +95,6 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
           <p
             class="text-xl font-black tabular-nums"
             :class="isOverloaded ? 'text-error' : ''"
-            :aria-label="`Encombrement ${totalEncumbrance} sur ${maxEncumbrance}`"
           >
             {{ totalEncumbrance }} / {{ maxEncumbrance }}
           </p>
@@ -104,7 +103,7 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
           class="progress progress-accent mt-2 h-3 w-full"
           :value="Math.min(totalEncumbrance, Math.max(maxEncumbrance, 1))"
           :max="Math.max(maxEncumbrance, 1)"
-          aria-hidden="true"
+          :aria-label="`Encombrement ${totalEncumbrance} sur ${maxEncumbrance}`"
         />
         <p class="mt-1 text-xs opacity-70">
           Max : Force × {{ encumbranceMultiplier }}

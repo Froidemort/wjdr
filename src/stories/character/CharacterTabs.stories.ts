@@ -14,7 +14,10 @@ const meta: Meta<typeof CharacterTabs> = {
       const active = ref<CharacterTabId>(args.modelValue)
       return { active }
     },
-    template: '<CharacterTabs v-model="active" />',
+    template: `
+      <CharacterTabs v-model="active" />
+      <div :id="'character-panel-' + active" role="tabpanel" :aria-labelledby="'character-tab-' + active" />
+    `,
   }),
   args: { modelValue: 'overview' },
 }

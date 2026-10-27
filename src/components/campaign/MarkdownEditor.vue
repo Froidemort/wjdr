@@ -75,7 +75,7 @@ async function applyFormat(format: MarkdownFormat): Promise<void> {
           type="button"
           role="tab"
           class="tab min-h-11 md:min-h-0"
-          :class="{ 'tab-active': !isPreview }"
+          :class="isPreview ? 'text-base-content/70' : 'tab-active'"
           :aria-selected="!isPreview"
           @click="mode = 'write'"
         >
@@ -85,7 +85,7 @@ async function applyFormat(format: MarkdownFormat): Promise<void> {
           type="button"
           role="tab"
           class="tab min-h-11 md:min-h-0"
-          :class="{ 'tab-active': isPreview }"
+          :class="isPreview ? 'tab-active' : 'text-base-content/70'"
           :aria-selected="isPreview"
           @click="mode = 'preview'"
         >

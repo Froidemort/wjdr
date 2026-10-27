@@ -59,7 +59,7 @@ watch(
 <template>
   <div v-if="open">
     <div class="fixed inset-0 z-40 bg-neutral/50 lg:hidden" aria-hidden="true" @click="emit('close')" />
-    <aside
+    <div
       role="dialog"
       aria-labelledby="session-create-panel-title"
       class="fixed inset-y-0 right-0 z-50 flex w-full flex-col gap-4 overflow-y-auto border-l border-base-300 bg-base-100 p-4 shadow-xl sm:p-6 lg:w-96"
@@ -127,6 +127,6 @@ watch(
           </div>
         </div>
       </form>
-    </aside>
+    </div>
   </div>
 </template>

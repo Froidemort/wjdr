@@ -49,22 +49,22 @@ export const AllCompactByDefault: Story = {
 
 export const ClickingACardExpandsItOnly: Story = {
   play: async ({ canvas }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /CC, total 30/ }))
+    await userEvent.click(canvas.getByRole('button', { name: /^CC 30/ }))
 
     await expect(canvas.getAllByText('Valeur totale')).toHaveLength(1)
-    await expect(canvas.getByRole('button', { name: /CT, total 30/ })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: /^CT 30/ })).toBeVisible()
   },
 }
 
 export const ClickingAnExpandedCardCollapsesItBack: Story = {
   play: async ({ canvas }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /CC, total 30/ }))
+    await userEvent.click(canvas.getByRole('button', { name: /^CC 30/ }))
     await expect(canvas.getByText('Valeur totale')).toBeVisible()
 
     await userEvent.click(canvas.getByRole('button', { name: 'CC' }))
 
     await expect(canvas.queryByText('Valeur totale')).toBeNull()
-    await expect(canvas.getByRole('button', { name: /CC, total 30/ })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: /^CC 30/ })).toBeVisible()
   },
 }
 
