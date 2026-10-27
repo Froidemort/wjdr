@@ -103,6 +103,7 @@ export const PrefetchRunning: Story = {
   args: { prefetch: { running: true, done: 340, total: 1360, failed: 0, message: null } },
   play: async ({ canvas, args }) => {
     await expect(canvas.getByText('340 / 1360 tuiles')).toBeVisible()
+    await expect(canvas.getByRole('progressbar', { name: 'Carte hors ligne' })).toBeVisible()
     await expect(canvas.queryByRole('button', { name: /Précharger/ })).toBeNull()
     await userEvent.click(canvas.getByRole('button', { name: 'Annuler' }))
     await expect(args.onCancelPrefetch).toHaveBeenCalledOnce()
