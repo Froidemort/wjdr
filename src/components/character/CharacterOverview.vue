@@ -7,7 +7,7 @@ import type { CharacterArmor, CharacterItem, CharacterStatValue, CharacterWeapon
 import {
   computeMaxEncumbrance,
   computeTotalEncumbrance,
-  getStatTotal,
+  getStatBonus,
 } from '../../utils/characterSheet'
 import { computeArmorByLocation, type WeaponHand } from '../../utils/equipmentSlots'
 import CharacterDerivedStatsCard from '../ui/CharacterDerivedStatsCard.vue'
@@ -35,8 +35,8 @@ const emit = defineEmits<{
   'unequip-weapon': [weaponId: string]
 }>()
 
-const bonusForce = computed(() => Math.floor(getStatTotal(props.stats, 'F') / 10))
-const bonusEndurance = computed(() => Math.floor(getStatTotal(props.stats, 'E') / 10))
+const bonusForce = computed(() => getStatBonus(props.stats, 'F'))
+const bonusEndurance = computed(() => getStatBonus(props.stats, 'E'))
 const maxEncumbrance = computed(() => computeMaxEncumbrance(props.race, props.stats))
 const totalEncumbrance = computed(() =>
   computeTotalEncumbrance({ weapons: props.weapons, armors: props.armors, items: props.items })
@@ -138,14 +138,14 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
       <h3 class="text-base font-semibold">Armes et armures équipées</h3>
       <ul class="flex flex-wrap gap-2" aria-label="Bonus de caractéristiques">
         <li
-          class="badge badge-neutral font-semibold"
+          class="badge badge-outline font-semibold"
           :aria-label="`Bonus de Force ${bonusForce}`"
           :title="`Bonus de Force ${bonusForce}`"
         >
           BF {{ bonusForce }}
         </li>
         <li
-          class="badge badge-neutral font-semibold"
+          class="badge badge-outline font-semibold"
           :aria-label="`Bonus d'Endurance ${bonusEndurance}`"
           :title="`Bonus d'Endurance ${bonusEndurance}`"
         >
