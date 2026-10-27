@@ -73,6 +73,8 @@ jobs:
       - run: npm run test:storybook
         env:
           STORYBOOK_THEME: ${{ matrix.theme }}
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_PUBLISHABLE_KEY: storybook-dummy-key
 
   test-e2e:
     name: E2E tests
