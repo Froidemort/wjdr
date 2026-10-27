@@ -88,6 +88,27 @@ describe.each(THEMES)('theme contrast: %s', (theme) => {
     expect(ratio(overBg(t['base-content'], 0.7, t[base]), toSrgb(t[base]))).toBeGreaterThanOrEqual(4.5)
   })
 
+  it.each([
+    { alpha: 0.7, min: 4.5 },
+    { alpha: 0.8, min: 7 },
+  ])('base-content at $alpha on base-300 reaches $min:1 (opacity-70 / opacity-80 text)', ({ alpha, min }) => {
+    expect(ratio(overBg(t['base-content'], alpha, t['base-300']), toSrgb(t['base-300']))).toBeGreaterThanOrEqual(min)
+  })
+
+  // Variants in use: solid, soft (state colors + plain), outline (plain), ghost. Colored outline is unused.
+  it.each(BASES)('badge-outline text reaches AAA on %s', (base) => {
+    expect(contrast(t['base-content'], t[base])).toBeGreaterThanOrEqual(7)
+  })
+
+  it('plain badge-soft text reaches AAA on its tinted background', () => {
+    const softBg = mixLab(t['base-content'], 0.08, t['base-100'])
+    expect(contrast(t['base-content'], softBg)).toBeGreaterThanOrEqual(7)
+  })
+
+  it('badge-ghost text reaches AAA on its base-200 background', () => {
+    expect(contrast(t['base-content'], t['base-200'])).toBeGreaterThanOrEqual(7)
+  })
+
   it.each(BASES)('placeholder reaches AA on %s', (base) => {
     const alpha = Number(/::placeholder\s*\{\s*color:\s*color-mix\(in oklab, var\(--color-base-content\) (\d+)%/.exec(css)?.[1]) / 100
     expect(alpha).toBeGreaterThan(0)
