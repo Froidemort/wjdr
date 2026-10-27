@@ -607,8 +607,9 @@ input[type="radio"]:focus-visible {
 }
 
 .modal-backdrop {
-  background: color-mix(in oklab, var(--color-neutral) 55%, transparent);
-  backdrop-filter: blur(2px);
+  /* Overlay lives on the dialog: a tinted backdrop form makes axe ignore the modal-box background. */
+  background: transparent;
+  backdrop-filter: none;
 }
 
 /*
@@ -631,7 +632,8 @@ dialog.modal[open] {
   visibility: visible !important;
   pointer-events: auto !important;
   opacity: 1 !important;
-  background-color: color-mix(in oklab, var(--color-neutral) 52%, transparent) !important;
+  background-color: color-mix(in oklab, var(--color-neutral) 78%, transparent) !important;
+  backdrop-filter: blur(2px);
   transition: none !important;
 }
 
