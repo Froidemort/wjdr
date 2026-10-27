@@ -4,10 +4,10 @@ import { SPLASH_TTL_MS } from '../config/appSplash'
 export const SPLASH_STORAGE_KEY = 'wjdr:splash-last-seen'
 
 export function useSplashSeen() {
-  const lastSeen = useLocalStorage<number | null>(SPLASH_STORAGE_KEY, null)
+  // With a null default VueUse stores and returns the raw string.
+  const lastSeen = useLocalStorage<string | null>(SPLASH_STORAGE_KEY, null)
 
   function shouldShow(): boolean {
-    // With a null default VueUse returns the raw stored string, so coerce it.
     const timestamp = Number(lastSeen.value ?? Number.NaN)
     if (!Number.isFinite(timestamp)) {
       return true
@@ -17,7 +17,7 @@ export function useSplashSeen() {
   }
 
   function markSeen(): void {
-    lastSeen.value = Date.now()
+    lastSeen.value = String(Date.now())
   }
 
   return { shouldShow, markSeen }
