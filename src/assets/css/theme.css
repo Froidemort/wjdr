@@ -207,41 +207,13 @@ input, select, textarea, .card {
 }
 
 ::placeholder {
-  color: color-mix(in oklab, var(--color-base-content) 72%, transparent);
+  color: color-mix(in oklab, var(--color-base-content) 80%, transparent);
   opacity: 1;
 }
 
 .btn {
-  border-color: color-mix(in oklab, var(--color-base-content) 18%, transparent);
-  background-color: color-mix(in oklab, var(--color-base-200) 84%, var(--color-neutral));
-  color: var(--color-base-content);
   letter-spacing: 0.015em;
   font-weight: 600;
-}
-
-.btn:hover {
-  background-color: color-mix(in oklab, var(--color-base-300) 88%, var(--color-neutral));
-}
-
-.btn-primary,
-.btn-accent {
-  border-color: color-mix(in oklab, var(--color-accent) 44%, var(--color-base-content));
-  background-color: color-mix(in oklab, var(--color-accent) 30%, var(--color-base-200));
-  color: color-mix(in oklab, var(--color-base-content) 92%, var(--color-accent-content));
-}
-
-.btn-primary:hover,
-.btn-accent:hover {
-  background-color: color-mix(in oklab, var(--color-accent) 42%, var(--color-base-200));
-}
-
-.btn-ghost {
-  background-color: transparent;
-  border-color: transparent;
-}
-
-.btn-ghost:hover {
-  background-color: color-mix(in oklab, var(--color-base-300) 72%, transparent);
 }
 
 .badge {

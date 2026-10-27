@@ -106,6 +106,30 @@ describe.each(THEMES)('theme contrast: %s', (theme) => {
   })
 })
 
+describe.each(THEMES)('button contrast: %s', (theme) => {
+  const t = parseTheme(theme)
+
+  it.each(SOLID)('btn-%s label reaches AA on its daisyUI background', (name) => {
+    expect(contrast(t[`${name}-content`], t[name])).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('default btn label reaches AA on base-200', () => {
+    expect(contrast(t['base-content'], t['base-200'])).toBeGreaterThanOrEqual(4.5)
+  })
+})
+
+describe('theme.css button rules', () => {
+  it('leaves button colors to daisyUI bg-* / *-content pairs', () => {
+    const rules = [...css.matchAll(/(^|\n)(\.btn[^{]*)\{([^}]*)\}/g)].filter(
+      ([, , selector]) => !selector.includes(':focus-visible'),
+    )
+    expect(rules.length).toBeGreaterThan(0)
+    for (const [, , selector, body] of rules) {
+      expect(body, selector).not.toMatch(/color-mix|background|border-color|(^|[\s;])color:/)
+    }
+  })
+})
+
 describe('theme.css badge rules', () => {
   it('does not force a text color on state badges', () => {
     expect(css).not.toMatch(/\.badge-(success|warning|error|info)\s*[,{][^}]*\bcolor:/)
