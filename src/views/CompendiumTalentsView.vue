@@ -53,7 +53,7 @@ void store.loadTalents()
 </script>
 
 <template>
-  <main class="bg-base-100">
+  <div class="bg-base-100">
     <header class="bg-base-300 text-base-content p-6">
       <h1 class="text-2xl font-bold">Compendium des talents</h1>
       <p class="opacity-80 text-sm mt-1">Talents et aptitudes spéciales du Vieux Monde.</p>
@@ -114,5 +114,5 @@ void store.loadTalents()
       :related="dialogRelated"
       @close="closeEntry"
     />
-  </main>
+  </div>
 </template>

@@ -13,6 +13,7 @@ import {
   computeTotalEncumbrance,
   formatMoney,
   formatNamedWithSpecialization,
+  getStatBonus,
   getStatTotal,
   sortStatsByCharacteristicOrder,
 } from '../../src/utils/characterSheet'
@@ -62,6 +63,18 @@ describe('characterSheet', () => {
   it('computes stat totals ignoring case and defaulting to 0', () => {
     expect(getStatTotal([stat('f', 30, 5)], 'F')).toBe(35)
     expect(getStatTotal([], 'F')).toBe(0)
+  })
+
+  it.each([
+    [0, 0],
+    [29, 2],
+    [30, 3],
+  ])('derives stat bonus floor(total/10) for total %i', (total, bonus) => {
+    expect(getStatBonus([stat('F', total)], 'F')).toBe(bonus)
+  })
+
+  it('derives stat bonus 0 when the stat is missing', () => {
+    expect(getStatBonus([stat('E', 40)], 'F')).toBe(0)
   })
 
   it('derives max encumbrance from Force and race', () => {

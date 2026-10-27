@@ -71,7 +71,7 @@ defineEmits<{
 
     <section v-if="prefetch" class="flex flex-col gap-2" aria-labelledby="map-offline-title">
       <p id="map-offline-title" class="text-xs font-bold uppercase tracking-wider opacity-70">Carte hors ligne</p>
-      <progress v-if="prefetch.running" class="progress progress-primary w-full" :value="prefetch.done" :max="prefetch.total" />
+      <progress v-if="prefetch.running" class="progress progress-primary w-full" aria-labelledby="map-offline-title" :value="prefetch.done" :max="prefetch.total" />
       <p v-if="prefetch.running" class="text-xs opacity-70" role="status">{{ prefetch.done }} / {{ prefetch.total }} tuiles</p>
       <button v-if="!prefetch.running" type="button" class="btn btn-sm min-h-11" @click="$emit('prefetch')">Précharger la carte</button>
       <button v-else type="button" class="btn btn-sm btn-outline min-h-11" @click="$emit('cancelPrefetch')">Annuler</button>

@@ -168,7 +168,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <main id="map-page" class="h-[calc(100dvh-var(--grim-chrome-height,0px))] overflow-hidden">
+  <div id="map-page" class="h-[calc(100dvh-var(--grim-chrome-height,0px))] overflow-hidden">
     <div class="drawer lg:drawer-open size-full">
       <input id="map-layers-drawer" type="checkbox" class="drawer-toggle" aria-label="Afficher les calques" />
 
@@ -245,5 +245,5 @@ onMounted(() => {
       @submit="onSubmit"
       @close="formOpen = false"
     />
-  </main>
+  </div>
 </template>

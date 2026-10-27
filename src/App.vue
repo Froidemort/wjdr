@@ -28,6 +28,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { APP_SPLASH } from './config/appSplash'
+import { useSplashSeen } from './composables/useSplashSeen'
 import AppSplash from './components/ui/AppSplash.vue'
 import CampaignCreateModal from './components/ui/CampaignCreateModal.vue'
 import { useOfflineQueueSync } from './composables/useOfflineQueueSync'
@@ -36,7 +37,8 @@ import AppLayout from './layouts/AppLayout.vue'
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
-const showSplash = ref(route.meta.skipSplash !== true)
+const { shouldShow: shouldShowSplash, markSeen: markSplashSeen } = useSplashSeen()
+const showSplash = ref(route.meta.skipSplash !== true && shouldShowSplash())
 const authReady = ref(false)
 
 const { isOnline, pendingCount, isSyncing } = useOfflineQueueSync()
@@ -56,6 +58,7 @@ onMounted(() => {
 
 function onSplashDismissed(): void {
   showSplash.value = false
+  markSplashSeen()
   document.documentElement.classList.remove(APP_SPLASH.classNames.activeHtmlClass)
 }
 

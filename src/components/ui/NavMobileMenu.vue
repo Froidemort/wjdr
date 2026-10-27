@@ -35,7 +35,7 @@ const { logout } = useLogout(close)
           <component :is="link.icon" class="size-5 text-primary" />
           {{ link.label }}
         </router-link>
-        <span v-else class="min-h-11 gap-3 text-base-content/40" aria-disabled="true">
+        <span v-else class="min-h-11 gap-3 text-base-content/70" aria-disabled="true">
           <component :is="link.icon" class="size-5" />
           {{ link.label }}
           <span class="badge badge-xs badge-soft badge-info">Bientôt</span>

@@ -87,11 +87,11 @@ function onCardClick(event: MouseEvent): void {
     class="min-h-11 w-full rounded-box border px-2 py-1 text-center"
     :class="cardToneClass"
     aria-expanded="false"
-    :aria-label="`${stat.statCode}, total ${totalValue}. Afficher le détail`"
     @click="emit('toggle')"
   >
     <span class="block text-xs font-semibold uppercase opacity-75">{{ stat.statCode }}</span>
     <span class="block text-lg font-black tabular-nums">{{ totalValue }}</span>
+    <span class="sr-only">Afficher le détail</span>
   </button>
   <article v-else class="card border w-full" :class="cardToneClass" @click="onCardClick">
     <div class="card-body p-4 gap-3">
@@ -103,7 +103,7 @@ function onCardClick(event: MouseEvent): void {
           @click="emit('toggle')"
         >
           {{ stat.statCode }}
-          <ChevronUp class="size-4 opacity-60" aria-hidden="true" />
+          <ChevronUp class="size-4 opacity-70" aria-hidden="true" />
         </button>
       </h4>
 
@@ -118,7 +118,7 @@ function onCardClick(event: MouseEvent): void {
         <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div class="text-2xl font-extrabold tabular-nums flex items-center gap-2">
             <span>{{ stat.currentAdvanced }}</span>
-            <span class="opacity-60">/</span>
+            <span class="opacity-70">/</span>
             <template v-if="editable">
               <input
                 :value="stat.totalAdvanced"
@@ -132,8 +132,8 @@ function onCardClick(event: MouseEvent): void {
             <span v-else>{{ stat.totalAdvanced }}</span>
           </div>
           <div v-if="editable" class="join items-stretch">
-            <button class="btn btn-sm h-11 min-h-11 min-w-16 join-item px-3 text-base font-semibold" aria-label="Diminuer l'avancement" @click="onTickDown">-{{ tickStep }}</button>
-            <button class="btn btn-sm h-11 min-h-11 min-w-16 join-item px-3 text-base font-semibold" aria-label="Augmenter l'avancement" @click="onTickUp">+{{ tickStep }}</button>
+            <button class="btn btn-sm h-11 min-h-11 min-w-16 join-item px-3 text-base font-semibold" @click="onTickDown">-{{ tickStep }}<span class="sr-only">&nbsp;Diminuer l'avancement</span></button>
+            <button class="btn btn-sm h-11 min-h-11 min-w-16 join-item px-3 text-base font-semibold" @click="onTickUp">+{{ tickStep }}<span class="sr-only">&nbsp;Augmenter l'avancement</span></button>
           </div>
         </div>
       </div>

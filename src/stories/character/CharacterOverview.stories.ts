@@ -67,17 +67,26 @@ type Story = StoryObj<typeof CharacterOverview>
 
 export const ShowsDerivedStats: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByText(/BF 3/)).toBeVisible()
-    await expect(canvas.getByText(/BE 3/)).toBeVisible()
-    await expect(canvas.getByLabelText('Encombrement 230 sur 350')).toBeVisible()
-    await expect(canvas.getByText(/Force × 10/)).toBeVisible()
+    const bf = canvas.getByLabelText('Bonus de Force 3')
+    const be = canvas.getByLabelText("Bonus d'Endurance 3")
+    await expect(bf).toBeVisible()
+    await expect(bf).toHaveTextContent('BF 3')
+    await expect(bf).toHaveAttribute('title', 'Bonus de Force 3')
+    await expect(be).toBeVisible()
+    await expect(be).toHaveTextContent('BE 3')
+    await expect(be).toHaveAttribute('title', "Bonus d'Endurance 3")
+    await expect(canvas.getByRole('progressbar', { name: 'Encombrement 230 sur 350' })).toBeVisible()
+    const encumbranceBox = canvas.getByText(/Force × 10/).closest('article')
+    await expect(encumbranceBox).not.toBeNull()
+    await expect(encumbranceBox).not.toHaveTextContent(/\bB[FE]\b/)
+    await expect(canvas.getByRole('heading', { name: 'Armes et armures équipées' })).toBeVisible()
   },
 }
 
 export const DwarfDoublesMaxEncumbrance: Story = {
   args: { race: 'nain' },
   play: async ({ canvas }) => {
-    await expect(canvas.getByLabelText('Encombrement 230 sur 700')).toBeVisible()
+    await expect(canvas.getByRole('progressbar', { name: 'Encombrement 230 sur 700' })).toBeVisible()
     await expect(canvas.getByText(/Force × 20/)).toBeVisible()
   },
 }
@@ -85,7 +94,7 @@ export const DwarfDoublesMaxEncumbrance: Story = {
 export const Overloaded: Story = {
   args: { stats: [stat('F', 10), stat('E', 10)] },
   play: async ({ canvas }) => {
-    await expect(canvas.getByLabelText('Encombrement 230 sur 100')).toHaveClass('text-error')
+    await expect(canvas.getByText('230 / 100')).toHaveClass('text-error')
   },
 }
 

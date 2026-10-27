@@ -1,5 +1,5 @@
 <template>
-	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
+	<div class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
     <header class="flex flex-wrap items-center justify-between gap-2">
       <h1 class="text-2xl font-semibold">Mes personnages</h1>
     </header>
@@ -42,7 +42,7 @@
 		</DataGrid>
 
 		<PageFooter back-to="/" back-label="Menu principal" />
-	</main>
+	</div>
 </template>
 
 <script setup lang="ts">

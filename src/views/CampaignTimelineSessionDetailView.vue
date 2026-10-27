@@ -1,5 +1,5 @@
 <template>
-  <main class="mx-auto max-w-5xl space-y-5 p-4 sm:p-6">
+  <div class="mx-auto max-w-5xl space-y-5 p-4 sm:p-6">
     <div v-if="loading" class="skeleton h-56 w-full" />
 
     <div v-else-if="errorMessage" role="alert" class="alert alert-error alert-soft">
@@ -38,9 +38,9 @@
           <div class="rounded-box border border-base-300 bg-base-200/70 p-4 sm:p-5">
             <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
               <div class="space-y-2">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] opacity-60">Détail</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] opacity-70">Détail</p>
                 <MarkdownContent v-if="sessionItem.description" :source="sessionItem.description" class="leading-relaxed" />
-                <p v-else class="text-sm italic opacity-60">Pas de description.</p>
+                <p v-else class="text-sm italic opacity-70">Pas de description.</p>
               </div>
 
               <div class="stats stats-vertical border border-base-300 bg-base-100 shadow-sm sm:stats-horizontal w-full sm:w-auto">
@@ -70,7 +70,7 @@
 
       <PageFooter :back-to="`/campaigns/${campaign.id}`" back-label="Retour à la campagne" mobile-visible />
     </template>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">

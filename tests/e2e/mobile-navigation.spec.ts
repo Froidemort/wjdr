@@ -20,47 +20,70 @@ test.describe('Mobile dock and character tabs (authenticated, mobile)', () => {
     expect(Math.abs(dockBox!.y - (tabsBox!.y + tabsBox!.height))).toBeLessThanOrEqual(1)
   })
 
-  test.describe('Aperçu button', () => {
-    test('nav shows a back-to-top button alongside the tabs', async ({ page }) => {
-      const nav = page.getByRole('navigation', { name: 'Sections du personnage' })
+  test.describe('Aperçu tab and section scrolling', () => {
+    test('Aperçu is the first tab and is selected by default', async ({ page }) => {
+      const tabs = page.getByRole('tab')
 
-      await expect(nav.getByRole('button', { name: 'Retour en haut de la fiche' })).toBeVisible()
+      await expect(tabs).toHaveCount(4)
+      await expect(tabs.first()).toHaveAccessibleName('Aperçu')
+      await expect(tabs.first()).toHaveAttribute('aria-selected', 'true')
+      await expect(page.getByRole('button', { name: 'Retour en haut de la fiche' })).toHaveCount(0)
     })
 
-    test('clicking it scrolls #character-overview into view', async ({ page }) => {
-      const skillsTab = page.getByRole('tab', { name: 'Compétences' })
-      await skillsTab.click()
-      await expect(skillsTab).toHaveAttribute('aria-selected', 'true')
+    test('all sections stay in the page flow', async ({ page }) => {
+      for (const id of ['overview', 'stats', 'skills', 'inventory']) {
+        await expect(page.locator(`#character-panel-${id}`)).toBeVisible()
+      }
+    })
 
-      await page.evaluate(() => window.scrollTo({ top: 300 }))
+    for (const [tabName, panelId] of [
+      ['Stats', 'stats'],
+      ['Compétences', 'skills'],
+      ['Inventaire', 'inventory'],
+    ] as const) {
+      test(`clicking ${tabName} brings its section into view and keeps the tab selected`, async ({ page }) => {
+        const tab = page.getByRole('tab', { name: tabName })
+        await tab.click()
+
+        await expect(page.locator(`#character-panel-${panelId}`)).toBeInViewport()
+        await expect(tab).toHaveAttribute('aria-selected', 'true')
+        await expect(page.getByRole('tab', { name: 'Aperçu' })).toHaveAttribute('aria-selected', 'false')
+      })
+    }
+
+    test('Aperçu tab stays visible and scrolls back to the overview', async ({ page }) => {
+      const overviewTab = page.getByRole('tab', { name: 'Aperçu' })
+
+      await page.getByRole('tab', { name: 'Inventaire' }).click()
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+      await expect(overviewTab).toBeVisible()
 
-      await page.getByRole('navigation', { name: 'Sections du personnage' }).getByRole('button', { name: 'Retour en haut de la fiche' }).click()
+      await overviewTab.click()
 
-      await expect(page.locator('#character-overview')).toBeInViewport()
-      await expect
-        .poll(() => page.evaluate(() => Math.abs(document.getElementById('character-overview')!.getBoundingClientRect().top)))
-        .toBeLessThanOrEqual(2)
+      await expect(page.locator('#character-panel-overview')).toBeInViewport()
+      await expect(overviewTab).toHaveAttribute('aria-selected', 'true')
     })
 
-    test('does not change the selected tab', async ({ page }) => {
-      const skillsTab = page.getByRole('tab', { name: 'Compétences' })
-      await skillsTab.click()
-      await expect(skillsTab).toHaveAttribute('aria-selected', 'true')
+    test('scrolling manually updates the active tab', async ({ page }) => {
+      await page.locator('#character-panel-skills').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
 
-      await page.getByRole('navigation', { name: 'Sections du personnage' }).getByRole('button', { name: 'Retour en haut de la fiche' }).click()
-
-      await expect(skillsTab).toHaveAttribute('aria-selected', 'true')
+      await expect(page.getByRole('tab', { name: 'Compétences' })).toHaveAttribute('aria-selected', 'true')
     })
   })
 
   test.describe('tablist keyboard navigation', () => {
     test('ArrowRight moves selection and focus to the next tab, End moves to the last tab', async ({ page }) => {
+      const overviewTab = page.getByRole('tab', { name: 'Aperçu' })
       const statsTab = page.getByRole('tab', { name: 'Stats' })
       const skillsTab = page.getByRole('tab', { name: 'Compétences' })
       const inventoryTab = page.getByRole('tab', { name: 'Inventaire' })
 
-      await statsTab.focus()
+      await overviewTab.focus()
+      await page.keyboard.press('ArrowRight')
+
+      await expect(statsTab).toHaveAttribute('aria-selected', 'true')
+      await expect(statsTab).toBeFocused()
+
       await page.keyboard.press('ArrowRight')
 
       await expect(skillsTab).toHaveAttribute('aria-selected', 'true')
@@ -70,6 +93,11 @@ test.describe('Mobile dock and character tabs (authenticated, mobile)', () => {
 
       await expect(inventoryTab).toHaveAttribute('aria-selected', 'true')
       await expect(inventoryTab).toBeFocused()
+
+      await page.keyboard.press('Home')
+
+      await expect(overviewTab).toHaveAttribute('aria-selected', 'true')
+      await expect(overviewTab).toBeFocused()
     })
   })
 

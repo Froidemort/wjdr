@@ -85,7 +85,7 @@ const tabClass = (active: boolean) =>
     'cursor-pointer border-b-2 pb-3 font-[family-name:var(--font-grim-title)] text-sm uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-base-100',
     active
       ? 'border-primary text-base-content'
-      : 'border-transparent text-base-content/45 hover:text-base-content/70',
+      : 'border-transparent text-base-content/70 hover:text-base-content/70',
   ].join(' ')
 
 watch(
@@ -190,7 +190,7 @@ async function requestPasswordReset(): Promise<void> {
             aria-describedby="password-reset-help"
           />
         </label>
-        <p id="password-reset-help" class="text-xs text-base-content/60 pt-2">
+        <p id="password-reset-help" class="text-xs text-base-content/70 pt-2">
           Un lien sera envoyé si cette adresse est associée à un compte.
         </p>
         <div v-if="resetError" role="alert" aria-live="assertive" class="alert alert-error alert-soft text-sm"><span>{{ resetError }}</span></div>
@@ -251,26 +251,26 @@ async function requestPasswordReset(): Promise<void> {
       @submit.prevent="onSubmit"
     >
       <div v-if="!isLogin" class="form-control">
-        <label class="label py-1">
+        <label for="auth-username" class="label py-1">
           <span class="label-text">Nom d'utilisateur</span>
         </label>
-        <input v-model="username" type="text" class="input w-full ui-critical-control" :aria-invalid="usernameError ? 'true' : 'false'" :aria-errormessage="usernameError ? 'auth-username-error' : undefined" :aria-describedby="usernameError ? 'auth-username-error' : undefined" required autocomplete="username" />
+        <input id="auth-username" v-model="username" type="text" class="input w-full ui-critical-control" :aria-invalid="usernameError ? 'true' : 'false'" :aria-errormessage="usernameError ? 'auth-username-error' : undefined" :aria-describedby="usernameError ? 'auth-username-error' : undefined" required autocomplete="username" />
         <p v-if="usernameError" id="auth-username-error" class="label text-error text-xs">{{ usernameError }}</p>
       </div>
 
       <div v-if="isLogin" class="form-control">
-        <label class="label py-1">
+        <label for="auth-identifier" class="label py-1">
           <span class="label-text">Email ou nom d'utilisateur</span>
         </label>
-        <input v-model="identifier" type="text" class="input w-full ui-critical-control" :aria-invalid="identifierError ? 'true' : 'false'" :aria-errormessage="identifierError ? 'auth-identifier-error' : undefined" :aria-describedby="identifierError ? 'auth-identifier-error' : undefined" required autocomplete="username" />
+        <input id="auth-identifier" v-model="identifier" type="text" class="input w-full ui-critical-control" :aria-invalid="identifierError ? 'true' : 'false'" :aria-errormessage="identifierError ? 'auth-identifier-error' : undefined" :aria-describedby="identifierError ? 'auth-identifier-error' : undefined" required autocomplete="username" />
         <p v-if="identifierError" id="auth-identifier-error" class="label text-error text-xs">{{ identifierError }}</p>
       </div>
 
       <div v-if="!isLogin" class="form-control">
-        <label class="label py-1">
+        <label for="auth-email" class="label py-1">
           <span class="label-text">Email</span>
         </label>
-        <input v-model="email" type="email" class="input w-full ui-critical-control" :aria-invalid="emailError ? 'true' : 'false'" :aria-errormessage="emailError ? 'auth-email-error' : undefined" :aria-describedby="emailError ? 'auth-email-error' : undefined" required autocomplete="email" />
+        <input id="auth-email" v-model="email" type="email" class="input w-full ui-critical-control" :aria-invalid="emailError ? 'true' : 'false'" :aria-errormessage="emailError ? 'auth-email-error' : undefined" :aria-describedby="emailError ? 'auth-email-error' : undefined" required autocomplete="email" />
         <p v-if="emailError" id="auth-email-error" class="label text-error text-xs">{{ emailError }}</p>
       </div>
 

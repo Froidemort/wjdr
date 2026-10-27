@@ -1,4 +1,5 @@
 import { test as base, type BrowserContext, type Page, type Route } from '@playwright/test'
+import { SPLASH_STORAGE_KEY } from '../../../src/composables/useSplashSeen'
 
 export const E2E_USER_ID = 'user-e2e'
 export const E2E_CHARACTER_ID = 'char-e2e'
@@ -315,6 +316,13 @@ async function installFakeSupabase(context: BrowserContext, page: Page, backend:
     return route.fulfill({ status: 204 })
   })
   await page.route('**/rest/v1/**', (route) => backend.handleRest(route))
+}
+
+/** Marks the splash as seen so it does not show (and race) in the test. */
+export async function markSplashSeen(page: Page): Promise<void> {
+  await page.addInitScript((key) => {
+    window.localStorage.setItem(key, String(Date.now()))
+  }, SPLASH_STORAGE_KEY)
 }
 
 export const test = base.extend<{ backend: FakeBackend }>({

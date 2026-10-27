@@ -73,10 +73,10 @@ export const ExpandedBodyClickEmitsToggle: Story = {
 export const ExpandedEditableTicksByFive: Story = {
   args: { expanded: true, editable: true },
   play: async ({ canvas, args }) => {
-    await userEvent.click(canvas.getByRole('button', { name: "Augmenter l'avancement" }))
+    await userEvent.click(canvas.getByRole('button', { name: /Augmenter l'avancement/ }))
     await expect(args['onTick-up']).toHaveBeenCalledWith({ statCode: 'F', step: 5 })
 
-    await userEvent.click(canvas.getByRole('button', { name: "Diminuer l'avancement" }))
+    await userEvent.click(canvas.getByRole('button', { name: /Diminuer l'avancement/ }))
     await expect(args['onTick-down']).toHaveBeenCalledWith({ statCode: 'F', step: 5 })
 
     // Clicking a control inside the expanded card must not also collapse it.
@@ -87,7 +87,7 @@ export const ExpandedEditableTicksByFive: Story = {
 export const ExpandedEditableSecondaryTicksByOne: Story = {
   args: { expanded: true, editable: true, stat: { ...stat, statCode: 'A', isSecondary: true } },
   play: async ({ canvas, args }) => {
-    await userEvent.click(canvas.getByRole('button', { name: "Augmenter l'avancement" }))
+    await userEvent.click(canvas.getByRole('button', { name: /Augmenter l'avancement/ }))
     await expect(args['onTick-up']).toHaveBeenCalledWith({ statCode: 'A', step: 1 })
   },
 }

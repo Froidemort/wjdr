@@ -2,7 +2,6 @@ name: CI
 
 on:
   pull_request:
-    branches: [master]
 permissions:
   contents: read
 
@@ -53,13 +52,39 @@ jobs:
       - run: npm ci
       - run: npm run test:unit
 
+  test-storybook:
+    name: Storybook tests (a11y, ${{ matrix.theme }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        theme: [grimorium-dark, grimorium-light]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:storybook
+        env:
+          STORYBOOK_THEME: ${{ matrix.theme }}
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_PUBLISHABLE_KEY: storybook-dummy-key
+
   test-e2e:
     name: E2E tests
-    runs-on: mcr.microsoft.com/playwright:v1.34.3-jammy
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
     needs:
       - lint
       - audit
       - test-unit
+      - test-storybook
 
     steps:
       - uses: actions/checkout@v4

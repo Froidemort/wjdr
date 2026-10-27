@@ -74,6 +74,10 @@ export function getStatTotal(stats: readonly CharacterStatValue[], code: string)
   return Math.max(0, stat.baseValue + stat.currentAdvanced)
 }
 
+export function getStatBonus(stats: readonly CharacterStatValue[], code: string): number {
+  return Math.floor(getStatTotal(stats, code) / 10)
+}
+
 export function computeMaxEncumbrance(
   race: CharacterRace,
   stats: readonly CharacterStatValue[]

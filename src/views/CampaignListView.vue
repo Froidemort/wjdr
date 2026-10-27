@@ -1,5 +1,5 @@
 <template>
-	<main class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
+	<div class="mx-auto max-w-6xl p-4 sm:p-6 space-y-4">
 		<header class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 class="text-2xl font-semibold">Campagnes</h1>
     <button class="btn btn-sm w-full sm:w-auto" @click="openCampaignCreate">Créer une campagne</button>
@@ -65,7 +65,7 @@
     />
 
 		<PageFooter back-to="/" back-label="Menu principal" />
-	</main>
+	</div>
 </template>
 
 <script setup lang="ts">

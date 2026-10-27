@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
                 v-if="editable"
                 :ref="(element) => setTrigger(skill.skillId, element)"
                 type="button"
-                class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11 opacity-60 hover:opacity-100 focus-visible:opacity-100"
+                class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11 opacity-70 hover:opacity-100 focus-visible:opacity-100"
                 :title="
                   activeMasteryId === skill.skillId
                     ? 'Fermer le choix du niveau de maîtrise'
@@ -205,7 +205,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div v-if="skill.linkedTalents?.length" class="mt-3 space-y-1.5">
-            <div class="text-[10px] font-semibold uppercase tracking-wide opacity-60">Talents liés</div>
+            <div class="text-[10px] font-semibold uppercase tracking-wide opacity-70">Talents liés</div>
             <div class="flex min-w-0 flex-wrap gap-1.5">
               <button
                 v-for="talent in skill.linkedTalents"

@@ -144,7 +144,7 @@ defineExpose({ dialog })
                     selectedIds.includes(option.id) ? 'border-l-warning bg-base-300' : 'border-l-transparent hover:bg-base-200',
                   ]"
                 >
-                  <label class="label min-h-11 cursor-pointer justify-start gap-3 rounded-none px-4 py-3">
+                  <label class="label min-h-11 cursor-pointer justify-start gap-3 rounded-none px-4 py-3 text-base-content">
                     <input
                       type="checkbox"
                       class="checkbox checkbox-md"
@@ -156,7 +156,7 @@ defineExpose({ dialog })
                         <span class="break-words font-medium leading-tight">{{ formatLabel(option) }}</span>
                         <span v-if="selectedIds.includes(option.id)" class="badge badge-warning badge-sm">Sélectionné</span>
                       </div>
-                      <p v-if="option.specialization" class="text-xs opacity-60">{{ option.specialization }}</p>
+                      <p v-if="option.specialization" class="text-xs opacity-70">{{ option.specialization }}</p>
                     </div>
                   </label>
                 </li>

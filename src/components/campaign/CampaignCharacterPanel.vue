@@ -90,28 +90,28 @@ defineProps<{
       </div>
 
       <section class="space-y-1">
-        <h4 class="text-xs font-semibold uppercase tracking-wide opacity-60">Armes équipées</h4>
+        <h4 class="text-xs font-semibold uppercase tracking-wide opacity-70">Armes équipées</h4>
         <ul v-if="entry.highlights.equippedWeapons.length > 0" class="space-y-0.5 text-sm">
           <li v-for="weapon in entry.highlights.equippedWeapons" :key="weapon.id">
             {{ weapon.name }}
             <span v-if="weapon.damageFormula" class="opacity-70">({{ weapon.damageFormula }})</span>
           </li>
         </ul>
-        <p v-else class="text-sm opacity-60">Aucune.</p>
+        <p v-else class="text-sm opacity-70">Aucune.</p>
       </section>
 
       <section class="space-y-1">
-        <h4 class="text-xs font-semibold uppercase tracking-wide opacity-60">Armures équipées</h4>
+        <h4 class="text-xs font-semibold uppercase tracking-wide opacity-70">Armures équipées</h4>
         <ul v-if="entry.highlights.equippedArmors.length > 0" class="space-y-0.5 text-sm">
           <li v-for="armor in entry.highlights.equippedArmors" :key="armor.id">
             {{ armor.name }} <span class="opacity-70">(PA {{ armor.armorPoints }})</span>
           </li>
         </ul>
-        <p v-else class="text-sm opacity-60">Aucune.</p>
+        <p v-else class="text-sm opacity-70">Aucune.</p>
       </section>
 
       <section class="space-y-1">
-        <h4 class="text-xs font-semibold uppercase tracking-wide opacity-60">Talents</h4>
+        <h4 class="text-xs font-semibold uppercase tracking-wide opacity-70">Talents</h4>
         <div v-if="entry.highlights.talents.length > 0" class="flex flex-wrap gap-1">
           <span
             v-for="talent in entry.highlights.talents"
@@ -124,11 +124,11 @@ defineProps<{
             +{{ entry.highlights.hiddenTalentCount }}
           </span>
         </div>
-        <p v-else class="text-sm opacity-60">Aucun.</p>
+        <p v-else class="text-sm opacity-70">Aucun.</p>
       </section>
 
       <section class="space-y-1">
-        <h4 class="text-xs font-semibold uppercase tracking-wide opacity-60">Compétences</h4>
+        <h4 class="text-xs font-semibold uppercase tracking-wide opacity-70">Compétences</h4>
         <div v-if="entry.highlights.skills.length > 0" class="flex flex-wrap gap-1">
           <span
             v-for="skill in entry.highlights.skills"
@@ -144,7 +144,7 @@ defineProps<{
             +{{ entry.highlights.hiddenSkillCount }}
           </span>
         </div>
-        <p v-else class="text-sm opacity-60">Aucune.</p>
+        <p v-else class="text-sm opacity-70">Aucune.</p>
       </section>
 
       <router-link

@@ -7,7 +7,7 @@ import type { CharacterArmor, CharacterItem, CharacterStatValue, CharacterWeapon
 import {
   computeMaxEncumbrance,
   computeTotalEncumbrance,
-  getStatTotal,
+  getStatBonus,
 } from '../../utils/characterSheet'
 import { computeArmorByLocation, type WeaponHand } from '../../utils/equipmentSlots'
 import CharacterDerivedStatsCard from '../ui/CharacterDerivedStatsCard.vue'
@@ -35,8 +35,8 @@ const emit = defineEmits<{
   'unequip-weapon': [weaponId: string]
 }>()
 
-const bonusForce = computed(() => Math.floor(getStatTotal(props.stats, 'F') / 10))
-const bonusEndurance = computed(() => Math.floor(getStatTotal(props.stats, 'E') / 10))
+const bonusForce = computed(() => getStatBonus(props.stats, 'F'))
+const bonusEndurance = computed(() => getStatBonus(props.stats, 'E'))
 const maxEncumbrance = computed(() => computeMaxEncumbrance(props.race, props.stats))
 const totalEncumbrance = computed(() =>
   computeTotalEncumbrance({ weapons: props.weapons, armors: props.armors, items: props.items })
@@ -48,11 +48,12 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
 
 <template>
   <section
-    id="character-overview"
-    aria-labelledby="character-overview-title"
-    class="space-y-3 rounded-box border border-base-300 bg-base-100 p-3 sm:p-4"
+    id="character-panel-overview"
+    role="tabpanel"
+    aria-labelledby="character-tab-overview"
+    class="scroll-mt-20 space-y-3 rounded-box border border-base-300 bg-base-100 p-3 sm:p-4"
   >
-    <h2 id="character-overview-title" class="text-lg font-semibold">Aperçu</h2>
+    <h2 class="text-lg font-semibold">Aperçu</h2>
 
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
       <HealthHeart
@@ -94,7 +95,6 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
           <p
             class="text-xl font-black tabular-nums"
             :class="isOverloaded ? 'text-error' : ''"
-            :aria-label="`Encombrement ${totalEncumbrance} sur ${maxEncumbrance}`"
           >
             {{ totalEncumbrance }} / {{ maxEncumbrance }}
           </p>
@@ -103,10 +103,10 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
           class="progress progress-accent mt-2 h-3 w-full"
           :value="Math.min(totalEncumbrance, Math.max(maxEncumbrance, 1))"
           :max="Math.max(maxEncumbrance, 1)"
-          aria-hidden="true"
+          :aria-label="`Encombrement ${totalEncumbrance} sur ${maxEncumbrance}`"
         />
         <p class="mt-1 text-xs opacity-70">
-          Max : Force × {{ encumbranceMultiplier }} · BF {{ bonusForce }} · BE {{ bonusEndurance }}
+          Max : Force × {{ encumbranceMultiplier }}
         </p>
       </article>
 
@@ -135,6 +135,22 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
 
     <div class="space-y-2">
       <h3 class="text-base font-semibold">Armes et armures équipées</h3>
+      <ul class="flex flex-wrap gap-2" aria-label="Bonus de caractéristiques">
+        <li
+          class="badge badge-outline font-semibold"
+          :aria-label="`Bonus de Force ${bonusForce}`"
+          :title="`Bonus de Force ${bonusForce}`"
+        >
+          BF {{ bonusForce }}
+        </li>
+        <li
+          class="badge badge-outline font-semibold"
+          :aria-label="`Bonus d'Endurance ${bonusEndurance}`"
+          :title="`Bonus d'Endurance ${bonusEndurance}`"
+        >
+          BE {{ bonusEndurance }}
+        </li>
+      </ul>
       <CharacterDerivedStatsCard
         :armor-by-location="armorByLocation"
         :armors="armors"

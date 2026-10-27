@@ -74,14 +74,6 @@ function buildArmorSlotView(slot: ArmorSlotDefinition): ArmorSlotView {
 
 const armorViews = computed(() => ARMOR_SLOTS.map(buildArmorSlotView))
 
-const armorViewById = computed(() => {
-  const map = new Map<ArmorSlotId, ArmorSlotView>()
-  for (const view of armorViews.value) {
-    map.set(view.slot.id, view)
-  }
-  return map
-})
-
 const leftWeaponView = computed(() => buildWeaponSlotView(leftWeaponSlot))
 const rightWeaponView = computed(() => buildWeaponSlotView(rightWeaponSlot))
 
@@ -143,45 +135,6 @@ function openSlot(slotId: EquipmentSlotId): void {
 function onPickerClosed(): void {
   pickerOpen.value = false
   activeSlotId.value = null
-}
-
-function slotAriaLabel(slotId: EquipmentSlotId, label: string): string {
-  if (slotId === 'main_droite' || slotId === 'main_gauche') {
-    const weapon = getWeaponForSlot(props.weapons, slotId)
-    if (!weapon) {
-      const state = 'vide'
-      if (!props.editable) {
-        return `${label}, ${state}`
-      }
-      return `${label}, ${state}. Activer pour choisir une arme.`
-    }
-    const damage = weapon.damageFormula?.trim()
-    const details = [weapon.name, damage, weapon.equipped === 'd&g' ? 'deux mains' : null]
-      .filter(Boolean)
-      .join(', ')
-    const state = `équipé : ${details}`
-    if (!props.editable) {
-      return `${label}, ${state}`
-    }
-    return `${label}, ${state}. Activer pour choisir une arme.`
-  }
-
-  const view = armorViewById.value.get(slotId)
-  const layers = view?.layers ?? []
-  const pa = view?.pa ?? 0
-  let state: string
-  if (layers.length === 0) {
-    state = 'vide'
-  } else if (layers.length === 1) {
-    state = `équipé : ${layers[0].name}, ${pa} PA`
-  } else {
-    state = `${layers.length} couches : ${layers.map((a) => a.name).join(', ')}, total ${pa} PA`
-  }
-
-  if (!props.editable) {
-    return `${label}, ${state}`
-  }
-  return `${label}, ${state}. Activer pour gérer l’équipement.`
 }
 
 function isLocationActive(zone: string): boolean {
@@ -251,7 +204,6 @@ function slotButtonClass(opts: {
             }),
           ]"
           :disabled="!editable"
-          :aria-label="slotAriaLabel(view.slot.id, view.slot.label)"
           @click="openSlot(view.slot.id)"
           @mouseenter="onArmorSlotEnter(view.slot.id)"
           @mouseleave="onArmorSlotLeave"
@@ -276,10 +228,7 @@ function slotButtonClass(opts: {
             </span>
           </span>
 
-          <span
-            class="flex shrink-0 gap-0.5"
-            :aria-label="`${view.layers.length} sur ${MAX_ARMORS_PER_LOCATION} couches`"
-          >
+          <span class="flex shrink-0 gap-0.5" aria-hidden="true">
             <span
               v-for="(filled, index) in view.depth"
               :key="index"
@@ -420,7 +369,6 @@ function slotButtonClass(opts: {
               })
             "
             :disabled="!editable"
-            :aria-label="slotAriaLabel(view.slot.id, view.slot.label)"
             @click="openSlot(view.slot.id)"
             @mouseenter="hoveredSlotId = view.slot.id"
             @mouseleave="hoveredSlotId = null"

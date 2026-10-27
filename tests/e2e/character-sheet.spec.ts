@@ -37,18 +37,18 @@ test.describe('Character sheet (authenticated, mobile)', () => {
   })
 
   test('equips then unequips armor through the doll', async ({ page, backend }) => {
-    const bodySlot = page.getByRole('button', { name: /^Corps, vide/ })
+    const bodySlot = page.getByRole('button', { name: /^Corps\b.*Vide/ })
     await bodySlot.click()
     const dialog = page.getByRole('dialog').filter({ hasText: 'Corps' })
     await dialog.getByRole('button', { name: /Cotte de mailles/ }).click()
 
     await expect.poll(() => backend.patchesTo('character_armors').at(-1)?.body).toEqual({ is_equipped: true })
-    await expect(page.getByRole('button', { name: /^Corps, équipé : Cotte de mailles/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Corps\b.*Cotte de mailles/ })).toBeVisible()
 
     await dialog.getByRole('button', { name: /Cotte de mailles/ }).click()
 
     await expect.poll(() => backend.patchesTo('character_armors').at(-1)?.body).toEqual({ is_equipped: false })
-    await expect(page.getByRole('button', { name: /^Corps, vide/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Corps\b.*Vide/ })).toBeVisible()
   })
 
   test('a failing action shows a dismissible error on the loaded sheet', async ({ page, backend }) => {
@@ -62,7 +62,7 @@ test.describe('Character sheet (authenticated, mobile)', () => {
         : route.fallback()
     )
 
-    await page.getByRole('button', { name: /^Corps, vide/ }).click()
+    await page.getByRole('button', { name: /^Corps\b.*Vide/ }).click()
     await page.getByRole('dialog').filter({ hasText: 'Corps' }).getByRole('button', { name: /Cotte de mailles/ }).click()
 
     const alert = page.getByRole('alert').filter({ hasText: 'Modification impossible.' })
@@ -135,7 +135,7 @@ test.describe('Character sheet (authenticated, mobile)', () => {
 
   test('a stat tick made offline is queued then replayed on reconnect', async ({ page, context, backend }) => {
     await page.getByTestId('character-stat-view-mode').click()
-    const tickUp = page.getByRole('article').filter({ hasText: 'Valeur totale' }).filter({ has: page.getByRole('heading', { name: 'F', exact: true }) }).getByRole('button', { name: "Augmenter l'avancement" })
+    const tickUp = page.getByRole('article').filter({ hasText: 'Valeur totale' }).filter({ has: page.getByRole('heading', { name: 'F', exact: true }) }).getByRole('button', { name: /Augmenter l'avancement/ })
 
     backend.offline = true
     await context.setOffline(true)

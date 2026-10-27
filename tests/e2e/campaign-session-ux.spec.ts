@@ -1,5 +1,9 @@
 import { getCampaignSessionTodayKey } from '../../src/utils/campaignSessions'
-import { E2E_CAMPAIGN_ID, E2E_USER_ID, expect, test } from './fixtures/supabaseAuth'
+import { E2E_CAMPAIGN_ID, E2E_USER_ID, expect, markSplashSeen, test } from './fixtures/supabaseAuth'
+
+test.beforeEach(async ({ page }) => {
+  await markSplashSeen(page)
+})
 
 async function waitForSplashGone(page: import('@playwright/test').Page): Promise<void> {
   await expect(page.locator('html.app-splash-active')).toHaveCount(0)

@@ -49,7 +49,7 @@ function getProgress(current: number, max: number): number {
         </div>
         <span class="font-semibold tabular-nums">{{ character.pvCurrent }}/{{ character.pvMax }}</span>
       </div>
-      <progress class="progress progress-error h-3 w-full bg-base-100" :value="getProgress(character.pvCurrent, character.pvMax)" max="100" />
+      <progress class="progress progress-error h-3 w-full bg-base-100" aria-label="Vie" :value="getProgress(character.pvCurrent, character.pvMax)" max="100" />
     </div>
 
     <div class="rounded-box border border-base-300 bg-base-200 px-3 py-2">
@@ -60,7 +60,7 @@ function getProgress(current: number, max: number): number {
         </div>
         <span class="font-semibold tabular-nums">{{ character.fortuneCurrent }}/{{ character.fortuneMax }}</span>
       </div>
-      <progress class="progress progress-success h-3 w-full bg-base-100" :value="getProgress(character.fortuneCurrent, character.fortuneMax)" max="100" />
+      <progress class="progress progress-success h-3 w-full bg-base-100" aria-label="Fortune" :value="getProgress(character.fortuneCurrent, character.fortuneMax)" max="100" />
     </div>
 
     <div class="rounded-box border border-base-300 bg-base-200 px-3 py-2">
@@ -71,7 +71,7 @@ function getProgress(current: number, max: number): number {
         </div>
         <span class="font-semibold tabular-nums">{{ character.destinyCurrent }}/{{ resolvedDestinyTotal }}</span>
       </div>
-      <progress class="progress progress-warning h-3 w-full bg-base-100" :value="getProgress(character.destinyCurrent, resolvedDestinyTotal)" max="100" />
+      <progress class="progress progress-warning h-3 w-full bg-base-100" aria-label="Destin" :value="getProgress(character.destinyCurrent, resolvedDestinyTotal)" max="100" />
     </div>
 
     <div class="rounded-box border border-base-300 bg-base-200 px-3 py-2">
