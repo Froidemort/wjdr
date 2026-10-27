@@ -144,7 +144,7 @@ defineExpose({ dialog })
                     selectedIds.includes(option.id) ? 'border-l-warning bg-base-300' : 'border-l-transparent hover:bg-base-200',
                   ]"
                 >
-                  <label class="label min-h-11 cursor-pointer justify-start gap-3 rounded-none px-4 py-3">
+                  <label class="label min-h-11 cursor-pointer justify-start gap-3 rounded-none px-4 py-3 text-base-content">
                     <input
                       type="checkbox"
                       class="checkbox checkbox-md"
