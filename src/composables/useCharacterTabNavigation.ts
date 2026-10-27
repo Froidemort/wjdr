@@ -8,6 +8,19 @@ export const CHARACTER_TAB_ORDER: readonly CharacterTabId[] = ['overview', 'stat
 const PANEL_ID_PREFIX = 'character-panel-'
 // Fallback when `scrollend` never fires (no scroll needed, unsupported browser).
 const SPY_LOCK_FALLBACK_MS = 1200
+const PAGE_BOTTOM_TOLERANCE_PX = 2
+const LAST_TAB: CharacterTabId = 'inventory'
+
+function defaultTab(mobile: boolean): CharacterTabId {
+  return mobile ? 'overview' : 'stats'
+}
+
+function isAtPageBottom(): boolean {
+  return (
+    window.innerHeight + window.scrollY >=
+    document.documentElement.scrollHeight - PAGE_BOTTOM_TOLERANCE_PX
+  )
+}
 
 export function characterPanelId(tab: CharacterTabId): string {
   return `${PANEL_ID_PREFIX}${tab}`
@@ -30,7 +43,7 @@ export function useCharacterTabNavigation({ ready }: UseCharacterTabNavigationOp
   const { isMobile } = useDeviceBreakpoint()
   const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
 
-  const activeTab = ref<CharacterTabId>(isMobile.value ? 'overview' : 'stats')
+  const activeTab = ref<CharacterTabId>(defaultTab(isMobile.value))
   const observedSections = shallowRef<HTMLElement[]>([])
   const visibleTabs = new Set<CharacterTabId>()
   let spyLocked = false
@@ -43,9 +56,22 @@ export function useCharacterTabNavigation({ ready }: UseCharacterTabNavigationOp
     { immediate: false }
   )
 
+  // The last section is often too short to reach the observed band: force it at page bottom.
+  function syncBottomTab(): void {
+    if (spyLocked || !isMobile.value || !isAtPageBottom()) return
+    activeTab.value = LAST_TAB
+  }
+
   useEventListener('scrollend', () => {
     spyLocked = false
     stopSpyLock()
+    syncBottomTab()
+  })
+
+  useEventListener('scroll', syncBottomTab, { passive: true })
+
+  watch(isMobile, (mobile) => {
+    activeTab.value = defaultTab(mobile)
   })
 
   watch(
@@ -71,6 +97,10 @@ export function useCharacterTabNavigation({ ready }: UseCharacterTabNavigationOp
         else visibleTabs.delete(tab)
       }
       if (spyLocked) return
+      if (isAtPageBottom()) {
+        activeTab.value = LAST_TAB
+        return
+      }
       const next = pickActiveTab(visibleTabs)
       if (next) activeTab.value = next
     },

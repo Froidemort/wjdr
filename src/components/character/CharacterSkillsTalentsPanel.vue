@@ -104,7 +104,7 @@ function confirmDelete(): void {
     id="character-panel-skills"
     role="tabpanel"
     aria-labelledby="character-tab-skills"
-    class="scroll-mt-4 space-y-4 rounded-box border border-base-300 bg-base-100 p-4"
+    class="scroll-mt-20 space-y-4 rounded-box border border-base-300 bg-base-100 p-4"
   >
     <h2 class="text-lg font-semibold">Compétences et Talents</h2>
 

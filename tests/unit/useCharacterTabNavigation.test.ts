@@ -10,7 +10,7 @@ const vueuse = vi.hoisted(() => ({
   observerCallback: null as ObserverCallback | null,
   observerTarget: null as { value: HTMLElement[] } | null,
   observerOptions: null as unknown,
-  scrollEnd: null as (() => void) | null,
+  listeners: new Map<string, () => void>(),
   timeoutCallback: null as (() => void) | null,
   timeoutStart: vi.fn(),
   timeoutStop: vi.fn(),
@@ -18,7 +18,7 @@ const vueuse = vi.hoisted(() => ({
 
 vi.mock('@vueuse/core', () => ({
   useMediaQuery: (query: string) => {
-    const state = vueuse.media.get(query) ?? { value: false }
+    const state = vueuse.media.get(query) ?? ref(false)
     vueuse.media.set(query, state)
     return state
   },
@@ -31,8 +31,8 @@ vi.mock('@vueuse/core', () => ({
     vueuse.observerCallback = callback
     vueuse.observerOptions = options
   },
-  useEventListener: (_event: string, listener: () => void) => {
-    vueuse.scrollEnd = listener
+  useEventListener: (event: string, listener: () => void) => {
+    vueuse.listeners.set(event, listener)
   },
   useTimeoutFn: (callback: () => void) => {
     vueuse.timeoutCallback = callback
@@ -52,8 +52,25 @@ const MOBILE_QUERY = '(max-width: 639px)'
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
 function setMedia(mobile: boolean, reducedMotion = false): void {
-  vueuse.media.set(MOBILE_QUERY, { value: mobile })
-  vueuse.media.set(REDUCED_MOTION_QUERY, { value: reducedMotion })
+  vueuse.media.set(MOBILE_QUERY, ref(mobile))
+  vueuse.media.set(REDUCED_MOTION_QUERY, ref(reducedMotion))
+}
+
+function setPageScroll({
+  scrollY,
+  innerHeight = 800,
+  scrollHeight = 3000,
+}: {
+  scrollY: number
+  innerHeight?: number
+  scrollHeight?: number
+}): void {
+  Object.defineProperty(window, 'scrollY', { configurable: true, value: scrollY })
+  Object.defineProperty(window, 'innerHeight', { configurable: true, value: innerHeight })
+  Object.defineProperty(document.documentElement, 'scrollHeight', {
+    configurable: true,
+    value: scrollHeight,
+  })
 }
 
 function mountPanels(): Map<CharacterTabId, HTMLElement> {
@@ -94,6 +111,8 @@ describe('tabIdFromPanelId', () => {
 describe('useCharacterTabNavigation', () => {
   beforeEach(() => {
     vueuse.media.clear()
+    vueuse.listeners.clear()
+    setPageScroll({ scrollY: 0 })
     vueuse.observerCallback = null
     vueuse.timeoutCallback = null
     vueuse.timeoutStart.mockClear()
@@ -215,7 +234,7 @@ describe('useCharacterTabNavigation', () => {
     intersect('skills', true)
     expect(nav.activeTab.value).toBe('inventory')
 
-    vueuse.scrollEnd?.()
+    vueuse.listeners.get('scrollend')?.()
     expect(vueuse.timeoutStop).toHaveBeenCalled()
     intersect('stats', false)
     intersect('skills', false)
@@ -224,6 +243,57 @@ describe('useCharacterTabNavigation', () => {
 
     intersect('inventory', false)
     intersect('skills', true)
+    expect(nav.activeTab.value).toBe('skills')
+  })
+
+  it('resets the active tab when the viewport switches between mobile and desktop', async () => {
+    setMedia(true)
+    const { nav } = setup()
+    const mobileQuery = vueuse.media.get(MOBILE_QUERY)!
+    nav.activeTab.value = 'skills'
+
+    mobileQuery.value = false
+    await nextTick()
+    expect(nav.activeTab.value).toBe('stats')
+
+    nav.activeTab.value = 'inventory'
+    mobileQuery.value = true
+    await nextTick()
+    expect(nav.activeTab.value).toBe('overview')
+  })
+
+  it('forces the last tab active at the bottom of the page on mobile', () => {
+    setMedia(true)
+    const { nav } = setup()
+
+    intersect('skills', true)
+    expect(nav.activeTab.value).toBe('skills')
+
+    setPageScroll({ scrollY: 2200 })
+    vueuse.listeners.get('scroll')?.()
+    expect(nav.activeTab.value).toBe('inventory')
+
+    // Observer updates at the bottom must not override the last tab.
+    intersect('skills', true)
+    expect(nav.activeTab.value).toBe('inventory')
+
+    setPageScroll({ scrollY: 1000 })
+    intersect('skills', true)
+    expect(nav.activeTab.value).toBe('skills')
+  })
+
+  it('does not force the last tab at the bottom on desktop or while a tab click is scrolling', async () => {
+    setMedia(false)
+    const desktop = setup().nav
+    setPageScroll({ scrollY: 2200 })
+    vueuse.listeners.get('scroll')?.()
+    expect(desktop.activeTab.value).toBe('stats')
+
+    setMedia(true)
+    mountPanels()
+    const { nav } = setup()
+    await nav.selectTab('skills')
+    vueuse.listeners.get('scroll')?.()
     expect(nav.activeTab.value).toBe('skills')
   })
 

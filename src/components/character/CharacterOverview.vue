@@ -51,7 +51,7 @@ const encumbranceMultiplier = computed(() => (props.race === 'nain' ? 20 : 10))
     id="character-panel-overview"
     role="tabpanel"
     aria-labelledby="character-tab-overview"
-    class="scroll-mt-4 space-y-3 rounded-box border border-base-300 bg-base-100 p-3 sm:p-4"
+    class="scroll-mt-20 space-y-3 rounded-box border border-base-300 bg-base-100 p-3 sm:p-4"
   >
     <h2 class="text-lg font-semibold">Aperçu</h2>
 
