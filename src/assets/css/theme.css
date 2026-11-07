@@ -18,11 +18,11 @@
   prefersdark: true;
   color-scheme: "dark";
 
-  /* Arrière-plans : Cendres et Encre corrompue */
-  --color-base-100: oklch(14.05% 0.012 15.0);       /* Fond ultra sombre teinté de rouge/brun */
-  --color-base-200: oklch(18.22% 0.014 15.0);       /* Éléments de cartes légèrement plus clairs */
-  --color-base-300: oklch(22.35% 0.016 15.0);       /* Survols et zones imbriquées */
-  --color-base-content: oklch(88.24% 0.025 65.0);   /* Texte blanc cassé / parchemin brûlé */
+  /* Arrière-plans : pierre, suie et parchemin vieilli */
+  --color-base-100: oklch(14.05% 0.012 55.0);
+  --color-base-200: oklch(18.22% 0.014 55.0);
+  --color-base-300: oklch(22.35% 0.016 55.0);
+  --color-base-content: oklch(88.24% 0.025 80.0);
 
   /* Couleurs d'accentuation : Rouge Sang Impérial & Or du Vieux Monde */
   --color-primary: oklch(72.5% 0.165 24.22);        /* Rouge sang clair / Enluminures du grimoire (texte AAA sur fonds sombres) */
@@ -71,10 +71,10 @@ html[data-theme="grimorium-dark"] {
   color-scheme: "light";
 
   /* Arrière-plans : Ton Parchemin et Vieux Papiers (tiré de l'image) */
-  --color-base-100: oklch(93.12% 0.045 82.0);       /* Fond parchemin clair texturé */
-  --color-base-200: oklch(89.45% 0.058 80.0);       /* Teinte papier un peu plus dense / Encadrés */
-  --color-base-300: oklch(84.18% 0.071 78.0);       /* Lignes de tableau et séparateurs */
-  --color-base-content: oklch(18.05% 0.021 52.0);   /* Encre noire/brune délavée très lisible */
+  --color-base-100: oklch(93.12% 0.035 85.0);       /* Parchemin clair */
+  --color-base-200: oklch(89.45% 0.045 82.0);       /* Papier vieilli */
+  --color-base-300: oklch(84.18% 0.060 78.0);       /* Bordures et surfaces imbriquées */
+  --color-base-content: oklch(18.05% 0.021 52.0);   /* Encre sombre */
 
   /* Couleurs d'accentuation : Contrastes issus des lettrines de la page */
   --color-primary: oklch(38.15% 0.142 22.0);       /* Rouge bordeaux des titres de chapitres */
