@@ -1,5 +1,6 @@
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, toRefs, watch } from 'vue'
 import type { Ref } from 'vue'
+import type { SpellFilterState } from '../stores/compendiumFilterState'
 import { compareByName } from '../utils/compare'
 
 export type SpellSortOrder = 'name' | 'difficulty-asc' | 'difficulty-desc'
@@ -13,6 +14,7 @@ interface FilterableSpell {
 
 interface UseCompendiumSpellFiltersOptions<TSpell extends FilterableSpell> {
   spells: Ref<TSpell[]>
+  state?: SpellFilterState
 }
 
 function normalize(value: string): string {
@@ -25,9 +27,16 @@ function normalize(value: string): string {
 export function useCompendiumSpellFilters<TSpell extends FilterableSpell>(
   options: UseCompendiumSpellFiltersOptions<TSpell>
 ) {
-  const searchQuery = ref('')
-  const selectedCategories = ref(new Set<string>())
-  const sortBy = ref<SpellSortOrder>('name')
+  const state = options.state ?? reactive<SpellFilterState>({
+    searchQuery: '',
+    selectedCategories: new Set<string>(),
+    sortBy: 'name',
+    minDifficulty: 0,
+    maxDifficulty: 0,
+    initialized: false,
+    lastBounds: null,
+  })
+  const { searchQuery, selectedCategories, sortBy, minDifficulty, maxDifficulty } = toRefs(state)
 
   const difficultyBounds = computed(() => {
     const difficulties = options.spells.value.map((spell) => spell.difficulty)
@@ -37,25 +46,34 @@ export function useCompendiumSpellFilters<TSpell extends FilterableSpell>(
     }
   })
 
-  const minDifficulty = ref(0)
-  const maxDifficulty = ref(0)
-
   // Keep the range bounds in sync once the dataset difficulty span is known.
   function resetDifficultyRange(): void {
     minDifficulty.value = difficultyBounds.value.min
     maxDifficulty.value = difficultyBounds.value.max
   }
-  resetDifficultyRange()
-
-  // Data may arrive after setup: follow the new bounds unless the user narrowed the range.
-  watch(difficultyBounds, (next, previous) => {
-    if (minDifficulty.value === previous.min && maxDifficulty.value === previous.max) {
+  function syncDifficultyRange(next: { min: number; max: number }, previousBounds: { min: number; max: number }): void {
+    if (minDifficulty.value === previousBounds.min && maxDifficulty.value === previousBounds.max) {
       resetDifficultyRange()
     } else {
-      minDifficulty.value = Math.max(minDifficulty.value, next.min)
-      maxDifficulty.value = Math.min(maxDifficulty.value, next.max)
+      minDifficulty.value = Math.min(Math.max(minDifficulty.value, next.min), next.max)
+      maxDifficulty.value = Math.min(Math.max(maxDifficulty.value, next.min), next.max)
       if (minDifficulty.value > maxDifficulty.value) minDifficulty.value = maxDifficulty.value
     }
+    state.lastBounds = next
+  }
+
+  if (!state.initialized) {
+    resetDifficultyRange()
+    state.initialized = true
+    if (options.spells.value.length > 0) state.lastBounds = difficultyBounds.value
+  } else if (options.spells.value.length > 0) {
+    syncDifficultyRange(difficultyBounds.value, state.lastBounds ?? { min: 0, max: 0 })
+  }
+
+  // An empty loading state must not overwrite a previously selected range.
+  watch(difficultyBounds, (next, previous) => {
+    if (options.spells.value.length === 0) return
+    syncDifficultyRange(next, state.lastBounds ?? previous)
   })
 
   const categories = computed(() => {
@@ -99,6 +117,7 @@ export function useCompendiumSpellFilters<TSpell extends FilterableSpell>(
     selectedCategories.value = new Set()
     sortBy.value = 'name'
     resetDifficultyRange()
+    state.lastBounds = options.spells.value.length > 0 ? difficultyBounds.value : null
   }
 
   const filteredSpells = computed(() => {

@@ -1,5 +1,6 @@
-import { computed, ref } from 'vue'
+import { computed, reactive, toRefs } from 'vue'
 import type { Ref } from 'vue'
+import type { TalentFilterState } from '../stores/compendiumFilterState'
 import { normalizeSearchText } from '../utils/searchText'
 
 interface FilterableTalent {
@@ -10,9 +11,10 @@ interface FilterableTalent {
 
 export function useCompendiumTalentFilters<TTalent extends FilterableTalent>(options: {
   talents: Ref<TTalent[]>
+  state?: TalentFilterState
 }) {
-  const searchQuery = ref('')
-  const onlySpecialized = ref(false)
+  const state = options.state ?? reactive<TalentFilterState>({ searchQuery: '', onlySpecialized: false })
+  const { searchQuery, onlySpecialized } = toRefs(state)
 
   const activeFilterCount = computed(
     () => (searchQuery.value.trim() ? 1 : 0) + (onlySpecialized.value ? 1 : 0)

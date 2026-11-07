@@ -72,4 +72,33 @@ test.describe('Compendium spells (public, read-only)', () => {
 
     await expect(page.getByRole('heading', { name: 'Eclair' })).toBeVisible()
   })
+
+  test('restores search, category, difficulty and sort after navigation', async ({ page }) => {
+    await page.route('**/rest/v1/spells*', (route) => route.fulfill(json(spells)))
+    await page.goto('/compendium/spells', { waitUntil: 'domcontentloaded' })
+    await expect(page.getByText('3 sort(s) trouvé(s)')).toBeVisible()
+
+    await page.getByRole('searchbox').first().fill('feu')
+    await page.getByRole('button', { name: /Collèges ou Divinités/ }).click()
+    await page.locator('label', { hasText: 'Feu' }).getByRole('checkbox').check()
+    await page.getByLabel('Difficulté maximum').fill('12')
+    await page.getByLabel('Trier les sorts').selectOption('difficulty-desc')
+    await expect(page.getByText('1 sort(s) trouvé(s)')).toBeVisible()
+
+    await page.locator('a[href="/compendium"]').first().click()
+    await expect(page).toHaveURL(/\/compendium$/)
+    await page.goBack()
+
+    await expect(page.getByRole('searchbox').first()).toHaveValue('feu')
+    await expect(page.getByLabel('Difficulté maximum')).toHaveValue('12')
+    await expect(page.getByLabel('Trier les sorts')).toHaveValue('difficulty-desc')
+    await expect(page.getByText('1 sort(s) trouvé(s)')).toBeVisible()
+    await page.getByRole('button', { name: /Réinitialiser/ }).click()
+    await page.locator('a[href="/compendium"]').first().click()
+    await expect(page).toHaveURL(/\/compendium$/)
+    await page.goBack()
+    await expect(page.getByRole('searchbox').first()).toHaveValue('')
+    await expect(page.getByLabel('Trier les sorts')).toHaveValue('name')
+    await expect(page.getByText('3 sort(s) trouvé(s)')).toBeVisible()
+  })
 })

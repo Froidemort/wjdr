@@ -47,4 +47,28 @@ test.describe('Compendium inventory (public, read-only)', () => {
     await expect(page.getByRole('heading', { name: 'Epee' })).toBeVisible()
     await expect(page.getByRole('button', { name: /ajouter|supprimer|modifier|équiper/i })).toHaveCount(0)
   })
+
+  test('restores independent tab filters after navigation and keeps a reset', async ({ page }) => {
+    await page.getByRole('searchbox').fill('arc')
+    await expect(page.getByRole('heading', { name: 'Arc court' })).toBeVisible()
+    await page.getByRole('tab', { name: 'Armures' }).click()
+    await page.getByRole('searchbox').fill('maille')
+    await expect(page.getByRole('heading', { name: 'Cotte de mailles' })).toBeVisible()
+
+    await page.locator('a[href="/compendium"]').first().click()
+    await expect(page).toHaveURL(/\/compendium$/)
+    await page.goBack()
+
+    await expect(page.getByRole('tab', { name: 'Armures' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('searchbox')).toHaveValue('maille')
+    await page.getByRole('tab', { name: 'Armes' }).click()
+    await expect(page.getByRole('searchbox')).toHaveValue('arc')
+    await expect(page.getByRole('heading', { name: 'Epee' })).toBeHidden()
+    await page.getByRole('button', { name: /Réinitialiser/ }).click()
+    await page.locator('a[href="/compendium"]').first().click()
+    await expect(page).toHaveURL(/\/compendium$/)
+    await page.goBack()
+    await expect(page.getByRole('searchbox')).toHaveValue('')
+    await expect(page.getByRole('heading', { name: 'Epee' })).toBeVisible()
+  })
 })

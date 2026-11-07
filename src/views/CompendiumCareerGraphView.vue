@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue'
 import { MarkerType, VueFlow, useVueFlow } from '@vue-flow/core'
 import type { Edge, Node, NodeMouseEvent } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
@@ -20,20 +20,26 @@ import {
   predecessorsOf,
   successorsOf,
 } from '../composables/useCareerGraph'
-import type { CareerGraphMode, CareerSubgraph } from '../composables/useCareerGraph'
+import type { CareerSubgraph } from '../composables/useCareerGraph'
 import { useCareerGraphStore } from '../stores/careerGraph'
+import { useCompendiumFilterStateStore } from '../stores/compendiumFilterState'
+import { unavailableFilterValues } from '../utils/filterOptions'
 
 const store = useCareerGraphStore()
+const filterState = useCompendiumFilterStateStore()
 const { careers, paths, loading, loaded, error } = storeToRefs(store)
 const { fitView } = useVueFlow()
 
-const mode = ref<CareerGraphMode>('chemin')
-const selectedStart = ref('')
-const selectedEnd = ref('')
+const { mode, start: selectedStart, end: selectedEnd } = toRefs(filterState.careers)
 const selectedNodeId = ref<string | null>(null)
 
 const graph = computed(() => buildCareerGraph(careers.value, paths.value))
 const careerNames = computed(() => new Map(careers.value.map((career) => [career.id, career.name])))
+const unavailableCareers = computed(() =>
+  loaded.value && !error.value
+    ? unavailableFilterValues([selectedStart.value, selectedEnd.value].filter(Boolean), careerNames.value.keys())
+    : []
+)
 
 const subgraph = computed<CareerSubgraph>(() => {
   const start = selectedStart.value
@@ -84,6 +90,7 @@ function namesOf(ids: string[]): string[] {
 }
 
 function resetSelection(): void {
+  mode.value = 'chemin'
   selectedStart.value = ''
   selectedEnd.value = ''
   selectedNodeId.value = null
@@ -132,6 +139,9 @@ onMounted(() => {
           <p v-else-if="careers.length === 0" class="text-sm opacity-70">Aucune carrière disponible pour le moment.</p>
 
           <template v-else>
+            <p v-if="unavailableCareers.length" role="status" class="text-sm">
+              Une carrière sélectionnée n'est plus disponible. Réinitialise les options pour la retirer.
+            </p>
             <div class="relative min-h-80 flex-1 rounded-box border border-base-300 bg-base-100 overflow-hidden">
               <VueFlow
                 :nodes="nodes"
