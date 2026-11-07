@@ -56,6 +56,7 @@ export function useCharacterLinks({
   const characterWeapons = ref<CharacterWeapon[]>([])
   const characterArmors = ref<CharacterArmor[]>([])
   const characterItems = ref<CharacterItem[]>([])
+  const linksCharacterId = ref<string | null>(null)
 
   const sortedCharacterSkills = computed(() => sortByName(characterSkills.value))
   const sortedCharacterTalents = computed(() => sortByName(characterTalents.value))
@@ -82,6 +83,7 @@ export function useCharacterLinks({
     characterWeapons.value = links.weapons
     characterArmors.value = links.armors
     characterItems.value = links.items
+    linksCharacterId.value = characterId
   }
 
   async function reloadLinksAfterDelete(id: string): Promise<void> {
@@ -238,6 +240,7 @@ export function useCharacterLinks({
   }
 
   return {
+    linksCharacterId,
     characterSkills,
     characterTalents,
     characterWeapons,
