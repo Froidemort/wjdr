@@ -52,6 +52,7 @@ export function useCharacterSheet() {
     feedback,
   })
   const {
+    linksCharacterId,
     characterSkills,
     characterTalents,
     characterWeapons,
@@ -214,6 +215,7 @@ export function useCharacterSheet() {
   )
 
   return {
+    linksCharacterId,
     character,
     loading,
     errorMessage,
