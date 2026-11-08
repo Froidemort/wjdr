@@ -1,5 +1,5 @@
-import type { Preview } from "@storybook/vue3";
-import { setup } from "@storybook/vue3";
+import type { Preview } from "@storybook/vue3-vite";
+import { setup } from "@storybook/vue3-vite";
 import { mswLoader } from "msw-storybook-addon/csf3";
 import { createPinia } from "pinia";
 import { createMemoryHistory, createRouter } from "vue-router";

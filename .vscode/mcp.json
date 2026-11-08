@@ -3,19 +3,20 @@
     {
       "id": "supabase-project-ref",
       "type": "promptString",
-      "description": "Supabase project ref"
+      "description": "Supabase project reference (required for supabase MCP)"
     },
     {
       "id": "supabase-token",
       "type": "promptString",
-      "description": "Supabase access token",
+      "description": "Supabase access token (required for supabase MCP)",
       "password": true
     }
   ],
   "servers": {
     "github": {
       "type": "http",
-      "url": "https://api.githubcopilot.com/mcp/"
+      "url": "https://api.githubcopilot.com/mcp/",
+      "tools": ["*"]
     },
     "supabase": {
       "type": "stdio",
@@ -28,29 +29,35 @@
       ],
       "env": {
         "SUPABASE_ACCESS_TOKEN": "${input:supabase-token}"
-      }
+      },
+      "tools": ["*"]
     },
     "playwright": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"]
+      "args": ["-y", "@playwright/mcp@latest"],
+      "tools": ["browser_*"]
     },
     "context7": {
       "type": "http",
-      "url": "https://mcp.context7.com/mcp"
+      "url": "https://mcp.context7.com/mcp",
+      "tools": ["query-docs", "resolve-library-id"]
     },
     "vercel": {
       "type": "http",
-      "url": "https://mcp.vercel.com"
+      "url": "https://mcp.vercel.com",
+      "tools": ["*"]
     },
     "storybook": {
       "type": "http",
-      "url": "http://localhost:6006/mcp"
+      "url": "http://localhost:6006/mcp",
+      "tools": ["*"]
     },
     "context-cutter": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "context-cutter-mcp"]
+      "args": ["-y", "context-cutter-mcp"],
+      "tools": ["*"]
     },
     "graphify": {
       "type": "stdio",
@@ -64,7 +71,8 @@
         "-m",
         "graphify.serve",
         "graphify-out/graph.json"
-      ]
+      ],
+      "tools": ["*"]
     }
   }
 }
