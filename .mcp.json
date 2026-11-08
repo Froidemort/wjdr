@@ -1,0 +1,57 @@
+{
+	"mcpServers": {
+		"github": {
+			"type": "http",
+			"url": "https://api.githubcopilot.com/mcp/",
+			"tools": [
+				"*"
+			]
+		},
+		"context7": {
+			"type": "http",
+			"url": "https://mcp.context7.com/mcp",
+			"tools": [
+				"*"
+			]
+		},
+		"graphify": {
+			"type": "stdio",
+			"command": "uv",
+			"args": [
+				"run",
+				"--no-project",
+				"--with",
+				"graphifyy[mcp]",
+				"python",
+				"-m",
+				"graphify.serve",
+				"graphify-out/graph.json"
+			],
+			"tools": [
+				"*"
+			]
+		},
+		"playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@playwright/mcp@latest"
+			],
+			"tools": [
+				"*"
+			]
+		},
+		"storybook": {
+			"type": "http",
+			"url": "http://localhost:6006/mcp",
+			"tools": [
+				"*"
+			]
+		},
+		"supabase": {
+		"type": "http",
+		"url": "https://mcp.supabase.com/mcp?project_ref=vbrbrsvhbmmxdgcdskpj&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cfeedback%2Cnotebooks"
+    	}
+	}
+}
