@@ -35,6 +35,8 @@
         @retry="retrySave"
       />
 
+      <CharacterSpellShortcut :user-id="authStore.user?.id ?? ''" :character-id="character.id" />
+
       <div v-if="actionSuccessMessage" class="toast toast-bottom toast-end z-50 p-2 sm:p-4">
         <div class="alert bg-success text-success-content py-3 px-4 min-h-0 shadow-lg gap-2 border-0" role="status" aria-live="polite">
           <span class="text-sm sm:text-base font-medium">{{ actionSuccessMessage }}</span>
@@ -200,6 +202,7 @@ import CharacterInventoryPanel from '../components/character/CharacterInventoryP
 import CharacterProfilePanel from '../components/character/CharacterProfilePanel.vue'
 import CharacterSkillsTalentsPanel from '../components/character/CharacterSkillsTalentsPanel.vue'
 import CharacterSyncStatus from '../components/character/CharacterSyncStatus.vue'
+import CharacterSpellShortcut from '../components/character/CharacterSpellShortcut.vue'
 import CharacterSummaryHeader from '../components/character/CharacterSummaryHeader.vue'
 import CharacterTabs from '../components/character/CharacterTabs.vue'
 import DescriptionModal from '../components/character/DescriptionModal.vue'
@@ -210,7 +213,9 @@ import { useCharacterSheet } from '../composables/useCharacterSheet'
 import { useCharacterTabNavigation } from '../composables/useCharacterTabNavigation'
 import { useIsOnline } from '../composables/useIsOnline'
 import { useQueuedUpdatesCount } from '../composables/useQueuedUpdatesCount'
+import { useAuthStore } from '../stores/auth'
 
+const authStore = useAuthStore()
 const {
   character,
   loading,
