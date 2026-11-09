@@ -78,3 +78,29 @@ test('reports spell loading errors and retries without navigating', async ({ pag
   await dialog.getByRole('button', { name: 'Réessayer' }).click()
   await expect(dialog.getByLabel('Feu')).toBeVisible()
 })
+
+test('cancels the first-time category selection without saving or navigating', async ({ page, backend }) => {
+  backend.spells.push({ id: 1, name: 'Flamme', category: 'Feu', difficulty: 5, description: 'feu' })
+  await page.goto(`/characters/${E2E_CHARACTER_ID}`, { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'Mes sorts' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Catégories de sorts' })
+  await dialog.getByLabel('Feu', { exact: true }).check()
+  await dialog.getByRole('button', { name: 'Annuler' }).click()
+  await expect(page).toHaveURL(new RegExp(`/characters/${E2E_CHARACTER_ID}$`))
+  const stored = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    spellShortcutKey(E2E_USER_ID, E2E_CHARACTER_ID),
+  )
+  expect(stored).toBeNull()
+  await page.getByRole('button', { name: 'Mes sorts' }).click()
+  await expect(dialog.getByLabel('Feu', { exact: true })).not.toBeChecked()
+})
+
+test('keeps apply disabled and shows the empty-categories state when no spells exist', async ({ page }) => {
+  await page.goto(`/characters/${E2E_CHARACTER_ID}`, { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'Mes sorts' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Catégories de sorts' })
+  await expect(dialog.getByText('Aucune catégorie disponible.')).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Enregistrer et ouvrir' })).toBeDisabled()
+  await expect(page).toHaveURL(new RegExp(`/characters/${E2E_CHARACTER_ID}$`))
+})
