@@ -63,6 +63,8 @@
       <CharacterProfilePanel
         v-show="isPanelVisible('stats')"
         :stats="character.stats"
+        :skills="linksCharacterId === character.id ? sortedCharacterSkills : []"
+        :talents="linksCharacterId === character.id ? sortedCharacterTalents : []"
         :editable="canEditQuickSection"
         @stat-tick="onStatTick"
         @stat-base-change="onStatBaseChange"
@@ -224,6 +226,7 @@ const {
   characterWeapons,
   characterArmors,
   characterItems,
+  linksCharacterId,
   sortedCharacterSkills,
   sortedCharacterTalents,
   sortedCharacterWeapons,

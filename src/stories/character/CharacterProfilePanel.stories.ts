@@ -30,6 +30,8 @@ const meta: Meta<typeof CharacterProfilePanel> = {
   tags: ['autodocs'],
   args: {
     stats,
+    skills: [],
+    talents: [],
     editable: true,
     'onStat-tick': fn(),
     'onStat-base-change': fn(),
@@ -92,5 +94,22 @@ export const EmptyStats: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Aucune caractéristique disponible.')).toBeVisible()
     await expect(canvas.getByText('Tout détailler')).toBeDisabled()
+  },
+}
+
+export const LinkedTalents: Story = {
+  args: {
+    talents: [{ talentId: 'audition', name: 'Acuité auditive', specialization: null, description: 'Perception des sons +20%' }],
+    skills: [{
+      skillId: 'perception', name: 'Perception', statCode: 'Int', specialization: null,
+      description: null, masteryLevel: 1, isBasic: true,
+      linkedTalents: [{ talentId: 'audition', name: 'Acuité auditive', specialization: null, description: 'Perception des sons +20%' }],
+    }],
+  },
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByText('Talents liés à INT (1)'))
+    await expect(canvas.getByText('Acuité auditive')).toBeVisible()
+    await expect(canvas.getByText('Perception des sons +20%')).toBeVisible()
+    await expect(canvas.getByRole('button', { name: /^INT 30/ })).toBeVisible()
   },
 }

@@ -65,6 +65,19 @@ describe('useCharacterLinks', () => {
     deps.confirmAction.mockResolvedValue(true)
   })
 
+  it('identifies the character whose links were actually loaded', async () => {
+    deps.listCharacterLinksBundle.mockResolvedValue({
+      skills: [skill()], talents: [], weapons: [], armors: [], items: [],
+    })
+    const { links } = setup()
+    expect(links.linksCharacterId.value).toBeNull()
+    await links.loadCharacterLinks('char-1')
+    expect(links.linksCharacterId.value).toBe('char-1')
+    deps.listCharacterLinksBundle.mockRejectedValue(new Error('offline'))
+    await expect(links.loadCharacterLinks('char-2')).rejects.toThrow('offline')
+    expect(links.linksCharacterId.value).toBe('char-1')
+  })
+
   it('updates the skill mastery level and invalidates the cache', async () => {
     const { links } = setup()
     links.characterSkills.value = [skill()]
