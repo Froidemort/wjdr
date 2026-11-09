@@ -4,8 +4,10 @@ import { storeToRefs } from 'pinia'
 import { useWindowScroll } from '@vueuse/core'
 import { ArrowUp, ListFilter, RotateCcw, ArrowDownUp } from '@lucide/vue'
 import { useCompendiumSpellsStore } from '../stores/compendiumSpells'
+import { useCompendiumFilterStateStore } from '../stores/compendiumFilterState'
 import { useCompendiumSpellFilters } from '../composables/useCompendiumSpellFilters'
 import { useIncrementalReveal } from '../composables/useIncrementalReveal'
+import { unavailableFilterValues } from '../utils/filterOptions'
 import DataGrid from '../components/ui/DataGrid.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 
@@ -18,11 +20,13 @@ function difficultyBadgeClass(difficulty: number): string {
 }
 
 const store = useCompendiumSpellsStore()
+const filterState = useCompendiumFilterStateStore()
 const { spells, loading, loaded, error } = storeToRefs(store)
 void store.loadSpells()
 
 const {
   searchQuery,
+  selectedCategories,
   categories,
   sortBy,
   minDifficulty,
@@ -33,9 +37,14 @@ const {
   toggleCategory,
   isCategorySelected,
   resetFilters,
-} = useCompendiumSpellFilters({ spells })
+} = useCompendiumSpellFilters({ spells, state: filterState.spells })
 
 const isLoading = computed(() => loading.value || (!loaded.value && !error.value))
+const unavailableCategories = computed(() =>
+  loaded.value && !error.value
+    ? unavailableFilterValues(selectedCategories.value, categories.value.map((category) => category.name))
+    : []
+)
 
 const scrollTargetRef = ref<HTMLElement | null>(null)
 const { visibleItems } = useIncrementalReveal(filteredSpells, scrollTargetRef, { pageSize: 10 })
@@ -208,11 +217,15 @@ function displayedDescription(spell: { id: string; description: string | null })
         </span>
       </div>
 
+      <p v-if="unavailableCategories.length" role="status" class="text-sm">
+        Catégories indisponibles : {{ unavailableCategories.join(', ') }}. Réinitialise les filtres pour les retirer.
+      </p>
+
       <div class="flex flex-wrap items-center justify-between gap-2 border-t border-base-300 pt-2">
         <p class="text-sm opacity-70" aria-live="polite">{{ filteredSpells.length }} sort(s) trouvé(s)</p>
-        <button v-if="activeFilterCount > 0" type="button" class="btn btn-sm btn-ghost gap-1" @click="resetFilters">
+        <button v-if="activeFilterCount > 0 || sortBy !== 'name'" type="button" class="btn btn-sm btn-ghost gap-1" @click="resetFilters">
           <RotateCcw class="size-4" aria-hidden="true" />
-          Réinitialiser ({{ activeFilterCount }})
+          Réinitialiser<span v-if="activeFilterCount > 0">&nbsp;({{ activeFilterCount }})</span>
         </button>
       </div>
     </section>

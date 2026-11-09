@@ -1,5 +1,6 @@
-import { computed, ref } from 'vue'
+import { computed, reactive, toRefs } from 'vue'
 import type { Ref } from 'vue'
+import type { InventoryFilterState } from '../stores/compendiumFilterState'
 import { compareByName } from '../utils/compare'
 
 export interface CompendiumFilterConfig<TItem> {
@@ -13,6 +14,7 @@ export interface CompendiumFilterConfig<TItem> {
 interface UseCompendiumInventoryFiltersOptions<TItem> {
   items: Ref<TItem[]>
   config: CompendiumFilterConfig<TItem>
+  state?: InventoryFilterState
 }
 
 function normalizeText(value: string): string {
@@ -29,13 +31,14 @@ export function useCompendiumInventoryFilters<TItem>(
   const facetNames = Object.keys(config.facets ?? {})
   const sorterNames = Object.keys(config.sorters)
 
-  const searchQuery = ref('')
-  const sortBy = ref(sorterNames[0] ?? '')
-  const selectedFacets = ref<Record<string, Set<string>>>(
-    Object.fromEntries(facetNames.map((name) => [name, new Set<string>()]))
-  )
-  const minEncumbrance = ref<number | null>(null)
-  const maxEncumbrance = ref<number | null>(null)
+  const state = options.state ?? reactive<InventoryFilterState>({
+    searchQuery: '',
+    sortBy: sorterNames[0] ?? '',
+    selectedFacets: Object.fromEntries(facetNames.map((name) => [name, new Set<string>()])),
+    minEncumbrance: null,
+    maxEncumbrance: null,
+  })
+  const { searchQuery, sortBy, selectedFacets, minEncumbrance, maxEncumbrance } = toRefs(state)
 
   const encumbranceBounds = computed(() => {
     const values = items.value.map(config.encumbrance)

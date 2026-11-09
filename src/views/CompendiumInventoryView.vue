@@ -4,12 +4,14 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { RotateCcw } from '@lucide/vue'
 import { useCompendiumInventoryStore } from '../stores/compendiumInventory'
+import { useCompendiumFilterStateStore } from '../stores/compendiumFilterState'
 import {
   useCompendiumInventoryFilters,
   type CompendiumFilterConfig,
 } from '../composables/useCompendiumInventoryFilters'
 import { useIncrementalReveal } from '../composables/useIncrementalReveal'
 import { compareByName } from '../utils/compare'
+import { unavailableFilterValues } from '../utils/filterOptions'
 import DataGrid from '../components/ui/DataGrid.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import CompendiumEntryCard from '../components/ui/CompendiumEntryCard.vue'
@@ -29,6 +31,7 @@ const TABS: ReadonlyArray<{ key: CompendiumTab; label: string }> = [
 const route = useRoute()
 const router = useRouter()
 const store = useCompendiumInventoryStore()
+const filterState = useCompendiumFilterStateStore()
 const { weapons, armors, items, loading, loaded, errors } = storeToRefs(store)
 
 function parseTab(value: unknown): CompendiumTab {
@@ -69,9 +72,9 @@ const itemConfig: CompendiumFilterConfig<CompendiumItem> = {
   sorters: { name: byName, encumbrance: byEncumbrance },
 }
 
-const weaponFilters = useCompendiumInventoryFilters({ items: weapons, config: weaponConfig })
-const armorFilters = useCompendiumInventoryFilters({ items: armors, config: armorConfig })
-const itemFilters = useCompendiumInventoryFilters({ items: items, config: itemConfig })
+const weaponFilters = useCompendiumInventoryFilters({ items: weapons, config: weaponConfig, state: filterState.inventory.weapons })
+const armorFilters = useCompendiumInventoryFilters({ items: armors, config: armorConfig, state: filterState.inventory.armors })
+const itemFilters = useCompendiumInventoryFilters({ items: items, config: itemConfig, state: filterState.inventory.items })
 
 const SORT_LABELS: Record<string, string> = {
   name: 'Nom',
@@ -115,6 +118,14 @@ const sortBy = computed({
   set: (value: string) => { filters.value.sortBy.value = value },
 })
 const facetEntries = computed(() => Object.entries(filters.value.facetOptions.value))
+const unavailableFacets = computed(() => {
+  if (!loaded.value[activeTab.value] || errors.value[activeTab.value]) return []
+  const available = filters.value.facetOptions.value
+  return Object.entries(filterState.inventory[activeTab.value].selectedFacets).flatMap(([facet, selected]) =>
+    unavailableFilterValues(selected, (available[facet] ?? []).map((option) => option.name))
+      .map((value) => `${facet} : ${value}`)
+  )
+})
 
 const maxEncumbrance = computed({
   get: () => filters.value.maxEncumbrance.value,
@@ -173,13 +184,13 @@ watch(activeTab, () => { void loadActiveTab() }, { immediate: true })
         </label>
 
         <button
-          v-if="filters.activeFilterCount.value > 0"
+          v-if="filters.activeFilterCount.value > 0 || sortBy !== 'name'"
           type="button"
           class="btn btn-sm btn-ghost gap-1"
           @click="filters.resetFilters()"
         >
           <RotateCcw class="size-4" aria-hidden="true" />
-          Réinitialiser ({{ filters.activeFilterCount.value }})
+          Réinitialiser<span v-if="filters.activeFilterCount.value > 0">&nbsp;({{ filters.activeFilterCount.value }})</span>
         </button>
       </div>
 
@@ -199,6 +210,9 @@ watch(activeTab, () => { void loadActiveTab() }, { immediate: true })
           </button>
         </div>
       </fieldset>
+      <p v-if="unavailableFacets.length" role="status" class="text-sm">
+        Filtres indisponibles : {{ unavailableFacets.join(', ') }}. Réinitialise les filtres pour les retirer.
+      </p>
     </section>
 
     <div class="px-4 pb-8">
