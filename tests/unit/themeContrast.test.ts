@@ -62,6 +62,17 @@ const contrast = (fg: Lab, bg: Lab): number => ratio(toSrgb(fg), toSrgb(bg))
 describe.each(THEMES)('theme contrast: %s', (theme) => {
   const t = parseTheme(theme)
 
+  it('keeps the three surface levels visually ordered', () => {
+    const [first, second, third] = BASES.map((base) => luminance(toSrgb(t[base])))
+    if (theme === 'grimorium-dark') {
+      expect(first).toBeLessThan(second)
+      expect(second).toBeLessThan(third)
+    } else {
+      expect(first).toBeGreaterThan(second)
+      expect(second).toBeGreaterThan(third)
+    }
+  })
+
   it.each(BASES)('body text on %s reaches AAA', (base) => {
     expect(contrast(t['base-content'], t[base])).toBeGreaterThanOrEqual(7)
   })
