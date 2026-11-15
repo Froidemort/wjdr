@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { CharacterSkill, CharacterStatValue, CharacterTalent } from '../../types/domain'
-import { formatNamedWithSpecialization, normalizeStatCode, sortStatsByCharacteristicOrder } from '../../utils/characterSheet'
-import { characterTalentReminders } from '../../utils/characterTalentReminders'
+import { normalizeStatCode, sortStatsByCharacteristicOrder } from '../../utils/characterSheet'
+import { characterTalentReminders, linkedTalentDetails } from '../../utils/characterTalentReminders'
+import type { LinkedTalentDetail } from '../../utils/characterTalentReminders'
 import CharacteristicCard from '../ui/CharacteristicCard.vue'
 import CharacterSection from './CharacterSection.vue'
 
@@ -21,6 +22,15 @@ const emit = defineEmits<{
 
 const expandedCodes = ref<string[]>([])
 const reminders = computed(() => characterTalentReminders(props.skills, props.talents))
+
+const linkedByStat = computed<Record<string, LinkedTalentDetail[]>>(() =>
+  Object.fromEntries(
+    Object.entries(reminders.value).map(([statCode, refs]) => [statCode, linkedTalentDetails(refs, props.talents)])
+  )
+)
+function linkedTalentsFor(statCode: string): LinkedTalentDetail[] {
+  return linkedByStat.value[normalizeStatCode(statCode)] ?? []
+}
 
 const visibleStats = computed(() =>
   sortStatsByCharacteristicOrder(
@@ -62,10 +72,6 @@ function toggleAll(): void {
           {{ allExpanded ? 'Tout compacter' : 'Tout détailler' }}
         </button>
       </div>
-      <p class="text-xs opacity-70">
-        Rappels indicatifs : seuls les liens disponibles entre compétences et talents possédés sont affichés.
-        Les effets directs et certains liens peuvent manquer. Vérifie les conditions dans la description.
-      </p>
       <p v-if="visibleStats.length === 0" class="text-sm opacity-70">Aucune caractéristique disponible.</p>
       <div v-else class="grid grid-cols-2 gap-2 md:grid-cols-4">
         <div
@@ -78,24 +84,13 @@ function toggleAll(): void {
             :stat="stat"
             :editable="editable"
             :expanded="expandedCodes.includes(stat.statCode)"
+            :linked-talents="linkedTalentsFor(stat.statCode)"
             @toggle="toggleStat(stat.statCode)"
             @tick-up="emit('stat-tick', $event.statCode, $event.step)"
             @tick-down="emit('stat-tick', $event.statCode, -$event.step)"
             @update-base="emit('stat-base-change', $event.statCode, $event.baseValue)"
             @update-total-advanced="emit('stat-total-advanced-change', $event.statCode, $event.totalAdvanced)"
           />
-          <details v-if="reminders.get(normalizeStatCode(stat.statCode))?.length" class="mt-1 rounded-box border border-base-300 p-2 text-sm">
-            <summary class="cursor-pointer min-h-11 flex items-center font-semibold">
-              Talents liés à {{ stat.statCode }} ({{ reminders.get(normalizeStatCode(stat.statCode))?.length }})
-            </summary>
-            <ul class="space-y-3 pb-2">
-              <li v-for="reminder in reminders.get(normalizeStatCode(stat.statCode))" :key="reminder.talent.talentId">
-                <strong>{{ formatNamedWithSpecialization(reminder.talent.name, reminder.talent.specialization) }}</strong>
-                <p>Compétences : {{ reminder.skills.join(', ') }}</p>
-                <p class="whitespace-pre-line">{{ reminder.talent.description || 'Aucune description disponible.' }}</p>
-              </li>
-            </ul>
-          </details>
         </div>
       </div>
     </CharacterSection>
