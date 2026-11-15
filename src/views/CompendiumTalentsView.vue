@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { RotateCcw } from '@lucide/vue'
 import { useCompendiumSkillsTalentsStore } from '../stores/compendiumSkillsTalents'
+import { useCompendiumFilterStateStore } from '../stores/compendiumFilterState'
 import { useCompendiumTalentFilters } from '../composables/useCompendiumTalentFilters'
 import { useIncrementalReveal } from '../composables/useIncrementalReveal'
 import { formatNamedWithSpecialization } from '../utils/characterSheet'
@@ -14,10 +15,11 @@ import CompendiumEntryDialog from '../components/ui/CompendiumEntryDialog.vue'
 const route = useRoute()
 const router = useRouter()
 const store = useCompendiumSkillsTalentsStore()
+const filterState = useCompendiumFilterStateStore()
 const { talents, loading, loaded, errors } = storeToRefs(store)
 
 const { searchQuery, onlySpecialized, filteredTalents, activeFilterCount, resetFilters } =
-  useCompendiumTalentFilters({ talents })
+  useCompendiumTalentFilters({ talents, state: filterState.talents })
 
 const scrollTarget = shallowRef<Window | null>(typeof window === 'undefined' ? null : window)
 const { visibleItems } = useIncrementalReveal(filteredTalents, scrollTarget, { pageSize: 18 })

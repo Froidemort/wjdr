@@ -53,6 +53,7 @@ interface SessionNoteRow {
 export class FakeBackend {
   readonly requests: RecordedRequest[] = []
   offline = false
+  spellsFail = false
 
   readonly character = {
     id: E2E_CHARACTER_ID,
@@ -121,6 +122,7 @@ export class FakeBackend {
 
   readonly sessions: SessionRow[] = []
   readonly sessionNotes: SessionNoteRow[] = []
+  readonly spells: Array<Record<string, unknown>> = []
   private nextSessionId = 1
   private nextNoteId = 1
 
@@ -154,6 +156,8 @@ export class FakeBackend {
           : this.stats
       case 'static_stats':
         return this.staticStats
+      case 'spells':
+        return this.spells
       case 'character_armors':
         return this.armors
       case 'profiles':
@@ -228,6 +232,11 @@ export class FakeBackend {
     }
 
     const wantsObject = (request.headers()['accept'] ?? '').includes('vnd.pgrst.object+json')
+
+    if (method === 'GET' && table === 'spells' && this.spellsFail) {
+      await route.fulfill({ status: 500, contentType: 'application/json', body: '{}' })
+      return
+    }
 
     if (method === 'POST' && body) {
       const created = this.applyInsert(table, body)

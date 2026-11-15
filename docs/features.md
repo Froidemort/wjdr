@@ -21,6 +21,7 @@ Les chemins sont relatifs à la racine du dépôt. Routes : voir [architecture.m
 - Liste et feuille de personnage (caractéristiques, XP, ressources, inventaire, carrière) : `src/views/Character*View.vue`, `src/components/character/`, `src/composables/useCharacterSheet.ts`.
 - Accès : `src/services/charactersRepository.ts`, `characterLinksRepository.ts`, `catalogRepository.ts`.
 - Dés : `src/services/dice.ts`.
+- Raccourci de sorts : catégories préférées enregistrées localement par utilisateur et personnage, sans synchronisation entre appareils ; elles restent distinctes des filtres modifiables du Compendium. Un échec de stockage est signalé et permet une utilisation temporaire.
 
 ## Compendium (public)
 
@@ -28,6 +29,7 @@ Les chemins sont relatifs à la racine du dépôt. Routes : voir [architecture.m
 - Carrières : `/compendium/careers`.
 - Sorts : `/compendium/spells`, store `compendiumSpells` (table `spells`, migrations 010-011).
 - Compétences et talents : `/compendium/skills`, `/compendium/talents`, store `compendiumSkillsTalents` (table `skills_talents`, migrations 008, 016).
+- Les recherches, filtres et tris restent en mémoire pendant la navigation, séparément par vue et par onglet d'inventaire ; les choix du graphe de carrières sont également conservés. Le rechargement de la page réinitialise cet état.
 - Accès : `src/services/compendiumRepository.ts`.
 
 ## Graphe de carrières

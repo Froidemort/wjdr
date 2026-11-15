@@ -1,5 +1,6 @@
-import { computed, ref } from 'vue'
+import { computed, reactive, toRefs } from 'vue'
 import type { Ref } from 'vue'
+import type { SkillFilterState } from '../stores/compendiumFilterState'
 import { normalizeSearchText } from '../utils/searchText'
 import { sortStatsByCharacteristicOrder } from '../utils/characterSheet'
 
@@ -15,10 +16,14 @@ interface FilterableSkill {
 
 export function useCompendiumSkillFilters<TSkill extends FilterableSkill>(options: {
   skills: Ref<TSkill[]>
+  state?: SkillFilterState
 }) {
-  const searchQuery = ref('')
-  const typeFilter = ref<SkillTypeFilter>('all')
-  const selectedCharacteristics = ref(new Set<string>())
+  const state = options.state ?? reactive<SkillFilterState>({
+    searchQuery: '',
+    typeFilter: 'all',
+    selectedCharacteristics: new Set<string>(),
+  })
+  const { searchQuery, typeFilter, selectedCharacteristics } = toRefs(state)
 
   const characteristics = computed(() => {
     const counts = new Map<string, number>()

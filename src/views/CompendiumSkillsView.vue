@@ -4,9 +4,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { RotateCcw } from '@lucide/vue'
 import { useCompendiumSkillsTalentsStore } from '../stores/compendiumSkillsTalents'
+import { useCompendiumFilterStateStore } from '../stores/compendiumFilterState'
 import { useCompendiumSkillFilters, type SkillTypeFilter } from '../composables/useCompendiumSkillFilters'
 import { useIncrementalReveal } from '../composables/useIncrementalReveal'
 import { formatNamedWithSpecialization } from '../utils/characterSheet'
+import { unavailableFilterValues } from '../utils/filterOptions'
 import DataGrid from '../components/ui/DataGrid.vue'
 import SearchInput from '../components/ui/SearchInput.vue'
 import CompendiumEntryDialog from '../components/ui/CompendiumEntryDialog.vue'
@@ -34,24 +36,31 @@ const TYPE_OPTIONS: ReadonlyArray<{ key: SkillTypeFilter; label: string }> = [
 const route = useRoute()
 const router = useRouter()
 const store = useCompendiumSkillsTalentsStore()
+const filterState = useCompendiumFilterStateStore()
 const { skills, loading, loaded, errors } = storeToRefs(store)
 
 const {
   searchQuery,
   typeFilter,
+  selectedCharacteristics,
   characteristics,
   filteredSkills,
   activeFilterCount,
   toggleCharacteristic,
   isCharacteristicSelected,
   resetFilters,
-} = useCompendiumSkillFilters({ skills })
+} = useCompendiumSkillFilters({ skills, state: filterState.skills })
 
 const scrollTarget = shallowRef<Window | null>(typeof window === 'undefined' ? null : window)
 const { visibleItems } = useIncrementalReveal(filteredSkills, scrollTarget, { pageSize: 18 })
 
 const isLoading = computed(() => loading.value.skills || (!loaded.value.skills && !errors.value.skills))
 const errorMessage = computed(() => errors.value.skills)
+const unavailableCharacteristics = computed(() =>
+  loaded.value.skills && !errors.value.skills
+    ? unavailableFilterValues(selectedCharacteristics.value, characteristics.value.map((item) => item.code))
+    : []
+)
 
 function characteristicLabel(code: string): string {
   return CHARACTERISTIC_LABELS[code] ?? code
@@ -130,6 +139,10 @@ void store.loadSkills()
           </button>
         </div>
       </fieldset>
+
+      <p v-if="unavailableCharacteristics.length" role="status" class="text-sm">
+        Caractéristiques indisponibles : {{ unavailableCharacteristics.join(', ') }}. Réinitialise les filtres pour les retirer.
+      </p>
 
       <div class="flex flex-wrap items-center justify-between gap-2 border-t border-base-300 pt-2">
         <p class="text-sm opacity-70" aria-live="polite">{{ filteredSkills.length }} compétence(s) trouvée(s)</p>
