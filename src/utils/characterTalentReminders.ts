@@ -1,36 +1,46 @@
 import type { CharacterSkill, CharacterTalent } from '../types/domain'
 import { formatNamedWithSpecialization, normalizeStatCode } from './characterSheet'
 
-export interface TalentReminder {
-  talent: CharacterTalent
-  skills: string[]
+export interface LinkedTalentRef {
+  id: string
+  name: string
 }
 
+export interface LinkedTalentDetail extends LinkedTalentRef {
+  description: string | null
+}
+
+// Owned talents linked to a skill, grouped by normalized characteristic code, deduplicated by talent id.
+// Unowned talents are ignored, so removing a talent or a skill updates the result.
 export function characterTalentReminders(
   skills: readonly CharacterSkill[],
   talents: readonly CharacterTalent[]
-): Map<string, TalentReminder[]> {
+): Record<string, LinkedTalentRef[]> {
   const owned = new Map(talents.map((talent) => [talent.talentId, talent]))
-  const grouped = new Map<string, Map<string, TalentReminder>>()
+  const result: Record<string, LinkedTalentRef[]> = {}
 
   for (const skill of skills) {
     const stat = normalizeStatCode(skill.statCode)
-    const skillName = formatNamedWithSpecialization(skill.name, skill.specialization)
     for (const linked of skill.linkedTalents ?? []) {
       const talent = owned.get(linked.talentId)
       if (!talent) continue
-      const byTalent = grouped.get(stat) ?? new Map<string, TalentReminder>()
-      const reminder = byTalent.get(talent.talentId) ?? { talent, skills: [] }
-      if (!reminder.skills.includes(skillName)) reminder.skills.push(skillName)
-      byTalent.set(talent.talentId, reminder)
-      grouped.set(stat, byTalent)
+      const refs = result[stat] ?? []
+      if (refs.some((ref) => ref.id === talent.talentId)) continue
+      refs.push({ id: talent.talentId, name: formatNamedWithSpecialization(talent.name, talent.specialization) })
+      result[stat] = refs
     }
   }
 
-  return new Map(
-    [...grouped].map(([stat, reminders]) => [
-      stat,
-      [...reminders.values()].sort((a, b) => a.talent.name.localeCompare(b.talent.name, 'fr')),
-    ])
-  )
+  for (const refs of Object.values(result)) {
+    refs.sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  }
+  return result
+}
+
+export function linkedTalentDetails(
+  refs: readonly LinkedTalentRef[],
+  talents: readonly CharacterTalent[]
+): LinkedTalentDetail[] {
+  const byId = new Map(talents.map((talent) => [talent.talentId, talent]))
+  return refs.map((ref) => ({ ...ref, description: byId.get(ref.id)?.description ?? null }))
 }

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { expect, fn, userEvent } from 'storybook/test'
 import CharacteristicCard from '../../components/ui/CharacteristicCard.vue'
 import type { CharacterStatValue } from '../../types/domain'
+import type { LinkedTalentDetail } from '../../utils/characterTalentReminders'
 
 const stat: CharacterStatValue = {
   statCode: 'F',
@@ -89,6 +90,36 @@ export const ExpandedEditableSecondaryTicksByOne: Story = {
   play: async ({ canvas, args }) => {
     await userEvent.click(canvas.getByRole('button', { name: /Augmenter l'avancement/ }))
     await expect(args['onTick-up']).toHaveBeenCalledWith({ statCode: 'A', step: 1 })
+  },
+}
+
+export const WithLinkedTalentBadge: Story = {
+  args: {
+    linkedTalents: [
+      { id: 'audition', name: 'Acuité auditive', description: 'Perception des sons +20%' } satisfies LinkedTalentDetail,
+    ],
+  },
+  play: async ({ canvas, args }) => {
+    await expect(canvas.getByRole('button', { name: '1 talent lié' })).toBeVisible()
+
+    await userEvent.click(canvas.getByRole('button', { name: /talent/ }))
+    await expect(args.onToggle).not.toHaveBeenCalled()
+  },
+}
+
+export const ExpandedWithLinkedTalentBadge: Story = {
+  args: {
+    expanded: true,
+    linkedTalents: [
+      { id: 'audition', name: 'Acuité auditive', description: 'Perception des sons +20%' } satisfies LinkedTalentDetail,
+    ],
+  },
+  play: async ({ canvas, args }) => {
+    await expect(canvas.getByRole('button', { name: '1 talent lié' })).toBeVisible()
+
+    // The badge sits outside the expanded <article>, so clicking it must not toggle the card.
+    await userEvent.click(canvas.getByRole('button', { name: /talent/ }))
+    await expect(args.onToggle).not.toHaveBeenCalled()
   },
 }
 
