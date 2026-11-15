@@ -123,6 +123,23 @@ export class FakeBackend {
   readonly sessions: SessionRow[] = []
   readonly sessionNotes: SessionNoteRow[] = []
   readonly spells: Array<Record<string, unknown>> = []
+  readonly skillsCatalog: Array<{
+    id: string
+    name: string
+    stat_code: string
+    specialization: string | null
+    description: string | null
+    is_basic: boolean
+  }> = []
+  readonly talentsCatalog: Array<{
+    id: string
+    name: string
+    specialization: string | null
+    description: string | null
+  }> = []
+  readonly characterSkills: Array<{ skill_id: string; mastery_level: 1 | 2 | 3 }> = []
+  readonly characterTalents: Array<{ talent_id: string }> = []
+  readonly skillsTalentLinks: Array<{ skill_id: string; talent_id: string }> = []
   private nextSessionId = 1
   private nextNoteId = 1
 
@@ -160,6 +177,24 @@ export class FakeBackend {
         return this.spells
       case 'character_armors':
         return this.armors
+      case 'character_skills':
+        return this.characterSkills.map((link) => ({
+          skill_id: link.skill_id,
+          mastery_level: link.mastery_level,
+          skills: this.skillsCatalog.find((skill) => skill.id === link.skill_id) ?? null,
+        }))
+      case 'character_talents':
+        return this.characterTalents.map((link) => ({
+          talent_id: link.talent_id,
+          talents: this.talentsCatalog.find((talent) => talent.id === link.talent_id) ?? null,
+        }))
+      case 'skills_talents': {
+        const skillIdFilter = query.get('skill_id')
+        const allowed = skillIdFilter?.startsWith('in.') ? skillIdFilter.slice('in.('.length, -1).split(',') : null
+        return allowed
+          ? this.skillsTalentLinks.filter((link) => allowed.includes(link.skill_id))
+          : this.skillsTalentLinks
+      }
       case 'profiles':
         return [{ full_name: 'Testeur', username: 'testeur', avatar_url: null }]
       default:
