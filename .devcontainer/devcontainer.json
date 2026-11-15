@@ -2,28 +2,38 @@
   "name": "WJDR",
   "image": "mcr.microsoft.com/devcontainers/typescript-node",
 
-  // Ensures npm dependencies install cleanly after build
-  "postCreateCommand": "npm install && curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh && curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/v0.5.5/prek-installer.sh | sh && $HOME/.local/bin/prek install",
+  "features": {
+    "ghcr.io/devcontainers/features/copilot-cli:1.1.4": {},
+    "ghcr.io/devcontainers/features/github-cli:1.1.3": {},
+    "ghcr.io/devcontainers-extra/features/uv:1": {}
+  },
 
-  // Explicitly set non-root user for security and permissions
-  "remoteUser": "node",
+  "runArgs": [
+    "--init",
+    "--ipc=host"
+  ],
+
+  "postCreateCommand": {
+    "npm": "npm install && npx playwright install --with-deps chromium",
+    "rtk": "curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh",
+    "prek": "curl -LsSf https://github.com/j178/prek/releases/download/v0.5.5/prek-installer.sh | sh && ~/.local/bin/prek install"
+  },
 
   "customizations": {
     "vscode": {
       "settings": {
-        // Fixes line-ending issues when switching between Windows and Linux
         "files.eol": "\n"
       },
       "extensions": [
         "Vue.volar",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "github.copilot",
         "github.copilot-chat",
         "ms-python.python",
         "tamasfe.even-better-toml",
         "GitHub.vscode-pull-request-github",
-        "webpro.vscode-knip"
+        "webpro.vscode-knip",
+        "ms-playwright.playwright"
       ]
     }
   }
