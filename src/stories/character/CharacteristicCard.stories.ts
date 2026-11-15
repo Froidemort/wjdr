@@ -95,12 +95,13 @@ export const ExpandedEditableSecondaryTicksByOne: Story = {
 
 export const WithLinkedTalentBadge: Story = {
   args: {
+    expanded: true,
     linkedTalents: [
       { id: 'audition', name: 'Acuité auditive', description: 'Perception des sons +20%' } satisfies LinkedTalentDetail,
     ],
   },
   play: async ({ canvas, args }) => {
-    await expect(canvas.getByRole('button', { name: '1 talent lié' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '1 talent lié à F' })).toBeVisible()
 
     await userEvent.click(canvas.getByRole('button', { name: /talent/ }))
     await expect(args.onToggle).not.toHaveBeenCalled()
@@ -115,9 +116,9 @@ export const ExpandedWithLinkedTalentBadge: Story = {
     ],
   },
   play: async ({ canvas, args }) => {
-    await expect(canvas.getByRole('button', { name: '1 talent lié' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '1 talent lié à F' })).toBeVisible()
 
-    // The badge sits outside the expanded <article>, so clicking it must not toggle the card.
+    // The badge sits inside the expanded <article>, so clicking it must not toggle the card.
     await userEvent.click(canvas.getByRole('button', { name: /talent/ }))
     await expect(args.onToggle).not.toHaveBeenCalled()
   },

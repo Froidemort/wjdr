@@ -107,13 +107,13 @@ export const LinkedTalents: Story = {
     }],
   },
   play: async ({ canvas, args }) => {
-    await userEvent.click(canvas.getByRole('button', { name: '1 talent lié' }))
-    await expect(canvas.getByText('Acuité auditive')).toBeVisible()
-    await expect(canvas.getByText('Perception des sons +20%')).toBeVisible()
-
     const intStat = (args.stats ?? []).find((candidate) => candidate.statCode === 'INT')
     if (!intStat) throw new Error('INT stat missing from story args')
     const intTotal = intStat.baseValue + intStat.currentAdvanced
-    await expect(canvas.getByRole('button', { name: new RegExp(`^INT ${intTotal}`) })).toBeVisible()
+    await userEvent.click(canvas.getByRole('button', { name: new RegExp(`^INT ${intTotal}`) }))
+
+    await userEvent.click(canvas.getByRole('button', { name: '1 talent lié à INT' }))
+    await expect(canvas.getByText('Acuité auditive')).toBeVisible()
+    await expect(canvas.getByText('Perception des sons +20%')).toBeVisible()
   },
 }

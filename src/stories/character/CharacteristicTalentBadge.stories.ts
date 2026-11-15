@@ -30,20 +30,20 @@ type Story = StoryObj<typeof CharacteristicTalentBadge>
 
 export const SingularLabel: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', { name: '1 talent lié' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '1 talent lié à INT' })).toBeVisible()
   },
 }
 
 export const PluralLabel: Story = {
   args: { talents: [audition, orientation] },
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', { name: '2 talents liés' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '2 talents liés à INT' })).toBeVisible()
   },
 }
 
 export const ClickOpensPanel: Story = {
   play: async ({ canvas }) => {
-    const button = canvas.getByRole('button', { name: '1 talent lié' })
+    const button = canvas.getByRole('button', { name: '1 talent lié à INT' })
     await expect(button).toHaveAttribute('aria-expanded', 'false')
 
     await userEvent.click(button)
@@ -56,7 +56,7 @@ export const ClickOpensPanel: Story = {
 
 export const EscapeClosesPanel: Story = {
   play: async ({ canvas }) => {
-    const button = canvas.getByRole('button', { name: '1 talent lié' })
+    const button = canvas.getByRole('button', { name: '1 talent lié à INT' })
     await userEvent.click(button)
     await expect(button).toHaveAttribute('aria-expanded', 'true')
 
