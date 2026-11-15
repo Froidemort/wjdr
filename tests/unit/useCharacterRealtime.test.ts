@@ -89,6 +89,45 @@ describe('useCharacterRealtime', () => {
     expect(loadCharacterLinks).toHaveBeenCalledWith('char-1', { force: true })
   })
 
+  it('catches an immediate links reload rejection instead of throwing', async () => {
+    const { loadCharacterLinks } = setup()
+    loadCharacterLinks.mockRejectedValue(new Error('backend down'))
+
+    capturedOnUpdate?.({ table: 'character_weapons', event: 'UPDATE' })
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(loadCharacterLinks).toHaveBeenCalledWith('char-1', { force: true })
+  })
+
+  it('catches a deferred links reload rejection instead of throwing', async () => {
+    const { loadCharacterLinks, setSaving } = setup()
+    loadCharacterLinks.mockRejectedValue(new Error('backend down'))
+    setSaving(true)
+
+    capturedOnUpdate?.({ table: 'character_armors', event: 'UPDATE' })
+    await vi.advanceTimersByTimeAsync(700)
+
+    expect(loadCharacterLinks).toHaveBeenCalledWith('char-1', { force: true })
+  })
+
+  it('does not throw when a reload rejects after the current character changed', async () => {
+    const { loadCharacterLinks, setCharacterId } = setup()
+    let reject: (error: Error) => void = () => {}
+    loadCharacterLinks.mockImplementation(
+      () =>
+        new Promise((_resolve, rej) => {
+          reject = rej
+        })
+    )
+
+    capturedOnUpdate?.({ table: 'character_weapons', event: 'UPDATE' })
+    setCharacterId('char-2')
+    reject(new Error('backend down'))
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(loadCharacterLinks).toHaveBeenCalledWith('char-1', { force: true })
+  })
+
   it('refreshes the character immediately for a non-link table when not saving', () => {
     const { loadCharacter } = setup()
 

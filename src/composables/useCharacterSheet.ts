@@ -53,6 +53,8 @@ export function useCharacterSheet() {
   })
   const {
     linksCharacterId,
+    linksError,
+    linksLoading,
     characterSkills,
     characterTalents,
     characterWeapons,
@@ -64,6 +66,8 @@ export function useCharacterSheet() {
     sortedCharacterArmors,
     sortedCharacterItems,
     loadCharacterLinks,
+    resetLinks,
+    retryLoadLinks,
     invalidateCurrentLinksCache,
     onChangeSkillMastery,
     onDeleteSkill,
@@ -122,6 +126,8 @@ export function useCharacterSheet() {
     loadCharacterLinks,
   })
 
+  let characterRequestSeq = 0
+
   async function loadCharacter(options: { background?: boolean } = {}): Promise<void> {
     const currentCharacterId = characterId.value
     if (!currentCharacterId) {
@@ -129,6 +135,7 @@ export function useCharacterSheet() {
       return
     }
 
+    const requestSeq = ++characterRequestSeq
     const isBackgroundRefresh = Boolean(options.background && character.value)
     if (!isBackgroundRefresh) {
       loading.value = true
@@ -136,6 +143,13 @@ export function useCharacterSheet() {
     }
     try {
       const data = await getCharacterById(currentCharacterId)
+      if (requestSeq !== characterRequestSeq) {
+        return
+      }
+
+      if (character.value && character.value.id !== data?.id) {
+        resetLinks()
+      }
       character.value = data
 
       if (!data) {
@@ -175,14 +189,21 @@ export function useCharacterSheet() {
       syncEditablePvFromWoundsValue()
       markSavedEditable({ ...editable.value })
 
-      await loadCharacterLinks(data.id)
+      try {
+        await loadCharacterLinks(data.id)
+      } catch {
+        // linksError is recorded by loadCharacterLinks; keep the character visible.
+      }
     } catch (error) {
+      if (requestSeq !== characterRequestSeq) {
+        return
+      }
       if (!isBackgroundRefresh || !character.value) {
         errorMessage.value =
           safeErrorMessage(error, 'Impossible de charger le personnage.')
       }
     } finally {
-      if (!isBackgroundRefresh) {
+      if (requestSeq === characterRequestSeq) {
         loading.value = false
       }
     }
@@ -216,6 +237,9 @@ export function useCharacterSheet() {
 
   return {
     linksCharacterId,
+    linksError,
+    linksLoading,
+    retryLoadLinks,
     character,
     loading,
     errorMessage,
