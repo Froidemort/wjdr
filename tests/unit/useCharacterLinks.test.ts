@@ -65,6 +65,161 @@ describe('useCharacterLinks', () => {
     deps.confirmAction.mockResolvedValue(true)
   })
 
+  it('identifies the character whose links were actually loaded', async () => {
+    deps.listCharacterLinksBundle.mockResolvedValue({
+      skills: [skill()], talents: [], weapons: [], armors: [], items: [],
+    })
+    const { links } = setup()
+    expect(links.linksCharacterId.value).toBeNull()
+    await links.loadCharacterLinks('char-1')
+    expect(links.linksCharacterId.value).toBe('char-1')
+    deps.listCharacterLinksBundle.mockRejectedValue(new Error('offline'))
+    await expect(links.loadCharacterLinks('char-2')).rejects.toThrow('offline')
+    expect(links.linksCharacterId.value).toBe('char-1')
+  })
+
+  it('ignores a successful reload when the current character changed before it resolved', async () => {
+    let currentCharacterId = 'char-1'
+    let resolveBundle: (bundle: {
+      skills: never[]
+      talents: never[]
+      weapons: never[]
+      armors: never[]
+      items: never[]
+    }) => void = () => {}
+    deps.listCharacterLinksBundle.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveBundle = resolve
+        })
+    )
+    const { links } = setup({ getCharacterId: () => currentCharacterId })
+
+    const pending = links.loadCharacterLinks('char-1')
+    currentCharacterId = 'char-2'
+    resolveBundle({ skills: [skill()], talents: [], weapons: [], armors: [], items: [] })
+    await pending
+
+    expect(links.characterSkills.value).toEqual([])
+    expect(links.linksCharacterId.value).toBeNull()
+  })
+
+  it('sets a generic linksError and rethrows on a load failure', async () => {
+    deps.listCharacterLinksBundle.mockRejectedValue(new Error('offline'))
+    const { links } = setup()
+
+    await expect(links.loadCharacterLinks('char-1')).rejects.toThrow('offline')
+
+    expect(links.linksError.value).toBe('Actualisation impossible, rechargez la page.')
+  })
+
+  it('clears linksError after a later successful load', async () => {
+    deps.listCharacterLinksBundle.mockRejectedValueOnce(new Error('offline'))
+    deps.listCharacterLinksBundle.mockResolvedValueOnce({
+      skills: [], talents: [], weapons: [], armors: [], items: [],
+    })
+    const { links } = setup()
+
+    await expect(links.loadCharacterLinks('char-1')).rejects.toThrow('offline')
+    expect(links.linksError.value).toBe('Actualisation impossible, rechargez la page.')
+
+    await links.loadCharacterLinks('char-1')
+
+    expect(links.linksError.value).toBeNull()
+  })
+
+  it('ignores a stale failure once a newer request has already succeeded', async () => {
+    let rejectStale: (error: Error) => void = () => {}
+    deps.listCharacterLinksBundle
+      .mockImplementationOnce(
+        () => new Promise((_resolve, reject) => { rejectStale = reject })
+      )
+      .mockResolvedValueOnce({ skills: [], talents: [], weapons: [], armors: [], items: [] })
+    const { links } = setup()
+
+    const stale = links.loadCharacterLinks('char-1')
+    await links.loadCharacterLinks('char-1')
+    expect(links.linksError.value).toBeNull()
+
+    rejectStale(new Error('late failure'))
+    await expect(stale).rejects.toThrow('late failure')
+
+    expect(links.linksError.value).toBeNull()
+  })
+
+  describe('resetLinks', () => {
+    it('clears loaded links, the error and the loading flag', async () => {
+      deps.listCharacterLinksBundle.mockResolvedValue({
+        skills: [skill()], talents: [], weapons: [], armors: [], items: [],
+      })
+      const { links } = setup()
+      await links.loadCharacterLinks('char-1')
+      expect(links.linksCharacterId.value).toBe('char-1')
+
+      links.resetLinks()
+
+      expect(links.characterSkills.value).toEqual([])
+      expect(links.linksCharacterId.value).toBeNull()
+      expect(links.linksError.value).toBeNull()
+      expect(links.linksLoading.value).toBe(false)
+    })
+
+    it('invalidates a pending load so its result is discarded', async () => {
+      let resolvePending: (bundle: {
+        skills: never[]
+        talents: never[]
+        weapons: never[]
+        armors: never[]
+        items: never[]
+      }) => void = () => {}
+      deps.listCharacterLinksBundle.mockImplementation(
+        () => new Promise((resolve) => { resolvePending = resolve })
+      )
+      const { links } = setup()
+
+      const pending = links.loadCharacterLinks('char-1')
+      links.resetLinks()
+      resolvePending({ skills: [skill()], talents: [], weapons: [], armors: [], items: [] })
+      await pending
+
+      expect(links.characterSkills.value).toEqual([])
+      expect(links.linksCharacterId.value).toBeNull()
+    })
+  })
+
+  describe('retryLoadLinks', () => {
+    it('forces a reload and tracks the loading state', async () => {
+      let resolveBundle: (bundle: {
+        skills: never[]
+        talents: never[]
+        weapons: never[]
+        armors: never[]
+        items: never[]
+      }) => void = () => {}
+      deps.listCharacterLinksBundle.mockImplementation(
+        () => new Promise((resolve) => { resolveBundle = resolve })
+      )
+      const { links } = setup()
+
+      const retrying = links.retryLoadLinks()
+      expect(links.linksLoading.value).toBe(true)
+      resolveBundle({ skills: [], talents: [], weapons: [], armors: [], items: [] })
+      await retrying
+
+      expect(deps.listCharacterLinksBundle).toHaveBeenCalledWith('char-1', { force: true })
+      expect(links.linksLoading.value).toBe(false)
+    })
+
+    it('records linksError without rejecting when the retry fails', async () => {
+      deps.listCharacterLinksBundle.mockRejectedValue(new Error('down'))
+      const { links } = setup()
+
+      await expect(links.retryLoadLinks()).resolves.toBeUndefined()
+
+      expect(links.linksError.value).toBe('Actualisation impossible, rechargez la page.')
+    })
+  })
+
   it('updates the skill mastery level and invalidates the cache', async () => {
     const { links } = setup()
     links.characterSkills.value = [skill()]
@@ -121,7 +276,7 @@ describe('useCharacterLinks', () => {
     expect(deps.removeCharacterTalent).not.toHaveBeenCalled()
   })
 
-  it('reports a refresh failure after a successful item delete', async () => {
+  it('reports a links error, not a delete failure, after a successful item delete', async () => {
     deps.removeCharacterItem.mockResolvedValue(undefined)
     deps.listCharacterLinksBundle.mockRejectedValue(new Error('down'))
     const { links, errorMessage } = setup()
@@ -129,7 +284,8 @@ describe('useCharacterLinks', () => {
     await links.onDeleteItem('i1')
 
     expect(deps.removeCharacterItem).toHaveBeenCalledWith('i1')
-    expect(errorMessage.value).toBe('Actualisation impossible, rechargez la page.')
+    expect(links.linksError.value).toBe('Actualisation impossible, rechargez la page.')
+    expect(errorMessage.value).toBeNull()
   })
 
   it('increments the item quantity', async () => {

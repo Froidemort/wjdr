@@ -29,6 +29,8 @@ interface UseCharacterLinksOptions {
   feedback: CharacterFeedbackHelpers
 }
 
+const LINKS_REFRESH_ERROR = 'Actualisation impossible, rechargez la page.'
+
 function sortByName<T extends { name: string }>(entries: T[]): T[] {
   return [...entries].sort((left, right) =>
     left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })
@@ -56,6 +58,10 @@ export function useCharacterLinks({
   const characterWeapons = ref<CharacterWeapon[]>([])
   const characterArmors = ref<CharacterArmor[]>([])
   const characterItems = ref<CharacterItem[]>([])
+  const linksCharacterId = ref<string | null>(null)
+  const linksError = ref<string | null>(null)
+  const linksLoading = ref(false)
+  let linksRequestSeq = 0
 
   const sortedCharacterSkills = computed(() => sortByName(characterSkills.value))
   const sortedCharacterTalents = computed(() => sortByName(characterTalents.value))
@@ -76,19 +82,62 @@ export function useCharacterLinks({
     characterId: string,
     options: { force?: boolean } = {}
   ): Promise<void> {
-    const links = await listCharacterLinksBundle(characterId, options)
-    characterSkills.value = links.skills
-    characterTalents.value = links.talents
-    characterWeapons.value = links.weapons
-    characterArmors.value = links.armors
-    characterItems.value = links.items
+    const requestSeq = ++linksRequestSeq
+    linksLoading.value = true
+    try {
+      const links = await listCharacterLinksBundle(characterId, options)
+      if (requestSeq !== linksRequestSeq || characterId !== getCharacterId()) {
+        return
+      }
+      characterSkills.value = links.skills
+      characterTalents.value = links.talents
+      characterWeapons.value = links.weapons
+      characterArmors.value = links.armors
+      characterItems.value = links.items
+      linksCharacterId.value = characterId
+      linksError.value = null
+    } catch (error) {
+      if (requestSeq === linksRequestSeq && characterId === getCharacterId()) {
+        linksError.value = LINKS_REFRESH_ERROR
+      }
+      throw error
+    } finally {
+      if (requestSeq === linksRequestSeq) {
+        linksLoading.value = false
+      }
+    }
+  }
+
+  function resetLinks(): void {
+    linksRequestSeq++
+    characterSkills.value = []
+    characterTalents.value = []
+    characterWeapons.value = []
+    characterArmors.value = []
+    characterItems.value = []
+    linksCharacterId.value = null
+    linksError.value = null
+    linksLoading.value = false
+  }
+
+  async function retryLoadLinks(): Promise<void> {
+    const currentCharacterId = getCharacterId()
+    if (!currentCharacterId) {
+      return
+    }
+
+    try {
+      await loadCharacterLinks(currentCharacterId, { force: true })
+    } catch {
+      // linksError is already recorded by loadCharacterLinks.
+    }
   }
 
   async function reloadLinksAfterDelete(id: string): Promise<void> {
     try {
       await loadCharacterLinks(id, { force: true })
     } catch {
-      errorMessage.value = 'Actualisation impossible, rechargez la page.'
+      // linksError is already recorded by loadCharacterLinks.
     }
   }
 
@@ -238,6 +287,9 @@ export function useCharacterLinks({
   }
 
   return {
+    linksCharacterId,
+    linksError,
+    linksLoading,
     characterSkills,
     characterTalents,
     characterWeapons,
@@ -249,6 +301,8 @@ export function useCharacterLinks({
     sortedCharacterArmors,
     sortedCharacterItems,
     loadCharacterLinks,
+    resetLinks,
+    retryLoadLinks,
     invalidateCurrentLinksCache,
     reloadLinksAfterDelete,
     onChangeSkillMastery,

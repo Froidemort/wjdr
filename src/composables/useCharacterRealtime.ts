@@ -24,8 +24,13 @@ export function useCharacterRealtime({
   loadCharacter,
   loadCharacterLinks,
 }: UseCharacterRealtimeOptions) {
+  function reloadLinks(currentCharacterId: string): void {
+    // loadCharacterLinks owns linksError; only prevent the unhandled rejection.
+    loadCharacterLinks(currentCharacterId, { force: true }).catch(() => undefined)
+  }
+
   const scheduleDeferredLinksReload = useDebounceFn((currentCharacterId: string) => {
-    void loadCharacterLinks(currentCharacterId, { force: true })
+    reloadLinks(currentCharacterId)
   }, 700)
   const scheduleDeferredRealtimeReload = useDebounceFn(() => {
     void loadCharacter({ background: true })
@@ -46,7 +51,7 @@ export function useCharacterRealtime({
         return
       }
 
-      void loadCharacterLinks(currentCharacterId, { force: true })
+      reloadLinks(currentCharacterId)
       return
     }
 

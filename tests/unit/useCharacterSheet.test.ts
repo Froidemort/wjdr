@@ -13,9 +13,10 @@ const deps = vi.hoisted(() => ({
   setCharacter: vi.fn(),
   setCampaign: vi.fn(),
   userId: { value: 'me' },
+  characterIdRef: { value: 'char-1' } as { value: string },
 }))
 
-vi.mock('@vueuse/router', () => ({ useRouteParams: () => ref('char-1') }))
+vi.mock('@vueuse/router', () => ({ useRouteParams: () => deps.characterIdRef }))
 vi.mock('../../src/composables/useRealtimeChannels', () => ({
   useRealtimeChannels: () => ({ subscribe: vi.fn(), unsubscribe: vi.fn() }),
 }))
@@ -107,6 +108,7 @@ describe('useCharacterSheet', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     deps.userId.value = 'me'
+    deps.characterIdRef = ref('char-1')
     deps.listCharacterLinksBundle.mockResolvedValue({
       skills: [],
       talents: [],
@@ -586,7 +588,7 @@ describe('useCharacterSheet', () => {
       expect(sheet.errorMessage.value).toBe('Connexion indisponible.')
     })
 
-    it('reports a refresh failure, not a delete failure, when the reload fails', async () => {
+    it('reports a links error, not a delete failure, when the reload fails', async () => {
       deps.removeCharacterItem.mockResolvedValue(undefined)
       const sheet = await setup()
       deps.listCharacterLinksBundle.mockRejectedValue(new Error('reload down'))
@@ -594,7 +596,8 @@ describe('useCharacterSheet', () => {
       await sheet.onDeleteItem('item-1')
 
       expect(deps.removeCharacterItem).toHaveBeenCalledWith('item-1')
-      expect(sheet.errorMessage.value).toBe('Actualisation impossible, rechargez la page.')
+      expect(sheet.linksError.value).toBe('Actualisation impossible, rechargez la page.')
+      expect(sheet.errorMessage.value).toBeNull()
     })
 
     it('clears a stale error when starting a new action', async () => {
@@ -607,6 +610,104 @@ describe('useCharacterSheet', () => {
 
       await sheet.onDeleteItem('item-1')
       expect(sheet.errorMessage.value).toBeNull()
+    })
+
+    it('keeps the character and sets linksError, not the shared error, when a background link reload fails', async () => {
+      const sheet = await setup()
+      deps.listCharacterLinksBundle.mockRejectedValue(new Error('down'))
+
+      await sheet.loadCharacter({ background: true })
+
+      expect(sheet.character.value?.id).toBe('char-1')
+      expect(sheet.linksError.value).toBe('Actualisation impossible, rechargez la page.')
+      expect(sheet.errorMessage.value).toBeNull()
+    })
+
+    it('keeps the character and sets linksError, not the shared error, when a foreground link reload fails', async () => {
+      const sheet = await setup()
+      deps.listCharacterLinksBundle.mockRejectedValue(new Error('down'))
+
+      await sheet.loadCharacter()
+
+      expect(sheet.character.value?.id).toBe('char-1')
+      expect(sheet.linksError.value).toBe('Actualisation impossible, rechargez la page.')
+      expect(sheet.errorMessage.value).toBeNull()
+    })
+
+    it('clears linksError once a retry succeeds', async () => {
+      const sheet = await setup()
+      deps.listCharacterLinksBundle.mockRejectedValueOnce(new Error('down'))
+      await sheet.loadCharacter()
+      expect(sheet.linksError.value).toBe('Actualisation impossible, rechargez la page.')
+
+      deps.listCharacterLinksBundle.mockResolvedValueOnce({
+        skills: [], talents: [], weapons: [], armors: [], items: [],
+      })
+      await sheet.retryLoadLinks()
+
+      expect(sheet.linksError.value).toBeNull()
+    })
+
+    it('stays silent when a background character fetch fails while a character is already loaded', async () => {
+      const sheet = await setup()
+      deps.getCharacterById.mockRejectedValueOnce(new Error('network blip'))
+
+      await sheet.loadCharacter({ background: true })
+
+      expect(sheet.errorMessage.value).toBeNull()
+      expect(sheet.character.value?.id).toBe('char-1')
+    })
+  })
+
+  describe('request sequencing', () => {
+    it('ignores a stale character response that resolves after a newer request', async () => {
+      const sheet = await setup()
+      let resolveStale: (data: CharacterDetail) => void = () => {}
+      deps.getCharacterById
+        .mockImplementationOnce(() => new Promise((resolve) => { resolveStale = resolve }))
+        .mockResolvedValueOnce(makeCharacter({ name: 'Fresh' }))
+
+      const stale = sheet.loadCharacter()
+      const fresh = sheet.loadCharacter()
+      await fresh
+
+      expect(sheet.character.value?.name).toBe('Fresh')
+
+      resolveStale(makeCharacter({ name: 'Stale' }))
+      await stale
+
+      expect(sheet.character.value?.name).toBe('Fresh')
+      expect(sheet.loading.value).toBe(false)
+    })
+
+    it('resets previously loaded links when switching to a different character', async () => {
+      deps.listCharacterLinksBundle.mockResolvedValueOnce({
+        skills: [{
+          skillId: 's1', name: 'Esquive', statCode: 'Ag', specialization: null,
+          description: null, masteryLevel: 1, isBasic: true,
+        }],
+        talents: [], weapons: [], armors: [], items: [],
+      })
+      const sheet = await setup()
+      await vi.waitFor(() => expect(sheet.characterSkills.value).toHaveLength(1))
+
+      deps.getCharacterById.mockResolvedValue(makeCharacter({ id: 'char-2' }))
+      let resolveLinks: (bundle: {
+        skills: never[]
+        talents: never[]
+        weapons: never[]
+        armors: never[]
+        items: never[]
+      }) => void = () => {}
+      deps.listCharacterLinksBundle.mockImplementationOnce(
+        () => new Promise((resolve) => { resolveLinks = resolve })
+      )
+
+      deps.characterIdRef.value = 'char-2'
+      await vi.waitFor(() => expect(sheet.character.value?.id).toBe('char-2'))
+
+      expect(sheet.characterSkills.value).toEqual([])
+      resolveLinks({ skills: [], talents: [], weapons: [], armors: [], items: [] })
     })
   })
 })

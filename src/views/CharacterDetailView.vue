@@ -19,6 +19,20 @@
         </button>
       </div>
 
+      <div v-if="linksError" role="alert" class="alert alert-error alert-soft">
+        <span class="min-w-0 flex-1">{{ linksError }}</span>
+        <button
+          type="button"
+          class="btn btn-sm min-h-11"
+          :disabled="linksLoading"
+          :aria-busy="linksLoading"
+          @click="retryLoadLinks"
+        >
+          <span v-if="linksLoading" class="loading loading-spinner loading-xs" aria-hidden="true" />
+          Réessayer l'actualisation des listes
+        </button>
+      </div>
+
       <CharacterSummaryHeader
         :name="character.name"
         :race="character.race"
@@ -65,6 +79,8 @@
       <CharacterProfilePanel
         v-show="isPanelVisible('stats')"
         :stats="character.stats"
+        :skills="linksCharacterId === character.id ? sortedCharacterSkills : []"
+        :talents="linksCharacterId === character.id ? sortedCharacterTalents : []"
         :editable="canEditQuickSection"
         @stat-tick="onStatTick"
         @stat-base-change="onStatBaseChange"
@@ -73,8 +89,8 @@
 
       <CharacterSkillsTalentsPanel
         v-show="isPanelVisible('skills')"
-        :skills="sortedCharacterSkills"
-        :talents="sortedCharacterTalents"
+        :skills="linksCharacterId === character.id ? sortedCharacterSkills : []"
+        :talents="linksCharacterId === character.id ? sortedCharacterTalents : []"
         :editable="canEditQuickSection"
         :busy-key="actionBusyKey"
         :skills-message="getSectionSuccessMessage('skills')"
@@ -229,6 +245,10 @@ const {
   characterWeapons,
   characterArmors,
   characterItems,
+  linksCharacterId,
+  linksError,
+  linksLoading,
+  retryLoadLinks,
   sortedCharacterSkills,
   sortedCharacterTalents,
   sortedCharacterWeapons,

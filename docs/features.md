@@ -20,6 +20,7 @@ Les chemins sont relatifs à la racine du dépôt. Routes : voir [architecture.m
 
 - Liste et feuille de personnage (caractéristiques, XP, ressources, inventaire, carrière) : `src/views/Character*View.vue`, `src/components/character/`, `src/composables/useCharacterSheet.ts`.
 - Accès : `src/services/charactersRepository.ts`, `characterLinksRepository.ts`, `catalogRepository.ts`.
+- Rappels indicatifs près des caractéristiques : liens disponibles entre compétences et talents possédés, avec descriptions, sans calcul automatique. Les effets directs, compétences absentes et liens manquants ne sont pas couverts ; leur disponibilité suit les données chargées de la fiche.
 - Dés : `src/services/dice.ts`.
 - Raccourci de sorts : catégories préférées enregistrées localement par utilisateur et personnage, sans synchronisation entre appareils ; elles restent distinctes des filtres modifiables du Compendium. Un échec de stockage est signalé et permet une utilisation temporaire.
 
